@@ -15,7 +15,7 @@ public class TileSnapshot
     public int TileFrameY { get; }
     public byte Slope { get; }
     public bool IsHalfBrick { get; }
-    // Add wall, liquid, etc. as needed
+    public ushort WallType { get; }
 
     public TileSnapshot(Point pos)
     {
@@ -27,6 +27,7 @@ public class TileSnapshot
         TileFrameY = tile.TileFrameY;
         Slope = (byte)tile.Slope;
         IsHalfBrick = tile.IsHalfBlock;
+        WallType = tile.WallType;
     }
 
     public void Restore()
@@ -46,6 +47,8 @@ public class TileSnapshot
         {
             tile.HasTile = false;
         }
+
+        tile.WallType = WallType;
 
         WorldGen.SquareTileFrame(Position.X, Position.Y);
 

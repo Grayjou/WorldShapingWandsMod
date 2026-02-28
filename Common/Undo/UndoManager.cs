@@ -26,13 +26,16 @@ public class UndoManager : ModPlayer
         _undoStack.Push(action);
 
         // Limit stack size
-        while (_undoStack.Count > MaxUndoActions)
+        if (_undoStack.Count > MaxUndoActions)
         {
-            // Remove oldest (would need a different data structure for efficiency)
+            // Keep only the most recent MaxUndoActions entries (drop the oldest).
+            // ToArray() returns items in pop (LIFO) order: index 0 = newest, last index = oldest.
+            // We push from index [MaxUndoActions-1] down to 0 so that index 0 (newest) ends
+            // up on top of the rebuilt stack, preserving correct pop order.
             var temp = _undoStack.ToArray();
             _undoStack.Clear();
-            for (int i = 0; i < temp.Length - 1; i++)
-                _undoStack.Push(temp[temp.Length - 1 - i]);
+            for (int i = MaxUndoActions - 1; i >= 0; i--)
+                _undoStack.Push(temp[i]);
         }
     }
 
