@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -69,25 +70,31 @@ public abstract class WandOfDestructionBase : BaseCyclingWand
         var action = undoMgr.BeginAction("Destruction");
 
         int destroyedTiles = 0, skipped = 0;
+        var snapshottedTiles = new HashSet<Point>();
 
         foreach (Point tile in tileSet.Tiles)
         {
             if (!WorldGen.InWorld(tile.X, tile.Y, 1)) continue;
 
-            if (settings.DestroyTiles && Main.tile[tile.X, tile.Y].HasTile)
-            {
-                if (!player.HasEnoughPickPowerToHurtTile(tile.X, tile.Y))
-                {
-                    skipped++;
-                    continue;
-                }
-                if (!WorldGen.CanKillTile(tile.X, tile.Y))
-                {
-                    skipped++;
-                    continue;
-                }
+            bool willDestroyTile = settings.DestroyTiles
+                && Main.tile[tile.X, tile.Y].HasTile
+                && player.HasEnoughPickPowerToHurtTile(tile.X, tile.Y)
+                && WorldGen.CanKillTile(tile.X, tile.Y);
 
+            bool willDestroyWall = settings.DestroyWalls
+                && Main.tile[tile.X, tile.Y].WallType > WallID.None;
+
+            if (!willDestroyTile && !willDestroyWall) { skipped++; continue; }
+
+            // Take a single snapshot per tile before any modification
+            if (!snapshottedTiles.Contains(tile))
+            {
                 action.AddSnapshot(tile);
+                snapshottedTiles.Add(tile);
+            }
+
+            if (willDestroyTile)
+            {
                 WorldGen.KillTile(tile.X, tile.Y, fail: false, effectOnly: false, noItem: settings.SuppressDrops);
                 destroyedTiles++;
 
@@ -95,20 +102,19 @@ public abstract class WandOfDestructionBase : BaseCyclingWand
                     NetMessage.SendTileSquare(-1, tile.X, tile.Y);
             }
 
-            if (settings.DestroyWalls && Main.tile[tile.X, tile.Y].WallType > WallID.None)
+            if (willDestroyWall)
             {
-                action.AddSnapshot(tile);
                 WorldGen.KillWall(tile.X, tile.Y);
-                
+
                 if (Main.netMode == NetmodeID.MultiplayerClient)
                     NetMessage.SendTileSquare(-1, tile.X, tile.Y);
             }
         }
 
-        if (destroyedTiles > 0)
+        if (snapshottedTiles.Count > 0)
         {
             undoMgr.CommitAction(action);
-            Main.NewText($"Destroyed {destroyedTiles} tiles" + 
+            Main.NewText($"Destroyed {destroyedTiles} tile(s)" + 
                 (skipped > 0 ? $", {skipped} skipped" : ""),
                 Color.OrangeRed);
         }

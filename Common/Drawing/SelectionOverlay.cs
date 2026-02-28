@@ -31,10 +31,9 @@ public class SelectionOverlay : ModSystem
         var wandPlayer = player.GetModPlayer<WandPlayer>();
         if (!wandPlayer.Selection.IsActive) return;
 
-        // Check if player is holding a wand item (placeholder - will be implemented when wand items are added)
         bool isHoldingWand = IsHoldingWandItem(player);
         
-        if (!wandPlayer.Settings.ShouldShowPreview(isHoldingWand) && !wandPlayer.Selection.IsActive) return;
+        if (!wandPlayer.Settings.ShouldShowPreview(isHoldingWand)) return;
 
         var shapeSettings = GetCurrentShapeSettings(player, wandPlayer);
         DrawSelection(wandPlayer, shapeSettings);
