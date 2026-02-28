@@ -1,0 +1,84 @@
+Keybinds: {
+	"Increase Thickness.DisplayName": Increase  Thickness
+	"Decrease Thickness.DisplayName": Decrease  Thickness
+}
+
+Configs: {
+	WandConfig: {
+		InfiniteResources.Header: Infinite Resources
+
+		EnableInfiniteResource: {
+			Label: Enable Infinite Resource Mode
+			Tooltip: If enabled, building/replacement wands will stop consuming items after you have placed a certain number of blocks (see below).
+		}
+
+		InfiniteResourceAmount: {
+			Label: Infinite Resource Amount
+			Tooltip: If you have at least this many of a block in your inventory, it will not be consumed when placing.\n0 = always infinite (never consume).
+		}
+
+		DisplayName: Wand Config
+	}
+}
+
+Items: {
+	WandOfDestructionInstant: {
+		DisplayName: Wand of Destruction (Instant)
+		Tooltip: Destroys tiles in a selected area
+	}
+
+	WandOfDestructionSelect: {
+		DisplayName: Wand of Destruction (Select)
+		Tooltip: Destroys tiles in a selected area
+	}
+
+	WandOfDestructionConfirm: {
+		DisplayName: Wand of Destruction (Confirm)
+		Tooltip: Destroys tiles in a selected area
+	}
+
+	WandOfBuildingInstant: {
+		DisplayName: Wand of Building (Instant)
+		Tooltip: Places tiles in a selected area
+	}
+
+	WandOfBuildingSelect: {
+		DisplayName: Wand of Building (Select)
+		Tooltip: Places tiles in a selected area
+	}
+
+	WandOfBuildingConfirm: {
+		DisplayName: Wand of Building (Confirm)
+		Tooltip: Places tiles in a selected area
+	}
+
+	WandOfReplacementInstant: {
+		DisplayName: Wand of Replacement (Instant)
+		Tooltip: Replaces tiles in a selected area
+	}
+
+	WandOfReplacementSelect: {
+		DisplayName: Wand of Replacement (Select)
+		Tooltip: Replaces tiles in a selected area
+	}
+
+	WandOfReplacementConfirm: {
+		DisplayName: Wand of Replacement (Confirm)
+		Tooltip: Replaces tiles in a selected area
+	}
+
+	WandOfWiringInstant: {
+		DisplayName: Wand of Wiring (Instant)
+		Tooltip: Places or removes wires and actuators in a selected area
+	}
+
+	WandOfWiringSelect: {
+		DisplayName: Wand of Wiring (Select)
+		Tooltip: Places or removes wires and actuators in a selected area
+	}
+
+	WandOfWiringConfirm: {
+		DisplayName: Wand of Wiring (Confirm)
+		Tooltip: Places or removes wires and actuators in a selected area
+	}
+}

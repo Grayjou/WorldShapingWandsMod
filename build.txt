@@ -1,0 +1,6 @@
+name = WorldShapingWandsMod
+displayName = World Shaping Wands
+author = YourName
+version = 0.1.0
+buildIgnore = *.csproj, *.user, obj\*, bin\*, .vs\*, .git\*
+homepage =

@@ -1,0 +1,12 @@
+C:\Users\RYZEN 9\Documents\My Games\Terraria\tModLoader\ModSources\WorldShapingWandsMod\obj\Debug\net8.0\WorldShapingWandsMod.csproj.AssemblyReference.cache
+C:\Users\RYZEN 9\Documents\My Games\Terraria\tModLoader\ModSources\WorldShapingWandsMod\obj\Debug\net8.0\WorldShapingWandsMod.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\RYZEN 9\Documents\My Games\Terraria\tModLoader\ModSources\WorldShapingWandsMod\obj\Debug\net8.0\WorldShapingWandsMod.AssemblyInfoInputs.cache
+C:\Users\RYZEN 9\Documents\My Games\Terraria\tModLoader\ModSources\WorldShapingWandsMod\obj\Debug\net8.0\WorldShapingWandsMod.AssemblyInfo.cs
+C:\Users\RYZEN 9\Documents\My Games\Terraria\tModLoader\ModSources\WorldShapingWandsMod\obj\Debug\net8.0\WorldShapingWandsMod.csproj.CoreCompileInputs.cache
+C:\Users\RYZEN 9\Documents\My Games\Terraria\tModLoader\ModSources\WorldShapingWandsMod\bin\Debug\net8.0\WorldShapingWandsMod.deps.json
+C:\Users\RYZEN 9\Documents\My Games\Terraria\tModLoader\ModSources\WorldShapingWandsMod\bin\Debug\net8.0\WorldShapingWandsMod.dll
+C:\Users\RYZEN 9\Documents\My Games\Terraria\tModLoader\ModSources\WorldShapingWandsMod\bin\Debug\net8.0\WorldShapingWandsMod.pdb
+C:\Users\RYZEN 9\Documents\My Games\Terraria\tModLoader\ModSources\WorldShapingWandsMod\obj\Debug\net8.0\WorldShapingWandsMod.dll
+C:\Users\RYZEN 9\Documents\My Games\Terraria\tModLoader\ModSources\WorldShapingWandsMod\obj\Debug\net8.0\refint\WorldShapingWandsMod.dll
+C:\Users\RYZEN 9\Documents\My Games\Terraria\tModLoader\ModSources\WorldShapingWandsMod\obj\Debug\net8.0\WorldShapingWandsMod.pdb
+C:\Users\RYZEN 9\Documents\My Games\Terraria\tModLoader\ModSources\WorldShapingWandsMod\obj\Debug\net8.0\ref\WorldShapingWandsMod.dll

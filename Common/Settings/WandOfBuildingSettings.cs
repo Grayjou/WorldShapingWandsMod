@@ -1,0 +1,73 @@
+using Microsoft.Xna.Framework;
+using WorldShapingWandsMod.Common.Enums;
+
+namespace WorldShapingWandsMod.Common.Settings;
+
+/// <summary>
+/// Settings for the Wand of Building.
+/// </summary>
+public class WandOfBuildingSettings
+{
+    /// <summary>The selection mode for this wand.</summary>
+    public SelectionMode SelectionMode { get; set; } = SelectionMode.OneClick;
+
+    /// <summary>The type of object to place.</summary>
+    public PlaceType Object { get; set; } = PlaceType.Solid;
+
+    /// <summary>The slope configuration for placed tiles.</summary>
+    public SlopeType Slope { get; set; } = SlopeType.Default;
+
+    /// <summary>The shape configuration.</summary>
+    public ShapeInfo Shape { get; set; } = ShapeInfo.Default;
+
+    /// <summary>The starting point of the selection.</summary>
+    public Point StartPoint { get; set; }
+
+    /// <summary>The ending point of the selection (used in ThreeClick mode).</summary>
+    public Point EndPoint { get; set; }
+
+    /// <summary>
+    /// Creates a copy of these settings.
+    /// </summary>
+    public WandOfBuildingSettings Clone()
+    {
+        return new WandOfBuildingSettings
+        {
+            SelectionMode = SelectionMode,
+            Object = Object,
+            Slope = Slope,
+            Shape = Shape,
+            StartPoint = StartPoint,
+            EndPoint = EndPoint
+        };
+    }
+
+    /// <summary>
+    /// Resets all settings to their default values.
+    /// </summary>
+    public void ResetToDefaults()
+    {
+        SelectionMode = SelectionMode.OneClick;
+        Object = PlaceType.Solid;
+        Slope = SlopeType.Default;
+        Shape = ShapeInfo.Default;
+        StartPoint = Point.Zero;
+        EndPoint = Point.Zero;
+    }
+
+    /// <summary>
+    /// Returns a human-readable description of the current settings.
+    /// </summary>
+    public string GetDescription()
+    {
+        return $"{SelectionMode} - {Object} ({Slope}) - {Shape.GetDescription()}";
+    }
+
+    /// <summary>
+    /// Validates all settings values.
+    /// </summary>
+    public void Validate()
+    {
+        Shape.Validate();
+    }
+}

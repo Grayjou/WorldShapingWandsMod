@@ -1,0 +1,6 @@
+A collection of wands for shaping the world with various geometric shapes.
+
+Features:
+- Multiple shape types: Rectangle, Ellipse, Diamond, Triangle, Line
+- Shape modes: Filled, Hollow, Outline
+- Configurable outline thickness
