@@ -20,7 +20,10 @@ public static class ShapeRegistry
         Register(new EllipseShape());
         Register(new DiamondShape());
         Register(new TriangleShape());
-        Register(new LineShape());
+        Register(new EdgeShape());
+        Register(new StraightLineShape());
+        Register(new HalfEllipseHShape());
+        Register(new HalfEllipseVShape());
 
         _initialized = true;
     }

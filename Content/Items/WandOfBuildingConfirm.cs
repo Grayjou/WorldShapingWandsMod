@@ -11,8 +11,8 @@ namespace WorldShapingWandsMod.Content.Items
     public class WandOfBuildingConfirm : WandOfBuildingBase
     {
         public override SelectionMode WandSelectionMode => SelectionMode.ThreeClick;
-        public override Color ModeColor => new Color(255, 100, 100); // Reddish
-        public override int GetNextModeItemType() => ModContent.ItemType<WandOfBuildingInstant>();
+        public override Color ModeColor => new Color(80, 255, 80); // Green — Confirm (safe)
+        public override int GetNextModeItemType() => ModContent.ItemType<WandOfBuildingStamp>();
 
         protected override bool HandleUseItem(Player player, WandPlayer wandPlayer, Point mouseTile)
         {
@@ -22,36 +22,26 @@ namespace WorldShapingWandsMod.Content.Items
                                 Math.Abs(Main.MouseWorld.X - player.Center.X);
                 wandPlayer.StartSelection(mouseTile, vertical);
                 Main.NewText("Selection started. Click to set end point.", Color.Cyan);
-                return true;
+                return false; // Don't consume the wand
             }
             else if (!wandPlayer.Selection.IsLocked)
             {
                 wandPlayer.UpdateSelection(mouseTile);
                 wandPlayer.LockSelection();
                 Main.NewText("End point set. Click again to confirm.", Color.Yellow);
-                return true;
+                return false; // Don't consume the wand
             }
             else
             {
                 ExecuteBuilding(player, wandPlayer);
                 wandPlayer.ClearSelection();
-                return true;
+                return false; // Don't consume the wand
             }
         }
 
         public override bool CanUseItem(Player player)
         {
-            if (player.altFunctionUse == 2)
-            {
-                var wandPlayer = player.GetModPlayer<WandPlayer>();
-                if (wandPlayer.Selection.IsActive)
-                {
-                    wandPlayer.ClearSelection();
-                    Main.NewText("Selection cancelled.", Color.Yellow);
-                }
-                return false;
-            }
-            return true;
+            return base.CanUseItem(player);
         }
     }
 }

@@ -10,7 +10,10 @@ using WorldShapingWandsMod.Common.Settings;
 using WorldShapingWandsMod.Common.UI;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Configs;
+using WorldShapingWandsMod.Common.Drawing;
 using WorldShapingWandsMod.Common.Items;
+using System;
+using SlopeType = WorldShapingWandsMod.Common.Enums.SlopeType;
 using System.Linq;
 
 namespace WorldShapingWandsMod.Content.Items
@@ -23,7 +26,15 @@ namespace WorldShapingWandsMod.Content.Items
 
         public override bool? UseItem(Player player)
         {
+            // Don't do anything if the mouse is over UI
+            if (Main.LocalPlayer.mouseInterface)
+                return false;
+
             var wandPlayer = player.GetModPlayer<WandPlayer>();
+
+            if (WandSelectionMode != SelectionMode.OneClick && !wandPlayer.TryConsumeFreshLeftClick())
+                return false;
+
             Point mouseTile = GeometryHelper.WorldToTile(Main.MouseWorld);
             return HandleUseItem(player, wandPlayer, mouseTile);
         }
@@ -50,8 +61,7 @@ namespace WorldShapingWandsMod.Content.Items
 
         protected virtual void CancelSelection(WandPlayer wandPlayer)
         {
-            wandPlayer.ClearSelection();
-            Main.NewText("Selection cancelled.", Color.Yellow);
+            wandPlayer.CancelSelection(WandColors.CancelBuilding, wandPlayer.BuildingSettings.Shape);
         }
 
         protected void ExecuteBuilding(Player player, WandPlayer wandPlayer)
@@ -63,18 +73,11 @@ namespace WorldShapingWandsMod.Content.Items
             // Get the condition for the selected object type
             var condition = ItemTypeHelper.GetConditions(settings.Object);
 
-            // Find the first matching item
-            Item blockItem = ItemTypeHelper.FindFirstItem(player, condition);
-            if (blockItem == null)
+            // Find the first matching placement item (block item or tile wand)
+            int sourceIndex = ItemTypeHelper.FindFirstItemIndex(player, condition);
+            if (sourceIndex < 0)
             {
                 Main.NewText($"No suitable item found for {settings.Object}.", Color.Red);
-                return;
-            }
-
-            ushort tileType = (ushort)blockItem.createTile;
-            if (tileType == 0)
-            {
-                Main.NewText($"Item {blockItem.Name} does not create a tile.", Color.Red);
                 return;
             }
 
@@ -90,56 +93,190 @@ namespace WorldShapingWandsMod.Content.Items
             );
 
             var tileSet = ShapeRegistry.GetShapeTiles(settings.Shape.Shape, context);
-            int required = tileSet.Tiles.Count();
+            var tilesToProcess = tileSet.Tiles.ToArray();
+            int required = tilesToProcess.Length;
 
-            // Check availability (unless infinite resource mode allows)
-            bool hasInfinite = ItemTypeHelper.CountItems(player.inventory, condition, out int total);
-            if (!hasInfinite && total < required)
+            // --- Cancel mode: pre-check total stock before touching anything ---
+            if (settings.ExhaustionMode == BlockExhaustionMode.Cancel)
             {
-                Main.NewText($"Need {required} {blockItem.Name}, have {total}.", Color.Red);
-                return;
+                Item firstSourceItem = player.inventory[sourceIndex];
+                bool usingTileWandForCheck = firstSourceItem.tileWand >= 0;
+                Func<Item, bool> checkCond = usingTileWandForCheck
+                    ? i => !i.IsAir && i.type == firstSourceItem.tileWand
+                    : i => !i.IsAir && condition(i);
+
+                bool hasInfinite = ItemTypeHelper.CountItems(player.inventory, checkCond, out int totalAvailable);
+                if (!hasInfinite && totalAvailable < required)
+                {
+                    string itemName = usingTileWandForCheck
+                        ? Lang.GetItemNameValue(firstSourceItem.tileWand)
+                        : firstSourceItem.Name;
+                    Main.NewText($"Need {required} {itemName}, have {totalAvailable}. Operation cancelled.", Color.Red);
+                    return;
+                }
             }
 
+            // Determine if consumption is needed
             bool shouldConsume = true;
             if (config.EnableInfiniteResource)
             {
+                // Check total across all matching items
+                ItemTypeHelper.CountItems(player.inventory, i => !i.IsAir && condition(i), out int grandTotal);
                 if (config.InfiniteResourceAmount == 0)
-                    shouldConsume = false; // always infinite
-                else if (total >= config.InfiniteResourceAmount)
-                    shouldConsume = false; // above threshold
+                    shouldConsume = false;
+                else if (grandTotal >= config.InfiniteResourceAmount)
+                    shouldConsume = false;
             }
 
             var undoMgr = player.GetModPlayer<UndoManager>();
             var action = undoMgr.BeginAction("Building");
 
             int placed = 0;
-            foreach (Point tile in tileSet.Tiles)
+            int replaced = 0;
+            bool replaceMode = player.TileReplacementEnabled;
+            bool interrupted = false;
+
+            foreach (Point tile in tilesToProcess)
             {
                 if (!WorldGen.InWorld(tile.X, tile.Y, 1)) continue;
-                if (Main.tile[tile.X, tile.Y].HasTile) continue; // skip occupied
 
-                action.AddSnapshot(tile);
-                if (WorldGen.PlaceTile(tile.X, tile.Y, tileType, mute: true, forced: false, plr: player.whoAmI))
+                var existingTile = Main.tile[tile.X, tile.Y];
+
+                if (existingTile.HasTile)
                 {
-                    placed++;
-                    if (Main.netMode == NetmodeID.MultiplayerClient)
-                        NetMessage.SendTileSquare(-1, tile.X, tile.Y);
+                    if (!replaceMode) continue;
+
+                    // Re-lookup source item for this tile (supports NextBlock)
+                    int idx = ItemTypeHelper.FindFirstItemIndex(player, condition);
+                    if (idx < 0)
+                    {
+                        if (settings.ExhaustionMode == BlockExhaustionMode.Interrupt) { interrupted = true; break; }
+                        continue; // NextBlock: no more items, skip remaining
+                    }
+
+                    Item srcItem = player.inventory[idx];
+                    ushort tType = (ushort)srcItem.createTile;
+
+                    if (existingTile.TileType == tType) continue;
+                    if (!player.HasEnoughPickPowerToHurtTile(tile.X, tile.Y)) continue;
+                    if (!WorldGen.CanKillTile(tile.X, tile.Y)) continue;
+
+                    action.AddSnapshot(tile);
+
+                    bool didReplace = false;
+                    if (WorldGen.ReplaceTile(tile.X, tile.Y, tType, srcItem.placeStyle))
+                    {
+                        didReplace = true;
+                    }
+                    else
+                    {
+                        WorldGen.KillTile(tile.X, tile.Y, fail: false, effectOnly: false, noItem: true);
+                        if (!Main.tile[tile.X, tile.Y].HasTile &&
+                            WorldGen.PlaceTile(tile.X, tile.Y, tType, mute: true, forced: false, plr: player.whoAmI))
+                        {
+                            didReplace = true;
+                        }
+                    }
+
+                    if (didReplace)
+                    {
+                        ApplySlope(tile.X, tile.Y, settings.Slope);
+                        replaced++;
+                        if (shouldConsume) ConsumeOneItem(player, srcItem, condition);
+                        if (Main.netMode == NetmodeID.MultiplayerClient)
+                            NetMessage.SendTileSquare(-1, tile.X, tile.Y);
+                    }
+                }
+                else
+                {
+                    // Re-lookup source item for this tile (supports NextBlock)
+                    int idx = ItemTypeHelper.FindFirstItemIndex(player, condition);
+                    if (idx < 0)
+                    {
+                        if (settings.ExhaustionMode == BlockExhaustionMode.Interrupt) { interrupted = true; break; }
+                        continue; // NextBlock: no more items, skip remaining
+                    }
+
+                    Item srcItem = player.inventory[idx];
+                    ushort tType = (ushort)srcItem.createTile;
+
+                    action.AddSnapshot(tile);
+                    if (WorldGen.PlaceTile(tile.X, tile.Y, tType, mute: true, forced: false, plr: player.whoAmI))
+                    {
+                        ApplySlope(tile.X, tile.Y, settings.Slope);
+                        placed++;
+                        if (shouldConsume) ConsumeOneItem(player, srcItem, condition);
+                        if (Main.netMode == NetmodeID.MultiplayerClient)
+                            NetMessage.SendTileSquare(-1, tile.X, tile.Y);
+                    }
                 }
             }
 
-            if (placed > 0)
+            int totalChanged = placed + replaced;
+            if (totalChanged > 0)
             {
                 undoMgr.CommitAction(action);
-                if (shouldConsume)
-                {
-                    blockItem.stack -= placed;
-                    if (blockItem.stack <= 0) blockItem.TurnToAir();
-                }
-                Main.NewText($"Placed {placed} {blockItem.Name}" + (shouldConsume ? "" : " (no items consumed)"), Color.Cyan);
+
+                string detail;
+                if (placed > 0 && replaced > 0)
+                    detail = $"Placed {placed}, replaced {replaced}";
+                else if (replaced > 0)
+                    detail = $"Replaced {replaced}";
+                else
+                    detail = $"Placed {placed}";
+
+                if (!shouldConsume) detail += " (no items consumed)";
+                if (interrupted) detail += " — ran out of blocks";
+                Main.NewText(detail, Color.Cyan);
             }
             else
             {
                 Main.NewText("No tiles could be placed.", Color.Gray);
+            }
+        }
+
+        /// <summary>
+        /// Consumes one item from the player's inventory for the given source item.
+        /// Handles tile wand ammo vs. direct consumption.
+        /// </summary>
+        private static void ConsumeOneItem(Player player, Item sourceItem, Func<Item, bool> placeCondition)
+        {
+            bool usingTileWand = sourceItem.tileWand >= 0;
+            Func<Item, bool> consumeCond = usingTileWand
+                ? i => !i.IsAir && i.type == sourceItem.tileWand
+                : i => !i.IsAir && i.type == sourceItem.type;
+
+            ItemTypeHelper.ConsumeItems(player.inventory, consumeCond, 1);
+        }
+
+        /// <summary>
+        /// Applies the selected slope/half-block setting to a placed tile.
+        /// Does nothing for SlopeType.Default (full block).
+        /// </summary>
+        private static void ApplySlope(int x, int y, SlopeType slope)
+        {
+            if (slope == SlopeType.Default) return;
+
+            var tile = Main.tile[x, y];
+            if (!tile.HasTile) return;
+
+            if (slope == SlopeType.VerticalHalf)
+            {
+                tile.IsHalfBlock = true;
+                tile.Slope = Terraria.ID.SlopeType.Solid; // clear any slope when setting half-block
+            }
+            else
+            {
+                tile.IsHalfBlock = false;
+
+                tile.Slope = slope switch
+                {
+                    SlopeType.BottomRight => Terraria.ID.SlopeType.SlopeDownLeft,
+                    SlopeType.BottomLeft  => Terraria.ID.SlopeType.SlopeDownRight,
+                    SlopeType.TopRight    => Terraria.ID.SlopeType.SlopeUpRight,
+                    SlopeType.TopLeft     => Terraria.ID.SlopeType.SlopeUpLeft,
+                    _ => Terraria.ID.SlopeType.Solid
+                };
             }
         }
 
@@ -154,7 +291,7 @@ namespace WorldShapingWandsMod.Content.Items
                 {
                     CancelSelection(wandPlayer);
                 }
-                else
+                else if (Main.myPlayer == player.whoAmI)
                 {
                     ModContent.GetInstance<WandUISystem>().ToggleUIForCurrentWand();
                 }

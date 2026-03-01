@@ -8,10 +8,7 @@ namespace WorldShapingWandsMod.Common.Enums
         /// <summary>Completely filled shape.</summary>
         Filled = 0,
         
-        /// <summary>Only the border/edge tiles.</summary>
+        /// <summary>Only the border/edge tiles with configurable thickness.</summary>
         Hollow = 1,
-        
-        /// <summary>Outline with configurable thickness (future).</summary>
-        Outline = 2,
     }
 }

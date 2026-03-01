@@ -23,11 +23,11 @@
 - ✅ Inventory stock check before placement
 - ✅ Infinite-resource mode (configurable threshold)
 - ✅ Undo support
-- ❌ Behaviour when block runs out mid-placement (config: next block / interrupt / cancel)
-- ❌ Block-replacement mode (replace existing tiles with selected block, respecting pick power)
-- ❌ Settings UI: Object selector UI (currently placeholder message)
-- ❌ Settings UI: Slope selector (Terraria six slopes)
-- ❌ Settings UI: Shape selector (currently accessible via Shape panel only)
+- ✅ Behaviour when block runs out mid-placement (config: NextBlock / Interrupt / Cancel via `BlockExhaustionMode`)
+- ✅ Block-replacement mode (replace existing tiles with selected block, respecting pick power)
+- ✅ Settings UI: Object selector UI
+- ✅ Settings UI: Slope selector (6 slopes: Full Block, Half Block, ◣ ◢ ◤ ◥) — icon buttons with hover labels
+- ✅ Settings UI: Shape selector
 
 ### Wand of Destruction ✅
 
@@ -42,21 +42,33 @@
 
 ### Wand of Replacement
 
-- ✅ Replaces every instance of inventory-slot-1 tile with inventory-slot-2 tile in selection
+- ✅ Replaces every instance of source-type tiles with target-type tiles in selection
 - ✅ Pick-power validation
 - ✅ `CanKillTile` check
 - ✅ Inventory consumption of replacement tiles
 - ✅ Undo support
-- ❌ Settings UI: Object1 / Object2 selectors (block, platform, rope, planter box, rails, seeds, air)
-- ❌ Air as a target type (effectively "erase")
-- ❌ Configurable source/target types instead of positional inventory logic
+- ✅ Settings UI: Source / Target ObjectType selectors (Tile, Platform, Rope, PlanterBox, Rail, Seeds, Air)
+- ✅ Air as a source/target type — Source=Air fills empty gaps, Target=Air erases matching tiles
+- ✅ Configurable source/target types via UI (replaces old positional-inventory logic)
 
 ### Wand of Wiring ✅
 
 - ✅ Place or remove red/green/blue/yellow wire and actuators
 - ✅ Shape-based area wiring
 - ✅ Three selection modes
-- ❌ Imported from MagicWiringMod full integration (overlay visualisation, per-wire colour preview)
+- ✅ Edge shape defaults to vanilla wire-kite behaviour
+
+#### Missing from MagicWiring integration
+
+The original MagicWiring mod has several features not yet ported:
+
+- ❌ **Per-wire colour overlay** — MagicWiring uses green (place), blue (remove), orange (clamped/pulsing) overlay colours. Our current overlay uses the shared `WandColors` palette without wiring-specific colour coding.
+- ❌ **Distance clamping with visual feedback** — MagicWiring enforces `MaxWiringDistance` (default 200 tiles) with `ShapeHelper.ClampDistance`. Clamped selections pulse orange. Our wand has no distance limit.
+- ❌ **Max wiring distance config** — `MagicWiringConfig.MaxWiringDistance` with server-side enforcement in the packet handler.
+- ❌ **Wire/actuator inventory consumption** — MagicWiring checks `HasItem(player, ItemID.Wire)` per tile and consumes one wire item per placement. Our wiring wand places for free (no wire consumption).
+- ❌ **Proper multiplayer wiring packets** — MagicWiring has `WiringPacketHandler` with `SendWiringOperation` / `HandleWiringOperation`, server-side distance clamping, and broadcast to all clients. Our wiring uses `NetMessage.SendTileSquare` only.
+- ❌ **Hold & Drag interaction mode** — MagicWiring distinguishes Hold (hold-click-drag-release) from Toggle (click-start → click-confirm). Our three selection modes (OneClick/TwoClick/ThreeClick) cover similar ground but the mapping isn't 1:1.
+- ✅ **Cancellation fade feedback** — cancelled selection overlay changes colour per wand type and fades out over ~45 ticks, with rising "Cancelled" text.
 
 ### Simple Wand Display
 
@@ -77,7 +89,7 @@
 
 ### Regular Mode Improvements
 
-- ❌ Max rectangular area limit (prevents accidental huge operations)
+- ✅ Max selection dimension caps (SmallSelectionCap for Edge/StraightLine, BigSelectionCap for everything else — configurable in WandConfig)
 - ❌ Drag-and-select points mode
 - ❌ Noise unavailable in regular mode (enforce)
 
@@ -142,6 +154,7 @@
 
 - ✅ Thickness controls: +/- keybinds (`ThicknessControls`)
 - ✅ Outline mode: slim (0), standard (1), Chebyshev-eroded thick (2+)
+- 🔄 **StraightLine perpendicular thickness** — the StraightLine shape currently ignores outline thickness. It should expand perpendicular to the line direction using odd widths only (even → width-1). On standby pending design review — unclear if it makes sense for all use cases, though it would make the thickness UI consistent across shapes.
 - ❌ Inward hollowing (industry standard — current Hollow uses 4-neighbour boundary)
 - ❌ Flood fill within selection
 - ❌ Additional shape modes (e.g., concentric rings, spiral)
@@ -150,7 +163,7 @@
 
 ## Dimension Display
 
-- ✅ WxH dimension label rendered above selection overlay
+- ✅ W x H dimension label rendered near cursor (top-left offset, UI-scaled, screen-clamped)
 - ❌ Tile count display
 - ❌ Resource count display in overlay
 
@@ -165,6 +178,8 @@
 ---
 
 ## Wall Operations
+
+> **Industry standard**: most building mods use a **separate item for wall placement** (e.g. "Wall Wand" or "Wall of Building"), while **tile destruction wands handle wall removal** via toggles (Destroy Tiles / Destroy Walls). This avoids overcrowding the building wand UI with wall controls while keeping destruction ergonomic. Our Wand of Destruction already follows this pattern with its tile/wall toggles.
 
 - ✅ Destruction wand can toggle wall removal
 - ❌ Building wand wall placement
@@ -185,7 +200,7 @@
 
 - **Undo complexity**: reversing building operations is non-trivial when tiles don't drop themselves (honey, multi-tile objects like doors or furniture). The current undo restores tile data directly, which may leave dangling multi-tile objects in a broken state.
 - **Wall operations UI saturation**: adding full wall controls may overcrowd existing panels — needs a design decision.
-- **Wand of Destruction vs Wand of Replacement with air**: if replacement supports "air" as a target, the destruction wand becomes redundant. Decide whether to keep both for UX clarity or unify.
+- **Wand of Destruction vs Wand of Replacement with air**: the destruction wand is **not** redundant. It removes *all* tiles and/or walls in the selected area regardless of type, while the replacement wand replaces a *specific* tile type with another. Destruction is area-wide mass removal; replacement is type-selective swap. Even with "air" as a replacement target, the user would have to specify which source tile type to erase — destruction skips that step entirely. Keep both.
 - **Flood fill**: to add or not? Could dramatically extend scope.
 - **Tile overlay for modded tiles**: ModTile sprites may need special rendering care.
 - **Wiring visualisation**: displaying existing wire layouts inline with the preview is complex.

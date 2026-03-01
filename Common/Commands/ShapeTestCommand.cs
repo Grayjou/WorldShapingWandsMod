@@ -12,7 +12,7 @@ public class ShapeTestCommand : ModCommand
 {
     public override string Command => "shape";
     public override string Usage => "/shape <type> [mode] [thickness]" +
-        "\nTypes: rect, ellipse, diamond, triangle, line" +
+        "\nTypes: rect, ellipse, diamond, triangle, edge, straight" +
         "\nModes: filled, hollow, outline [thickness]" +
         "\nThickness: 0=slim, 1=standard, 2+=thick" +
         "\nUse /shape start|end|clear for selection";
@@ -69,8 +69,13 @@ public class ShapeTestCommand : ModCommand
                 caller.Reply(settings.GetDescription(), Color.Cyan);
                 break;
 
-            case "line":
-                settings.ShapeType = ShapeType.Line;
+            case "edge": case "line":
+                settings.ShapeType = ShapeType.Edge;
+                caller.Reply(settings.GetDescription(), Color.Cyan);
+                break;
+
+            case "straight":
+                settings.ShapeType = ShapeType.StraightLine;
                 caller.Reply(settings.GetDescription(), Color.Cyan);
                 break;
 
@@ -79,13 +84,8 @@ public class ShapeTestCommand : ModCommand
                 caller.Reply(settings.GetDescription(), Color.Cyan);
                 break;
 
-            case "hollow":
+            case "hollow": case "outline":
                 settings.ShapeMode = ShapeMode.Hollow;
-                caller.Reply(settings.GetDescription(), Color.Cyan);
-                break;
-
-            case "outline":
-                settings.ShapeMode = ShapeMode.Outline;
                 if (args.Length > 1 && int.TryParse(args[1], out int t))
                     settings.Thickness = Math.Clamp(t, 0, 50);
                 settings.Validate();

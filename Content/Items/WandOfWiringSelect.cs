@@ -11,7 +11,7 @@ namespace WorldShapingWandsMod.Content.Items;
 public class WandOfWiringSelect : WandOfWiringBase
 {
     public override SelectionMode WandSelectionMode => SelectionMode.TwoClick;
-    public override Color ModeColor => new Color(100, 200, 255); // Light blue
+    public override Color ModeColor => new Color(255, 255, 80); // Yellow — Select (caution)
     public override int GetNextModeItemType() => ModContent.ItemType<WandOfWiringConfirm>();
 
     protected override bool HandleUseItem(Player player, WandPlayer wandPlayer, Point mouseTile)
@@ -22,14 +22,14 @@ public class WandOfWiringSelect : WandOfWiringBase
                             Math.Abs(Main.MouseWorld.X - player.Center.X);
             wandPlayer.StartSelection(mouseTile, vertical);
             Main.NewText("Selection started. Click again to wire.", Color.Yellow);
-            return true;
+            return false; // Don't consume the wand
         }
         else
         {
             wandPlayer.UpdateSelection(mouseTile);
             ExecuteWiring(player, wandPlayer);
             wandPlayer.ClearSelection();
-            return true;
+            return false; // Don't consume the wand
         }
     }
 }

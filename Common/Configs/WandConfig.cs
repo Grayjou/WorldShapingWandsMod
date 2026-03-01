@@ -20,6 +20,19 @@ namespace WorldShapingWandsMod.Common.Configs
         [TooltipKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.InfiniteResourceAmount.Tooltip")]
         public int InfiniteResourceAmount { get; set; }
 
-        // You can add other global settings here later
+        [Header("$Mods.WorldShapingWandsMod.Configs.WandConfig.SelectionLimits.Header")]
+        [DefaultValue(1000)]
+        [Range(10, 10000)]
+        [Increment(50)]
+        [LabelKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.SmallSelectionCap.Label")]
+        [TooltipKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.SmallSelectionCap.Tooltip")]
+        public int SmallSelectionCap { get; set; } = 1000;
+
+        [DefaultValue(200)]
+        [Range(10, 10000)]
+        [Increment(10)]
+        [LabelKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.BigSelectionCap.Label")]
+        [TooltipKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.BigSelectionCap.Tooltip")]
+        public int BigSelectionCap { get; set; } = 200;
     }
 }

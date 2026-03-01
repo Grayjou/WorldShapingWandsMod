@@ -9,6 +9,8 @@ public enum ShapeType : byte
     Ellipse = 1,
     Diamond = 2,
     Triangle = 3,
-    Line = 4,
-    // Future: Parallelogram, Polygon, etc.
+    Edge = 4,
+    StraightLine = 5,
+    HalfEllipseH = 6,
+    HalfEllipseV = 7,
 }

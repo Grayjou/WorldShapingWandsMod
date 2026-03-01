@@ -7,21 +7,21 @@ generate correctly, and undo captures full tile + wall state.
 
 | System | Status | Notes |
 |---|---|---|
-| Shape geometry (5 shapes, 3 modes, variable thickness) | ✅ Solid | Ellipse uses O(W×H) raster — outperforms binary-search and pathfinding approaches in benchmarks up to 1000×1000 |
-| Outline system (`OutlineHelper`) | ✅ Solid | Centralised; shapes only provide filled tiles |
+| Shape geometry (8 shapes, 2 modes, variable thickness) | ✅ Solid | Ellipse uses direct `Math.Sqrt` rasterisation; Half-ellipses clip a doubled ellipse to one half; Diamond uses ×2 integer arithmetic; StraightLine uses 8-sector direction detection |
+| Outline system (`OutlineHelper`) | ✅ Solid | Centralised; shapes only provide filled tiles; only Filled and Hollow modes (Outline removed) |
 | Selection state (immutable, lockable) | ✅ Solid | |
 | Per-player wand state (`WandPlayer`) | ✅ Solid | |
-| Wand of Building | ✅ Working | Inventory stock check, infinite-resource config, undo |
+| Wand of Building | ✅ Working | Inventory stock check, infinite-resource config, undo, block-replacement, exhaustion modes |
 | Wand of Destruction | ✅ Working | Pick-power check, tile+wall, undo |
 | Wand of Replacement | ✅ Working | Pick-power check, inventory consumption, undo |
-| Wand of Wiring | ✅ Working | Wire/actuator placement and removal |
-| Three selection modes (Instant / Select / Confirm) | ✅ Working | |
+| Wand of Wiring | ✅ Working | Wire/actuator placement and removal — missing: wire consumption, per-wire colour overlay, distance clamping, proper MP packets (see MagicWiring gap analysis) |
+| Three selection modes (Instant / Select / Confirm) | ✅ Working | `SelectionOwnerItemType` prevents cross-wand execution on switch |
 | Mode cycling via right-click inventory | ✅ Working | |
 | Screen-culled selection overlay | ✅ Working | |
 | Per-wand settings panels (draggable UI) | ✅ Working | |
 | Config (infinite-resource threshold) | ✅ Working | |
 | Undo stack (20-deep, tile + wall state) | ✅ Working | Fixed: was dropping newest action instead of oldest |
-| Localization keys | ✅ Partial | En-US only; workshop description placeholder |
+| Localization keys | ✅ Working | En-US; single correctly-named hjson file; icon-button tooltips use `Language.GetTextValue` |
 
 ---
 
@@ -30,21 +30,52 @@ generate correctly, and undo captures full tile + wall state.
 **Goal**: fill gaps in existing wands; no new wand families yet.
 
 ### 1.1 Settings UI completion
-- Building wand: functional Object selector (Solid / Platform / Rope / Rail / GrassSeed / PlantPot)
+- ✅ Building wand: functional Object selector (Solid / Platform / Rope / Rail / GrassSeed / PlantPot)
+- ✅ All panels: shape icon buttons (14 buttons across 8 shape types × filled/hollow + edge + straight)
+- ✅ All panels: object-type icon buttons where applicable (Building: 6, Replacement: 6 source + 7 target)
 - Building wand: Slope selector (flat / top-left / top-right / bottom-left / bottom-right / half)
 - Destruction wand: expose `SuppressDrops` toggle in UI (already in settings struct, not shown)
 
-### 1.2 Building wand: block-exhaustion behaviour
-- Config option: **Next block** (automatically switch to the next matching block in inventory), **Interrupt** (stop mid-operation), **Cancel** (abort if not enough blocks before starting)
+### 1.2 Building wand: block-exhaustion behaviour ✅
+- ✅ Config option: **NextBlock** (automatically switch to the next matching block in inventory), **Interrupt** (stop mid-operation), **Cancel** (abort if not enough blocks before starting)
+- Implemented via `BlockExhaustionMode` enum and per-tile item lookup in `ExecuteBuilding`
 
-### 1.3 Building wand: replace mode
-- When enabled, overwrite existing tiles instead of skipping occupied positions
-- Validate pick power and `CanKillTile` on source tile before replacing
+### 1.3 Building wand: replace mode ✅
+- ✅ When enabled, overwrite existing tiles instead of skipping occupied positions
+- ✅ Validate pick power and `CanKillTile` on source tile before replacing
 
-### 1.4 HUD element — active wand info
+### 1.4 Wand of Replacement: Air as object type
+- Air is simply another entry in the object type settings (not a separate wand or mode)
+- Source = Air → "fill empty gaps" (place into empty tiles within selection)
+- Target = Air → "erase matching tiles" (remove matching tiles, like targeted destruction)
+- Should be straightforward: add `PlaceType.Air` variant, condition = `!tile.HasTile` or `tile.HasTile` depending on direction
+
+### 1.5 UI redesign: custom asset buttons with hover labels
+
+**Problem**: as more features are added (shapes, modes, object types, exhaustion, slopes…), text-based
+`UIToggleButton` panels are becoming crowded and tall.
+
+**Proposed solution**: replace text buttons with small **custom-asset icon buttons** (Terraria style,
+like the vanilla wiring UI). Each button is a 32×32 or 22×22 sprite that shows a **hover label**
+on mouseover using `UICommon.TooltipMouseText(label)`.
+
+**Implementation pattern** (from tModLoader ExampleMod):
+- Subclass `UIImageButton` → override `DrawSelf` → call `base.DrawSelf` + `UICommon.TooltipMouseText` on hover
+- Load assets via `ModContent.Request<Texture2D>("MyMod/Assets/UI/ButtonName")`
+- Icons go in `Assets/UI/` folder — Terraria-style pixel art at 2× scale
+
+**Design decisions pending**:
+- **Object types**: good candidate for icons — block sprite thumbnails are immediately recognisable
+- **Modes (Filled/Hollow)**: good candidate — small shape-outline icons are clear
+- **Shapes**: **uncertain** — text labels ("Rect", "Ellipse", "Edge", "Straight") may be more descriptive
+  than tiny icons. Could keep text for shapes while using icons for everything else.
+- **Exhaustion mode, slope selector, wire types**: all could benefit from compact icon layout
+- Need to test in-game before committing — panel height is the main concern
+
+### 1.6 HUD element — active wand info
 - Small HUD indicator showing current wand name, SelectionMode, and active shape type
 
-### 1.5 Screen-edge indicators
+### 1.7 Screen-edge indicators
 - Draw directional arrow or count indicator at screen edges for off-screen tiles in the selection
 
 ---
@@ -77,6 +108,38 @@ Transforms the mod from "immediate apply" to a staged-changes model for precisio
 - Overlay colour-coding: **green** = tiles to add, **red** = tiles to remove, **yellow** = replacements
 - Info panel: required blocks, currently held, shortfall highlighted in red
 - Indestructible block warnings (tiles that fail `CanKillTile` or pick-power check)
+
+### Overlay Design Notes (for designer workflow)
+
+The current `SelectionOverlay` draws a flat colour per tile. Phase 3 needs richer overlays:
+
+1. **Colour semantics** — assign fixed colours from `WandColors` for each staged change type:
+   - Build (place new tile): semi-transparent green
+   - Destroy (remove existing tile): semi-transparent red
+   - Replace (swap tile type): semi-transparent yellow/amber
+   - Wall-only changes: same scheme but dimmer alpha
+   - Conflicting / impossible tiles: pulsing red outline
+
+2. **Layered rendering** — staged changes overlay on top of the existing selection outline.
+   The outline still shows the selection boundary; the interior fill uses change-type colours.
+   This requires `SelectionOverlay.Draw` to accept a `ChangeBuffer` alongside the `SelectionState`.
+
+3. **Resource info overlay** — a small floating panel near the selection showing:
+   - Block type icon + count needed vs count in inventory
+   - Red text for shortfalls
+   - Drawn via `UIWorldInfoPanel` (new element), positioned at selection corner
+
+4. **Ghost tile rendering** — for preview mode, draw the *intended* tile sprite at reduced opacity
+   instead of a flat colour fill. This gives the player a true preview of the final result.
+   Implementation: use `Main.instance.TilePaintSystem` data + `Main.spriteBatch.Draw` with the
+   tile's source rectangle from `Main.tileFrame` at ~40% alpha.
+
+5. **Performance** — overlay rendering must remain screen-culled. Only compute overlay data for
+   tiles within `Main.screenPosition` ± margin. The `ChangeBuffer` should support spatial queries
+   (e.g., a `HashSet<Point>` for O(1) lookup of whether a tile has a staged change).
+
+6. **Overlay toggle** — a keybind or UI toggle to show/hide the preview overlay without discarding
+   the staged changes. Useful when the overlay obscures the build context.
 
 ### Intersection resolution
 When multiple staged shapes overlap, compute the net result:
@@ -148,7 +211,10 @@ Builds on the preview system. Depends on Phase 3 being complete.
 | `Execute*` methods | Duplicated structure in `WandOfBuildingBase`, `WandOfDestructionBase`, etc. | A shared `WandOperation` base that takes a `TileAction` delegate would remove the per-type switch |
 | `IsHoldingWandItem` | Duplicated in `WandPlayer` and `SelectionOverlay` | Centralise in `WandPlayer` as a property |
 | `CancelSelection` | Virtually identical in all four wand base classes | Already `virtual` — consolidate the `Main.NewText` call into the base |
-| Overlay colour constants | Hardcoded in `SelectionOverlay` | Move to `WandConfig` or a `OverlayTheme` static class |
+| Overlay colour constants | Previously hardcoded in `SelectionOverlay` | ✅ Centralised in `WandColors.cs` |
+| `ShapeMode.Hollow` vs `ShapeMode.Outline` | Were identical (`BuildHollow` delegated to `BuildOutline`) | ✅ Resolved: removed `ShapeMode.Outline`; only Filled and Hollow remain |
+| Overlay colour constants | Hardcoded in `SelectionOverlay` | ✅ Centralised in `WandColors.cs` |
+| UI crowdedness | Text buttons scale poorly with feature count | Proposed: custom-asset icon buttons with hover labels (tModLoader `UIImageButton` + `TooltipMouseText` pattern). Icons for object types and modes; text may stay for shapes (more descriptive). See Phase 1.5 |
 
 ---
 

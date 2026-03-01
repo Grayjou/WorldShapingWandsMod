@@ -20,6 +20,11 @@ public class WandOfBuildingSettings
     /// <summary>The shape configuration.</summary>
     public ShapeInfo Shape { get; set; } = ShapeInfo.Default;
 
+    /// <summary>
+    /// What happens when the player runs out of blocks mid-placement.
+    /// </summary>
+    public BlockExhaustionMode ExhaustionMode { get; set; } = BlockExhaustionMode.NextBlock;
+
     /// <summary>The starting point of the selection.</summary>
     public Point StartPoint { get; set; }
 
@@ -37,6 +42,7 @@ public class WandOfBuildingSettings
             Object = Object,
             Slope = Slope,
             Shape = Shape,
+            ExhaustionMode = ExhaustionMode,
             StartPoint = StartPoint,
             EndPoint = EndPoint
         };
@@ -51,6 +57,7 @@ public class WandOfBuildingSettings
         Object = PlaceType.Solid;
         Slope = SlopeType.Default;
         Shape = ShapeInfo.Default;
+        ExhaustionMode = BlockExhaustionMode.NextBlock;
         StartPoint = Point.Zero;
         EndPoint = Point.Zero;
     }

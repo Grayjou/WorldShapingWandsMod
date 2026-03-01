@@ -20,6 +20,7 @@ public abstract class BaseCyclingWand : ModItem
         SelectionMode.OneClick => "Instant",
         SelectionMode.TwoClick => "Select", 
         SelectionMode.ThreeClick => "Confirm",
+        SelectionMode.FourClick => "Stamp",
         _ => ""
     };
 
@@ -36,7 +37,7 @@ public abstract class BaseCyclingWand : ModItem
         Item.UseSound = SoundID.Item1;
         Item.useAnimation = 12;
         Item.useTime = 12;
-        Item.channel = true; // Continuous use
+        Item.channel = false;
         Item.rare = ItemRarityID.Blue;
         Item.autoReuse = false;
         Item.noMelee = true;
@@ -85,6 +86,7 @@ public abstract class BaseCyclingWand : ModItem
             SelectionMode.OneClick => "Click and drag to select area",
             SelectionMode.TwoClick => "Click start, then click end",
             SelectionMode.ThreeClick => "Click start, click end, click to confirm",
+            SelectionMode.FourClick => "Click start, click end, click to lock stamp, click to repeat",
             _ => ""
         };
         

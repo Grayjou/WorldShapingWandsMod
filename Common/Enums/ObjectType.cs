@@ -22,4 +22,7 @@ public enum ObjectType : byte
 
     /// <summary>Seed tiles (grass seeds, etc.).</summary>
     Seeds = 5,
+
+    /// <summary>Air (empty space). Used as target to erase tiles.</summary>
+    Air = 6,
 }

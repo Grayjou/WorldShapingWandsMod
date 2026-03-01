@@ -10,8 +10,8 @@ namespace WorldShapingWandsMod.Content.Items;
 public class WandOfReplacementConfirm : WandOfReplacementBase
 {
     public override SelectionMode WandSelectionMode => SelectionMode.ThreeClick;
-    public override Color ModeColor => new Color(220, 200, 255);
-    public override int GetNextModeItemType() => ModContent.ItemType<WandOfReplacementInstant>();
+    public override Color ModeColor => new Color(80, 255, 80); // Green — Confirm (safe)
+    public override int GetNextModeItemType() => ModContent.ItemType<WandOfReplacementStamp>();
 
     protected override bool HandleUseItem(Player player, WandPlayer wandPlayer, Point mouseTile)
     {
@@ -21,20 +21,20 @@ public class WandOfReplacementConfirm : WandOfReplacementBase
                             System.Math.Abs(Main.MouseWorld.X - player.Center.X);
             wandPlayer.StartSelection(mouseTile, vertical);
             Main.NewText("Selection started. Click to set end point.", Color.MediumPurple);
-            return true;
+            return false; // Don't consume the wand
         }
         else if (!wandPlayer.Selection.IsLocked)
         {
             wandPlayer.UpdateSelection(mouseTile);
             wandPlayer.LockSelection();
             Main.NewText("Click again to confirm replacement.", Color.Yellow);
-            return true;
+            return false; // Don't consume the wand
         }
         else
         {
             ExecuteReplacement(player, wandPlayer);
             wandPlayer.ClearSelection();
-            return true;
+            return false; // Don't consume the wand
         }
     }
 }

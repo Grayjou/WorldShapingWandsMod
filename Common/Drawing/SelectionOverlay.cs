@@ -7,7 +7,6 @@ using Terraria.ModLoader;
 using WorldShapingWandsMod.Common.Geometry;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Selection;
-using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Settings;
 using WorldShapingWandsMod.Content.Items;
 
@@ -16,11 +15,6 @@ namespace WorldShapingWandsMod.Common.Drawing;
 [Autoload(Side = ModSide.Client)]
 public class SelectionOverlay : ModSystem
 {
-    private const float FillOpacity = 0.20f;
-    private const float BorderOpacity = 0.5f;
-    private const float GridLineOpacity = 0.3f;
-    private const int GridLineWidth = 1;
-
     public override void PostDrawTiles()
     {
         if (Main.gameMenu) return;
@@ -29,14 +23,20 @@ public class SelectionOverlay : ModSystem
         if (player?.active != true) return;
 
         var wandPlayer = player.GetModPlayer<WandPlayer>();
-        if (!wandPlayer.Selection.IsActive) return;
-
         bool isHoldingWand = IsHoldingWandItem(player);
-        
-        if (!wandPlayer.Settings.ShouldShowPreview(isHoldingWand)) return;
 
-        var shapeSettings = GetCurrentShapeSettings(player, wandPlayer);
-        DrawSelection(wandPlayer, shapeSettings);
+        // Draw the cancelled selection overlay (fading out) if present
+        if (wandPlayer.CancelledSelection != null && !wandPlayer.CancelledSelection.IsExpired)
+        {
+            DrawCancelledSelection(wandPlayer.CancelledSelection);
+        }
+
+        // Draw the active selection overlay
+        if (wandPlayer.Selection.IsActive && wandPlayer.Settings.ShouldShowPreview(isHoldingWand))
+        {
+            var shapeSettings = GetCurrentShapeSettings(player, wandPlayer);
+            DrawSelection(wandPlayer, shapeSettings);
+        }
     }
 
     private ShapeInfo GetCurrentShapeSettings(Player player, WandPlayer wandPlayer)
@@ -69,8 +69,6 @@ public class SelectionOverlay : ModSystem
             || player.HeldItem?.ModItem is WandOfBuildingBase
             || player.HeldItem?.ModItem is WandOfReplacementBase
             || player.HeldItem?.ModItem is WandOfWiringBase;
-        // As you add more wands, include them here:
-        // || player.HeldItem?.ModItem is WandOfDesigner;
     }
 
     private void DrawSelection(WandPlayer wandPlayer, ShapeInfo shapeSettings)
@@ -82,17 +80,15 @@ public class SelectionOverlay : ModSystem
         var tileSet = ShapeRegistry.GetShapeTiles(shapeSettings.Shape, context);
 
         var tiles = new HashSet<Point>(tileSet.Tiles);
-        var boundary = new HashSet<Point>(tileSet.BoundaryTiles);
 
         if (tiles.Count == 0) return;
 
         Color baseColor = selection.WasClamped && (Main.GameUpdateCount % 30 < 15)
-            ? Color.Orange
-            : Color.LimeGreen;
+            ? WandColors.OverlayClamped
+            : WandColors.OverlayBase;
 
-        Color fillColor = baseColor * FillOpacity;
-        Color borderColor = baseColor * BorderOpacity;
-        Color gridColor = Color.White * GridLineOpacity;
+        Color fillColor = baseColor * WandColors.OverlayFillOpacity;
+        Color outlineColor = baseColor * WandColors.OverlayOutlineOpacity;
 
         Main.spriteBatch.Begin(
             SpriteSortMode.Deferred,
@@ -104,29 +100,66 @@ public class SelectionOverlay : ModSystem
             Main.GameViewMatrix.TransformationMatrix
         );
 
-        // Draw fill and borders
+        var pixel = TextureAssets.MagicPixel.Value;
+        int ow = WandColors.OverlayOutlineWidth;
+
+        // Pass 1: Fill all tiles
         foreach (var tile in tiles)
         {
-            Vector2 worldPos = new Vector2(tile.X * 16, tile.Y * 16);
-            Vector2 screenPos = worldPos - Main.screenPosition;
+            Vector2 screenPos = new Vector2(tile.X * 16, tile.Y * 16) - Main.screenPosition;
 
             if (screenPos.X < -16 || screenPos.X > Main.screenWidth + 16 ||
                 screenPos.Y < -16 || screenPos.Y > Main.screenHeight + 16)
                 continue;
 
-            // Draw filled tile (slightly smaller to show grid)
-            Rectangle fillRect = new Rectangle(
-                (int)screenPos.X + GridLineWidth, 
-                (int)screenPos.Y + GridLineWidth, 
-                16 - GridLineWidth * 2, 
-                16 - GridLineWidth * 2
-            );
-            
-            Color color = boundary.Contains(tile) ? borderColor : fillColor;
-            Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, fillRect, color);
+            Main.spriteBatch.Draw(pixel,
+                new Rectangle((int)screenPos.X, (int)screenPos.Y, 16, 16),
+                fillColor);
+        }
 
-            // Draw grid lines for this tile
-            DrawTileGridLines(screenPos, tiles, tile, gridColor);
+        // Pass 2: Draw outline edges
+        foreach (var tile in tiles)
+        {
+            Vector2 screenPos = new Vector2(tile.X * 16, tile.Y * 16) - Main.screenPosition;
+
+            if (screenPos.X < -32 || screenPos.X > Main.screenWidth + 32 ||
+                screenPos.Y < -32 || screenPos.Y > Main.screenHeight + 32)
+                continue;
+
+            int sx = (int)screenPos.X;
+            int sy = (int)screenPos.Y;
+
+            // Top edge — no neighbor above
+            if (!tiles.Contains(new Point(tile.X, tile.Y - 1)))
+            {
+                Main.spriteBatch.Draw(pixel,
+                    new Rectangle(sx, sy, 16, ow),
+                    outlineColor);
+            }
+
+            // Bottom edge — no neighbor below
+            if (!tiles.Contains(new Point(tile.X, tile.Y + 1)))
+            {
+                Main.spriteBatch.Draw(pixel,
+                    new Rectangle(sx, sy + 16 - ow, 16, ow),
+                    outlineColor);
+            }
+
+            // Left edge — no neighbor to the left
+            if (!tiles.Contains(new Point(tile.X - 1, tile.Y)))
+            {
+                Main.spriteBatch.Draw(pixel,
+                    new Rectangle(sx, sy, ow, 16),
+                    outlineColor);
+            }
+
+            // Right edge — no neighbor to the right
+            if (!tiles.Contains(new Point(tile.X + 1, tile.Y)))
+            {
+                Main.spriteBatch.Draw(pixel,
+                    new Rectangle(sx + 16 - ow, sy, ow, 16),
+                    outlineColor);
+            }
         }
 
         Main.spriteBatch.End();
@@ -135,68 +168,55 @@ public class SelectionOverlay : ModSystem
             DrawDimensionLabel(selection, context.GetBounds());
     }
 
-    private void DrawTileGridLines(Vector2 screenPos, HashSet<Point> tiles, Point tile, Color gridColor)
-    {
-        // Draw right edge if no tile to the right
-        if (!tiles.Contains(new Point(tile.X + 1, tile.Y)))
-        {
-            Rectangle rightEdge = new Rectangle(
-                (int)screenPos.X + 16 - GridLineWidth, 
-                (int)screenPos.Y, 
-                GridLineWidth, 
-                16
-            );
-            Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, rightEdge, gridColor);
-        }
-
-        // Draw bottom edge if no tile below
-        if (!tiles.Contains(new Point(tile.X, tile.Y + 1)))
-        {
-            Rectangle bottomEdge = new Rectangle(
-                (int)screenPos.X, 
-                (int)screenPos.Y + 16 - GridLineWidth, 
-                16, 
-                GridLineWidth
-            );
-            Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, bottomEdge, gridColor);
-        }
-
-        // Draw left edge if no tile to the left
-        if (!tiles.Contains(new Point(tile.X - 1, tile.Y)))
-        {
-            Rectangle leftEdge = new Rectangle(
-                (int)screenPos.X, 
-                (int)screenPos.Y, 
-                GridLineWidth, 
-                16
-            );
-            Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, leftEdge, gridColor);
-        }
-
-        // Draw top edge if no tile above
-        if (!tiles.Contains(new Point(tile.X, tile.Y - 1)))
-        {
-            Rectangle topEdge = new Rectangle(
-                (int)screenPos.X, 
-                (int)screenPos.Y, 
-                16, 
-                GridLineWidth
-            );
-            Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, topEdge, gridColor);
-        }
-    }
-
     private void DrawDimensionLabel(SelectionState selection, Rectangle bounds)
     {
-        string dimensionText = $"{selection.Width}x{selection.Height}";
+        string dimensionText = $"{selection.Width} x {selection.Height}";
 
-        const float textScale = 0.7f;
+        const float textScale = 0.9f;
+        // Position at top-left of cursor, offset so it doesn't overlap the cursor icon
+        Vector2 cursorScreen = Main.MouseScreen;
+        Vector2 screenPos = new Vector2(cursorScreen.X + 20f, cursorScreen.Y - 28f);
+
+        // Clamp to screen bounds so the label doesn't go off-screen
         Vector2 textSize = FontAssets.MouseText.Value.MeasureString(dimensionText) * textScale;
-        Vector2 worldPos = new Vector2(
-            bounds.X * 16 + (bounds.Width * 16 - textSize.X) / 2,
-            bounds.Y * 16 - textSize.Y - 4
+        if (screenPos.X + textSize.X > Main.screenWidth - 4)
+            screenPos.X = Main.screenWidth - 4 - textSize.X;
+        if (screenPos.Y < 4)
+            screenPos.Y = 4;
+
+        Main.spriteBatch.Begin(
+            SpriteSortMode.Deferred,
+            BlendState.AlphaBlend,
+            SamplerState.PointClamp,
+            DepthStencilState.None,
+            RasterizerState.CullCounterClockwise,
+            null,
+            Main.UIScaleMatrix  // Use UI scale so it stays crisp at any zoom
         );
-        Vector2 screenPos = worldPos - Main.screenPosition;
+
+        Utils.DrawBorderString(Main.spriteBatch, dimensionText, screenPos,
+            Color.White * WandColors.DimensionLabelOpacity, textScale);
+
+        Main.spriteBatch.End();
+    }
+
+    /// <summary>
+    /// Draws the cancelled selection overlay with fading opacity and a "Cancelled" text label.
+    /// </summary>
+    private void DrawCancelledSelection(CancelledSelectionState cancelState)
+    {
+        float opacity = cancelState.Opacity;
+        if (opacity <= 0f) return;
+
+        var context = cancelState.Shape.ToShapeContext(cancelState.StartTile, cancelState.EndTile);
+        var tileSet = ShapeRegistry.GetShapeTiles(cancelState.Shape.Shape, context);
+        var tiles = new HashSet<Point>(tileSet.Tiles);
+
+        if (tiles.Count == 0) return;
+
+        Color baseColor = cancelState.CancelColor;
+        Color fillColor = baseColor * (WandColors.OverlayFillOpacity * opacity);
+        Color outlineColor = baseColor * (WandColors.OverlayOutlineOpacity * opacity);
 
         Main.spriteBatch.Begin(
             SpriteSortMode.Deferred,
@@ -208,7 +228,88 @@ public class SelectionOverlay : ModSystem
             Main.GameViewMatrix.TransformationMatrix
         );
 
-        Utils.DrawBorderString(Main.spriteBatch, dimensionText, screenPos, Color.White * 0.8f, textScale);
+        var pixel = TextureAssets.MagicPixel.Value;
+        int ow = WandColors.OverlayOutlineWidth;
+
+        // Fill pass
+        foreach (var tile in tiles)
+        {
+            Vector2 screenPos = new Vector2(tile.X * 16, tile.Y * 16) - Main.screenPosition;
+            if (screenPos.X < -16 || screenPos.X > Main.screenWidth + 16 ||
+                screenPos.Y < -16 || screenPos.Y > Main.screenHeight + 16)
+                continue;
+
+            Main.spriteBatch.Draw(pixel,
+                new Rectangle((int)screenPos.X, (int)screenPos.Y, 16, 16),
+                fillColor);
+        }
+
+        // Outline pass
+        foreach (var tile in tiles)
+        {
+            Vector2 screenPos = new Vector2(tile.X * 16, tile.Y * 16) - Main.screenPosition;
+            if (screenPos.X < -32 || screenPos.X > Main.screenWidth + 32 ||
+                screenPos.Y < -32 || screenPos.Y > Main.screenHeight + 32)
+                continue;
+
+            int sx = (int)screenPos.X;
+            int sy = (int)screenPos.Y;
+
+            if (!tiles.Contains(new Point(tile.X, tile.Y - 1)))
+                Main.spriteBatch.Draw(pixel, new Rectangle(sx, sy, 16, ow), outlineColor);
+            if (!tiles.Contains(new Point(tile.X, tile.Y + 1)))
+                Main.spriteBatch.Draw(pixel, new Rectangle(sx, sy + 16 - ow, 16, ow), outlineColor);
+            if (!tiles.Contains(new Point(tile.X - 1, tile.Y)))
+                Main.spriteBatch.Draw(pixel, new Rectangle(sx, sy, ow, 16), outlineColor);
+            if (!tiles.Contains(new Point(tile.X + 1, tile.Y)))
+                Main.spriteBatch.Draw(pixel, new Rectangle(sx + 16 - ow, sy, ow, 16), outlineColor);
+        }
+
+        Main.spriteBatch.End();
+
+        // Draw fading "Cancelled" text at the center of the selection
+        DrawCancelledText(cancelState, context.GetBounds(), opacity);
+    }
+
+    /// <summary>
+    /// Draws a fading "Cancelled" text centered on the cancelled selection.
+    /// </summary>
+    private void DrawCancelledText(CancelledSelectionState cancelState, Rectangle bounds, float opacity)
+    {
+        // Use a separate timer for text fade (slightly shorter so text vanishes first)
+        float textOpacity = cancelState.ElapsedTicks < WandColors.CancelTextDurationTicks
+            ? 1f - (float)cancelState.ElapsedTicks / WandColors.CancelTextDurationTicks
+            : 0f;
+
+        if (textOpacity <= 0f) return;
+
+        const string cancelText = "Cancelled";
+        const float textScale = 0.9f;
+        Vector2 textSize = FontAssets.MouseText.Value.MeasureString(cancelText) * textScale;
+
+        // Center of the selection bounds in world coordinates
+        Vector2 worldCenter = new Vector2(
+            bounds.X * 16 + bounds.Width * 16 * 0.5f,
+            bounds.Y * 16 + bounds.Height * 16 * 0.5f
+        );
+
+        // Rise slightly as it fades
+        float rise = cancelState.ElapsedTicks * 0.3f;
+        Vector2 screenPos = worldCenter - Main.screenPosition - textSize * 0.5f;
+        screenPos.Y -= rise;
+
+        Main.spriteBatch.Begin(
+            SpriteSortMode.Deferred,
+            BlendState.AlphaBlend,
+            SamplerState.PointClamp,
+            DepthStencilState.None,
+            RasterizerState.CullCounterClockwise,
+            null,
+            Main.GameViewMatrix.TransformationMatrix
+        );
+
+        Utils.DrawBorderString(Main.spriteBatch, cancelText, screenPos,
+            cancelState.CancelColor * textOpacity, textScale);
 
         Main.spriteBatch.End();
     }

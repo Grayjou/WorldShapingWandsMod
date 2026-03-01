@@ -41,12 +41,11 @@ public struct ShapeInfo
         return FillMode switch
         {
             ShapeMode.Filled => $"{Shape} - Filled",
-            ShapeMode.Hollow => $"{Shape} - Hollow",
-            ShapeMode.Outline => Thickness switch
+            ShapeMode.Hollow => Thickness switch
             {
-                0 => $"{Shape} - Outline (Slim)",
-                1 => $"{Shape} - Outline (Standard)",
-                _ => $"{Shape} - Outline ({Thickness})"
+                0 => $"{Shape} - Hollow (Slim)",
+                1 => $"{Shape} - Hollow (Standard)",
+                _ => $"{Shape} - Hollow ({Thickness})"
             },
             _ => $"{Shape} - Unknown"
         };
@@ -66,7 +65,8 @@ public struct ShapeInfo
     /// </summary>
     public ShapeContext ToShapeContext(Point start, Point end)
     {
-        int effectiveThickness = FillMode == ShapeMode.Outline ? Thickness : 0;
+        // Use thickness for both Hollow and Outline modes
+        int effectiveThickness = (FillMode == ShapeMode.Hollow) ? Thickness : 0;
         return new ShapeContext(start, end, FillMode, effectiveThickness,
             HorizontalBias.None, VerticalBias.None, false);
     }

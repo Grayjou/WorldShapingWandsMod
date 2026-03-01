@@ -1,8 +1,8 @@
+using System;
+using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
 using WorldShapingWandsMod.Common.Enums;
-using System;
-using System.Collections.Generic;
 
 namespace WorldShapingWandsMod.Common.Utilities
 {
@@ -99,6 +99,146 @@ namespace WorldShapingWandsMod.Common.Utilities
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Finds the first inventory index that matches the condition.
+        /// Scans hotbar (0-9), main inventory (10-49), then ammo slots (50-57).
+        /// Returns -1 if none found.
+        /// </summary>
+        public static int FindFirstItemIndex(Player player, Func<Item, bool> condition)
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                Item item = player.inventory[i];
+                if (!item.IsAir && condition(item))
+                    return i;
+            }
+
+            for (int i = 10; i < 50; i++)
+            {
+                Item item = player.inventory[i];
+                if (!item.IsAir && condition(item))
+                    return i;
+            }
+
+            for (int i = 50; i < 58; i++)
+            {
+                Item item = player.inventory[i];
+                if (!item.IsAir && condition(item))
+                    return i;
+            }
+
+            return -1;
+        }
+
+        /// <summary>
+        /// Consumes up to <paramref name="amount"/> items matching <paramref name="condition"/>.
+        /// Returns true when the amount is fully satisfied. Non-consumable matching items are treated as infinite.
+        /// </summary>
+        public static bool ConsumeItems(Item[] inv, Func<Item, bool> condition, int amount)
+        {
+            if (amount <= 0)
+                return true;
+
+            foreach (Item item in inv)
+            {
+                if (item.IsAir || !condition(item)) continue;
+                if (!item.consumable) return true;
+            }
+
+            int remaining = amount;
+            foreach (Item item in inv)
+            {
+                if (item.IsAir || !condition(item)) continue;
+
+                int take = Math.Min(item.stack, remaining);
+                item.stack -= take;
+                remaining -= take;
+
+                if (item.stack <= 0)
+                    item.TurnToAir();
+
+                if (remaining <= 0)
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Returns a predicate that matches inventory items based on the desired ObjectType.
+        /// </summary>
+        public static Func<Item, bool> GetConditions(ObjectType objectType)
+        {
+            return objectType switch
+            {
+                ObjectType.Tile => item =>
+                    item.createTile > -1 &&
+                    !Main.tileSolidTop[item.createTile] &&
+                    Main.tileSolid[item.createTile] &&
+                    !GrassSeeds.Contains(item.createTile) &&
+                    item.createTile != TileID.ClosedDoor,
+
+                ObjectType.Platform => item =>
+                    item.createTile > -1 &&
+                    TileID.Sets.Platforms[item.createTile],
+
+                ObjectType.Rope => item =>
+                    item.createTile > -1 &&
+                    Main.tileRope[item.createTile],
+
+                ObjectType.PlanterBox => item =>
+                    item.createTile == TileID.PlanterBox,
+
+                ObjectType.Rail => item =>
+                    item.createTile == TileID.MinecartTrack,
+
+                ObjectType.Seeds => item =>
+                    GrassSeeds.Contains(item.createTile),
+
+                ObjectType.Air => _ => false, // Air has no matching item
+
+                _ => _ => false
+            };
+        }
+
+        /// <summary>
+        /// Checks whether a placed world tile matches the given ObjectType category.
+        /// </summary>
+        public static bool WorldTileMatchesObjectType(Terraria.Tile tile, ObjectType objectType)
+        {
+            if (!tile.HasTile)
+                return objectType == ObjectType.Air;
+
+            int type = tile.TileType;
+            return objectType switch
+            {
+                ObjectType.Tile =>
+                    Main.tileSolid[type] &&
+                    !Main.tileSolidTop[type] &&
+                    !GrassSeeds.Contains(type) &&
+                    type != TileID.ClosedDoor,
+
+                ObjectType.Platform =>
+                    TileID.Sets.Platforms[type],
+
+                ObjectType.Rope =>
+                    Main.tileRope[type],
+
+                ObjectType.PlanterBox =>
+                    type == TileID.PlanterBox,
+
+                ObjectType.Rail =>
+                    type == TileID.MinecartTrack,
+
+                ObjectType.Seeds =>
+                    GrassSeeds.Contains(type),
+
+                ObjectType.Air => false, // tile.HasTile is true here so it's not Air
+
+                _ => false
+            };
         }
 
         /// <summary>

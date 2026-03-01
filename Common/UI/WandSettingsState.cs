@@ -95,13 +95,14 @@ public class WandSettingsState : UIState
 
     private void CreateShapeButtons(float yOffset)
     {
-        string[] shapes = { "Rect", "Ellipse", "Diamond", "Tri", "Line" };
+        string[] shapes = { "Rect", "Ellipse", "Diamond", "Tri", "Edge", "Simple Line" };
         ShapeType[] shapeTypes = { 
             ShapeType.Rectangle, 
             ShapeType.Ellipse, 
             ShapeType.Diamond, 
             ShapeType.Triangle, 
-            ShapeType.Line 
+            ShapeType.Edge,
+            ShapeType.StraightLine 
         };
 
         _shapeButtons = new UIPanel[shapes.Length];
@@ -132,8 +133,8 @@ public class WandSettingsState : UIState
 
     private void CreateModeButtons(float yOffset)
     {
-        string[] modes = { "Filled", "Hollow", "Outline" };
-        ShapeMode[] shapeModes = { ShapeMode.Filled, ShapeMode.Hollow, ShapeMode.Outline };
+        string[] modes = { "Filled", "Hollow" };
+        ShapeMode[] shapeModes = { ShapeMode.Filled, ShapeMode.Hollow };
 
         _modeButtons = new UIPanel[modes.Length];
         float buttonWidth = 70f;
@@ -209,7 +210,8 @@ public class WandSettingsState : UIState
             ShapeType.Ellipse, 
             ShapeType.Diamond, 
             ShapeType.Triangle, 
-            ShapeType.Line 
+            ShapeType.Edge,
+            ShapeType.StraightLine 
         };
         
         for (int i = 0; i < _shapeButtons.Length; i++)
@@ -221,7 +223,7 @@ public class WandSettingsState : UIState
         }
 
         // Update mode buttons
-        ShapeMode[] shapeModes = { ShapeMode.Filled, ShapeMode.Hollow, ShapeMode.Outline };
+        ShapeMode[] shapeModes = { ShapeMode.Filled, ShapeMode.Hollow };
         
         for (int i = 0; i < _modeButtons.Length; i++)
         {

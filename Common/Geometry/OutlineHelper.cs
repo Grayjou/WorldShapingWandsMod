@@ -23,8 +23,7 @@ public static class OutlineHelper
         return mode switch
         {
             ShapeMode.Filled => BuildFilled(filledTiles),
-            ShapeMode.Hollow => BuildHollow(filledTiles),
-            ShapeMode.Outline => BuildOutline(filledTiles, thickness),
+            ShapeMode.Hollow => BuildHollow(filledTiles, thickness),
             _ => BuildFilled(filledTiles)
         };
     }
@@ -36,21 +35,12 @@ public static class OutlineHelper
     }
 
     /// <summary>
-    /// Hollow = only 4-neighbor boundary tiles (same as outline thickness 0).
-    /// </summary>
-    private static ShapeTileSet BuildHollow(HashSet<Point> filled)
-    {
-        var boundary = GeometryHelper.GetBoundaryTiles4(filled);
-        return new ShapeTileSet(boundary, boundary);
-    }
-
-    /// <summary>
-    /// Outline with configurable thickness:
+    /// Hollow with configurable thickness:
     ///   0  = 4-neighbor boundary (slimmest)
     ///   1  = 8-neighbor boundary (fills diagonal gaps)
     ///   2+ = Chebyshev erosion, ~N tiles thick
     /// </summary>
-    private static ShapeTileSet BuildOutline(HashSet<Point> filled, int thickness)
+    private static ShapeTileSet BuildHollow(HashSet<Point> filled, int thickness)
     {
         HashSet<Point> outlineTiles;
 
@@ -66,9 +56,9 @@ public static class OutlineHelper
         }
         else
         {
-            // Thick: erode interior by (thickness - 1) using Chebyshev distance,
+            // Thick: erode interior by thickness using Chebyshev distance,
             // then subtract what remains from the original filled set.
-            var interior = ErodeChebyshev(filled, thickness - 1);
+            var interior = ErodeChebyshev(filled, thickness);
             outlineTiles = new HashSet<Point>(filled);
             outlineTiles.ExceptWith(interior);
         }

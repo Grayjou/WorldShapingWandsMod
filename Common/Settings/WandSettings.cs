@@ -26,10 +26,10 @@ public class WandSettings
     public bool ShowDimensions { get; set; } = true;
 
     /// <summary>
-    /// The effective thickness passed to outline generation.
-    /// Returns 0 when not in outline mode (irrelevant but safe).
+    /// The effective thickness passed to outline/hollow generation.
+    /// Returns 0 when not in outline or hollow mode (irrelevant but safe).
     /// </summary>
-    public int EffectiveThickness => ShapeMode == ShapeMode.Outline ? Thickness : 0;
+    public int EffectiveThickness => (ShapeMode == ShapeMode.Hollow) ? Thickness : 0;
 
     public ShapeContext ToShapeContext(Point start, Point end)
     {
@@ -78,12 +78,11 @@ public class WandSettings
         return ShapeMode switch
         {
             ShapeMode.Filled => $"{ShapeType} - Filled",
-            ShapeMode.Hollow => $"{ShapeType} - Hollow",
-            ShapeMode.Outline => Thickness switch
+            ShapeMode.Hollow => Thickness switch
             {
-                0 => $"{ShapeType} - Outline (Slim)",
-                1 => $"{ShapeType} - Outline (Standard)",
-                _ => $"{ShapeType} - Outline ({Thickness})"
+                0 => $"{ShapeType} - Hollow (Slim)",
+                1 => $"{ShapeType} - Hollow (Standard)",
+                _ => $"{ShapeType} - Hollow ({Thickness})"
             },
             _ => $"{ShapeType} - Unknown"
         };
@@ -148,7 +147,7 @@ public class WandSettings
     public static WandSettings OutlinePreset => new WandSettings
     {
         ShapeType = ShapeType.Rectangle,
-        ShapeMode = ShapeMode.Outline,
+        ShapeMode = ShapeMode.Hollow,
         Thickness = 2,
         PreviewMode = PreviewMode.Forced,
         ShowDimensions = true

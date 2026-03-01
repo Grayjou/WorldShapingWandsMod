@@ -3,6 +3,81 @@ Keybinds: {
 	"Decrease Thickness.DisplayName": Decrease  Thickness
 }
 
+UI: {
+	Common: {
+		Shape: Shape
+		OutlineThickness: Outline Thickness:
+		Close: Close
+		// Shape hover texts
+		ShapeRectFilled: Rectangle (Filled)
+		ShapeRectHollow: Rectangle (Hollow)
+		ShapeEllipseFilled: Ellipse (Filled)
+		ShapeEllipseHollow: Ellipse (Hollow)
+		ShapeDiamondFilled: Diamond (Filled)
+		ShapeDiamondHollow: Diamond (Hollow)
+		ShapeTriangleFilled: Triangle (Filled)
+		ShapeTriangleHollow: Triangle (Hollow)
+		ShapeEdge: Edge
+		ShapeStraight: Straight Line
+		ShapeHalfEllipseHFilled: Half Ellipse H (Filled)
+		ShapeHalfEllipseHHollow: Half Ellipse H (Hollow)
+		ShapeHalfEllipseVFilled: Half Ellipse V (Filled)
+		ShapeHalfEllipseVHollow: Half Ellipse V (Hollow)
+	}
+
+	Building: {
+		Title: Wand of Building
+		ObjectType: Object Type
+		SolidBlock: Solid Block
+		Platform: Platform
+		Rope: Rope
+		Rail: Rail
+		GrassSeed: Grass Seed
+		PlanterBox: Planter Box
+		Slope: Slope
+		SlopeDefault: Full Block
+		SlopeHalf: Half Block
+		SlopeBottomRight: Slope ◣ (Down-Right)
+		SlopeBottomLeft: Slope ◢ (Down-Left)
+		SlopeTopRight: Slope ◤ (Up-Right)
+		SlopeTopLeft: Slope ◥ (Up-Left)
+	}
+
+	Destruction: {
+		Title: Wand of Destruction
+		Options: Options
+		DestroyTiles: Destroy Tiles
+		DestroyWalls: Destroy Walls
+		SuppressDrops: Suppress Drops
+	}
+
+	Replacement: {
+		Title: Wand of Replacement
+		SourceType: Source Type (Find)
+		TargetType: Target Type (Replace)
+		Tile: Tile
+		Platform: Platform
+		Rope: Rope
+		Planter: Planter
+		Rail: Rail
+		Seeds: Seeds
+		Air: Air
+	}
+
+	Wiring: {
+		Title: Wand of Wiring
+		WireTypes: Wire Types
+		RedWire: Red Wire
+		GreenWire: Green Wire
+		BlueWire: Blue Wire
+		YellowWire: Yellow Wire
+		Actuator: Actuator
+		Mode: Mode
+		Place: Place
+		Remove: Remove
+	}
+}
+
 Configs: {
 	WandConfig: {
 		InfiniteResources.Header: Infinite Resources
@@ -15,6 +90,18 @@ Configs: {
 		InfiniteResourceAmount: {
 			Label: Infinite Resource Amount
 			Tooltip: If you have at least this many of a block in your inventory, it will not be consumed when placing.\n0 = always infinite (never consume).
+		}
+
+		SelectionLimits.Header: Selection Dimension Limits
+
+		SmallSelectionCap: {
+			Label: Small Shape Cap (Edge / Straight)
+			Tooltip: Maximum dimension (width or height) for Edge and Straight Line shapes.\nThese shapes are 1D so they can safely be longer.
+		}
+
+		BigSelectionCap: {
+			Label: Big Shape Cap (Rect / Ellipse / etc.)
+			Tooltip: Maximum dimension (width or height) for 2D area shapes.\nA cap of 200 means the largest selection is 200×200.
 		}
 
 		DisplayName: Wand Config
@@ -80,5 +167,25 @@ Items: {
 	WandOfWiringConfirm: {
 		DisplayName: Wand of Wiring (Confirm)
 		Tooltip: Places or removes wires and actuators in a selected area
+	}
+
+	WandOfBuildingStamp: {
+		DisplayName: Wand of Building (Stamp)
+		Tooltip: Define a shape once, then stamp it repeatedly
+	}
+
+	WandOfDestructionStamp: {
+		DisplayName: Wand of Destruction (Stamp)
+		Tooltip: Define a destruction area once, then stamp it repeatedly
+	}
+
+	WandOfReplacementStamp: {
+		DisplayName: Wand of Replacement (Stamp)
+		Tooltip: Define a replacement area once, then stamp it repeatedly
+	}
+
+	WandOfWiringStamp: {
+		DisplayName: Wand of Wiring (Stamp)
+		Tooltip: Define a wiring area once, then stamp it repeatedly
 	}
 }

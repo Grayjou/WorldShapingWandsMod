@@ -13,4 +13,10 @@ public enum SelectionMode : byte
 
     /// <summary>Click start point, click end point, click to confirm.</summary>
     ThreeClick = 2,
+
+    /// <summary>
+    /// Click start, click end, click to lock as stamp, then click repeatedly to stamp.
+    /// Right-click resets.
+    /// </summary>
+    FourClick = 3,
 }

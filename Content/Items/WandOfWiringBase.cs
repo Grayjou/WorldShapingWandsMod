@@ -4,6 +4,7 @@ using System.Linq;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
+using WorldShapingWandsMod.Common.Drawing;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Geometry;
 using WorldShapingWandsMod.Common.Items;
@@ -30,7 +31,15 @@ public abstract class WandOfWiringBase : BaseCyclingWand
 
     public override bool? UseItem(Player player)
     {
+        // Don't do anything if the mouse is over UI
+        if (Main.LocalPlayer.mouseInterface)
+            return false;
+
         var wandPlayer = player.GetModPlayer<WandPlayer>();
+
+        if (WandSelectionMode != SelectionMode.OneClick && !wandPlayer.TryConsumeFreshLeftClick())
+            return false;
+
         Point mouseTile = GeometryHelper.WorldToTile(Main.MouseWorld);
         return HandleUseItem(player, wandPlayer, mouseTile);
     }
@@ -72,8 +81,7 @@ public abstract class WandOfWiringBase : BaseCyclingWand
 
     protected virtual void CancelSelection(WandPlayer wandPlayer)
     {
-        wandPlayer.ClearSelection();
-        Main.NewText("Selection cancelled.", Color.Yellow);
+        wandPlayer.CancelSelection(WandColors.CancelWiring, wandPlayer.WiringSettings.Shape);
     }
 
     protected void ExecuteWiring(Player player, WandPlayer wandPlayer)
@@ -158,7 +166,11 @@ public abstract class WandOfWiringBase : BaseCyclingWand
             }
             else
             {
-                ModContent.GetInstance<WandUISystem>().ToggleUIForCurrentWand();
+                // Only toggle UI on the client
+                if (Main.myPlayer == player.whoAmI)
+                {
+                    ModContent.GetInstance<WandUISystem>().ToggleUIForCurrentWand();
+                }
             }
             return false;
         }

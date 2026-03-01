@@ -6,6 +6,16 @@ using WorldShapingWandsMod.Common.Enums;
 
 namespace WorldShapingWandsMod.Common.Geometry.Shapes;
 
+/// <summary>
+/// Diamond (rhombus) shape inscribed in the bounding rectangle.
+///
+/// Uses the "×2 coordinate" trick (tile-center coordinates doubled to stay
+/// in integer arithmetic) for precise, symmetric rasterisation.
+///
+/// Equation (in ×2 units):  |dx2| * H + |dy2| * W &lt;= W * H
+/// where dx2/dy2 are signed distances from the diamond center and W, H are
+/// the bounding rectangle's width and height.
+/// </summary>
 public class DiamondShape : IShapeProvider
 {
     public ShapeType ShapeType => ShapeType.Diamond;
@@ -19,53 +29,107 @@ public class DiamondShape : IShapeProvider
 
     public bool ContainsPoint(Point point, ShapeContext context)
     {
-        var bounds = context.GetBounds();
-        if (point.X < bounds.X || point.X >= bounds.X + bounds.Width ||
-            point.Y < bounds.Y || point.Y >= bounds.Y + bounds.Height)
+        var b = context.GetBounds();
+
+        if (point.X < b.X || point.X >= b.X + b.Width ||
+            point.Y < b.Y || point.Y >= b.Y + b.Height)
             return false;
 
-        double centerX = bounds.X + bounds.Width / 2.0;
-        double centerY = bounds.Y + bounds.Height / 2.0;
-        double halfW = Math.Max(bounds.Width / 2.0, 0.001);
-        double halfH = Math.Max(bounds.Height / 2.0, 0.001);
+        if (b.Width <= 0 || b.Height <= 0)
+            return false;
 
-        // Diamond formula: |x - cx|/hw + |y - cy|/hh <= 1
-        return Math.Abs(point.X - centerX) / halfW + Math.Abs(point.Y - centerY) / halfH <= 1.0;
+        return IsInsideDiamond(point.X, point.Y, b);
     }
 
-    private static IEnumerable<Point> GetFilledTiles(Rectangle bounds)
+    /// <summary>
+    /// Enumerate every tile inside the diamond inscribed in <paramref name="b"/>.
+    /// Pure integer arithmetic, O(area).
+    /// </summary>
+    public static IEnumerable<Point> GetFilledTiles(Rectangle b)
     {
-        double centerX = bounds.X + bounds.Width / 2.0;
-        double centerY = bounds.Y + bounds.Height / 2.0;
-        double halfW = Math.Max(bounds.Width / 2.0, 0.001);
-        double halfH = Math.Max(bounds.Height / 2.0, 0.001);
+        if (b.Width <= 0 || b.Height <= 0)
+            yield break;
 
-        int minY = (int)Math.Ceiling(centerY - halfH);
-        int maxY = (int)Math.Floor(centerY + halfH);
+        int yMin = b.Y;
+        int yMax = b.Y + b.Height - 1;
 
-        // Clamp to bounds
-        minY = Math.Max(minY, bounds.Y);
-        maxY = Math.Min(maxY, bounds.Y + bounds.Height);
-
-        for (int y = minY; y <= maxY; y++)
+        for (int y = yMin; y <= yMax; y++)
         {
-            // Diamond formula: |x - cx|/hw + |y - cy|/hh <= 1
-            // |x - cx| <= hw * (1 - |y - cy|/hh)
-            double relativeY = Math.Abs(y - centerY) / halfH;
-            double rowHalfWidth = halfW * (1.0 - relativeY);
-            
-            int startX = (int)Math.Ceiling(centerX - rowHalfWidth);
-            int endX = (int)Math.Floor(centerX + rowHalfWidth);
-
-            // Clamp to bounds
-            startX = Math.Max(startX, bounds.X);
-            endX = Math.Min(endX, bounds.X + bounds.Width);
-
+            var (startX, endX) = RowRange(y, b);
             for (int x = startX; x <= endX; x++)
-            {
                 yield return new Point(x, y);
-            }
         }
     }
-}
 
+    /// <summary>
+    /// Compute the inclusive x-range [startX, endX] of filled tiles at row
+    /// <paramref name="y"/> inside the diamond inscribed in <paramref name="b"/>.
+    /// Returns (0, -1) when the row is empty.
+    /// Pure integer arithmetic.
+    /// </summary>
+    private static (int startX, int endX) RowRange(int y, Rectangle b)
+    {
+        // ×2 center coordinates (avoids floating point)
+        int cx2 = 2 * b.X + b.Width;
+        int cy2 = 2 * b.Y + b.Height;
+        int W   = b.Width;
+        int H   = b.Height;
+
+        int y2  = 2 * y + 1;
+        int dy2 = Math.Abs(y2 - cy2);
+
+        // Diamond equation in ×2 units: |dx2|*H + |dy2|*W <= W*H
+        // => max |dx2| = W * (H - dy2) / H
+        long numer = (long)W * ((long)H - dy2);
+        if (numer < 0)
+            return (0, -1);          // row outside diamond
+
+        int maxDx2 = (int)(numer / H);
+
+        // Solve  cx2 - maxDx2 <= 2*x + 1 <= cx2 + maxDx2
+        int startX = CeilDiv(cx2 - maxDx2 - 1, 2);
+        int endX   = FloorDiv(cx2 + maxDx2 - 1, 2);
+
+        // Clamp to bounding rectangle
+        int xMin = b.X;
+        int xMax = b.X + b.Width - 1;
+        if (startX < xMin) startX = xMin;
+        if (endX   > xMax) endX   = xMax;
+
+        return (startX, endX);
+    }
+
+    /// <summary>
+    /// Point-in-diamond test using the ×2 coordinate equation.
+    /// </summary>
+    private static bool IsInsideDiamond(int x, int y, Rectangle b)
+    {
+        int x2 = 2 * x + 1;
+        int y2 = 2 * y + 1;
+
+        int cx2 = 2 * b.X + b.Width;
+        int cy2 = 2 * b.Y + b.Height;
+
+        int W = b.Width;
+        int H = b.Height;
+
+        long dx2 = Math.Abs((long)x2 - cx2);
+        long dy2 = Math.Abs((long)y2 - cy2);
+
+        return dx2 * H + dy2 * W <= (long)W * H;
+    }
+
+    /// <summary>Floor division (rounds towards −∞). Assumes b &gt; 0.</summary>
+    private static int FloorDiv(int a, int b)
+    {
+        int q = Math.DivRem(a, b, out int r);
+        return (r < 0) ? q - 1 : q;
+    }
+
+    /// <summary>Ceiling division (rounds towards +∞). Assumes b &gt; 0.</summary>
+    private static int CeilDiv(int a, int b)
+    {
+        int q = Math.DivRem(a, b, out int r);
+        return (r > 0) ? q + 1 : q;
+    }
+}

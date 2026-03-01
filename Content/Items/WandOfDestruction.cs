@@ -1,9 +1,10 @@
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
+using WorldShapingWandsMod.Common.Drawing;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Geometry;
 using WorldShapingWandsMod.Common.Items;
@@ -24,9 +25,17 @@ public abstract class WandOfDestructionBase : BaseCyclingWand
 
     public override bool? UseItem(Player player)
     {
+        // Don't do anything if the mouse is over UI
+        if (Main.LocalPlayer.mouseInterface)
+            return false;
+
         var wandPlayer = player.GetModPlayer<WandPlayer>();
+
+        if (WandSelectionMode != SelectionMode.OneClick && !wandPlayer.TryConsumeFreshLeftClick())
+            return false;
+
         Point mouseTile = GeometryHelper.WorldToTile(Main.MouseWorld);
-        
+
         return HandleUseItem(player, wandPlayer, mouseTile);
     }
 
@@ -46,8 +55,7 @@ public abstract class WandOfDestructionBase : BaseCyclingWand
     // NEW: Virtual method so derived classes can add behavior on cancel
     protected virtual void CancelSelection(WandPlayer wandPlayer)
     {
-        wandPlayer.ClearSelection();
-        Main.NewText("Selection cancelled.", Color.Yellow);
+        wandPlayer.CancelSelection(WandColors.CancelDestruction, wandPlayer.DestructionSettings.Shape);
     }
 
     protected void ExecuteDestruction(Player player, WandPlayer wandPlayer)
@@ -138,7 +146,11 @@ public abstract class WandOfDestructionBase : BaseCyclingWand
             }
             else
             {
-                ModContent.GetInstance<WandUISystem>().ToggleUIForCurrentWand();
+                // Only toggle UI on the client
+                if (Main.myPlayer == player.whoAmI)
+                {
+                    ModContent.GetInstance<WandUISystem>().ToggleUIForCurrentWand();
+                }
             }
             return false;
         }
@@ -150,7 +162,7 @@ public abstract class WandOfDestructionBase : BaseCyclingWand
 public class WandOfDestructionInstant : WandOfDestructionBase
 {
     public override SelectionMode WandSelectionMode => SelectionMode.OneClick;
-    public override Color ModeColor => new Color(255, 100, 100); // Light red
+    public override Color ModeColor => new Color(255, 80, 80); // Red — Instant (dangerous)
     public override int GetNextModeItemType() => ModContent.ItemType<WandOfDestructionSelect>();
 
     public override void SetDefaults()
@@ -161,31 +173,45 @@ public class WandOfDestructionInstant : WandOfDestructionBase
 
     protected override bool HandleUseItem(Player player, WandPlayer wandPlayer, Point mouseTile)
     {
-        if (!wandPlayer.Selection.IsActive)
-        {
-            bool vertical = Math.Abs(Main.MouseWorld.Y - player.Center.Y) >
-                            Math.Abs(Main.MouseWorld.X - player.Center.X);
-            wandPlayer.StartSelection(mouseTile, vertical);
-        }
-        
-        wandPlayer.UpdateSelection(mouseTile);
-        return true;
+        // All logic handled in HoldItem for instant/drag mode
+        return false;
     }
 
     public override void HoldItem(Player player)
     {
-        base.HoldItem(player); // Handle right-click cancel first
-        
-        var wandPlayer = player.GetModPlayer<WandPlayer>();
-        
-        // If selection was cancelled by right-click, don't proceed
-        if (!wandPlayer.Selection.IsActive)
+        base.HoldItem(player);
+
+        if (Main.myPlayer != player.whoAmI)
             return;
-        
-        // Execute on mouse release (left button released)
-        if (!Main.mouseLeft)
+
+        var wandPlayer = player.GetModPlayer<WandPlayer>();
+        Point mouseTile = GeometryHelper.WorldToTile(Main.MouseWorld);
+
+        if (Main.mouseLeft)
         {
-            ExecuteDestruction(player, wandPlayer);
+            // Don't start selection if mouse is over UI
+            if (Main.LocalPlayer.mouseInterface)
+                return;
+
+            // Don't restart selection immediately after cancellation
+            if (!wandPlayer.CanStartNewSelection())
+                return;
+
+            if (!wandPlayer.Selection.IsActive)
+            {
+                bool vertical = Math.Abs(Main.MouseWorld.Y - player.Center.Y) >
+                                Math.Abs(Main.MouseWorld.X - player.Center.X);
+                wandPlayer.StartSelection(mouseTile, vertical);
+            }
+            wandPlayer.UpdateSelection(mouseTile);
+        }
+        else if (wandPlayer.Selection.IsActive)
+        {
+            // Mouse released - execute only if this wand started the selection
+            if (wandPlayer.IsSelectionOwnedByCurrentItem())
+            {
+                ExecuteDestruction(player, wandPlayer);
+            }
             wandPlayer.ClearSelection();
         }
     }
@@ -195,7 +221,7 @@ public class WandOfDestructionInstant : WandOfDestructionBase
 public class WandOfDestructionSelect : WandOfDestructionBase
 {
     public override SelectionMode WandSelectionMode => SelectionMode.TwoClick;
-    public override Color ModeColor => new Color(255, 200, 100); // Orange
+    public override Color ModeColor => new Color(255, 255, 80); // Yellow — Select (caution)
     public override int GetNextModeItemType() => ModContent.ItemType<WandOfDestructionConfirm>();
 
     protected override bool HandleUseItem(Player player, WandPlayer wandPlayer, Point mouseTile)
@@ -207,7 +233,7 @@ public class WandOfDestructionSelect : WandOfDestructionBase
                             Math.Abs(Main.MouseWorld.X - player.Center.X);
             wandPlayer.StartSelection(mouseTile, vertical);
             Main.NewText("Selection started. Click again to confirm area.", Color.Cyan);
-            return true;
+            return false; // Don't consume the wand
         }
         else
         {
@@ -215,7 +241,7 @@ public class WandOfDestructionSelect : WandOfDestructionBase
             wandPlayer.UpdateSelection(mouseTile);
             ExecuteDestruction(player, wandPlayer);
             wandPlayer.ClearSelection();
-            return true;
+            return false; // Don't consume the wand
         }
     }
 }
@@ -224,8 +250,8 @@ public class WandOfDestructionSelect : WandOfDestructionBase
 public class WandOfDestructionConfirm : WandOfDestructionBase
 {
     public override SelectionMode WandSelectionMode => SelectionMode.ThreeClick;
-    public override Color ModeColor => new Color(100, 255, 100); // Light green
-    public override int GetNextModeItemType() => ModContent.ItemType<WandOfDestructionInstant>();
+    public override Color ModeColor => new Color(80, 255, 80); // Green — Confirm (safe)
+    public override int GetNextModeItemType() => ModContent.ItemType<WandOfDestructionStamp>();
 
     protected override bool HandleUseItem(Player player, WandPlayer wandPlayer, Point mouseTile)
     {
@@ -236,7 +262,7 @@ public class WandOfDestructionConfirm : WandOfDestructionBase
                             Math.Abs(Main.MouseWorld.X - player.Center.X);
             wandPlayer.StartSelection(mouseTile, vertical);
             Main.NewText("Selection started. Click to set end point.", Color.Cyan);
-            return true;
+            return false; // Don't consume the wand
         }
         else if (!wandPlayer.Selection.IsLocked)
         {
@@ -244,29 +270,19 @@ public class WandOfDestructionConfirm : WandOfDestructionBase
             wandPlayer.UpdateSelection(mouseTile);
             wandPlayer.LockSelection();  // LOCK IT HERE
             Main.NewText("Click again to confirm, or right-click to cancel.", Color.Yellow);
-            return true;
+            return false; // Don't consume the wand
         }
         else
         {
             // Third click - execute
             ExecuteDestruction(player, wandPlayer);
             wandPlayer.ClearSelection();
-            return true;
+            return false; // Don't consume the wand
         }
     }
 
     public override bool CanUseItem(Player player)
     {
-        if (player.altFunctionUse == 2)
-        {
-            var wandPlayer = player.GetModPlayer<WandPlayer>();
-            if (wandPlayer.Selection.IsActive)
-            {
-                wandPlayer.ClearSelection();
-                Main.NewText("Selection cancelled.", Color.Yellow);
-            }
-            return false;
-        }
-        return true;
+        return base.CanUseItem(player);
     }
 }

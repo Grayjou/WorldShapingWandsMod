@@ -224,5 +224,49 @@ The `HoldItem` method is called continuously while the item is held, ensuring th
 - Inventory contents change
 - The previously selected item is depleted
 
-This system provides immediate visual feedback, allowing players to see exactly which item will be used before initiating placement, enhancing the user experience with clear, real-time information.</content>
+This system provides immediate visual feedback, allowing players to see exactly which item will be used before initiating placement, enhancing the user experience with clear, real-time information.
+
+## Item Use Animation
+
+### Staff Animation Style
+The SpaceWand displays a **staff animation** when used, configured through specific item properties:
+
+```csharp
+public override void SetStaticDefaults()
+{
+    Item.staff[Type] = true; // Enables staff animation style
+}
+
+public override void SetDefaults()
+{
+    Item.SetUseValues(ItemUseStyleID.Shoot, SoundID.Item1, 12, 12);
+    Item.channel = true; // Allows continuous holding
+}
+```
+
+### Animation Components
+
+#### Staff Animation (`Item.staff[Type] = true`)
+- **Purpose**: Modifies the `ItemUseStyleID.Shoot` animation to display as a staff instead of a gun
+- **Visual Effect**: Player holds the wand extended outward in front, angled appropriately for a magical staff
+- **Convention**: Staff sprites are typically designed pointing upward and to the right
+
+#### Use Style (`ItemUseStyleID.Shoot`)
+- **Base Animation**: Provides the "holding out" motion used by ranged weapons, spears, and magical items
+- **Modified by Staff Flag**: When combined with `Item.staff[Type] = true`, creates the distinctive staff-holding pose
+- **Duration**: Uses `useTime` and `useAnimation` values (12 ticks each) for animation timing
+
+#### Channeling (`Item.channel = true`)
+- **Continuous Use**: Allows the item to be held down for continuous operation
+- **Animation Loop**: The staff animation repeats while the mouse button is held
+- **Selection Maintenance**: Enables the marquee selection system to remain active during use
+
+### Visual Behavior
+When activated, the player character:
+1. Extends their arm forward holding the SpaceWand
+2. Positions the wand at an angle typical of magical staves
+3. Maintains the pose while the selection rectangle is drawn
+4. Continues the animation during the placement operation
+
+This animation style reinforces the SpaceWand's identity as a magical building tool, distinct from typical construction tools while maintaining the channeling behavior needed for its marquee-based selection system.</content>
 <parameter name="filePath">c:\Users\RYZEN 9\Documents\Cloned\SummariesAndAnalysis\ImproveGame\Analysis\ImproveGame_SpaceWand_Item_Recognition_Analysis.md

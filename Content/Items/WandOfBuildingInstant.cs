@@ -1,4 +1,4 @@
-using Terraria;
+﻿using Terraria;
 using Terraria.ModLoader;
 using Microsoft.Xna.Framework;
 using WorldShapingWandsMod.Common.Players;
@@ -11,7 +11,7 @@ namespace WorldShapingWandsMod.Content.Items
     public class WandOfBuildingInstant : WandOfBuildingBase
     {
         public override SelectionMode WandSelectionMode => SelectionMode.OneClick;
-        public override Color ModeColor => new Color(100, 255, 100); // Light green
+        public override Color ModeColor => new Color(255, 80, 80); // Red — Instant (dangerous)
         public override int GetNextModeItemType() => ModContent.ItemType<WandOfBuildingSelect>();
 
         public override void SetDefaults()
@@ -22,35 +22,45 @@ namespace WorldShapingWandsMod.Content.Items
 
         protected override bool HandleUseItem(Player player, WandPlayer wandPlayer, Point mouseTile)
         {
-            if (!wandPlayer.Selection.IsActive)
-            {
-            bool vertical = Math.Abs(Main.MouseWorld.Y - player.Center.Y) >
-                            Math.Abs(Main.MouseWorld.X - player.Center.X);
-                wandPlayer.StartSelection(mouseTile, vertical);
-            }
-            // Update selection in HoldItem continuously
-            wandPlayer.UpdateSelection(mouseTile);
-            return true;
+            // All logic handled in HoldItem for instant/drag mode
+            return false;
         }
 
         public override void HoldItem(Player player)
         {
-            base.HoldItem(player); // handles right-click cancel
-            var wandPlayer = player.GetModPlayer<WandPlayer>();
-            if (!wandPlayer.Selection.IsActive)
+            base.HoldItem(player);
+
+            if (Main.myPlayer != player.whoAmI)
                 return;
 
-            // Update selection while holding left click
+            var wandPlayer = player.GetModPlayer<WandPlayer>();
+            Point mouseTile = GeometryHelper.WorldToTile(Main.MouseWorld);
+
             if (Main.mouseLeft)
             {
-                Point mouseTile = GeometryHelper.WorldToTile(Main.MouseWorld);
+                // Don't start selection if mouse is over UI
+                if (Main.LocalPlayer.mouseInterface)
+                    return;
+
+                // Don't restart selection immediately after cancellation
+                if (!wandPlayer.CanStartNewSelection())
+                    return;
+
+                if (!wandPlayer.Selection.IsActive)
+                {
+                    bool vertical = Math.Abs(Main.MouseWorld.Y - player.Center.Y) >
+                                    Math.Abs(Main.MouseWorld.X - player.Center.X);
+                    wandPlayer.StartSelection(mouseTile, vertical);
+                }
                 wandPlayer.UpdateSelection(mouseTile);
             }
-
-            // On release, execute
-            if (!Main.mouseLeft && wandPlayer.Selection.IsActive)
+            else if (wandPlayer.Selection.IsActive)
             {
-                ExecuteBuilding(player, wandPlayer);
+                // Mouse released - execute only if this wand started the selection
+                if (wandPlayer.IsSelectionOwnedByCurrentItem())
+                {
+                    ExecuteBuilding(player, wandPlayer);
+                }
                 wandPlayer.ClearSelection();
             }
         }

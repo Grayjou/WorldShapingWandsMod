@@ -1,16 +1,17 @@
-using Terraria;
+﻿using Terraria;
 using Terraria.ModLoader;
 using Microsoft.Xna.Framework;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Utilities;
+using System;
 
 namespace WorldShapingWandsMod.Content.Items;
 
 public class WandOfReplacementInstant : WandOfReplacementBase
 {
     public override SelectionMode WandSelectionMode => SelectionMode.OneClick;
-    public override Color ModeColor => new Color(180, 100, 255);
+    public override Color ModeColor => new Color(255, 80, 80); // Red — Instant (dangerous)
     public override int GetNextModeItemType() => ModContent.ItemType<WandOfReplacementSelect>();
 
     public override void SetDefaults()
@@ -21,32 +22,41 @@ public class WandOfReplacementInstant : WandOfReplacementBase
 
     protected override bool HandleUseItem(Player player, WandPlayer wandPlayer, Point mouseTile)
     {
-        if (!wandPlayer.Selection.IsActive)
-        {
-            bool vertical = System.Math.Abs(Main.MouseWorld.Y - player.Center.Y) >
-                            System.Math.Abs(Main.MouseWorld.X - player.Center.X);
-            wandPlayer.StartSelection(mouseTile, vertical);
-        }
-        wandPlayer.UpdateSelection(mouseTile);
-        return true;
+        // All logic handled in HoldItem for instant/drag mode
+        return false;
     }
 
     public override void HoldItem(Player player)
     {
         base.HoldItem(player);
+
+        if (Main.myPlayer != player.whoAmI)
+            return;
+
         var wandPlayer = player.GetModPlayer<WandPlayer>();
-        
-        if (!wandPlayer.Selection.IsActive) return;
+        Point mouseTile = GeometryHelper.WorldToTile(Main.MouseWorld);
 
         if (Main.mouseLeft)
         {
-            Point mouseTile = GeometryHelper.WorldToTile(Main.MouseWorld);
+            // Don't restart selection immediately after cancellation
+            if (!wandPlayer.CanStartNewSelection())
+                return;
+
+            if (!wandPlayer.Selection.IsActive)
+            {
+                bool vertical = Math.Abs(Main.MouseWorld.Y - player.Center.Y) >
+                                Math.Abs(Main.MouseWorld.X - player.Center.X);
+                wandPlayer.StartSelection(mouseTile, vertical);
+            }
             wandPlayer.UpdateSelection(mouseTile);
         }
-
-        if (!Main.mouseLeft && wandPlayer.Selection.IsActive)
+        else if (wandPlayer.Selection.IsActive)
         {
-            ExecuteReplacement(player, wandPlayer);
+            // Mouse released - execute only if this wand started the selection
+            if (wandPlayer.IsSelectionOwnedByCurrentItem())
+            {
+                ExecuteReplacement(player, wandPlayer);
+            }
             wandPlayer.ClearSelection();
         }
     }
