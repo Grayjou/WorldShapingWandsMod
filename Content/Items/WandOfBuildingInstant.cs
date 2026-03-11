@@ -1,9 +1,12 @@
 ﻿using Terraria;
+using Terraria.Audio;
+using Terraria.ID;
 using Terraria.ModLoader;
 using Microsoft.Xna.Framework;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Utilities;
+using WorldShapingWandsMod.Common.Systems;
 using System;
 
 namespace WorldShapingWandsMod.Content.Items
@@ -18,6 +21,7 @@ namespace WorldShapingWandsMod.Content.Items
         {
             base.SetDefaults();
             Item.channel = true; // needed for drag detection
+            Item.UseSound = null; // prevent sound spam during drag — played once on selection start
         }
 
         protected override bool HandleUseItem(Player player, WandPlayer wandPlayer, Point mouseTile)
@@ -51,11 +55,19 @@ namespace WorldShapingWandsMod.Content.Items
                     bool vertical = Math.Abs(Main.MouseWorld.Y - player.Center.Y) >
                                     Math.Abs(Main.MouseWorld.X - player.Center.X);
                     wandPlayer.StartSelection(mouseTile, vertical);
+                    SoundEngine.PlaySound(SoundID.Item1, player.Center);
                 }
                 wandPlayer.UpdateSelection(mouseTile);
             }
             else if (wandPlayer.Selection.IsActive)
             {
+                // Don't execute if mouse released over UI (e.g. NPC shop)
+                if (Main.LocalPlayer.mouseInterface)
+                {
+                    wandPlayer.ClearSelection();
+                    return;
+                }
+
                 // Mouse released - execute only if this wand started the selection
                 if (wandPlayer.IsSelectionOwnedByCurrentItem())
                 {
@@ -63,6 +75,18 @@ namespace WorldShapingWandsMod.Content.Items
                 }
                 wandPlayer.ClearSelection();
             }
+        }
+
+        public override void AddRecipes()
+        {
+            CreateRecipe()
+                .AddIngredient(ItemID.Wood, 10)
+                .AddIngredient(ItemID.GrayBrick, 10)
+                .AddIngredient(ItemID.RedBrick, 10)
+                .AddIngredient(ItemID.Rope, 20)
+                .AddIngredient(ItemID.ManaCrystal, 1)
+                .AddTile(TileID.Anvils)
+                .Register();
         }
     }
 }

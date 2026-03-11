@@ -14,17 +14,35 @@ namespace WorldShapingWandsMod.Common.Geometry.Shapes
     /// Provides L-shaped edge (right-angle joint) calculations.
     /// Creates a path from start to end using two perpendicular segments.
     /// </summary>
-    public class EdgeShape : IShapeProvider
+    public class ElbowShape : IShapeProvider
     {
-        public ShapeType ShapeType => ShapeType.Edge;
+        public ShapeType ShapeType => ShapeType.Elbow;
 
         public ShapeTileSet GetTiles(ShapeContext context)
         {
-            var tiles = GenerateEdgeTiles(context);
+            var tiles = GenerateElbowTiles(context);
             return OutlineHelper.Apply(tiles, context.Mode, context.Thickness);
         }
 
-        private static HashSet<Point> GenerateEdgeTiles(ShapeContext context)
+        /// <summary>
+        /// Returns display dimensions as the two segment lengths of the L-shape.
+        /// For VerticalFirst: vertical segment length × horizontal segment length.
+        /// For HorizontalFirst: horizontal segment length × vertical segment length.
+        /// The "width" is always the first segment drawn, "height" the second.
+        /// </summary>
+        public (int Width, int Height) GetDisplayDimensions(ShapeContext context)
+        {
+            int hLen = Math.Abs(context.End.X - context.Start.X) + 1;
+            int vLen = Math.Abs(context.End.Y - context.Start.Y) + 1;
+
+            // Display order matches drawing order: first segment = "width", second = "height"
+            if (context.VerticalFirst)
+                return (vLen, hLen);
+            else
+                return (hLen, vLen);
+        }
+
+        private static HashSet<Point> GenerateElbowTiles(ShapeContext context)
         {
             var tiles = new HashSet<Point>();
 

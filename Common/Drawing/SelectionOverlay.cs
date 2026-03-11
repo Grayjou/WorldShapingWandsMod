@@ -1,13 +1,18 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.ModLoader;
+using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Geometry;
+using WorldShapingWandsMod.Common.Geometry.Shapes;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Selection;
 using WorldShapingWandsMod.Common.Settings;
+using WorldShapingWandsMod.Common.Utilities;
 using WorldShapingWandsMod.Content.Items;
 
 namespace WorldShapingWandsMod.Common.Drawing;
@@ -15,6 +20,57 @@ namespace WorldShapingWandsMod.Common.Drawing;
 [Autoload(Side = ModSide.Client)]
 public class SelectionOverlay : ModSystem
 {
+    // ────────────────────────────────────────────────────────────
+    //  Tile Set Cache — prevents recomputing shapes every frame.
+    //  Invalidated when selection endpoints or shape settings change.
+    // ────────────────────────────────────────────────────────────
+    private HashSet<Point> _cachedTiles;
+    private Point _cacheStart, _cacheEnd;
+    private ShapeInfo _cacheShape;
+    private bool _cacheValid;
+
+    // ────────────────────────────────────────────────────────────
+    //  Area Calculation Cache — debounced to avoid per-frame cost.
+    //  Only recomputed after dimensions stay stable for N frames.
+    // ────────────────────────────────────────────────────────────
+    private int _areaStableFrames;
+    private (int W, int H) _lastAreaDimensions;
+    private int _cachedAreaCount = -1;
+    private const int AreaDebounceFrames = 10; // ~0.17 seconds at 60fps
+
+    private void InvalidateCache()
+    {
+        _cacheValid = false;
+        _cachedTiles = null;
+    }
+
+    private bool _cacheVerticalFirst;
+
+    private HashSet<Point> GetOrComputeTiles(ShapeInfo shapeSettings, Point start, Point end, bool verticalFirst)
+    {
+        // Check if cache is still valid
+        if (_cacheValid && _cacheStart == start && _cacheEnd == end
+            && _cacheVerticalFirst == verticalFirst
+            && _cacheShape.Shape == shapeSettings.Shape
+            && _cacheShape.FillMode == shapeSettings.FillMode
+            && _cacheShape.Thickness == shapeSettings.Thickness
+            && _cacheShape.EqualDimensions == shapeSettings.EqualDimensions)
+        {
+            return _cachedTiles;
+        }
+
+        // Recompute
+        var context = shapeSettings.ToShapeContext(start, end, verticalFirst);
+        var tileSet = ShapeRegistry.GetShapeTiles(shapeSettings.Shape, context);
+        _cachedTiles = new HashSet<Point>(tileSet.Tiles);
+        _cacheStart = start;
+        _cacheEnd = end;
+        _cacheVerticalFirst = verticalFirst;
+        _cacheShape = shapeSettings;
+        _cacheValid = true;
+        return _cachedTiles;
+    }
+
     public override void PostDrawTiles()
     {
         if (Main.gameMenu) return;
@@ -37,13 +93,19 @@ public class SelectionOverlay : ModSystem
             var shapeSettings = GetCurrentShapeSettings(player, wandPlayer);
             DrawSelection(wandPlayer, shapeSettings);
         }
+        // Draw cursor highlight when holding a wand but no selection is active
+        else if (isHoldingWand && !wandPlayer.Selection.IsActive)
+        {
+            var shapeSettings = GetCurrentShapeSettings(player, wandPlayer);
+            DrawCursorHighlight(shapeSettings);
+        }
     }
 
     private ShapeInfo GetCurrentShapeSettings(Player player, WandPlayer wandPlayer)
     {
-        if (player.HeldItem?.ModItem is WandOfDestructionBase)
+        if (player.HeldItem?.ModItem is WandOfDismantlingBase)
         {
-            return wandPlayer.DestructionSettings.Shape;
+            return wandPlayer.DismantlingSettings.Shape;
         }
         else if (player.HeldItem?.ModItem is WandOfBuildingBase)
         {
@@ -57,6 +119,10 @@ public class SelectionOverlay : ModSystem
         {
             return wandPlayer.WiringSettings.Shape;
         }
+        else if (player.HeldItem?.ModItem is WandOfSafekeepingBase)
+        {
+            return wandPlayer.SafekeepingSettings.Shape;
+        }
         else
         {
             return new ShapeInfo(wandPlayer.Settings.ShapeType, wandPlayer.Settings.ShapeMode, wandPlayer.Settings.Thickness); // fallback
@@ -65,10 +131,11 @@ public class SelectionOverlay : ModSystem
 
     private bool IsHoldingWandItem(Terraria.Player player)
     {
-        return player.HeldItem?.ModItem is WandOfDestructionBase
+        return player.HeldItem?.ModItem is WandOfDismantlingBase
             || player.HeldItem?.ModItem is WandOfBuildingBase
             || player.HeldItem?.ModItem is WandOfReplacementBase
-            || player.HeldItem?.ModItem is WandOfWiringBase;
+            || player.HeldItem?.ModItem is WandOfWiringBase
+            || player.HeldItem?.ModItem is WandOfSafekeepingBase;
     }
 
     private void DrawSelection(WandPlayer wandPlayer, ShapeInfo shapeSettings)
@@ -76,10 +143,7 @@ public class SelectionOverlay : ModSystem
         var settings = wandPlayer.Settings;
         var selection = wandPlayer.Selection;
 
-        var context = shapeSettings.ToShapeContext(selection.StartTile, selection.EndTile);
-        var tileSet = ShapeRegistry.GetShapeTiles(shapeSettings.Shape, context);
-
-        var tiles = new HashSet<Point>(tileSet.Tiles);
+        var tiles = GetOrComputeTiles(shapeSettings, selection.StartTile, selection.EndTile, selection.VerticalFirst);
 
         if (tiles.Count == 0) return;
 
@@ -165,24 +229,144 @@ public class SelectionOverlay : ModSystem
         Main.spriteBatch.End();
 
         if (settings.ShowDimensions)
-            DrawDimensionLabel(selection, context.GetBounds());
+        {
+            var dimContext = shapeSettings.ToShapeContext(selection.StartTile, selection.EndTile, selection.VerticalFirst);
+            DrawDimensionLabel(shapeSettings.Shape, dimContext, tiles);
+        }
     }
 
-    private void DrawDimensionLabel(SelectionState selection, Rectangle bounds)
+    /// <summary>
+    /// Draws a cursor highlight at the mouse position when holding a wand.
+    /// For cardinal lines with thickness > 1, shows a circle of diameter = thickness.
+    /// For all other shapes, shows a single tile highlight.
+    /// This gives the player immediate visual feedback of where their selection will start.
+    /// </summary>
+    private void DrawCursorHighlight(ShapeInfo shapeSettings)
     {
-        string dimensionText = $"{selection.Width} x {selection.Height}";
+        // Don't draw if mouse is over UI
+        if (Main.LocalPlayer.mouseInterface) return;
+
+        Point mouseTile = GeometryHelper.WorldToTile(Main.MouseWorld);
+
+        // Determine highlight tiles
+        List<Point> highlightTiles;
+
+        if (shapeSettings.Shape == ShapeType.CardinalLine && shapeSettings.Thickness > 1)
+        {
+            // Show circle brush preview for thick cardinal lines
+            int thickness = shapeSettings.Thickness;
+            if (thickness % 2 == 0) thickness -= 1;
+            thickness = Math.Max(1, thickness);
+            int radius = thickness / 2;
+
+            // Reuse the cached circle offsets from CardinalLineShape
+            highlightTiles = new List<Point>();
+            int radiusSq = radius * radius;
+            for (int dy = -radius; dy <= radius; dy++)
+            {
+                for (int dx = -radius; dx <= radius; dx++)
+                {
+                    if (dx * dx + dy * dy <= radiusSq)
+                        highlightTiles.Add(new Point(mouseTile.X + dx, mouseTile.Y + dy));
+                }
+            }
+        }
+        else
+        {
+            // Single tile highlight for all other shapes
+            highlightTiles = new List<Point> { mouseTile };
+        }
+
+        // Draw with a subtle pulse effect
+        float pulse = 0.5f + 0.2f * (float)Math.Sin(Main.GameUpdateCount * 0.08);
+        Color highlightFill = WandColors.OverlayBase * (0.15f * pulse);
+        Color highlightOutline = WandColors.OverlayBase * (0.5f * pulse);
+
+        Main.spriteBatch.Begin(
+            SpriteSortMode.Deferred,
+            BlendState.AlphaBlend,
+            SamplerState.PointClamp,
+            DepthStencilState.None,
+            RasterizerState.CullCounterClockwise,
+            null,
+            Main.GameViewMatrix.TransformationMatrix
+        );
+
+        var pixel = TextureAssets.MagicPixel.Value;
+        int ow = WandColors.OverlayOutlineWidth;
+        var tileSet = new HashSet<Point>(highlightTiles);
+
+        // Fill pass
+        foreach (var tile in highlightTiles)
+        {
+            Vector2 screenPos = new Vector2(tile.X * 16, tile.Y * 16) - Main.screenPosition;
+            Main.spriteBatch.Draw(pixel,
+                new Rectangle((int)screenPos.X, (int)screenPos.Y, 16, 16),
+                highlightFill);
+        }
+
+        // Outline pass (only outer edges)
+        foreach (var tile in highlightTiles)
+        {
+            Vector2 screenPos = new Vector2(tile.X * 16, tile.Y * 16) - Main.screenPosition;
+            int sx = (int)screenPos.X;
+            int sy = (int)screenPos.Y;
+
+            if (!tileSet.Contains(new Point(tile.X, tile.Y - 1)))
+                Main.spriteBatch.Draw(pixel, new Rectangle(sx, sy, 16, ow), highlightOutline);
+            if (!tileSet.Contains(new Point(tile.X, tile.Y + 1)))
+                Main.spriteBatch.Draw(pixel, new Rectangle(sx, sy + 16 - ow, 16, ow), highlightOutline);
+            if (!tileSet.Contains(new Point(tile.X - 1, tile.Y)))
+                Main.spriteBatch.Draw(pixel, new Rectangle(sx, sy, ow, 16), highlightOutline);
+            if (!tileSet.Contains(new Point(tile.X + 1, tile.Y)))
+                Main.spriteBatch.Draw(pixel, new Rectangle(sx + 16 - ow, sy, ow, 16), highlightOutline);
+        }
+
+        Main.spriteBatch.End();
+    }
+
+    private void DrawDimensionLabel(ShapeType shapeType, ShapeContext context, HashSet<Point> tiles)
+    {
+        var (displayWidth, displayHeight) = ShapeRegistry.GetDisplayDimensions(shapeType, context);
+
+        // ── Area calculation (debounced) ──
+        var currentDims = (displayWidth, displayHeight);
+        if (currentDims != _lastAreaDimensions)
+        {
+            _lastAreaDimensions = currentDims;
+            _areaStableFrames = 0;
+            _cachedAreaCount = -1; // invalidate while dimensions are changing
+        }
+        else
+        {
+            _areaStableFrames++;
+        }
+
+        if (_cachedAreaCount < 0 && _areaStableFrames >= AreaDebounceFrames && tiles != null)
+        {
+            _cachedAreaCount = tiles.Count;
+        }
+
+        string dimensionText = $"{displayWidth} x {displayHeight}";
+        if (_cachedAreaCount >= 0)
+            dimensionText += $"  ({_cachedAreaCount})";
 
         const float textScale = 0.9f;
-        // Position at top-left of cursor, offset so it doesn't overlap the cursor icon
-        Vector2 cursorScreen = Main.MouseScreen;
-        Vector2 screenPos = new Vector2(cursorScreen.X + 20f, cursorScreen.Y - 28f);
 
-        // Clamp to screen bounds so the label doesn't go off-screen
+        // ── Configurable offset — position relative to cursor ──
+        // Offset places the label above and to the right of the cursor,
+        // avoiding overlap with cursor icon and item icons.
+        const float offsetX = 24f;
+        const float offsetY = -32f;
+        Vector2 cursorScreen = Main.MouseScreen;
+        Vector2 screenPos = new Vector2(cursorScreen.X + offsetX, cursorScreen.Y + offsetY);
+
+        // ── Screen-bounds clamping with margin ──
+        const float margin = 4f;
         Vector2 textSize = FontAssets.MouseText.Value.MeasureString(dimensionText) * textScale;
-        if (screenPos.X + textSize.X > Main.screenWidth - 4)
-            screenPos.X = Main.screenWidth - 4 - textSize.X;
-        if (screenPos.Y < 4)
-            screenPos.Y = 4;
+
+        screenPos.X = Math.Clamp(screenPos.X, margin, Main.screenWidth - margin - textSize.X);
+        screenPos.Y = Math.Clamp(screenPos.Y, margin, Main.screenHeight - margin - textSize.Y);
 
         Main.spriteBatch.Begin(
             SpriteSortMode.Deferred,
@@ -208,7 +392,7 @@ public class SelectionOverlay : ModSystem
         float opacity = cancelState.Opacity;
         if (opacity <= 0f) return;
 
-        var context = cancelState.Shape.ToShapeContext(cancelState.StartTile, cancelState.EndTile);
+        var context = cancelState.Shape.ToShapeContext(cancelState.StartTile, cancelState.EndTile, cancelState.VerticalFirst);
         var tileSet = ShapeRegistry.GetShapeTiles(cancelState.Shape.Shape, context);
         var tiles = new HashSet<Point>(tileSet.Tiles);
 

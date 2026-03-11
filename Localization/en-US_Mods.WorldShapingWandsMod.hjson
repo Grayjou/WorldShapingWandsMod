@@ -1,6 +1,14 @@
 Keybinds: {
 	"Increase Thickness.DisplayName": Increase  Thickness
 	"Decrease Thickness.DisplayName": Decrease  Thickness
+	"Open Wand Settings.DisplayName": Open Wand Settings
+	"Undo Selection Step.DisplayName": Undo Selection Step
+}
+
+RecipeGroups: {
+	AnyGemstone: Any Gemstone
+	AnyWandOfBuilding: Any Wand of Building
+	AnyWandOfDismantling: Any Wand of Dismantling
 }
 
 UI: {
@@ -17,12 +25,13 @@ UI: {
 		ShapeDiamondHollow: Diamond (Hollow)
 		ShapeTriangleFilled: Triangle (Filled)
 		ShapeTriangleHollow: Triangle (Hollow)
-		ShapeEdge: Edge
-		ShapeStraight: Straight Line
+		ShapeElbow: Elbow
+		ShapeCardinal: Cardinal Line
 		ShapeHalfEllipseHFilled: Half Ellipse H (Filled)
 		ShapeHalfEllipseHHollow: Half Ellipse H (Hollow)
 		ShapeHalfEllipseVFilled: Half Ellipse V (Filled)
 		ShapeHalfEllipseVHollow: Half Ellipse V (Hollow)
+		EqualDimensions: Equal Dimensions
 	}
 
 	Building: {
@@ -34,6 +43,7 @@ UI: {
 		Rail: Rail
 		GrassSeed: Grass Seed
 		PlanterBox: Planter Box
+		Wall: Wall
 		Slope: Slope
 		SlopeDefault: Full Block
 		SlopeHalf: Half Block
@@ -41,14 +51,14 @@ UI: {
 		SlopeBottomLeft: Slope ◢ (Down-Left)
 		SlopeTopRight: Slope ◤ (Up-Right)
 		SlopeTopLeft: Slope ◥ (Up-Left)
+		OverwriteSlope: Overwrite Slope
 	}
 
-	Destruction: {
-		Title: Wand of Destruction
+	Dismantling: {
+		Title: Wand of Dismantling
 		Options: Options
 		DestroyTiles: Destroy Tiles
 		DestroyWalls: Destroy Walls
-		SuppressDrops: Suppress Drops
 	}
 
 	Replacement: {
@@ -62,6 +72,7 @@ UI: {
 		Rail: Rail
 		Seeds: Seeds
 		Air: Air
+		Wall: Wall
 	}
 
 	Wiring: {
@@ -75,6 +86,16 @@ UI: {
 		Mode: Mode
 		Place: Place
 		Remove: Remove
+	}
+
+	Safekeeping: {
+		Title: Wand of Safekeeping
+		Mode: Mode
+		Protect: Protect
+		Unprotect: Unprotect
+		ProtectTiles: Protect Tiles
+		ProtectWalls: Protect Walls
+		ClearAll: Clear All
 	}
 }
 
@@ -95,8 +116,8 @@ Configs: {
 		SelectionLimits.Header: Selection Dimension Limits
 
 		SmallSelectionCap: {
-			Label: Small Shape Cap (Edge / Straight)
-			Tooltip: Maximum dimension (width or height) for Edge and Straight Line shapes.\nThese shapes are 1D so they can safely be longer.
+			Label: Small Shape Cap (Elbow / Cardinal)
+			Tooltip: Maximum dimension (width or height) for Elbow and Cardinal Line shapes.\nThese shapes are 1D so they can safely be longer.
 		}
 
 		BigSelectionCap: {
@@ -104,24 +125,66 @@ Configs: {
 			Tooltip: Maximum dimension (width or height) for 2D area shapes.\nA cap of 200 means the largest selection is 200×200.
 		}
 
+		ProgressiveMode.Header: Progressive Dismantling
+		Sandbox.Header: Sandbox Options
+
+		SuppressDrops: {
+			Label: Suppress Tile Drops
+			Tooltip: When enabled, tiles destroyed by any wand (dismantling, replacement, or building swap) will not drop items.\nUseful for creative/sandbox building where you don't need the materials back.
+		}
+
+		BypassPickaxePower: {
+			Label: Bypass Pickaxe Power
+			Tooltip: When enabled, wands ignore pickaxe power requirements and can destroy or replace any tile regardless of pickaxe strength.\nUseful for creative/sandbox building.
+		}
+
+		EnableProgressiveMode: {
+			Label: Enable Progressive Mode
+			Tooltip: When enabled, Dismantling and replacement operations process tiles in timed batches with proper drops, sounds, and effects.\nWhen disabled, operations are instant and silent (no tile drops).
+		}
+
+		ProgressiveBatchSize: {
+			Label: Batch Size
+			Tooltip: Number of tiles processed per batch in progressive mode.\n400 tiles per batch is a satisfying amount without lag.
+		}
+
+		ProgressiveInterval: {
+			Label: Batch Interval (seconds)
+			Tooltip: Time between each batch in progressive mode.\n0.3 seconds gives a satisfying wave-like demolition feel.
+		}
+
+		Tooltips.Header: Tooltip Options
+
+		ShowLoreTooltips: {
+			Label: Show Lore Tooltips
+			Tooltip: When enabled, holding Shift while hovering a wand shows its lore text.\nDisable to hide lore entirely.
+		}
+
+		Audio.Header: Audio
+
+		EnableWandSounds: {
+			Label: Enable Wand Sound Effects
+			Tooltip: When enabled, wands play custom sound effects on action success.\nDisable for silent operations.
+		}
+
 		DisplayName: Wand Config
 	}
 }
 
 Items: {
-	WandOfDestructionInstant: {
-		DisplayName: Wand of Destruction (Instant)
-		Tooltip: Destroys tiles in a selected area
+	WandOfDismantlingInstant: {
+		Tooltip: ""
+		DisplayName: Wand Of Dismantling Instant
 	}
 
-	WandOfDestructionSelect: {
-		DisplayName: Wand of Destruction (Select)
-		Tooltip: Destroys tiles in a selected area
+	WandOfDismantlingSelect: {
+		Tooltip: ""
+		DisplayName: Wand Of Dismantling Select
 	}
 
-	WandOfDestructionConfirm: {
-		DisplayName: Wand of Destruction (Confirm)
-		Tooltip: Destroys tiles in a selected area
+	WandOfDismantlingConfirm: {
+		Tooltip: ""
+		DisplayName: Wand Of Dismantling Confirm
 	}
 
 	WandOfBuildingInstant: {
@@ -174,9 +237,9 @@ Items: {
 		Tooltip: Define a shape once, then stamp it repeatedly
 	}
 
-	WandOfDestructionStamp: {
-		DisplayName: Wand of Destruction (Stamp)
-		Tooltip: Define a destruction area once, then stamp it repeatedly
+	WandOfDismantlingStamp: {
+		Tooltip: ""
+		DisplayName: Wand Of Dismantling Stamp
 	}
 
 	WandOfReplacementStamp: {
@@ -187,5 +250,25 @@ Items: {
 	WandOfWiringStamp: {
 		DisplayName: Wand of Wiring (Stamp)
 		Tooltip: Define a wiring area once, then stamp it repeatedly
+	}
+
+	WandOfSafekeepingInstant: {
+		DisplayName: Wand of Safekeeping (Instant)
+		Tooltip: Protects or unprotects tiles in a selected area
+	}
+
+	WandOfSafekeepingSelect: {
+		DisplayName: Wand of Safekeeping (Select)
+		Tooltip: Protects or unprotects tiles in a selected area
+	}
+
+	WandOfSafekeepingConfirm: {
+		DisplayName: Wand of Safekeeping (Confirm)
+		Tooltip: Protects or unprotects tiles in a selected area
+	}
+
+	WandOfSafekeepingStamp: {
+		DisplayName: Wand of Safekeeping (Stamp)
+		Tooltip: Define a protection area once, then stamp it repeatedly
 	}
 }

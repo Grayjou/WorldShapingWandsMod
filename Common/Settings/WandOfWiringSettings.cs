@@ -16,7 +16,7 @@ public class WandOfWiringSettings
     public WiringMode Mode { get; set; } = WiringMode.Place;
 
     // Shape (uses your existing ShapeInfo)
-    public ShapeInfo Shape { get; set; } = new ShapeInfo(ShapeType.Edge, ShapeMode.Filled, 1);
+    public ShapeInfo Shape { get; set; } = new ShapeInfo(ShapeType.Elbow, ShapeMode.Filled, 1);
 
     // Selection mode (for cycling wand)
     public SelectionMode SelectionMode { get; set; } = SelectionMode.OneClick;
@@ -69,7 +69,7 @@ public class WandOfWiringSettings
         WireYellow = false;
         Actuator = false;
         Mode = WiringMode.Place;
-        Shape = new ShapeInfo(ShapeType.Edge, ShapeMode.Filled, 1);
+        Shape = new ShapeInfo(ShapeType.Elbow, ShapeMode.Filled, 1);
         SelectionMode = SelectionMode.OneClick;
     }
 

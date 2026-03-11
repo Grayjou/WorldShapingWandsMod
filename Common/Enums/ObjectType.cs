@@ -23,6 +23,9 @@ public enum ObjectType : byte
     /// <summary>Seed tiles (grass seeds, etc.).</summary>
     Seeds = 5,
 
-    /// <summary>Air (empty space). Used as target to erase tiles.</summary>
+    /// <summary>Air (empty space). Used as target only — erases matching tiles.</summary>
     Air = 6,
+
+    /// <summary>Wall tiles. Used by the replacement wand for wall-to-wall swaps.</summary>
+    Wall = 7,
 }

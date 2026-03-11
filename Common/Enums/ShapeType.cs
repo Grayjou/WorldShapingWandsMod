@@ -9,8 +9,8 @@ public enum ShapeType : byte
     Ellipse = 1,
     Diamond = 2,
     Triangle = 3,
-    Edge = 4,
-    StraightLine = 5,
+    Elbow = 4,
+    CardinalLine = 5,
     HalfEllipseH = 6,
     HalfEllipseV = 7,
 }

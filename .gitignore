@@ -9,3 +9,12 @@ bin/
 # OS
 .DS_Store
 Thumbs.db
+
+ImportedSummaries
+ClonedAutofish
+ClonedMagicWiring
+ClonedMoreObtainingTooltips
+ClonedImproveGame
+recipe_draft.txt
+asset_dupe.py
+generic_asset_gen.py

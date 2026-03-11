@@ -1,6 +1,6 @@
 name = WorldShapingWandsMod
 displayName = World Shaping Wands
-author = YourName
+author = Grayjou
 version = 0.1.0
 buildIgnore = *.csproj, *.user, obj\*, bin\*, .vs\*, .git\*
-homepage =
+homepage = https://github.com/Grayjou/WorldShapingWandsMod

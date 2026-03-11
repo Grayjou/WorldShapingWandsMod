@@ -1,4 +1,5 @@
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 using Microsoft.Xna.Framework;
 using WorldShapingWandsMod.Common.Players;
@@ -36,5 +37,17 @@ public class WandOfReplacementConfirm : WandOfReplacementBase
             wandPlayer.ClearSelection();
             return false; // Don't consume the wand
         }
+    }
+
+    public override void AddRecipes()
+    {
+        WandRecipeConditions.Register(Type);
+        CreateRecipe()
+            .AddIngredient<WandOfReplacementInstant>(1)
+            .AddCustomShimmerResult(ModContent.ItemType<WandOfBuildingInstant>(), 1)
+            .AddCustomShimmerResult(ModContent.ItemType<WandOfDismantlingInstant>(), 1)
+            .AddCustomShimmerResult(ItemID.ManaCrystal, 1)
+            .AddCondition(WandRecipeConditions.NonCraftable)
+            .Register();
     }
 }

@@ -37,8 +37,8 @@ public static class WandColors
     /// <summary>Building wand cancellation overlay color (green → orange).</summary>
     public static readonly Color CancelBuilding = Color.Orange;
 
-    /// <summary>Destruction wand cancellation overlay color (red → yellow).</summary>
-    public static readonly Color CancelDestruction = Color.Yellow;
+    /// <summary>Dismantling wand cancellation overlay color (red → yellow).</summary>
+    public static readonly Color CancelDismantling = Color.Yellow;
 
     /// <summary>Replacement wand cancellation overlay color (green → orange).</summary>
     public static readonly Color CancelReplacement = Color.Orange;
@@ -46,18 +46,24 @@ public static class WandColors
     /// <summary>Wiring wand cancellation overlay color.</summary>
     public static readonly Color CancelWiring = Color.Orange;
 
+    /// <summary>Safekeeping wand cancellation overlay color (purple).</summary>
+    public static readonly Color CancelSafekeeping = new Color(180, 100, 255);
+
     // ── Chat messages ────────────────────────────────────────
     /// <summary>Success / placement messages.</summary>
     public static readonly Color MsgSuccess = Color.Cyan;
 
-    /// <summary>Destruction result messages.</summary>
-    public static readonly Color MsgDestruction = Color.OrangeRed;
+    /// <summary>Dismantling result messages.</summary>
+    public static readonly Color MsgDismantling = Color.OrangeRed;
 
     /// <summary>Replacement result messages.</summary>
     public static readonly Color MsgReplacement = Color.MediumPurple;
 
     /// <summary>Wiring placement messages.</summary>
     public static readonly Color MsgWiring = Color.LimeGreen;
+
+    /// <summary>Safekeeping status messages.</summary>
+    public static readonly Color MsgSafekeeping = Color.MediumPurple;
 
     /// <summary>Error / missing-item messages.</summary>
     public static readonly Color MsgError = Color.Red;
@@ -79,8 +85,8 @@ public static class WandColors
     // Kept here for easy cross-referencing but each wand still
     // exposes its own ModeColor override.
 
-    /// <summary>Destruction wand mode colors.</summary>
-    public static class Destruction
+    /// <summary>Dismantling wand mode colors.</summary>
+    public static class Dismantling
     {
         public static readonly Color Instant = new Color(255, 100, 100);
         public static readonly Color Select  = new Color(255, 200, 100);
@@ -109,5 +115,14 @@ public static class WandColors
         public static readonly Color Instant = new Color(255, 200, 50);
         public static readonly Color Select  = new Color(255, 220, 100);
         public static readonly Color Confirm = new Color(200, 255, 150);
+    }
+
+    /// <summary>Safekeeping wand mode colors.</summary>
+    public static class Safekeeping
+    {
+        public static readonly Color Instant = new Color(255, 80, 80);
+        public static readonly Color Select  = new Color(255, 255, 80);
+        public static readonly Color Confirm = new Color(80, 255, 80);
+        public static readonly Color Stamp   = new Color(100, 200, 255);
     }
 }

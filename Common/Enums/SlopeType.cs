@@ -23,3 +23,4 @@ public enum SlopeType : byte
     /// <summary>Slope with top-left corner raised.</summary>
     TopLeft = 5,
 }
+

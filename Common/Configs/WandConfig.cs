@@ -34,5 +34,48 @@ namespace WorldShapingWandsMod.Common.Configs
         [LabelKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.BigSelectionCap.Label")]
         [TooltipKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.BigSelectionCap.Tooltip")]
         public int BigSelectionCap { get; set; } = 200;
+
+        [Header("$Mods.WorldShapingWandsMod.Configs.WandConfig.Sandbox.Header")]
+        [DefaultValue(false)]
+        [LabelKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.SuppressDrops.Label")]
+        [TooltipKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.SuppressDrops.Tooltip")]
+        public bool SuppressDrops { get; set; }
+
+        [DefaultValue(false)]
+        [LabelKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.BypassPickaxePower.Label")]
+        [TooltipKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.BypassPickaxePower.Tooltip")]
+        public bool BypassPickaxePower { get; set; }
+
+        [Header("$Mods.WorldShapingWandsMod.Configs.WandConfig.ProgressiveMode.Header")]
+        [DefaultValue(true)]
+        [LabelKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.EnableProgressiveMode.Label")]
+        [TooltipKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.EnableProgressiveMode.Tooltip")]
+        public bool EnableProgressiveMode { get; set; } = true;
+
+        [DefaultValue(400)]
+        [Range(50, 2000)]
+        [Increment(50)]
+        [LabelKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.ProgressiveBatchSize.Label")]
+        [TooltipKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.ProgressiveBatchSize.Tooltip")]
+        public int ProgressiveBatchSize { get; set; } = 400;
+
+        [DefaultValue(0.3f)]
+        [Range(0.1f, 2.0f)]
+        [Increment(0.05f)]
+        [LabelKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.ProgressiveInterval.Label")]
+        [TooltipKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.ProgressiveInterval.Tooltip")]
+        public float ProgressiveInterval { get; set; } = 0.3f;
+
+        [Header("$Mods.WorldShapingWandsMod.Configs.WandConfig.Tooltips.Header")]
+        [DefaultValue(true)]
+        [LabelKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.ShowLoreTooltips.Label")]
+        [TooltipKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.ShowLoreTooltips.Tooltip")]
+        public bool ShowLoreTooltips { get; set; } = true;
+
+        [Header("$Mods.WorldShapingWandsMod.Configs.WandConfig.Audio.Header")]
+        [DefaultValue(true)]
+        [LabelKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.EnableWandSounds.Label")]
+        [TooltipKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.EnableWandSounds.Tooltip")]
+        public bool EnableWandSounds { get; set; } = true;
     }
 }

@@ -3,55 +3,81 @@
 > **Status: Pre-release / Active Development** — not yet published on the Steam Workshop.
 
 A [tModLoader](https://github.com/tModLoader/tModLoader) mod for Terraria that provides a suite of
-geometric world-shaping wands: build, destroy, replace and wire large areas in customisable shapes
-with a single drag or two clicks.
+geometric world-shaping wands. Build, dismantle, replace, wire, and protect large areas of the world
+using customisable shapes — rectangles, ellipses, diamonds, triangles, elbows, cardinal lines, and
+half-ellipses — with a single drag or a series of clicks.
 
 ---
 
 ## Features
 
-### Implemented ✅
+### Wand Families (5 wands × 4 modes = 20 items)
 
-| Category | What works |
+| Wand | What It Does |
 |---|---|
-| **Shapes** | Rectangle, Ellipse (rasterised), Diamond, Triangle, L-shaped Line |
-| **Shape modes** | Filled, Hollow (boundary-only), Outline (configurable thickness 0–50) |
-| **Wand of Building** | Place any solid block / platform / rope / rail / planter-box / grass seed in a shape; respects inventory stock; infinite-resource config option |
-| **Wand of Destruction** | Destroy tiles and/or walls in a shape; pick-power check; drop suppression toggle |
-| **Wand of Replacement** | Replace the first inventory tile type with the second across a shape; pick-power check |
-| **Wand of Wiring** | Place or remove red/green/blue/yellow wire and actuators in a shape |
-| **Three selection modes** | *Instant* (click-and-drag), *Select* (click-start → click-end), *Confirm* (click-start → click-end → click-confirm) |
-| **Mode cycling** | Right-click in inventory to cycle Instant → Select → Confirm → Instant |
-| **Undo** | Up to 20 per-player undo steps for all wand operations (tile + wall state) |
-| **Preview overlay** | Screen-culled shape overlay with dimension label; colour-flashes orange when clamped |
-| **Per-wand settings UI** | Draggable panel per wand type (Building / Destruction / Replacement / Wiring) |
-| **Config** | Infinite-resource mode with configurable threshold |
+| **Wand of Building** | Place solid blocks, platforms, ropes, rails, planter boxes, grass seeds, or walls in a shape. Respects inventory stock, supports infinite-resource mode, and configurable block-exhaustion behaviour (NextBlock / Cancel / Interrupt). Slope application included. |
+| **Wand of Dismantling** | Destroy tiles and/or walls in a shape. Validates pick power and `CanKillTile`. Configurable drop suppression. Optional progressive (batched) processing for large operations. |
+| **Wand of Replacement** | Replace every instance of a source tile type with a target type across a shape. Supports 7 object types (Tile, Platform, Rope, PlanterBox, Rail, Seeds, Air). Air as source = fill gaps; Air as target = erase matching tiles. Substrate variant detection (e.g., replacing "dirt" catches all grass variants). |
+| **Wand of Wiring** | Place or remove red/green/blue/yellow wire and actuators in a shape. Defaults to the Elbow shape for vanilla wire-kite behaviour. |
+| **Wand of Safekeeping** | Protect or unprotect tiles and walls. Other wands refuse to modify protected positions. Protection persists across world saves via `TagCompound`. Visual overlay shows protected areas when holding the wand. |
 
-### Planned 🔄
+### Selection Modes
 
-See [`dev_notes/TODO_FEATURES.md`](dev_notes/TODO_FEATURES.md) for the full list and
-[`dev_notes/Roadmap.md`](dev_notes/Roadmap.md) for phased milestones.
+Each wand comes in 4 mode variants. Right-click in inventory to cycle between them.
 
-High-level highlights:
-- Boundary **noise** (procedural jitter on shape edges)
-- Full **preview / commit / discard** workflow (shows required & consumed resources)
-- **Selection Wand** with boolean operations (add / remove / intersect / XOR)
-- **Drawing Wand** (stage changes before committing)
-- **Multi-level undo** for preview commits
-- Slope application, wall operations, multiplayer sync
+| Mode | Behaviour |
+|---|---|
+| **Instant** | Click-and-drag, release to apply immediately |
+| **Select** | Click to set start → click to set end and apply |
+| **Confirm** | Click start → click end (locks selection) → click to confirm |
+| **Stamp** | Click start → click end → stamp repeatedly at new positions |
+
+### Shapes (8 types × 2 fill modes)
+
+| Shape | Algorithm |
+|---|---|
+| **Rectangle** | Bounding-box fill |
+| **Ellipse** | Direct `Math.Sqrt` rasterisation |
+| **Diamond** | Manhattan distance with ×2 integer arithmetic |
+| **Triangle** | Scanline fill with degenerate-case handling |
+| **Elbow** | L-shaped right-angle joint (axis determined by first mouse movement) |
+| **Cardinal Line** | 8-direction straight line (Bresenham-like) |
+| **Half-Ellipse (H)** | Horizontal half of a doubled ellipse |
+| **Half-Ellipse (V)** | Vertical half of a doubled ellipse |
+
+All shapes support **Filled** and **Hollow** modes (configurable thickness 0–50).
+An **Equal Dimensions** toggle forces square bounding boxes for perfect circles, squares, and equilateral diamonds.
+
+### Additional Features
+
+| Feature | Description |
+|---|---|
+| **Undo** | Up to 20 per-player undo steps for all tile/wall operations |
+| **Preview overlay** | Screen-culled shape overlay with W×H dimension label; orange flash when selection is clamped |
+| **Safekeeping overlay** | Colour-coded protected-tile display (cyan = tile, magenta = wall, gold = both) |
+| **Cancel animation** | Colour-coded fade-out with rising "Cancelled" text per wand family |
+| **Per-wand settings UI** | Draggable panel per wand type with icon buttons and hover tooltips |
+| **Dual sprites** | Separate world and inventory textures per wand item |
+| **Lore tooltips** | Shift-gated flavour text with shared + wand-specific lore (configurable) |
+| **Progressive processing** | Optional batched execution for large operations to prevent frame drops |
+| **Selection caps** | Configurable max tiles per shape (SmallCap for Elbow/Cardinal, BigCap for others) |
+| **Config** | Infinite resources, drop suppression, pick power bypass, progressive mode, lore toggle, and more |
+| **4 keybinds** | Thickness ± (`[` / `]`), toggle UI (`.`), undo step (`Backspace`) |
 
 ---
 
 ## How to Use
 
-1. Obtain a wand item (currently cheatable via `/give`; crafting recipes are TBD).
+1. Obtain a wand item (currently via `/give`; crafting recipes are TBD).
 2. Left-click to start a selection; drag or click again to set the end point.
-   - **Instant mode**: release the mouse button to apply immediately.
-   - **Select mode**: left-click a second time to apply.
-   - **Confirm mode**: click a second time to lock the selection, then a third time to apply.
+   - **Instant**: release the mouse button to apply immediately.
+   - **Select**: left-click a second time to apply.
+   - **Confirm**: click a second time to lock the selection, then a third time to apply.
+   - **Stamp**: click a second time to define the shape, then click repeatedly to stamp at new positions.
 3. Right-click **while selecting** to cancel the selection.
 4. Right-click **while not selecting** to open the settings panel for the held wand.
-5. Right-click **in inventory** to cycle the wand between Instant / Select / Confirm modes.
+5. Right-click **in inventory** to cycle through the 4 selection modes.
+6. Use `[` / `]` to adjust hollow thickness, `.` to toggle the settings panel, `Backspace` to undo.
 
 ---
 
@@ -60,52 +86,72 @@ High-level highlights:
 ```
 WorldShapingWandsMod/
 ├── Common/
-│   ├── Commands/       — /shape test command
-│   ├── Configs/        — WandConfig (client-side, infinite resources)
-│   ├── Drawing/        — SelectionOverlay (screen-culled shape preview)
-│   ├── Enums/          — ShapeType, ShapeMode, SelectionMode, PlaceType, etc.
+│   ├── Commands/       — /shape test command (debug)
+│   ├── Configs/        — WandConfig (client-side settings)
+│   ├── Drawing/        — SelectionOverlay, SafekeepingOverlay, WandColors
+│   ├── Enums/          — ShapeType, ShapeMode, SelectionMode, PlaceType, ObjectType,
+│   │                      SlopeType, BiasType, BlockExhaustionMode, OperationType, PreviewMode
 │   ├── Geometry/
-│   │   ├── IShapeProvider.cs  — shape contract
-│   │   ├── OutlineHelper.cs   — unified Filled / Hollow / Outline logic
-│   │   ├── ShapeContext.cs    — immutable per-call parameters
-│   │   ├── ShapeRegistry.cs   — provider map, Initialize / Unload
-│   │   ├── ShapeTileSet.cs    — result (tiles + boundary)
-│   │   └── Shapes/            — Rectangle, Ellipse, Diamond, Triangle, Line
-│   ├── Input/          — ThicknessControls keybinds
-│   ├── Items/          — BaseCyclingWand base class
-│   ├── Players/        — WandPlayer (per-player selection + settings)
-│   ├── Selection/      — immutable SelectionState
-│   ├── Settings/       — WandSettings, ShapeInfo, per-wand settings structs
-│   ├── UI/             — WandUISystem + per-wand settings panels
-│   ├── Undo/           — UndoManager, UndoAction, TileSnapshot
-│   └── Utilities/      — GeometryHelper, ItemTypeHelper, WiringHelper
+│   │   ├── IShapeProvider.cs   — shape contract
+│   │   ├── OutlineHelper.cs    — unified Filled / Hollow logic (Chebyshev erosion)
+│   │   ├── ShapeContext.cs     — immutable per-call parameters
+│   │   ├── ShapeRegistry.cs    — provider dictionary, Initialize / Unload
+│   │   ├── ShapeTileSet.cs     — result container (tiles + boundary)
+│   │   └── Shapes/             — Rectangle, Ellipse, Diamond, Triangle, Elbow,
+│   │                              CardinalLine, HalfEllipseH, HalfEllipseV
+│   ├── Input/          — WandControls (4 keybinds)
+│   ├── Items/          — BaseCyclingWand (abstract base for all 20 wands)
+│   ├── Players/        — WandPlayer (per-player selection state + 5 settings structs)
+│   ├── Selection/      — SelectionState (immutable), CancelledSelectionState
+│   ├── Settings/       — ShapeInfo, WandSettings, + 5 per-wand settings structs
+│   ├── Systems/        — SafekeepingSystem (protection data), ProgressiveTileProcessor
+│   ├── UI/             — WandUISystem + 5 settings panels + Elements/
+│   ├── Undo/           — UndoManager, UndoAction (TileSnapshot)
+│   └── Utilities/      — BulkTileOperations, GeometryHelper, ItemTypeHelper, WiringHelper
 ├── Content/
-│   └── Items/          — WandOfBuilding{Instant,Select,Confirm},
-│                          WandOfDestruction{…}, WandOfReplacement{…},
-│                          WandOfWiring{…}
-├── Localization/       — en-US hjson keys
-└── dev_notes/          — Developer documentation
+│   └── Items/          — 5 wand bases + 20 concrete items + 40 sprites
+│                          (Building, Dismantling, Replacement, Wiring, Safekeeping)
+├── Assets/
+│   └── Icons/          — 30 UI icons (shapes, objects, slopes)
+├── Localization/       — en-US hjson (keybinds, UI, configs, 20 items)
+└── dev_notes/          — Roadmap, TODO, SanityChecks
 ```
+
+### Key Design Patterns
+
+- **Provider pattern** — Shapes implement `IShapeProvider`; `ShapeRegistry` maps `ShapeType` enum values to providers. Adding a shape = one class + one registry entry.
+- **Immutable state** — `SelectionState` and `ShapeContext` return new instances on every mutation, preventing aliasing bugs.
+- **Per-wand settings** — Each wand family has its own settings struct on `WandPlayer`. No global state leaks.
+- **Client-side safety** — All rendering systems are `[Autoload(Side = ModSide.Client)]`.
+- **Single-responsibility** — Shapes produce filled tiles only; `OutlineHelper` handles Hollow mode; overlays read but never write game state.
 
 ---
 
-## Development Notes
+## Documentation
 
-- [`dev_notes/Roadmap.md`](dev_notes/Roadmap.md) — phased feature plan
-- [`dev_notes/TODO_FEATURES.md`](dev_notes/TODO_FEATURES.md) — detailed feature checklist
-- [`dev_notes/SanityChecks.md`](dev_notes/SanityChecks.md) — safety measures, separation of concerns, known limitations
+| Document | Description |
+|---|---|
+| [`CurrentStateAndStatus.md`](CurrentStateAndStatus.md) | Comprehensive technical reference: architecture, algorithms, file inventory, patterns |
+| [`IssuesAndFixes.md`](IssuesAndFixes.md) | Issue tracker: #1–42 resolved, #6–49 deferred, with full context |
+| [`dev_notes/Roadmap.md`](dev_notes/Roadmap.md) | Phased development plan (Phases 1–6) |
+| [`dev_notes/TODO_FEATURES.md`](dev_notes/TODO_FEATURES.md) | Granular feature checklist with status markers |
+| [`dev_notes/SanityChecks.md`](dev_notes/SanityChecks.md) | Safety measures, separation of concerns, known limitations |
 
 ---
 
 ## Building
 
-This mod requires tModLoader. There is no automated CI build at this time.
+This mod requires [tModLoader](https://github.com/tModLoader/tModLoader) (targeting .NET 8.0).
 
-```bash
-# Place the repository folder under tModLoader's Mod Sources directory, then
-# build with the in-game "Mod Sources" menu, or use the tModLoader CLI:
-dotnet build
+```powershell
+# Place the mod folder under tModLoader's Mod Sources directory, then build:
+dotnet build --no-restore -p:TargetFramework=net8.0
+
+# Or use the in-game "Mod Sources" menu to build and reload.
 ```
+
+> **Note**: TML003 + MSB3073 warnings are expected when tModLoader is already running
+> (packaging lock file conflict — not compile errors).
 
 ---
 

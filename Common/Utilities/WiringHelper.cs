@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
 using WorldShapingWandsMod.Common.Settings;
+using WorldShapingWandsMod.Common.Systems;
 
 namespace WorldShapingWandsMod.Common.Utilities;
 
@@ -24,6 +25,9 @@ public static class WiringHelper
             int y = tile.Y;
 
             if (!WorldGen.InWorld(x, y, 1)) continue;
+
+            // Skip protected positions
+            if (SafekeepingSystem.IsProtected(x, y)) continue;
 
             if (mode == WiringMode.Place)
                 placed += PlaceStep(x, y, wireRed, wireGreen, wireBlue, wireYellow, actuator, player);

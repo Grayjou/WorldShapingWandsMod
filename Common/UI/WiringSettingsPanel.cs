@@ -26,17 +26,20 @@ public class WiringSettingsPanel : UIState
     private UIToggleButton _placeModeBtn, _removeModeBtn;
 
     // Shape buttons (icon-based)
-    private UIIconButton _rectFilledBtn, _edgeBtn, _straightBtn;
+    private UIIconButton _rectFilledBtn, _edgeBtn, _cardinalBtn;
     private UIIconButton _diamondFilledBtn, _triangleFilledBtn;
     private UIIconButton _halfEllipseHFilledBtn, _halfEllipseVFilledBtn;
 
     private UIText _thicknessValue;
 
+    // Equal Dimensions toggle
+    private UIToggleButton _equalDimensionsBtn;
+
     private const string UIPrefix = "Mods.WorldShapingWandsMod.UI";
     private static string L(string key) => Language.GetTextValue($"{UIPrefix}.{key}");
 
     private const float PanelWidth = 320f;
-    private const float PanelHeight = 425f;
+    private const float PanelHeight = 463f;
     private const float Padding = 10f;
     private const float ButtonWidth = 140f;
     private const float ButtonHeight = 28f;
@@ -115,8 +118,8 @@ public class WiringSettingsPanel : UIState
         // Load shape icon textures
         var mod = ModContent.GetInstance<WorldShapingWandsMod>();
         var texRectFilled     = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeRectFilled", AssetRequestMode.ImmediateLoad);
-        var texEdge           = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeEdge", AssetRequestMode.ImmediateLoad);
-        var texStraight       = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeStraight", AssetRequestMode.ImmediateLoad);
+        var texElbow           = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeElbow", AssetRequestMode.ImmediateLoad);
+        var texCardinal       = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeCardinal", AssetRequestMode.ImmediateLoad);
         var texDiamondFilled  = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeDiamondFilled", AssetRequestMode.ImmediateLoad);
         var texTriangleFilled = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeTriangleFilled", AssetRequestMode.ImmediateLoad);
         var texHalfEHFilled   = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeHalfEllipseHFilled", AssetRequestMode.ImmediateLoad);
@@ -127,13 +130,13 @@ public class WiringSettingsPanel : UIState
         float shapeStartX = (PanelWidth - totalShapeWidth) / 2f - Padding;
 
         _rectFilledBtn    = MakeIconBtn(texRectFilled,     L("Common.ShapeRectFilled"),    shapeStartX + (IconBtnSize + IconGap) * 0, y);
-        _edgeBtn          = MakeIconBtn(texEdge,           L("Common.ShapeEdge"),          shapeStartX + (IconBtnSize + IconGap) * 1, y);
-        _straightBtn      = MakeIconBtn(texStraight,       L("Common.ShapeStraight"),      shapeStartX + (IconBtnSize + IconGap) * 2, y);
+        _edgeBtn          = MakeIconBtn(texElbow,           L("Common.ShapeElbow"),          shapeStartX + (IconBtnSize + IconGap) * 1, y);
+        _cardinalBtn      = MakeIconBtn(texCardinal,       L("Common.ShapeCardinal"),      shapeStartX + (IconBtnSize + IconGap) * 2, y);
         _diamondFilledBtn = MakeIconBtn(texDiamondFilled,  L("Common.ShapeDiamondFilled"), shapeStartX + (IconBtnSize + IconGap) * 3, y);
         _triangleFilledBtn = MakeIconBtn(texTriangleFilled, L("Common.ShapeTriangleFilled"), shapeStartX + (IconBtnSize + IconGap) * 4, y);
         _mainPanel.Append(_rectFilledBtn);
         _mainPanel.Append(_edgeBtn);
-        _mainPanel.Append(_straightBtn);
+        _mainPanel.Append(_cardinalBtn);
         _mainPanel.Append(_diamondFilledBtn);
         _mainPanel.Append(_triangleFilledBtn);
         y += IconBtnSize + IconGap;
@@ -176,13 +179,23 @@ public class WiringSettingsPanel : UIState
         _mainPanel.Append(plusBtn);
         y += 42f;
 
+        // === EQUAL DIMENSIONS TOGGLE ===
+        _equalDimensionsBtn = new UIToggleButton(L("Common.EqualDimensions"), false);
+        _equalDimensionsBtn.Width.Set(200f, 0f);
+        _equalDimensionsBtn.Height.Set(28f, 0f);
+        _equalDimensionsBtn.HAlign = 0.5f;
+        _equalDimensionsBtn.Top.Set(y, 0f);
+        _equalDimensionsBtn.OnToggled += (_, _) => ToggleEqualDimensions();
+        _mainPanel.Append(_equalDimensionsBtn);
+        y += 38f;
+
         // Close button
         var closeBtn = new UITextPanel<string>(L("Common.Close"), 0.9f, false);
         closeBtn.Width.Set(80f, 0f);
         closeBtn.Height.Set(30f, 0f);
         closeBtn.HAlign = 0.5f;
         closeBtn.Top.Set(y, 0f);
-        closeBtn.OnLeftClick += (_, _) => IsVisible = false;
+        closeBtn.OnLeftClick += (_, _) => ModContent.GetInstance<WandUISystem>().CloseAllUI();
         _mainPanel.Append(closeBtn);
 
         // Wire up events
@@ -196,8 +209,8 @@ public class WiringSettingsPanel : UIState
         _removeModeBtn.OnToggled += (_, _) => GetSettings().Mode = WiringMode.Remove;
 
         _rectFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.Rectangle, ShapeMode.Filled);
-        _edgeBtn.OnToggled += (_, _) => SetShape(ShapeType.Edge, ShapeMode.Filled);
-        _straightBtn.OnToggled += (_, _) => SetShape(ShapeType.StraightLine, ShapeMode.Filled);
+        _edgeBtn.OnToggled += (_, _) => SetShape(ShapeType.Elbow, ShapeMode.Filled);
+        _cardinalBtn.OnToggled += (_, _) => SetShape(ShapeType.CardinalLine, ShapeMode.Filled);
         _diamondFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.Diamond, ShapeMode.Filled);
         _triangleFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.Triangle, ShapeMode.Filled);
         _halfEllipseHFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.HalfEllipseH, ShapeMode.Filled);
@@ -211,7 +224,7 @@ public class WiringSettingsPanel : UIState
     {
         var settings = GetSettings();
         if (settings == null) return;
-        settings.Shape = new ShapeInfo(type, mode, settings.Shape.Thickness);
+        settings.Shape = new ShapeInfo(type, mode, settings.Shape.Thickness, settings.Shape.EqualDimensions);
         UpdateShapeButtons();
     }
 
@@ -288,12 +301,28 @@ public class WiringSettingsPanel : UIState
         var shape = settings.Shape;
 
         _rectFilledBtn.Toggled = shape.Shape == ShapeType.Rectangle && shape.FillMode == ShapeMode.Filled;
-        _edgeBtn.Toggled = shape.Shape == ShapeType.Edge;
-        _straightBtn.Toggled = shape.Shape == ShapeType.StraightLine;
+        _edgeBtn.Toggled = shape.Shape == ShapeType.Elbow;
+        _cardinalBtn.Toggled = shape.Shape == ShapeType.CardinalLine;
         _diamondFilledBtn.Toggled = shape.Shape == ShapeType.Diamond && shape.FillMode == ShapeMode.Filled;
         _triangleFilledBtn.Toggled = shape.Shape == ShapeType.Triangle && shape.FillMode == ShapeMode.Filled;
         _halfEllipseHFilledBtn.Toggled = shape.Shape == ShapeType.HalfEllipseH && shape.FillMode == ShapeMode.Filled;
         _halfEllipseVFilledBtn.Toggled = shape.Shape == ShapeType.HalfEllipseV && shape.FillMode == ShapeMode.Filled;
+    }
+
+    private void ToggleEqualDimensions()
+    {
+        var settings = GetSettings();
+        if (settings == null) return;
+        var shape = settings.Shape;
+        shape.EqualDimensions = _equalDimensionsBtn.Toggled;
+        settings.Shape = shape;
+    }
+
+    private void UpdateEqualDimensionsButton()
+    {
+        var settings = GetSettings();
+        if (settings == null) return;
+        _equalDimensionsBtn.Toggled = settings.Shape.EqualDimensions;
     }
 
     private void UpdateThicknessDisplay()
@@ -308,6 +337,7 @@ public class WiringSettingsPanel : UIState
         UpdateModeButtons();
         UpdateShapeButtons();
         UpdateThicknessDisplay();
+        UpdateEqualDimensionsButton();
     }
 
     public override void Update(GameTime gameTime)
@@ -319,7 +349,7 @@ public class WiringSettingsPanel : UIState
             Main.LocalPlayer.mouseInterface = true;
 
         if (Main.keyState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.Escape))
-            IsVisible = false;
+            ModContent.GetInstance<WandUISystem>().CloseAllUI();
     }
 
     public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)

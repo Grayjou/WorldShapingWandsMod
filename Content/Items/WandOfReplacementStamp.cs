@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Players;
@@ -64,5 +65,17 @@ public class WandOfReplacementStamp : WandOfReplacementBase
             Point mouseTile = GeometryHelper.WorldToTile(Main.MouseWorld);
             wandPlayer.MoveStampTo(mouseTile);
         }
+    }
+
+    public override void AddRecipes()
+    {
+        WandRecipeConditions.Register(Type);
+        CreateRecipe()
+            .AddIngredient<WandOfReplacementInstant>(1)
+            .AddCustomShimmerResult(ModContent.ItemType<WandOfBuildingInstant>(), 1)
+            .AddCustomShimmerResult(ModContent.ItemType<WandOfDismantlingInstant>(), 1)
+            .AddCustomShimmerResult(ItemID.ManaCrystal, 1)
+            .AddCondition(WandRecipeConditions.NonCraftable)
+            .Register();
     }
 }

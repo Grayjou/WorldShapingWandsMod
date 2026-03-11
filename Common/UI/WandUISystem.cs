@@ -12,17 +12,19 @@ public class WandUISystem : ModSystem
 {
     // Individual UI panels
     internal BuildingSettingsPanel BuildingUI;
-    internal DestructionSettingsPanel DestructionUI;
+    internal DismantlingSettingsPanel DismantlingUI;
     internal ReplacementSettingsPanel ReplacementUI;
     internal WiringSettingsPanel WiringUI;
+    internal SafekeepingSettingsPanel SafekeepingUI;
     
     private UserInterface _userInterface;
 
     public bool IsAnyUIOpen => 
         (BuildingUI?.IsVisible ?? false) ||
-        (DestructionUI?.IsVisible ?? false) ||
+        (DismantlingUI?.IsVisible ?? false) ||
         (ReplacementUI?.IsVisible ?? false) ||
-        (WiringUI?.IsVisible ?? false);
+        (WiringUI?.IsVisible ?? false) ||
+        (SafekeepingUI?.IsVisible ?? false);
 
     public override void Load()
     {
@@ -37,22 +39,26 @@ public class WandUISystem : ModSystem
         BuildingUI = new BuildingSettingsPanel();
         BuildingUI.Activate();
 
-        DestructionUI = new DestructionSettingsPanel();
-        DestructionUI.Activate();
+        DismantlingUI = new DismantlingSettingsPanel();
+        DismantlingUI.Activate();
 
         ReplacementUI = new ReplacementSettingsPanel();
         ReplacementUI.Activate();
 
         WiringUI = new WiringSettingsPanel();
         WiringUI.Activate();
+
+        SafekeepingUI = new SafekeepingSettingsPanel();
+        SafekeepingUI.Activate();
     }
 
     public override void Unload()
     {
         BuildingUI = null;
-        DestructionUI = null;
+        DismantlingUI = null;
         ReplacementUI = null;
         WiringUI = null;
+        SafekeepingUI = null;
         _userInterface = null;
     }
 
@@ -61,81 +67,65 @@ public class WandUISystem : ModSystem
     /// </summary>
     public void OpenUIForCurrentWand()
     {
-        Main.NewText($"[DEBUG] OpenUIForCurrentWand called", Color.Cyan);
         CloseAllUI();
 
         var heldItem = Main.LocalPlayer?.HeldItem?.ModItem;
-        Main.NewText($"[DEBUG] Opening UI for item type: {heldItem?.GetType().Name ?? "NULL"}", Color.Cyan);
 
         if (heldItem is WandOfBuildingBase)
         {
-            Main.NewText($"[DEBUG] Setting BuildingUI visible", Color.Cyan);
             BuildingUI.IsVisible = true;
             _userInterface.SetState(BuildingUI);
-            Main.NewText($"[DEBUG] BuildingUI.IsVisible = {BuildingUI.IsVisible}", Color.Cyan);
         }
-        else if (heldItem is WandOfDestructionBase)
+        else if (heldItem is WandOfDismantlingBase)
         {
-            Main.NewText($"[DEBUG] Setting DestructionUI visible", Color.Cyan);
-            DestructionUI.IsVisible = true;
-            _userInterface.SetState(DestructionUI);
-            Main.NewText($"[DEBUG] DestructionUI.IsVisible = {DestructionUI.IsVisible}", Color.Cyan);
+            DismantlingUI.IsVisible = true;
+            _userInterface.SetState(DismantlingUI);
         }
         else if (heldItem is WandOfReplacementBase)
         {
-            Main.NewText($"[DEBUG] Setting ReplacementUI visible", Color.Cyan);
             ReplacementUI.IsVisible = true;
             _userInterface.SetState(ReplacementUI);
-            Main.NewText($"[DEBUG] ReplacementUI.IsVisible = {ReplacementUI.IsVisible}", Color.Cyan);
         }
         else if (heldItem is WandOfWiringBase)
         {
-            Main.NewText($"[DEBUG] Setting WiringUI visible", Color.Cyan);
             WiringUI.IsVisible = true;
             _userInterface.SetState(WiringUI);
-            Main.NewText($"[DEBUG] WiringUI.IsVisible = {WiringUI.IsVisible}", Color.Cyan);
         }
-        else
+        else if (heldItem is WandOfSafekeepingBase)
         {
-            Main.NewText($"[DEBUG] Held item is not a recognized wand type!", Color.Red);
+            SafekeepingUI.IsVisible = true;
+            _userInterface.SetState(SafekeepingUI);
         }
     }
 
     public void ToggleUIForCurrentWand()
     {
         var heldItem = Main.LocalPlayer?.HeldItem?.ModItem;
-        Main.NewText($"[DEBUG] ToggleUIForCurrentWand called. HeldItem: {heldItem?.GetType().Name ?? "NULL"}", Color.Cyan);
 
         // Check if the current wand's UI is already open
         bool currentIsOpen = heldItem switch
         {
             WandOfBuildingBase => BuildingUI?.IsVisible ?? false,
-            WandOfDestructionBase => DestructionUI?.IsVisible ?? false,
+            WandOfDismantlingBase => DismantlingUI?.IsVisible ?? false,
             WandOfReplacementBase => ReplacementUI?.IsVisible ?? false,
             WandOfWiringBase => WiringUI?.IsVisible ?? false,
+            WandOfSafekeepingBase => SafekeepingUI?.IsVisible ?? false,
             _ => false
         };
 
-        Main.NewText($"[DEBUG] Current UI open: {currentIsOpen}", Color.Cyan);
-
         if (currentIsOpen)
-        {
-            Main.NewText($"[DEBUG] Closing all UI", Color.Yellow);
             CloseAllUI();
-        }
         else
-        {
-            Main.NewText($"[DEBUG] Opening UI for wand", Color.Yellow);
             OpenUIForCurrentWand();
-        }
     }
 
     public void CloseAllUI()
     {
         if (BuildingUI != null) BuildingUI.IsVisible = false;
-        if (DestructionUI != null) DestructionUI.IsVisible = false;
+        if (DismantlingUI != null) DismantlingUI.IsVisible = false;
         if (ReplacementUI != null) ReplacementUI.IsVisible = false;
         if (WiringUI != null) WiringUI.IsVisible = false;
+        if (SafekeepingUI != null) SafekeepingUI.IsVisible = false;
         _userInterface?.SetState(null);
     }
 
@@ -157,13 +147,14 @@ public class WandUISystem : ModSystem
                 "WorldShapingWandsMod: Wand Settings",
                 delegate
                 {
+                    // Use _userInterface.Draw instead of panel.Draw directly.
+                    // UserInterface.Draw handles click propagation, hover states,
+                    // and focus management that UI elements need to receive proper
+                    // mouse interaction. Calling panel.Draw directly bypasses this,
+                    // which was the root cause of wiring UI not responding to clicks.
                     if (IsAnyUIOpen)
                     {
-                        // Draw whichever is visible
-                        if (BuildingUI?.IsVisible == true) BuildingUI.Draw(Main.spriteBatch);
-                        else if (DestructionUI?.IsVisible == true) DestructionUI.Draw(Main.spriteBatch);
-                        else if (ReplacementUI?.IsVisible == true) ReplacementUI.Draw(Main.spriteBatch);
-                        else if (WiringUI?.IsVisible == true) WiringUI.Draw(Main.spriteBatch);
+                        _userInterface?.Draw(Main.spriteBatch, Main._drawInterfaceGameTime);
                     }
                     return true;
                 },

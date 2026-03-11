@@ -95,14 +95,14 @@ public class WandSettingsState : UIState
 
     private void CreateShapeButtons(float yOffset)
     {
-        string[] shapes = { "Rect", "Ellipse", "Diamond", "Tri", "Edge", "Simple Line" };
+        string[] shapes = { "Rect", "Ellipse", "Diamond", "Tri", "Elbow", "Simple Line" };
         ShapeType[] shapeTypes = { 
             ShapeType.Rectangle, 
             ShapeType.Ellipse, 
             ShapeType.Diamond, 
             ShapeType.Triangle, 
-            ShapeType.Edge,
-            ShapeType.StraightLine 
+            ShapeType.Elbow,
+            ShapeType.CardinalLine 
         };
 
         _shapeButtons = new UIPanel[shapes.Length];
@@ -210,8 +210,8 @@ public class WandSettingsState : UIState
             ShapeType.Ellipse, 
             ShapeType.Diamond, 
             ShapeType.Triangle, 
-            ShapeType.Edge,
-            ShapeType.StraightLine 
+            ShapeType.Elbow,
+            ShapeType.CardinalLine 
         };
         
         for (int i = 0; i < _shapeButtons.Length; i++)

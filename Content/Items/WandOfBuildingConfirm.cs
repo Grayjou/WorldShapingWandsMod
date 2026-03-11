@@ -1,4 +1,5 @@
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 using Microsoft.Xna.Framework;
 using WorldShapingWandsMod.Common.Players;
@@ -42,6 +43,20 @@ namespace WorldShapingWandsMod.Content.Items
         public override bool CanUseItem(Player player)
         {
             return base.CanUseItem(player);
+        }
+
+        public override void AddRecipes()
+        {
+            WandRecipeConditions.Register(Type);
+            CreateRecipe()
+                .AddIngredient<WandOfBuildingInstant>(1)
+                .AddCustomShimmerResult(ItemID.Wood, 10)
+                .AddCustomShimmerResult(ItemID.GrayBrick, 10)
+                .AddCustomShimmerResult(ItemID.RedBrick, 10)
+                .AddCustomShimmerResult(ItemID.Rope, 20)
+                .AddCustomShimmerResult(ItemID.ManaCrystal, 1)
+                .AddCondition(WandRecipeConditions.NonCraftable)
+                .Register();
         }
     }
 }

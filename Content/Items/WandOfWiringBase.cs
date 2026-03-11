@@ -2,8 +2,10 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
+using WorldShapingWandsMod.Common.Configs;
 using WorldShapingWandsMod.Common.Drawing;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Geometry;
@@ -18,6 +20,8 @@ namespace WorldShapingWandsMod.Content.Items;
 public abstract class WandOfWiringBase : BaseCyclingWand
 {
     public override string WandBaseName => "Wand of Wiring";
+    public override string WandLore => "An advanced mechanism wrench, refined beyond the Grand Design. Where gods shape matter, engineers shape purpose.";
+    public override bool ShowDivineLore => false;
 
     protected abstract bool HandleUseItem(Player player, WandPlayer wandPlayer, Point mouseTile);
 
@@ -121,7 +125,8 @@ public abstract class WandOfWiringBase : BaseCyclingWand
             settings.Shape.Thickness,
             HorizontalBias.None,
             VerticalBias.None,
-            selection.VerticalFirst
+            selection.VerticalFirst,
+            settings.Shape.EqualDimensions
         );
 
         var tileSet = ShapeRegistry.GetShapeTiles(settings.Shape.Shape, context);
@@ -137,10 +142,20 @@ public abstract class WandOfWiringBase : BaseCyclingWand
         // Report results
         if (settings.Mode == WiringMode.Place && placed > 0)
         {
+            // Play GrandDesignSound (SoundID.Item64) — Blowgun / Grand Design
+            var config = ModContent.GetInstance<WandConfig>();
+            if (config.EnableWandSounds)
+                SoundEngine.PlaySound(SoundID.Item64, player.Center); // GrandDesignSound
+
             Main.NewText($"Placed {placed} wire segments.", Color.LimeGreen);
         }
         else if (settings.Mode == WiringMode.Remove && removed > 0)
         {
+            // Play GrandDesignSound (SoundID.Item64) — Blowgun / Grand Design
+            var config = ModContent.GetInstance<WandConfig>();
+            if (config.EnableWandSounds)
+                SoundEngine.PlaySound(SoundID.Item64, player.Center); // GrandDesignSound
+
             Main.NewText($"Removed {removed} wire segments.", Color.Cyan);
         }
         else
@@ -179,11 +194,7 @@ public abstract class WandOfWiringBase : BaseCyclingWand
 
     public override void AddRecipes()
     {
-        CreateRecipe()
-            .AddIngredient(ItemID.WireKite, 1)
-            .AddIngredient(ItemID.Wire, 50)
-            .AddIngredient(ItemID.Actuator, 10)
-            .AddTile(TileID.TinkerersWorkbench)
-            .Register();
+        // Only the Instant variant has a craftable recipe.
+        // Other modes are obtained via right-click cycling in inventory.
     }
 }

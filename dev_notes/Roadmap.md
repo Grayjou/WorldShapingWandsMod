@@ -1,82 +1,76 @@
 # WorldShapingWandsMod — Roadmap
 
-## Current State (as of this writing)
+## Current State (post-DevNotes #4 — Alpha Release Prep)
 
-The core infrastructure is complete and stable. All four wand families compile and run, shapes
-generate correctly, and undo captures full tile + wall state.
+The core infrastructure is complete and stable. All five wand families compile and run, shapes
+generate correctly, undo captures full tile + wall state, and crafting recipes are in place.
 
 | System | Status | Notes |
 |---|---|---|
-| Shape geometry (8 shapes, 2 modes, variable thickness) | ✅ Solid | Ellipse uses direct `Math.Sqrt` rasterisation; Half-ellipses clip a doubled ellipse to one half; Diamond uses ×2 integer arithmetic; StraightLine uses 8-sector direction detection |
-| Outline system (`OutlineHelper`) | ✅ Solid | Centralised; shapes only provide filled tiles; only Filled and Hollow modes (Outline removed) |
-| Selection state (immutable, lockable) | ✅ Solid | |
+| Shape geometry (8 shapes, 2 modes, variable thickness) | ✅ Solid | Ellipse, Diamond, CardinalLine, Half-ellipses all correct |
+| Outline system (`OutlineHelper`) | ✅ Solid | Centralised; shapes only provide filled tiles; Filled and Hollow modes |
+| Selection state (immutable, lockable) | ✅ Solid | 4 modes: Instant/Select/Confirm/Stamp |
 | Per-player wand state (`WandPlayer`) | ✅ Solid | |
-| Wand of Building | ✅ Working | Inventory stock check, infinite-resource config, undo, block-replacement, exhaustion modes |
-| Wand of Destruction | ✅ Working | Pick-power check, tile+wall, undo |
-| Wand of Replacement | ✅ Working | Pick-power check, inventory consumption, undo |
-| Wand of Wiring | ✅ Working | Wire/actuator placement and removal — missing: wire consumption, per-wire colour overlay, distance clamping, proper MP packets (see MagicWiring gap analysis) |
-| Three selection modes (Instant / Select / Confirm) | ✅ Working | `SelectionOwnerItemType` prevents cross-wand execution on switch |
+| Wand of Building | ✅ Working | Tile+wall placement, stock check, infinite-resource, undo, exhaustion modes, recipe |
+| Wand of Dismantling | ✅ Working | Pick-power check, tile+wall, undo, progressive mode, recipe |
+| Wand of Replacement | ✅ Working | Tile+wall replacement (#37), pick-power, inventory consumption, undo, recipe |
+| Wand of Wiring | ✅ Working | Wire/actuator placement and removal, recipe |
+| Wand of Safekeeping | ✅ Working | Protect/unprotect tiles+walls, persistent+session, recipe |
+| Four selection modes | ✅ Working | SelectionOwnerItemType prevents cross-wand execution |
 | Mode cycling via right-click inventory | ✅ Working | |
-| Screen-culled selection overlay | ✅ Working | |
-| Per-wand settings panels (draggable UI) | ✅ Working | |
-| Config (infinite-resource threshold) | ✅ Working | |
-| Undo stack (20-deep, tile + wall state) | ✅ Working | Fixed: was dropping newest action instead of oldest |
-| Localization keys | ✅ Working | En-US; single correctly-named hjson file; icon-button tooltips use `Language.GetTextValue` |
+| Screen-culled selection overlay | ✅ Working | Dimension labels with area count |
+| Per-wand settings panels (draggable UI) | ✅ Working | Icon-based buttons |
+| Config (infinite-resource, progressive, etc.) | ✅ Working | |
+| Undo stack (20-deep, tile + wall state) | ✅ Working | |
+| Recipe system with recipe groups | ✅ Working | AnyGem, AnyGoldBar, AnySilverBar, AnyEvilStone, AnyWandOfBuilding, AnyWandOfDismantling |
+| Sound effects (per-wand, conditional) | ✅ Working | Dismantling: Tink, Replacement: Item29, Wiring: Item64, Safekeeping: Item30 |
+| Lore system (divine + per-wand) | ✅ Working | ShowDivineLore override for Wiring |
+| Localization keys | ✅ Working | En-US; includes Wall type |
+| Dual-sprite system | ✅ Working | Inventory vs swing textures |
+| Shimmer decraft | ✅ Working | All wands decraft to Amethyst |
+| Cursor highlight | ✅ Working | Pulsing highlight at cursor when holding wand |
+| UI close button | ✅ Working | Properly clears UserInterface state |
 
 ---
 
-## Phase 1 — Stability & Completeness (current focus)
+## Phase 1 — Alpha Release (current)
 
-**Goal**: fill gaps in existing wands; no new wand families yet.
+**Goal**: Complete, polished, single-player-ready alpha. All 5 wand families functional with
+recipes, sound effects, correct dimension display, and proper documentation.
 
-### 1.1 Settings UI completion
-- ✅ Building wand: functional Object selector (Solid / Platform / Rope / Rail / GrassSeed / PlantPot)
-- ✅ All panels: shape icon buttons (14 buttons across 8 shape types × filled/hollow + edge + straight)
-- ✅ All panels: object-type icon buttons where applicable (Building: 6, Replacement: 6 source + 7 target)
-- Building wand: Slope selector (flat / top-left / top-right / bottom-left / bottom-right / half)
-- Destruction wand: expose `SuppressDrops` toggle in UI (already in settings struct, not shown)
+### Completed in DevNotes #4
+- ✅ build.txt metadata (author, homepage)
+- ✅ description.txt rewritten (5 families, 4 modes, features, limitations)
+- ✅ Sound effects: Building (Item9), Dismantling (Item14), Replacement (Item29)
+- ✅ ElbowShape GetDisplayDimensions (shows segment lengths, not bounding box)
+- ✅ Dimension display: Math.Clamp positioning, configurable offset
+- ✅ Area tile count display (debounced, appended to dimension label)
+- ✅ Replacement wall mode (#37): ObjType.Wall, ExecuteWallReplacement, UI buttons
+- ✅ Air source type clarified: Air is target-only (enum doc + UI already correct)
+- ✅ Lore finalized: Replacement updated, Wiring divine header removed
+- ✅ Recipes: Building, Dismantling, Replacement added; Safekeeping updated
+- ✅ WandRecipeSystem with 4 recipe groups
+- ✅ TODO_FEATURES.md and Roadmap.md fully updated
 
-### 1.2 Building wand: block-exhaustion behaviour ✅
-- ✅ Config option: **NextBlock** (automatically switch to the next matching block in inventory), **Interrupt** (stop mid-operation), **Cancel** (abort if not enough blocks before starting)
-- Implemented via `BlockExhaustionMode` enum and per-tile item lookup in `ExecuteBuilding`
+### Completed in DevNotes #5
+- ✅ Cardinal line circular brush algorithm (replaces checker-pattern perpendicular expansion)
+- ✅ Cursor highlight / starting area preview when holding wand
+- ✅ Only Instant mode has crafting recipe (other modes via inventory right-click)
+- ✅ "Gemstone" label for AnyGem recipe group
+- ✅ Replacement wand recipe uses AnyWandOfBuilding / AnyWandOfDismantling groups
+- ✅ Sound effects: correct IDs, conditional playback, config toggle (EnableWandSounds)
+- ✅ Multiplayer fix: Dismantling and Replacement skip WorldGen.gen in MP
 
-### 1.3 Building wand: replace mode ✅
-- ✅ When enabled, overwrite existing tiles instead of skipping occupied positions
-- ✅ Validate pick power and `CanKillTile` on source tile before replacing
+### Completed in DevNotes #6
+- ✅ Shimmer decraft to Amethyst instead of shimmer cycling (follows vanilla Shellphone convention)
+- ✅ UI close button fix: all 5 panels now call WandUISystem.CloseAllUI() properly
+- ✅ Shimmer tooltip hint added
 
-### 1.4 Wand of Replacement: Air as object type
-- Air is simply another entry in the object type settings (not a separate wand or mode)
-- Source = Air → "fill empty gaps" (place into empty tiles within selection)
-- Target = Air → "erase matching tiles" (remove matching tiles, like targeted destruction)
-- Should be straightforward: add `PlaceType.Air` variant, condition = `!tile.HasTile` or `tile.HasTile` depending on direction
-
-### 1.5 UI redesign: custom asset buttons with hover labels
-
-**Problem**: as more features are added (shapes, modes, object types, exhaustion, slopes…), text-based
-`UIToggleButton` panels are becoming crowded and tall.
-
-**Proposed solution**: replace text buttons with small **custom-asset icon buttons** (Terraria style,
-like the vanilla wiring UI). Each button is a 32×32 or 22×22 sprite that shows a **hover label**
-on mouseover using `UICommon.TooltipMouseText(label)`.
-
-**Implementation pattern** (from tModLoader ExampleMod):
-- Subclass `UIImageButton` → override `DrawSelf` → call `base.DrawSelf` + `UICommon.TooltipMouseText` on hover
-- Load assets via `ModContent.Request<Texture2D>("MyMod/Assets/UI/ButtonName")`
-- Icons go in `Assets/UI/` folder — Terraria-style pixel art at 2× scale
-
-**Design decisions pending**:
-- **Object types**: good candidate for icons — block sprite thumbnails are immediately recognisable
-- **Modes (Filled/Hollow)**: good candidate — small shape-outline icons are clear
-- **Shapes**: **uncertain** — text labels ("Rect", "Ellipse", "Edge", "Straight") may be more descriptive
-  than tiny icons. Could keep text for shapes while using icons for everything else.
-- **Exhaustion mode, slope selector, wire types**: all could benefit from compact icon layout
-- Need to test in-game before committing — panel height is the main concern
-
-### 1.6 HUD element — active wand info
-- Small HUD indicator showing current wand name, SelectionMode, and active shape type
-
-### 1.7 Screen-edge indicators
-- Draw directional arrow or count indicator at screen edges for off-screen tiles in the selection
+### Remaining Alpha Polish
+- ✅ Cardinal line thickness verified (#21 — circular brush)
+- ❌ Multiplayer testing notes (basic fix in place, needs thorough testing)
+- ❌ Workshop description polish
+- ❌ Advanced editor mode scaffolding (roadmap only)
 
 ---
 
@@ -88,10 +82,7 @@ Adds procedural jitter to shape boundaries for organic-looking terrain placement
 - Per-wand noise toggle
 - Keyboard shortcut or UI button to regenerate noise with a new seed
 - Noise unavailable in Instant mode (too disorienting for click-drag)
-- Performance ceiling: noise only evaluated on boundary tiles (already identified by `OutlineHelper`)
-
-**Possible deduplication**: noise generation is shape-agnostic; a single `NoiseHelper` used by all
-wand types avoids duplication.
+- Performance ceiling: noise only evaluated on boundary tiles
 
 ---
 
@@ -99,135 +90,57 @@ wand types avoids duplication.
 
 Transforms the mod from "immediate apply" to a staged-changes model for precision building.
 
-### Core additions
-- `StagedChange` struct: position + intended new tile + wall type
-- `ChangeBuffer` per player: ordered list of staged changes with net-delta calculation
-- `CommitAction` and `DiscardAction` commands
-
-### UI additions
-- Overlay colour-coding: **green** = tiles to add, **red** = tiles to remove, **yellow** = replacements
-- Info panel: required blocks, currently held, shortfall highlighted in red
-- Indestructible block warnings (tiles that fail `CanKillTile` or pick-power check)
-
-### Overlay Design Notes (for designer workflow)
-
-The current `SelectionOverlay` draws a flat colour per tile. Phase 3 needs richer overlays:
-
-1. **Colour semantics** — assign fixed colours from `WandColors` for each staged change type:
-   - Build (place new tile): semi-transparent green
-   - Destroy (remove existing tile): semi-transparent red
-   - Replace (swap tile type): semi-transparent yellow/amber
-   - Wall-only changes: same scheme but dimmer alpha
-   - Conflicting / impossible tiles: pulsing red outline
-
-2. **Layered rendering** — staged changes overlay on top of the existing selection outline.
-   The outline still shows the selection boundary; the interior fill uses change-type colours.
-   This requires `SelectionOverlay.Draw` to accept a `ChangeBuffer` alongside the `SelectionState`.
-
-3. **Resource info overlay** — a small floating panel near the selection showing:
-   - Block type icon + count needed vs count in inventory
-   - Red text for shortfalls
-   - Drawn via `UIWorldInfoPanel` (new element), positioned at selection corner
-
-4. **Ghost tile rendering** — for preview mode, draw the *intended* tile sprite at reduced opacity
-   instead of a flat colour fill. This gives the player a true preview of the final result.
-   Implementation: use `Main.instance.TilePaintSystem` data + `Main.spriteBatch.Draw` with the
-   tile's source rectangle from `Main.tileFrame` at ~40% alpha.
-
-5. **Performance** — overlay rendering must remain screen-culled. Only compute overlay data for
-   tiles within `Main.screenPosition` ± margin. The `ChangeBuffer` should support spatial queries
-   (e.g., a `HashSet<Point>` for O(1) lookup of whether a tile has a staged change).
-
-6. **Overlay toggle** — a keybind or UI toggle to show/hide the preview overlay without discarding
-   the staged changes. Useful when the overlay obscures the build context.
-
-### Intersection resolution
-When multiple staged shapes overlap, compute the net result:
-- Two filled areas with different block types → second operation overrides first
-- An erase followed by a fill → net fill
-
-### Undo within preview mode
-- Each staged change is its own undo entry inside the buffer
-- Committing the buffer creates one undo entry restoring the pre-commit world state
-
-**Possible optimisation**: `ChangeBuffer` only stores positions where the final state differs
-from the current world — avoids redundant snapshotting.
+- `StagedChange` struct and `ChangeBuffer` per player
+- Overlay colour-coding: green (add), red (remove), yellow (replace)
+- Info panel: required blocks, inventory status, shortfall warnings
+- Ghost tile rendering at reduced opacity
+- Intersection resolution for overlapping staged shapes
+- Moving selection (offset staged changes before commit)
 
 ---
 
-## Phase 4 — Designer Wands (medium priority)
+## Phase 4 — Designer Wands (depends on Phase 3)
 
-Builds on the preview system. Depends on Phase 3 being complete.
-
-### Selection Wand
-- Boolean region operations: Add / Remove / Intersect / XOR
-- Visual indicator for each boolean mode
-
-### Drawing Wand
-- Paint inside a selection region without placing tiles (stages changes)
-- Full shape support with selected block type
-- No inventory consumption until commit
-
-### Eraser Wand (may merge with Drawing Wand)
-- Stage air/removal operations
-
-### Replacement Wand (may merge with Drawing Wand)
-- Stage tile-type swaps
-
-### Commit Wand (may merge into Selection Wand right-click)
-- Trigger commit from any selection state
-- Display final resource delta before confirming
-
-### Moving Selection
-- Offset all staged changes dynamically to preview position before commit
-- Essential for "build a room template, move it around to find the right spot"
+- Selection Wand: boolean region operations (Add / Remove / Intersect / XOR)
+- Drawing Wand: paint tile placements without committing
+- Commit Wand: trigger commit from any selection state
+- Resource tracking across commit buffer
 
 ---
 
-## Phase 5 — QoL & Advanced Features (lower priority)
+## Phase 5 — QoL & Advanced Features
 
-- **Multi-level undo**: undo individual staged operations inside a committed buffer
-- **Wall-aware building**: wand of building can optionally place walls
-- **Max canvas area limit**: configurable cap on total tiles in a single operation (prevents lag)
-- **Save / load structures**: `TagCompound`-serialised tile snapshots (inspiration: WandOfConstruction)
-- **Flood fill mode**: fill a contiguous region of matching tiles
+- Multi-level undo / redo
+- Max canvas area limit (configurable cap)
+- Save / load structures (`TagCompound` tile snapshots)
+- Flood fill mode
+- HUD element showing active wand info
+- Screen-edge indicators for off-screen tiles
+- **Cross-mod gem support**: When Thorium Mod is loaded, add Opal and Aquamarine to AnyGem recipe group via `ModLoader.TryGetMod("ThoriumMod")` in `AddRecipeGroups()`
+- Wand of Erosion: erosion algorithms for deepening holes, shaping terrain
 
 ---
 
-## Phase 6 — Multiplayer & Polish (future)
+## Phase 6 — Multiplayer & Polish
 
 - Packet-based sync for all placement/destruction operations
-- Server-side validation (currently client-authority with `NetMessage.SendTileSquare` notifications)
-- Multiplayer: lock selection region to prevent concurrent modification conflicts
-- Workshop release (description, icon, crafting recipes)
+- Server-side validation
+- Multiplayer protection permissions
+- `TileLoader.CanPlace()` for modded tiles
+- Workshop release (description, icon, tags)
 
 ---
 
-## Architecture Decisions & Deduplication Opportunities
+## Architecture Notes
 
-| Concern | Current approach | Opportunity |
-|---|---|---|
-| Per-wand settings | Four separate `WandOf*Settings` structs | Extract shared fields (`SelectionMode`, `ShapeInfo`) into a `BaseWandSettings` base class |
-| `Execute*` methods | Duplicated structure in `WandOfBuildingBase`, `WandOfDestructionBase`, etc. | A shared `WandOperation` base that takes a `TileAction` delegate would remove the per-type switch |
-| `IsHoldingWandItem` | Duplicated in `WandPlayer` and `SelectionOverlay` | Centralise in `WandPlayer` as a property |
-| `CancelSelection` | Virtually identical in all four wand base classes | Already `virtual` — consolidate the `Main.NewText` call into the base |
-| Overlay colour constants | Previously hardcoded in `SelectionOverlay` | ✅ Centralised in `WandColors.cs` |
-| `ShapeMode.Hollow` vs `ShapeMode.Outline` | Were identical (`BuildHollow` delegated to `BuildOutline`) | ✅ Resolved: removed `ShapeMode.Outline`; only Filled and Hollow remain |
-| Overlay colour constants | Hardcoded in `SelectionOverlay` | ✅ Centralised in `WandColors.cs` |
-| UI crowdedness | Text buttons scale poorly with feature count | Proposed: custom-asset icon buttons with hover labels (tModLoader `UIImageButton` + `TooltipMouseText` pattern). Icons for object types and modes; text may stay for shapes (more descriptive). See Phase 1.5 |
+| Concern | Status |
+|---|---|
+| Per-wand settings | Separate classes per family — works well for different needs |
+| `Execute*` methods | Each family has its own — deduplication possible but low priority |
+| Overlay colours | Centralised in `WandColors.cs` |
+| Shape modes | Filled + Hollow only (Outline removed as redundant) |
+| Recipe groups | Centralised in `WandRecipeSystem.cs` |
 
 ---
 
-## Risk Register
-
-| Risk | Likelihood | Mitigation |
-|---|---|---|
-| Undo breaking multi-tile objects (doors, furniture) | Medium | Document as known limitation; add tile-object check before snapshot |
-| Large operations causing frame spikes | Medium | Max canvas limit + background processing (coroutine) |
-| Preview mode state becoming desynced on world reload | Medium | Clear staged changes on `OnEnterWorld` |
-| Modded tile incompatibility | Low (vanilla only currently) | Add `TileLoader.CanPlace()` validation in Phase 6 |
-| Multiplayer desyncs | High without fix | Addressed in Phase 6 packet work |
-
----
-
-*See [`TODO_FEATURES.md`](TODO_FEATURES.md) for a granular, status-annotated checklist.*
+*See [`TODO_FEATURES.md`](TODO_FEATURES.md) for granular status checklist.*

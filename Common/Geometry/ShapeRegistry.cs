@@ -20,8 +20,8 @@ public static class ShapeRegistry
         Register(new EllipseShape());
         Register(new DiamondShape());
         Register(new TriangleShape());
-        Register(new EdgeShape());
-        Register(new StraightLineShape());
+        Register(new ElbowShape());
+        Register(new CardinalLineShape());
         Register(new HalfEllipseHShape());
         Register(new HalfEllipseVShape());
 
@@ -62,6 +62,17 @@ public static class ShapeRegistry
         {
             var provider = GetProvider(shapeType);
             return provider.GetTiles(context);
+        }
+
+        /// <summary>
+        /// Returns shape-aware display dimensions for the given shape and context.
+        /// Shapes like CardinalLine return accurate dimensions (e.g. Wx1 for horizontal lines)
+        /// instead of the raw bounding box.
+        /// </summary>
+        public static (int Width, int Height) GetDisplayDimensions(ShapeType shapeType, ShapeContext context)
+        {
+            var provider = GetProvider(shapeType);
+            return provider.GetDisplayDimensions(context);
         }
 
     /// <summary>

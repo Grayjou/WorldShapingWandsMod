@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Players;
@@ -8,11 +9,11 @@ using WorldShapingWandsMod.Common.Utilities;
 
 namespace WorldShapingWandsMod.Content.Items;
 
-public class WandOfDestructionStamp : WandOfDestructionBase
+public class WandOfDismantlingStamp : WandOfDismantlingBase
 {
     public override SelectionMode WandSelectionMode => SelectionMode.FourClick;
     public override Color ModeColor => new Color(100, 200, 255); // Light blue — Stamp (repeatable)
-    public override int GetNextModeItemType() => ModContent.ItemType<WandOfDestructionInstant>();
+    public override int GetNextModeItemType() => ModContent.ItemType<WandOfDismantlingInstant>();
 
     protected override bool HandleUseItem(Player player, WandPlayer wandPlayer, Point mouseTile)
     {
@@ -44,7 +45,7 @@ public class WandOfDestructionStamp : WandOfDestructionBase
         {
             // 4th+ click — execute at current mouse position, keep stamp
             wandPlayer.MoveStampTo(mouseTile);
-            ExecuteDestruction(player, wandPlayer);
+            ExecuteDismantling(player, wandPlayer);
             return false;
         }
     }
@@ -64,5 +65,19 @@ public class WandOfDestructionStamp : WandOfDestructionBase
             Point mouseTile = GeometryHelper.WorldToTile(Main.MouseWorld);
             wandPlayer.MoveStampTo(mouseTile);
         }
+    }
+
+    public override void AddRecipes()
+    {
+        WandRecipeConditions.Register(Type);
+        CreateRecipe()
+            .AddIngredient<WandOfDismantlingInstant>(1)
+            .AddCustomShimmerResult(ItemID.Wood, 10)
+            .AddCustomShimmerResult(ItemID.Rope, 20)
+            .AddCustomShimmerResult(ItemID.Amethyst, 5)
+            .AddCustomShimmerResult(ItemID.Dynamite, 50)
+            .AddCustomShimmerResult(ItemID.ManaCrystal, 1)
+            .AddCondition(WandRecipeConditions.NonCraftable)
+            .Register();
     }
 }

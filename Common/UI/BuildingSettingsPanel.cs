@@ -20,7 +20,7 @@ public class BuildingSettingsPanel : UIState
     private UIDraggablePanel _mainPanel;
 
     // Object type buttons (icon-based)
-    private UIIconButton _solidBtn, _platformBtn, _ropeBtn, _railBtn, _grassSeedBtn, _planterBtn;
+    private UIIconButton _solidBtn, _platformBtn, _ropeBtn, _railBtn, _grassSeedBtn, _planterBtn, _wallBtn;
 
     // Shape buttons (icon-based)
     private UIIconButton _rectFilledBtn, _rectHollowBtn;
@@ -30,7 +30,7 @@ public class BuildingSettingsPanel : UIState
     private UIIconButton _halfEllipseHFilledBtn, _halfEllipseHHollowBtn;
     private UIIconButton _halfEllipseVFilledBtn, _halfEllipseVHollowBtn;
     private UIIconButton _edgeBtn;
-    private UIIconButton _straightBtn;
+    private UIIconButton _cardinalBtn;
 
     // Thickness
     private UIText _thicknessValue;
@@ -40,11 +40,17 @@ public class BuildingSettingsPanel : UIState
     private UIIconButton _slopeBottomRightBtn, _slopeBottomLeftBtn;
     private UIIconButton _slopeTopRightBtn, _slopeTopLeftBtn;
 
+    // Overwrite Slope toggle
+    private UIToggleButton _overwriteSlopeBtn;
+
+    // Equal Dimensions toggle
+    private UIToggleButton _equalDimensionsBtn;
+
     private const string UIPrefix = "Mods.WorldShapingWandsMod.UI";
     private static string L(string key) => Language.GetTextValue($"{UIPrefix}.{key}");
 
     private const float PanelWidth = 320f;
-    private const float PanelHeight = 460f;
+    private const float PanelHeight = 580f;
     private const float Padding = 10f;
     private const float IconBtnSize = 36f;  // icon button outer size (includes visual padding)
     private const float IconGap = 6f;       // gap between icon buttons
@@ -88,20 +94,30 @@ public class BuildingSettingsPanel : UIState
         var texRail      = mod.Assets.Request<Texture2D>("Assets/Icons/ObjRail", AssetRequestMode.ImmediateLoad);
         var texGrassSeed = mod.Assets.Request<Texture2D>("Assets/Icons/ObjGrassSeed", AssetRequestMode.ImmediateLoad);
         var texPlanter   = mod.Assets.Request<Texture2D>("Assets/Icons/ObjPlanter", AssetRequestMode.ImmediateLoad);
+        // Wall icon — reuses ObjSolid until a dedicated ObjWall.png is created
+        var texWall      = mod.Assets.Request<Texture2D>("Assets/Icons/ObjWall", AssetRequestMode.ImmediateLoad);
 
-        // Row of 6 object type icons, centered
-        float totalObjWidth = IconBtnSize * 6 + IconGap * 5;
-        float objStartX = (PanelWidth - totalObjWidth) / 2f - Padding;
+        // Row 1: 4 object type icons, centered
+        float totalObjRow1 = IconBtnSize * 4 + IconGap * 3;
+        float objRow1X = (PanelWidth - totalObjRow1) / 2f - Padding;
 
-        _solidBtn     = MakeIconBtn(texSolid,     L("Building.SolidBlock"),  objStartX + (IconBtnSize + IconGap) * 0, y);
-        _platformBtn  = MakeIconBtn(texPlatform,   L("Building.Platform"),   objStartX + (IconBtnSize + IconGap) * 1, y);
-        _ropeBtn      = MakeIconBtn(texRope,       L("Building.Rope"),       objStartX + (IconBtnSize + IconGap) * 2, y);
-        _railBtn      = MakeIconBtn(texRail,       L("Building.Rail"),       objStartX + (IconBtnSize + IconGap) * 3, y);
-        _grassSeedBtn = MakeIconBtn(texGrassSeed,  L("Building.GrassSeed"),  objStartX + (IconBtnSize + IconGap) * 4, y);
-        _planterBtn   = MakeIconBtn(texPlanter,    L("Building.PlanterBox"), objStartX + (IconBtnSize + IconGap) * 5, y);
+        _solidBtn     = MakeIconBtn(texSolid,     L("Building.SolidBlock"),  objRow1X + (IconBtnSize + IconGap) * 0, y);
+        _platformBtn  = MakeIconBtn(texPlatform,   L("Building.Platform"),   objRow1X + (IconBtnSize + IconGap) * 1, y);
+        _wallBtn      = MakeIconBtn(texWall,       L("Building.Wall"),       objRow1X + (IconBtnSize + IconGap) * 2, y);
+        _ropeBtn      = MakeIconBtn(texRope,       L("Building.Rope"),       objRow1X + (IconBtnSize + IconGap) * 3, y);
         _mainPanel.Append(_solidBtn);
         _mainPanel.Append(_platformBtn);
+        _mainPanel.Append(_wallBtn);
         _mainPanel.Append(_ropeBtn);
+        y += IconBtnSize + IconGap;
+
+        // Row 2: 3 object type icons, centered
+        float totalObjRow2 = IconBtnSize * 3 + IconGap * 2;
+        float objRow2X = (PanelWidth - totalObjRow2) / 2f - Padding;
+
+        _railBtn      = MakeIconBtn(texRail,       L("Building.Rail"),       objRow2X + (IconBtnSize + IconGap) * 0, y);
+        _grassSeedBtn = MakeIconBtn(texGrassSeed,  L("Building.GrassSeed"),  objRow2X + (IconBtnSize + IconGap) * 1, y);
+        _planterBtn   = MakeIconBtn(texPlanter,    L("Building.PlanterBox"), objRow2X + (IconBtnSize + IconGap) * 2, y);
         _mainPanel.Append(_railBtn);
         _mainPanel.Append(_grassSeedBtn);
         _mainPanel.Append(_planterBtn);
@@ -124,8 +140,8 @@ public class BuildingSettingsPanel : UIState
         var texDiamondHollow  = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeDiamondHollow", AssetRequestMode.ImmediateLoad);
         var texTriangleFilled = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeTriangleFilled", AssetRequestMode.ImmediateLoad);
         var texTriangleHollow = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeTriangleHollow", AssetRequestMode.ImmediateLoad);
-        var texEdge           = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeEdge", AssetRequestMode.ImmediateLoad);
-        var texStraight       = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeStraight", AssetRequestMode.ImmediateLoad);
+        var texElbow           = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeElbow", AssetRequestMode.ImmediateLoad);
+        var texCardinal       = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeCardinal", AssetRequestMode.ImmediateLoad);
         var texHalfEHFilled   = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeHalfEllipseHFilled", AssetRequestMode.ImmediateLoad);
         var texHalfEHHollow   = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeHalfEllipseHHollow", AssetRequestMode.ImmediateLoad);
         var texHalfEVFilled   = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeHalfEllipseVFilled", AssetRequestMode.ImmediateLoad);
@@ -139,7 +155,7 @@ public class BuildingSettingsPanel : UIState
         _rectHollowBtn    = MakeIconBtn(texRectHollow,     L("Common.ShapeRectHollow"),    shapeStartX + (IconBtnSize + IconGap) * 1, y);
         _ellipseFilledBtn = MakeIconBtn(texEllipseFilled,  L("Common.ShapeEllipseFilled"), shapeStartX + (IconBtnSize + IconGap) * 2, y);
         _ellipseHollowBtn = MakeIconBtn(texEllipseHollow,  L("Common.ShapeEllipseHollow"), shapeStartX + (IconBtnSize + IconGap) * 3, y);
-        _edgeBtn          = MakeIconBtn(texEdge,           L("Common.ShapeEdge"),          shapeStartX + (IconBtnSize + IconGap) * 4, y);
+        _edgeBtn          = MakeIconBtn(texElbow,           L("Common.ShapeElbow"),          shapeStartX + (IconBtnSize + IconGap) * 4, y);
         _mainPanel.Append(_rectFilledBtn);
         _mainPanel.Append(_rectHollowBtn);
         _mainPanel.Append(_ellipseFilledBtn);
@@ -152,12 +168,12 @@ public class BuildingSettingsPanel : UIState
         _diamondHollowBtn  = MakeIconBtn(texDiamondHollow,  L("Common.ShapeDiamondHollow"),  shapeStartX + (IconBtnSize + IconGap) * 1, y);
         _triangleFilledBtn = MakeIconBtn(texTriangleFilled, L("Common.ShapeTriangleFilled"), shapeStartX + (IconBtnSize + IconGap) * 2, y);
         _triangleHollowBtn = MakeIconBtn(texTriangleHollow, L("Common.ShapeTriangleHollow"), shapeStartX + (IconBtnSize + IconGap) * 3, y);
-        _straightBtn       = MakeIconBtn(texStraight,       L("Common.ShapeStraight"),       shapeStartX + (IconBtnSize + IconGap) * 4, y);
+        _cardinalBtn       = MakeIconBtn(texCardinal,       L("Common.ShapeCardinal"),       shapeStartX + (IconBtnSize + IconGap) * 4, y);
         _mainPanel.Append(_diamondFilledBtn);
         _mainPanel.Append(_diamondHollowBtn);
         _mainPanel.Append(_triangleFilledBtn);
         _mainPanel.Append(_triangleHollowBtn);
-        _mainPanel.Append(_straightBtn);
+        _mainPanel.Append(_cardinalBtn);
         y += IconBtnSize + IconGap;
 
         // Row 3: 4 half-ellipse shape icons
@@ -234,18 +250,39 @@ public class BuildingSettingsPanel : UIState
         _mainPanel.Append(_slopeTopLeftBtn);
         y += IconBtnSize + 12f;
 
+        // === OVERWRITE SLOPE TOGGLE ===
+        _overwriteSlopeBtn = new UIToggleButton(L("Building.OverwriteSlope"), true);
+        _overwriteSlopeBtn.Width.Set(200f, 0f);
+        _overwriteSlopeBtn.Height.Set(28f, 0f);
+        _overwriteSlopeBtn.HAlign = 0.5f;
+        _overwriteSlopeBtn.Top.Set(y, 0f);
+        _overwriteSlopeBtn.OnToggled += (_, _) => ToggleOverwriteSlope();
+        _mainPanel.Append(_overwriteSlopeBtn);
+        y += 38f;
+
+        // === EQUAL DIMENSIONS TOGGLE ===
+        _equalDimensionsBtn = new UIToggleButton(L("Common.EqualDimensions"), false);
+        _equalDimensionsBtn.Width.Set(200f, 0f);
+        _equalDimensionsBtn.Height.Set(28f, 0f);
+        _equalDimensionsBtn.HAlign = 0.5f;
+        _equalDimensionsBtn.Top.Set(y, 0f);
+        _equalDimensionsBtn.OnToggled += (_, _) => ToggleEqualDimensions();
+        _mainPanel.Append(_equalDimensionsBtn);
+        y += 38f;
+
         // Close button
         var closeBtn = new UITextPanel<string>(L("Common.Close"), 0.9f, false);
         closeBtn.Width.Set(80f, 0f);
         closeBtn.Height.Set(30f, 0f);
         closeBtn.HAlign = 0.5f;
         closeBtn.Top.Set(y, 0f);
-        closeBtn.OnLeftClick += (_, _) => IsVisible = false;
+        closeBtn.OnLeftClick += (_, _) => ModContent.GetInstance<WandUISystem>().CloseAllUI();
         _mainPanel.Append(closeBtn);
 
         // Wire up events
         _solidBtn.OnToggled += (_, _) => SetObjectType(PlaceType.Solid);
         _platformBtn.OnToggled += (_, _) => SetObjectType(PlaceType.Platform);
+        _wallBtn.OnToggled += (_, _) => SetObjectType(PlaceType.Wall);
         _ropeBtn.OnToggled += (_, _) => SetObjectType(PlaceType.Rope);
         _railBtn.OnToggled += (_, _) => SetObjectType(PlaceType.Rail);
         _grassSeedBtn.OnToggled += (_, _) => SetObjectType(PlaceType.GrassSeed);
@@ -253,8 +290,8 @@ public class BuildingSettingsPanel : UIState
 
         _rectFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.Rectangle, ShapeMode.Filled);
         _rectHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.Rectangle, ShapeMode.Hollow);
-        _edgeBtn.OnToggled += (_, _) => SetShape(ShapeType.Edge, ShapeMode.Filled);
-        _straightBtn.OnToggled += (_, _) => SetShape(ShapeType.StraightLine, ShapeMode.Filled);
+        _edgeBtn.OnToggled += (_, _) => SetShape(ShapeType.Elbow, ShapeMode.Filled);
+        _cardinalBtn.OnToggled += (_, _) => SetShape(ShapeType.CardinalLine, ShapeMode.Filled);
         _ellipseFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.Ellipse, ShapeMode.Filled);
         _ellipseHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.Ellipse, ShapeMode.Hollow);
         _diamondFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.Diamond, ShapeMode.Filled);
@@ -289,7 +326,7 @@ public class BuildingSettingsPanel : UIState
     {
         var settings = GetSettings();
         if (settings == null) return;
-        settings.Shape = new ShapeInfo(type, mode, settings.Shape.Thickness);
+        settings.Shape = new ShapeInfo(type, mode, settings.Shape.Thickness, settings.Shape.EqualDimensions);
         UpdateShapeButtons();
     }
 
@@ -299,6 +336,22 @@ public class BuildingSettingsPanel : UIState
         if (settings == null) return;
         settings.Slope = slope;
         UpdateSlopeButtons();
+    }
+
+    private void ToggleOverwriteSlope()
+    {
+        var settings = GetSettings();
+        if (settings == null) return;
+        settings.OverwriteSlope = _overwriteSlopeBtn.Toggled;
+    }
+
+    private void ToggleEqualDimensions()
+    {
+        var settings = GetSettings();
+        if (settings == null) return;
+        var shape = settings.Shape;
+        shape.EqualDimensions = _equalDimensionsBtn.Toggled;
+        settings.Shape = shape;
     }
 
     private void AdjustThickness(int delta)
@@ -329,6 +382,7 @@ public class BuildingSettingsPanel : UIState
 
         _solidBtn.Toggled = settings.Object == PlaceType.Solid;
         _platformBtn.Toggled = settings.Object == PlaceType.Platform;
+        _wallBtn.Toggled = settings.Object == PlaceType.Wall;
         _ropeBtn.Toggled = settings.Object == PlaceType.Rope;
         _railBtn.Toggled = settings.Object == PlaceType.Rail;
         _grassSeedBtn.Toggled = settings.Object == PlaceType.GrassSeed;
@@ -343,8 +397,8 @@ public class BuildingSettingsPanel : UIState
 
         _rectFilledBtn.Toggled = shape.Shape == ShapeType.Rectangle && shape.FillMode == ShapeMode.Filled;
         _rectHollowBtn.Toggled = shape.Shape == ShapeType.Rectangle && shape.FillMode == ShapeMode.Hollow;
-        _edgeBtn.Toggled = shape.Shape == ShapeType.Edge;
-        _straightBtn.Toggled = shape.Shape == ShapeType.StraightLine;
+        _edgeBtn.Toggled = shape.Shape == ShapeType.Elbow;
+        _cardinalBtn.Toggled = shape.Shape == ShapeType.CardinalLine;
         _ellipseFilledBtn.Toggled = shape.Shape == ShapeType.Ellipse && shape.FillMode == ShapeMode.Filled;
         _ellipseHollowBtn.Toggled = shape.Shape == ShapeType.Ellipse && shape.FillMode == ShapeMode.Hollow;
         _diamondFilledBtn.Toggled = shape.Shape == ShapeType.Diamond && shape.FillMode == ShapeMode.Filled;
@@ -376,12 +430,28 @@ public class BuildingSettingsPanel : UIState
         _slopeTopLeftBtn.Toggled     = settings.Slope == SlopeType.TopLeft;
     }
 
+    private void UpdateOverwriteSlopeButton()
+    {
+        var settings = GetSettings();
+        if (settings == null || _overwriteSlopeBtn == null) return;
+        _overwriteSlopeBtn.Toggled = settings.OverwriteSlope;
+    }
+
+    private void UpdateEqualDimensionsButton()
+    {
+        var settings = GetSettings();
+        if (settings == null || _equalDimensionsBtn == null) return;
+        _equalDimensionsBtn.Toggled = settings.Shape.EqualDimensions;
+    }
+
     private void SyncFromSettings()
     {
         UpdateObjectButtons();
         UpdateShapeButtons();
         UpdateThicknessDisplay();
         UpdateSlopeButtons();
+        UpdateOverwriteSlopeButton();
+        UpdateEqualDimensionsButton();
     }
 
     public override void Update(GameTime gameTime)
@@ -393,7 +463,7 @@ public class BuildingSettingsPanel : UIState
             Main.LocalPlayer.mouseInterface = true;
 
         if (Main.keyState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.Escape))
-            IsVisible = false;
+            ModContent.GetInstance<WandUISystem>().CloseAllUI();
     }
 
     public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)

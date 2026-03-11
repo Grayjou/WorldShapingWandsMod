@@ -1,6 +1,37 @@
-A collection of wands for shaping the world with various geometric shapes.
+World Shaping Wands — A suite of five wand families for large-scale terrain
+editing. Build, dismantle, replace, wire, and protect regions using geometric
+shapes with multiple selection modes.
 
-Features:
-- Multiple shape types: Rectangle, Ellipse, Diamond, Triangle, Line
-- Shape modes: Filled, Hollow, Outline
-- Configurable outline thickness
+Wand Families:
+  • Wand of Building — Place tiles, platforms, walls, rope, and more in bulk.
+  • Wand of Dismantling — Mass-destroy tiles and walls within a shape.
+  • Wand of Replacement — Swap one tile type for another across an area.
+  • Wand of Wiring — Place or remove wire colours and actuators in bulk.
+  • Wand of Safekeeping — Protect tiles from accidental modification.
+
+Selection Modes (each wand has all four):
+  Instant — Click and drag. Executes on release.
+  Select  — Click start point, click end point. Executes immediately.
+  Confirm — Click start, click end, click to confirm. Safe three-step.
+  Stamp   — Define a template, then click to repeat it anywhere.
+
+Shape Types: Rectangle, Ellipse, Diamond, Triangle, Half-Ellipse (H/V),
+  Elbow (L-shape), and Cardinal Line. Each supports Filled and Hollow modes
+  with configurable outline thickness.
+
+Key Features:
+  • Per-wand settings UI panels with icon buttons
+  • Configurable infinite-resource mode
+  • Block exhaustion modes (NextBlock / Interrupt / Cancel)
+  • Full undo support (20-deep stack)
+  • Tile protection system (persistent + session)
+  • Selection overlay with dimension labels
+  • Substrate-variant awareness (e.g., dirt ↔ grass)
+  • Progressive placement mode (batched waves)
+  • Drop suppression toggle
+
+Known Limitations (alpha):
+  • Single-player focus — multiplayer sync is basic (SendTileSquare only)
+  • No preview/commit workflow yet (planned for future)
+  • Multi-tile objects (furniture, doors) are skipped by building wand
+  • Undo may leave multi-tile objects in broken states

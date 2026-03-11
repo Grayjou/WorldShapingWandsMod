@@ -130,7 +130,7 @@ def _draw_triangle_hollow(d, w, h):
 def _draw_edge(d, w, h):
     d.rectangle([1, 1, w-2, h-2], outline=C_LINE, width=1)
 
-def _draw_straight(d, w, h):
+def _draw_cardinal(d, w, h):
     d.line([(1, h-2), (w-2, 1)], fill=C_LINE, width=2)
 
 # ====== Object Type drawing helpers ======
@@ -295,6 +295,23 @@ wand_of_wiring_stamp_asset = WandAsset(
     color=(150, 255, 200)  # Light mint
 )
 
+wand_of_protection_instant_asset = WandAsset(
+    name="WandOfProtectionInstant",
+    color=(100, 80, 200)  # Deep purple for instant
+)
+wand_of_protection_select_asset = WandAsset(
+    name="WandOfProtectionSelect",
+    color=(130, 100, 220)  # Medium purple for select
+)
+wand_of_protection_confirm_asset = WandAsset(
+    name="WandOfProtectionConfirm",
+    color=(160, 130, 240)  # Light purple for confirm
+)
+wand_of_protection_stamp_asset = WandAsset(
+    name="WandOfProtectionStamp",
+    color=(180, 160, 255)  # Lightest purple for stamp
+)
+
 # === Slope icon assets (14x14, 1px padding, gray placeholder) ===
 slope_default_icon = IconAsset(name="SlopeDefault")
 slope_half_icon = IconAsset(name="SlopeHalf")
@@ -316,7 +333,7 @@ shape_diamond_hollow = _shape_icon("ShapeDiamondHollow", _draw_diamond_hollow)
 shape_triangle_filled = _shape_icon("ShapeTriangleFilled", _draw_triangle_filled)
 shape_triangle_hollow = _shape_icon("ShapeTriangleHollow", _draw_triangle_hollow)
 shape_edge           = _shape_icon("ShapeEdge",           _draw_edge)
-shape_straight       = _shape_icon("ShapeStraight",       _draw_straight)
+shape_cardinal       = _shape_icon("ShapeCardinal",       _draw_cardinal)
 shape_half_ellipse_h_filled = _shape_icon("ShapeHalfEllipseHFilled", _draw_half_ellipse_h_filled)
 shape_half_ellipse_h_hollow = _shape_icon("ShapeHalfEllipseHHollow", _draw_half_ellipse_h_hollow)
 shape_half_ellipse_v_filled = _shape_icon("ShapeHalfEllipseVFilled", _draw_half_ellipse_v_filled)
@@ -362,6 +379,11 @@ assets = [
     wand_of_wiring_confirm_asset,
     wand_of_wiring_stamp_asset,
 
+    wand_of_protection_instant_asset,
+    wand_of_protection_select_asset,
+    wand_of_protection_confirm_asset,
+    wand_of_protection_stamp_asset,
+
     slope_default_icon,
     slope_half_icon,
     slope_bottom_right_icon,
@@ -379,7 +401,7 @@ assets = [
     shape_triangle_filled,
     shape_triangle_hollow,
     shape_edge,
-    shape_straight,
+    shape_cardinal,
     shape_half_ellipse_h_filled,
     shape_half_ellipse_h_hollow,
     shape_half_ellipse_v_filled,

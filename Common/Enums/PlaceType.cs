@@ -7,6 +7,7 @@ namespace WorldShapingWandsMod.Common.Enums
         Rope,
         Rail,
         GrassSeed,
-        PlantPot
+        PlantPot,
+        Wall
     }
 }

@@ -9,18 +9,22 @@ using Terraria.UI;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Settings;
+using WorldShapingWandsMod.Common.Systems;
 using WorldShapingWandsMod.Common.UI.Elements;
 
 namespace WorldShapingWandsMod.Common.UI;
 
-public class DestructionSettingsPanel : UIState
+public class SafekeepingSettingsPanel : UIState
 {
     public bool IsVisible { get; set; }
 
     private UIDraggablePanel _mainPanel;
 
-    // Destruction toggles
-    private UIToggleButton _destroyTilesBtn, _destroyWallsBtn, _suppressDropsBtn;
+    // Mode toggle
+    private UIToggleButton _protectBtn, _unprotectBtn;
+
+    // Target toggles
+    private UIToggleButton _protectTilesBtn, _protectWallsBtn;
 
     // Shape buttons (icon-based)
     private UIIconButton _rectFilledBtn, _rectHollowBtn;
@@ -30,15 +34,18 @@ public class DestructionSettingsPanel : UIState
     private UIIconButton _halfEllipseHFilledBtn, _halfEllipseHHollowBtn;
     private UIIconButton _halfEllipseVFilledBtn, _halfEllipseVHollowBtn;
     private UIIconButton _edgeBtn;
-    private UIIconButton _straightBtn;
+    private UIIconButton _cardinalBtn;
 
     private UIText _thicknessValue;
+
+    // Equal Dimensions toggle
+    private UIToggleButton _equalDimensionsBtn;
 
     private const string UIPrefix = "Mods.WorldShapingWandsMod.UI";
     private static string L(string key) => Language.GetTextValue($"{UIPrefix}.{key}");
 
     private const float PanelWidth = 320f;
-    private const float PanelHeight = 410f;
+    private const float PanelHeight = 508f;
     private const float Padding = 10f;
     private const float ButtonWidth = 140f;
     private const float ButtonHeight = 28f;
@@ -52,8 +59,8 @@ public class DestructionSettingsPanel : UIState
         _mainPanel.Height.Set(PanelHeight, 0f);
         _mainPanel.HAlign = 0.5f;
         _mainPanel.VAlign = 0.5f;
-        _mainPanel.BackgroundColor = new Color(79, 44, 44, 220);  // Reddish tint
-        _mainPanel.BorderColor = new Color(60, 20, 20);
+        _mainPanel.BackgroundColor = new Color(54, 44, 79, 220);  // Purple tint
+        _mainPanel.BorderColor = new Color(30, 20, 60);
         Append(_mainPanel);
 
         float y = 8f;
@@ -61,29 +68,32 @@ public class DestructionSettingsPanel : UIState
         float col2 = PanelWidth - Padding - ButtonWidth - 12f;
 
         // Title
-        var title = new UISectionTitle(L("Destruction.Title"));
+        var title = new UISectionTitle(L("Safekeeping.Title"));
         title.Width.Set(0f, 1f);
         title.Height.Set(28f, 0f);
         title.Top.Set(y, 0f);
         _mainPanel.Append(title);
         y += 36f;
 
-        // === DESTRUCTION OPTIONS ===
-        var optionsSection = new UISectionTitle(L("Destruction.Options"));
-        optionsSection.Width.Set(0f, 1f);
-        optionsSection.Height.Set(22f, 0f);
-        optionsSection.Top.Set(y, 0f);
-        _mainPanel.Append(optionsSection);
+        // === MODE SECTION ===
+        var modeSection = new UISectionTitle(L("Safekeeping.Mode"));
+        modeSection.Width.Set(0f, 1f);
+        modeSection.Height.Set(22f, 0f);
+        modeSection.Top.Set(y, 0f);
+        _mainPanel.Append(modeSection);
         y += 28f;
 
-        _destroyTilesBtn = MakeToggle(L("Destruction.DestroyTiles"), col1, y, new Color(200, 80, 80));
-        _destroyWallsBtn = MakeToggle(L("Destruction.DestroyWalls"), col2, y, new Color(150, 100, 80));
-        _mainPanel.Append(_destroyTilesBtn);
-        _mainPanel.Append(_destroyWallsBtn);
+        _protectBtn = MakeToggle(L("Safekeeping.Protect"), col1, y, new Color(80, 180, 80));
+        _unprotectBtn = MakeToggle(L("Safekeeping.Unprotect"), col2, y, new Color(200, 80, 80));
+        _mainPanel.Append(_protectBtn);
+        _mainPanel.Append(_unprotectBtn);
         y += 34f;
 
-        _suppressDropsBtn = MakeToggle(L("Destruction.SuppressDrops"), col1, y, new Color(100, 100, 100));
-        _mainPanel.Append(_suppressDropsBtn);
+        // === TARGET SECTION ===
+        _protectTilesBtn = MakeToggle(L("Safekeeping.ProtectTiles"), col1, y, new Color(100, 140, 200));
+        _protectWallsBtn = MakeToggle(L("Safekeeping.ProtectWalls"), col2, y, new Color(150, 100, 180));
+        _mainPanel.Append(_protectTilesBtn);
+        _mainPanel.Append(_protectWallsBtn);
         y += 42f;
 
         // === SHAPE SECTION ===
@@ -104,8 +114,8 @@ public class DestructionSettingsPanel : UIState
         var texDiamondHollow  = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeDiamondHollow", AssetRequestMode.ImmediateLoad);
         var texTriangleFilled = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeTriangleFilled", AssetRequestMode.ImmediateLoad);
         var texTriangleHollow = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeTriangleHollow", AssetRequestMode.ImmediateLoad);
-        var texEdge           = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeEdge", AssetRequestMode.ImmediateLoad);
-        var texStraight       = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeStraight", AssetRequestMode.ImmediateLoad);
+        var texElbow           = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeElbow", AssetRequestMode.ImmediateLoad);
+        var texCardinal       = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeCardinal", AssetRequestMode.ImmediateLoad);
         var texHalfEHFilled   = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeHalfEllipseHFilled", AssetRequestMode.ImmediateLoad);
         var texHalfEHHollow   = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeHalfEllipseHHollow", AssetRequestMode.ImmediateLoad);
         var texHalfEVFilled   = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeHalfEllipseVFilled", AssetRequestMode.ImmediateLoad);
@@ -114,11 +124,12 @@ public class DestructionSettingsPanel : UIState
         float totalShapeWidth = IconBtnSize * 5 + IconGap * 4;
         float shapeStartX = (PanelWidth - totalShapeWidth) / 2f - Padding;
 
+        // Row 1
         _rectFilledBtn    = MakeIconBtn(texRectFilled,     L("Common.ShapeRectFilled"),    shapeStartX + (IconBtnSize + IconGap) * 0, y);
         _rectHollowBtn    = MakeIconBtn(texRectHollow,     L("Common.ShapeRectHollow"),    shapeStartX + (IconBtnSize + IconGap) * 1, y);
         _ellipseFilledBtn = MakeIconBtn(texEllipseFilled,  L("Common.ShapeEllipseFilled"), shapeStartX + (IconBtnSize + IconGap) * 2, y);
         _ellipseHollowBtn = MakeIconBtn(texEllipseHollow,  L("Common.ShapeEllipseHollow"), shapeStartX + (IconBtnSize + IconGap) * 3, y);
-        _edgeBtn          = MakeIconBtn(texEdge,           L("Common.ShapeEdge"),          shapeStartX + (IconBtnSize + IconGap) * 4, y);
+        _edgeBtn          = MakeIconBtn(texElbow,           L("Common.ShapeElbow"),          shapeStartX + (IconBtnSize + IconGap) * 4, y);
         _mainPanel.Append(_rectFilledBtn);
         _mainPanel.Append(_rectHollowBtn);
         _mainPanel.Append(_ellipseFilledBtn);
@@ -126,19 +137,20 @@ public class DestructionSettingsPanel : UIState
         _mainPanel.Append(_edgeBtn);
         y += IconBtnSize + IconGap;
 
+        // Row 2
         _diamondFilledBtn  = MakeIconBtn(texDiamondFilled,  L("Common.ShapeDiamondFilled"),  shapeStartX + (IconBtnSize + IconGap) * 0, y);
         _diamondHollowBtn  = MakeIconBtn(texDiamondHollow,  L("Common.ShapeDiamondHollow"),  shapeStartX + (IconBtnSize + IconGap) * 1, y);
         _triangleFilledBtn = MakeIconBtn(texTriangleFilled, L("Common.ShapeTriangleFilled"), shapeStartX + (IconBtnSize + IconGap) * 2, y);
         _triangleHollowBtn = MakeIconBtn(texTriangleHollow, L("Common.ShapeTriangleHollow"), shapeStartX + (IconBtnSize + IconGap) * 3, y);
-        _straightBtn       = MakeIconBtn(texStraight,       L("Common.ShapeStraight"),       shapeStartX + (IconBtnSize + IconGap) * 4, y);
+        _cardinalBtn       = MakeIconBtn(texCardinal,       L("Common.ShapeCardinal"),       shapeStartX + (IconBtnSize + IconGap) * 4, y);
         _mainPanel.Append(_diamondFilledBtn);
         _mainPanel.Append(_diamondHollowBtn);
         _mainPanel.Append(_triangleFilledBtn);
         _mainPanel.Append(_triangleHollowBtn);
-        _mainPanel.Append(_straightBtn);
+        _mainPanel.Append(_cardinalBtn);
         y += IconBtnSize + IconGap;
 
-        // Row 3: 4 half-ellipse shape icons
+        // Row 3: half-ellipse shapes
         _halfEllipseHFilledBtn = MakeIconBtn(texHalfEHFilled, L("Common.ShapeHalfEllipseHFilled"), shapeStartX + (IconBtnSize + IconGap) * 0, y);
         _halfEllipseHHollowBtn = MakeIconBtn(texHalfEHHollow, L("Common.ShapeHalfEllipseHHollow"), shapeStartX + (IconBtnSize + IconGap) * 1, y);
         _halfEllipseVFilledBtn = MakeIconBtn(texHalfEVFilled, L("Common.ShapeHalfEllipseVFilled"), shapeStartX + (IconBtnSize + IconGap) * 2, y);
@@ -177,24 +189,52 @@ public class DestructionSettingsPanel : UIState
         _mainPanel.Append(plusBtn);
         y += 42f;
 
+        // === EQUAL DIMENSIONS TOGGLE ===
+        _equalDimensionsBtn = new UIToggleButton(L("Common.EqualDimensions"), false);
+        _equalDimensionsBtn.Width.Set(200f, 0f);
+        _equalDimensionsBtn.Height.Set(28f, 0f);
+        _equalDimensionsBtn.HAlign = 0.5f;
+        _equalDimensionsBtn.Top.Set(y, 0f);
+        _equalDimensionsBtn.OnToggled += (_, _) => ToggleEqualDimensions();
+        _mainPanel.Append(_equalDimensionsBtn);
+        y += 38f;
+
+        // Clear All button
+        var clearBtn = new UITextPanel<string>(L("Safekeeping.ClearAll"), 0.85f, false);
+        clearBtn.Width.Set(120f, 0f);
+        clearBtn.Height.Set(30f, 0f);
+        clearBtn.HAlign = 0.5f;
+        clearBtn.Top.Set(y, 0f);
+        clearBtn.OnLeftClick += (_, _) =>
+        {
+            int tiles = SafekeepingSystem.ProtectedTileCount;
+            int walls = SafekeepingSystem.ProtectedWallCount;
+            SafekeepingSystem.ClearAll();
+            Main.NewText($"Cleared all protection ({tiles} tiles, {walls} walls).", Color.LightCoral);
+        };
+        _mainPanel.Append(clearBtn);
+        y += 38f;
+
         // Close button
         var closeBtn = new UITextPanel<string>(L("Common.Close"), 0.9f, false);
         closeBtn.Width.Set(80f, 0f);
         closeBtn.Height.Set(30f, 0f);
         closeBtn.HAlign = 0.5f;
         closeBtn.Top.Set(y, 0f);
-        closeBtn.OnLeftClick += (_, _) => IsVisible = false;
+        closeBtn.OnLeftClick += (_, _) => ModContent.GetInstance<WandUISystem>().CloseAllUI();
         _mainPanel.Append(closeBtn);
 
         // Wire up events
-        _destroyTilesBtn.OnToggled += (_, _) => GetSettings().DestroyTiles = _destroyTilesBtn.Toggled;
-        _destroyWallsBtn.OnToggled += (_, _) => GetSettings().DestroyWalls = _destroyWallsBtn.Toggled;
-        _suppressDropsBtn.OnToggled += (_, _) => GetSettings().SuppressDrops = _suppressDropsBtn.Toggled;
+        _protectBtn.OnToggled += (_, _) => { GetSettings().Mode = SafekeepingMode.Protect; UpdateModeButtons(); };
+        _unprotectBtn.OnToggled += (_, _) => { GetSettings().Mode = SafekeepingMode.Unprotect; UpdateModeButtons(); };
+
+        _protectTilesBtn.OnToggled += (_, _) => GetSettings().ProtectTiles = _protectTilesBtn.Toggled;
+        _protectWallsBtn.OnToggled += (_, _) => GetSettings().ProtectWalls = _protectWallsBtn.Toggled;
 
         _rectFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.Rectangle, ShapeMode.Filled);
         _rectHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.Rectangle, ShapeMode.Hollow);
-        _edgeBtn.OnToggled += (_, _) => SetShape(ShapeType.Edge, ShapeMode.Filled);
-        _straightBtn.OnToggled += (_, _) => SetShape(ShapeType.StraightLine, ShapeMode.Filled);
+        _edgeBtn.OnToggled += (_, _) => SetShape(ShapeType.Elbow, ShapeMode.Filled);
+        _cardinalBtn.OnToggled += (_, _) => SetShape(ShapeType.CardinalLine, ShapeMode.Filled);
         _ellipseFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.Ellipse, ShapeMode.Filled);
         _ellipseHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.Ellipse, ShapeMode.Hollow);
         _diamondFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.Diamond, ShapeMode.Filled);
@@ -207,14 +247,14 @@ public class DestructionSettingsPanel : UIState
         _halfEllipseVHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.HalfEllipseV, ShapeMode.Hollow);
     }
 
-    private WandOfDestructionSettings GetSettings() =>
-        Main.LocalPlayer?.GetModPlayer<WandPlayer>()?.DestructionSettings;
+    private WandOfSafekeepingSettings GetSettings() =>
+        Main.LocalPlayer?.GetModPlayer<WandPlayer>()?.SafekeepingSettings;
 
     private void SetShape(ShapeType type, ShapeMode mode)
     {
         var settings = GetSettings();
         if (settings == null) return;
-        settings.Shape = new ShapeInfo(type, mode, settings.Shape.Thickness);
+        settings.Shape = new ShapeInfo(type, mode, settings.Shape.Thickness, settings.Shape.EqualDimensions);
         UpdateShapeButtons();
     }
 
@@ -251,14 +291,22 @@ public class DestructionSettingsPanel : UIState
         return btn;
     }
 
-    private void UpdateOptionsButtons()
+    private void UpdateModeButtons()
     {
         var settings = GetSettings();
         if (settings == null) return;
 
-        _destroyTilesBtn.Toggled = settings.DestroyTiles;
-        _destroyWallsBtn.Toggled = settings.DestroyWalls;
-        _suppressDropsBtn.Toggled = settings.SuppressDrops;
+        _protectBtn.Toggled = settings.Mode == SafekeepingMode.Protect;
+        _unprotectBtn.Toggled = settings.Mode == SafekeepingMode.Unprotect;
+    }
+
+    private void UpdateTargetButtons()
+    {
+        var settings = GetSettings();
+        if (settings == null) return;
+
+        _protectTilesBtn.Toggled = settings.ProtectTiles;
+        _protectWallsBtn.Toggled = settings.ProtectWalls;
     }
 
     private void UpdateShapeButtons()
@@ -269,8 +317,8 @@ public class DestructionSettingsPanel : UIState
 
         _rectFilledBtn.Toggled = shape.Shape == ShapeType.Rectangle && shape.FillMode == ShapeMode.Filled;
         _rectHollowBtn.Toggled = shape.Shape == ShapeType.Rectangle && shape.FillMode == ShapeMode.Hollow;
-        _edgeBtn.Toggled = shape.Shape == ShapeType.Edge;
-        _straightBtn.Toggled = shape.Shape == ShapeType.StraightLine;
+        _edgeBtn.Toggled = shape.Shape == ShapeType.Elbow;
+        _cardinalBtn.Toggled = shape.Shape == ShapeType.CardinalLine;
         _ellipseFilledBtn.Toggled = shape.Shape == ShapeType.Ellipse && shape.FillMode == ShapeMode.Filled;
         _ellipseHollowBtn.Toggled = shape.Shape == ShapeType.Ellipse && shape.FillMode == ShapeMode.Hollow;
         _diamondFilledBtn.Toggled = shape.Shape == ShapeType.Diamond && shape.FillMode == ShapeMode.Filled;
@@ -289,11 +337,29 @@ public class DestructionSettingsPanel : UIState
         _thicknessValue?.SetText(settings?.Shape.Thickness.ToString() ?? "1");
     }
 
+    private void ToggleEqualDimensions()
+    {
+        var settings = GetSettings();
+        if (settings == null) return;
+        var shape = settings.Shape;
+        shape.EqualDimensions = _equalDimensionsBtn.Toggled;
+        settings.Shape = shape;
+    }
+
+    private void UpdateEqualDimensionsButton()
+    {
+        var settings = GetSettings();
+        if (settings == null) return;
+        _equalDimensionsBtn.Toggled = settings.Shape.EqualDimensions;
+    }
+
     private void SyncFromSettings()
     {
-        UpdateOptionsButtons();
+        UpdateModeButtons();
+        UpdateTargetButtons();
         UpdateShapeButtons();
         UpdateThicknessDisplay();
+        UpdateEqualDimensionsButton();
     }
 
     public override void Update(GameTime gameTime)
@@ -305,10 +371,10 @@ public class DestructionSettingsPanel : UIState
             Main.LocalPlayer.mouseInterface = true;
 
         if (Main.keyState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.Escape))
-            IsVisible = false;
+            ModContent.GetInstance<WandUISystem>().CloseAllUI();
     }
 
-    public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
+    public override void Draw(SpriteBatch spriteBatch)
     {
         if (!IsVisible) return;
         base.Draw(spriteBatch);

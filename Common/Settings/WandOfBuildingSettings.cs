@@ -17,6 +17,12 @@ public class WandOfBuildingSettings
     /// <summary>The slope configuration for placed tiles.</summary>
     public SlopeType Slope { get; set; } = SlopeType.Default;
 
+    /// <summary>
+    /// When true, the selected slope is always applied to placed/replaced tiles.
+    /// When false, slopes are left as-is (existing tiles keep their slope, new tiles get default).
+    /// </summary>
+    public bool OverwriteSlope { get; set; } = true;
+
     /// <summary>The shape configuration.</summary>
     public ShapeInfo Shape { get; set; } = ShapeInfo.Default;
 
@@ -41,6 +47,7 @@ public class WandOfBuildingSettings
             SelectionMode = SelectionMode,
             Object = Object,
             Slope = Slope,
+            OverwriteSlope = OverwriteSlope,
             Shape = Shape,
             ExhaustionMode = ExhaustionMode,
             StartPoint = StartPoint,
@@ -56,6 +63,7 @@ public class WandOfBuildingSettings
         SelectionMode = SelectionMode.OneClick;
         Object = PlaceType.Solid;
         Slope = SlopeType.Default;
+        OverwriteSlope = true;
         Shape = ShapeInfo.Default;
         ExhaustionMode = BlockExhaustionMode.NextBlock;
         StartPoint = Point.Zero;

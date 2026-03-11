@@ -37,6 +37,7 @@ public class WandPlayer : ModPlayer
     private bool _lastMouseLeft;
     private ulong _lastConsumedLeftClickTick;
     private bool _justCancelled; // Prevents immediate restart after cancellation
+    private int _lastHeldItemType; // Tracks held item for cross-wand detection
     
     /// <summary>
     /// Stores the visual state of the last cancelled selection for overlay feedback.
@@ -46,9 +47,10 @@ public class WandPlayer : ModPlayer
 
     // Per-wand settings
     public WandOfBuildingSettings BuildingSettings { get; private set; } = new();
-    public WandOfDestructionSettings DestructionSettings { get; private set; } = new();
+    public WandOfDismantlingSettings DismantlingSettings { get; private set; } = new();
     public WandOfReplacementSettings ReplacementSettings { get; private set; } = new();
     public WandOfWiringSettings WiringSettings { get; private set; } = new();
+    public WandOfSafekeepingSettings SafekeepingSettings { get; private set; } = new();
 
     // Keep global settings for backward compatibility with test commands
     public WandSettings Settings { get; private set; } = new WandSettings();
@@ -90,7 +92,7 @@ public class WandPlayer : ModPlayer
 
     /// <summary>
     /// Clamps the end point so the selection dimensions don't exceed the config cap.
-    /// Uses SmallSelectionCap for Edge/StraightLine, BigSelectionCap for everything else.
+    /// Uses SmallSelectionCap for Elbow/CardinalLine, BigSelectionCap for everything else.
     /// </summary>
     private Point ClampEndToCaps(Point start, Point end)
     {
@@ -98,7 +100,7 @@ public class WandPlayer : ModPlayer
         if (config == null) return end;
 
         ShapeType currentShape = GetCurrentShapeType();
-        int cap = (currentShape == ShapeType.Edge || currentShape == ShapeType.StraightLine)
+        int cap = (currentShape == ShapeType.Elbow || currentShape == ShapeType.CardinalLine)
             ? config.SmallSelectionCap
             : config.BigSelectionCap;
 
@@ -122,12 +124,14 @@ public class WandPlayer : ModPlayer
     {
         if (Player.HeldItem?.ModItem is WandOfBuildingBase)
             return BuildingSettings.Shape.Shape;
-        if (Player.HeldItem?.ModItem is WandOfDestructionBase)
-            return DestructionSettings.Shape.Shape;
+        if (Player.HeldItem?.ModItem is WandOfDismantlingBase)
+            return DismantlingSettings.Shape.Shape;
         if (Player.HeldItem?.ModItem is WandOfReplacementBase)
             return ReplacementSettings.Shape.Shape;
         if (Player.HeldItem?.ModItem is WandOfWiringBase)
             return WiringSettings.Shape.Shape;
+        if (Player.HeldItem?.ModItem is WandOfSafekeepingBase)
+            return SafekeepingSettings.Shape.Shape;
         return Settings.ShapeType;
     }
 
@@ -214,6 +218,20 @@ public class WandPlayer : ModPlayer
     }
 
     /// <summary>
+    /// Unlocks a locked stamp, reverting to the "click to lock anchor" state.
+    /// The selection remains locked (showing the end point), but the stamp
+    /// template is cleared so the user can reposition the anchor.
+    /// </summary>
+    public void UnlockStamp()
+    {
+        IsStampLocked = false;
+        StampDelta = Point.Zero;
+        StampAnchorOffset = Point.Zero;
+        // Keep selection locked — user still has their endpoint set.
+        // They just need to re-click to set the anchor position.
+    }
+
+    /// <summary>
     /// Repositions the stamp selection so the anchor follows the mouse.
     /// Called each frame/click while stamp is locked.
     /// </summary>
@@ -297,6 +315,20 @@ public class WandPlayer : ModPlayer
 
     public override void PostUpdate()
     {
+        // Detect wand switches (scroll wheel, hotbar clicks) and clear selection
+        // to prevent cross-wand state leaks (e.g., CardinalLine selection viewed 
+        // through a FilledTriangle + EqualDimensions = 999×999 area lag).
+        int currentHeldType = Player.HeldItem?.type ?? 0;
+        if (_lastHeldItemType != 0 && currentHeldType != _lastHeldItemType && Selection.IsActive)
+        {
+            // Only clear if switching away from a wand item (not from non-wand to wand)
+            if (SelectionOwnerItemType != 0)
+            {
+                ClearSelection();
+            }
+        }
+        _lastHeldItemType = currentHeldType;
+
         // Update selection preview in real-time when selection is active AND not locked
         if (Selection.IsActive && !Selection.IsLocked && IsHoldingWandItem())
         {
@@ -322,12 +354,11 @@ public class WandPlayer : ModPlayer
 
     private bool IsHoldingWandItem()
     {
-        return Player.HeldItem?.ModItem is WandOfDestructionBase
+        return Player.HeldItem?.ModItem is WandOfDismantlingBase
             || Player.HeldItem?.ModItem is WandOfBuildingBase
             || Player.HeldItem?.ModItem is WandOfReplacementBase
             || Player.HeldItem?.ModItem is WandOfWiringBase
-            // Add other wand types here as you implement them
-            // || Player.HeldItem?.ModItem is WandOfDesigner
+            || Player.HeldItem?.ModItem is WandOfSafekeepingBase
             ;
     }
 
@@ -338,8 +369,9 @@ public class WandPlayer : ModPlayer
         ClearSelection();
         Settings.ResetToDefaults();
         BuildingSettings.ResetToDefaults();
-        DestructionSettings.ResetToDefaults();
+        DismantlingSettings.ResetToDefaults();
         ReplacementSettings.ResetToDefaults();
         WiringSettings.ResetToDefaults();
+        SafekeepingSettings.ResetToDefaults();
     }
 }

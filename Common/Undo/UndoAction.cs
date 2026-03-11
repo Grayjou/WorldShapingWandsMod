@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
+using WorldShapingWandsMod.Common.Utilities;
 
 namespace WorldShapingWandsMod.Common.Undo;
 
@@ -30,6 +31,10 @@ public class TileSnapshot
         WallType = tile.WallType;
     }
 
+    /// <summary>
+    /// Restores the tile data only (no frame update or network sync).
+    /// Frame updates and network sync are handled in batch by <see cref="UndoAction.Undo"/>.
+    /// </summary>
     public void Restore()
     {
         var tile = Main.tile[Position.X, Position.Y];
@@ -49,11 +54,6 @@ public class TileSnapshot
         }
 
         tile.WallType = WallType;
-
-        WorldGen.SquareTileFrame(Position.X, Position.Y);
-
-        if (Main.netMode == NetmodeID.MultiplayerClient)
-            NetMessage.SendTileSquare(-1, Position.X, Position.Y);
     }
 }
 
@@ -65,9 +65,23 @@ public class UndoAction
 
     public void AddSnapshot(Point pos) => Snapshots.Add(new TileSnapshot(pos));
 
+    /// <summary>
+    /// Restores all tile snapshots, then performs a single batched frame update
+    /// and network sync for the entire affected region.
+    /// </summary>
     public void Undo()
     {
+        if (Snapshots.Count == 0) return;
+
+        // Phase 1: Restore all tile data
+        var positions = new List<Point>(Snapshots.Count);
         foreach (var snapshot in Snapshots)
+        {
             snapshot.Restore();
+            positions.Add(snapshot.Position);
+        }
+
+        // Phase 2: Batch frame update + network sync
+        BulkTileOperations.FinalizeBatch(positions);
     }
 }

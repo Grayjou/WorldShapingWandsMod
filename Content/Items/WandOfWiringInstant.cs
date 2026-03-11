@@ -1,6 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using Terraria;
+using Terraria.Audio;
+using Terraria.ID;
 using Terraria.ModLoader;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Players;
@@ -18,6 +20,7 @@ public class WandOfWiringInstant : WandOfWiringBase
     {
         base.SetDefaults();
         Item.channel = true;
+        Item.UseSound = null; // prevent sound spam during drag — played once on selection start
     }
 
     protected override bool HandleUseItem(Player player, WandPlayer wandPlayer, Point mouseTile)
@@ -51,11 +54,19 @@ public class WandOfWiringInstant : WandOfWiringBase
                 bool vertical = Math.Abs(Main.MouseWorld.Y - player.Center.Y) >
                                 Math.Abs(Main.MouseWorld.X - player.Center.X);
                 wandPlayer.StartSelection(mouseTile, vertical);
+                SoundEngine.PlaySound(SoundID.Item1, player.Center);
             }
             wandPlayer.UpdateSelection(mouseTile);
         }
         else if (wandPlayer.Selection.IsActive)
         {
+            // Don't execute if mouse released over UI (e.g. NPC shop)
+            if (Main.LocalPlayer.mouseInterface)
+            {
+                wandPlayer.ClearSelection();
+                return;
+            }
+
             // Mouse released - execute only if this wand started the selection
             if (wandPlayer.IsSelectionOwnedByCurrentItem())
             {
@@ -63,5 +74,15 @@ public class WandOfWiringInstant : WandOfWiringBase
             }
             wandPlayer.ClearSelection();
         }
+    }
+
+    public override void AddRecipes()
+    {
+        CreateRecipe()
+            .AddIngredient(ItemID.WireKite, 1)
+            .AddIngredient(ItemID.Wire, 50)
+            .AddIngredient(ItemID.Actuator, 10)
+            .AddTile(TileID.TinkerersWorkbench)
+            .Register();
     }
 }

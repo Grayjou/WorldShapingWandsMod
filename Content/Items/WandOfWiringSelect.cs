@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Players;
@@ -31,5 +32,17 @@ public class WandOfWiringSelect : WandOfWiringBase
             wandPlayer.ClearSelection();
             return false; // Don't consume the wand
         }
+    }
+
+    public override void AddRecipes()
+    {
+        WandRecipeConditions.Register(Type);
+        CreateRecipe()
+            .AddIngredient<WandOfWiringInstant>(1)
+            .AddCustomShimmerResult(ItemID.WireKite, 1)
+            .AddCustomShimmerResult(ItemID.Wire, 50)
+            .AddCustomShimmerResult(ItemID.Actuator, 10)
+            .AddCondition(WandRecipeConditions.NonCraftable)
+            .Register();
     }
 }

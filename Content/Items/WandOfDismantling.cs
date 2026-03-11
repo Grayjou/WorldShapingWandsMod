@@ -1,15 +1,19 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
+using WorldShapingWandsMod.Common.Configs;
 using WorldShapingWandsMod.Common.Drawing;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Geometry;
 using WorldShapingWandsMod.Common.Items;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Settings;
+using WorldShapingWandsMod.Common.Systems;
 using WorldShapingWandsMod.Common.UI;
 using WorldShapingWandsMod.Common.Undo;
 using WorldShapingWandsMod.Common.Utilities;
@@ -17,9 +21,10 @@ using WorldShapingWandsMod.Common.Utilities;
 namespace WorldShapingWandsMod.Content.Items;
 
 // Base destruction logic shared by all modes
-public abstract class WandOfDestructionBase : BaseCyclingWand
+public abstract class WandOfDismantlingBase : BaseCyclingWand
 {
-    public override string WandBaseName => "Wand of Destruction";
+    public override string WandBaseName => "Wand of Dismantling";
+    public override string WandLore => "The Deity of Erasure lets you restore nothingness as you wish.";
     
     protected abstract bool HandleUseItem(Player player, WandPlayer wandPlayer, Point mouseTile);
 
@@ -55,13 +60,14 @@ public abstract class WandOfDestructionBase : BaseCyclingWand
     // NEW: Virtual method so derived classes can add behavior on cancel
     protected virtual void CancelSelection(WandPlayer wandPlayer)
     {
-        wandPlayer.CancelSelection(WandColors.CancelDestruction, wandPlayer.DestructionSettings.Shape);
+        wandPlayer.CancelSelection(WandColors.CancelDismantling, wandPlayer.DismantlingSettings.Shape);
     }
 
-    protected void ExecuteDestruction(Player player, WandPlayer wandPlayer)
+    protected void ExecuteDismantling(Player player, WandPlayer wandPlayer)
     {
-        var settings = wandPlayer.DestructionSettings;
+        var settings = wandPlayer.DismantlingSettings;
         var selection = wandPlayer.Selection;
+        var config = ModContent.GetInstance<WandConfig>();
         
         var context = new ShapeContext(
             selection.StartTile,
@@ -70,23 +76,27 @@ public abstract class WandOfDestructionBase : BaseCyclingWand
             settings.Shape.Thickness,
             HorizontalBias.None,
             VerticalBias.None,
-            selection.VerticalFirst
+            selection.VerticalFirst,
+            settings.Shape.EqualDimensions
         );
 
         var tileSet = ShapeRegistry.GetShapeTiles(settings.Shape.Shape, context);
         var undoMgr = player.GetModPlayer<UndoManager>();
-        var action = undoMgr.BeginAction("Destruction");
+        var action = undoMgr.BeginAction("Dismantling");
 
-        int destroyedTiles = 0, skipped = 0;
+        // Pre-validate all tiles and snapshot them
+        var validTiles = new List<ProgressiveTileProcessor.TileDismantlingInfo>();
         var snapshottedTiles = new HashSet<Point>();
+        int skipped = 0;
 
         foreach (Point tile in tileSet.Tiles)
         {
             if (!WorldGen.InWorld(tile.X, tile.Y, 1)) continue;
+            if (SafekeepingSystem.IsProtected(tile.X, tile.Y)) { skipped++; continue; }
 
             bool willDestroyTile = settings.DestroyTiles
                 && Main.tile[tile.X, tile.Y].HasTile
-                && player.HasEnoughPickPowerToHurtTile(tile.X, tile.Y)
+                && (config.BypassPickaxePower || player.HasEnoughPickPowerToHurtTile(tile.X, tile.Y))
                 && WorldGen.CanKillTile(tile.X, tile.Y);
 
             bool willDestroyWall = settings.DestroyWalls
@@ -101,34 +111,93 @@ public abstract class WandOfDestructionBase : BaseCyclingWand
                 snapshottedTiles.Add(tile);
             }
 
-            if (willDestroyTile)
+            validTiles.Add(new ProgressiveTileProcessor.TileDismantlingInfo
             {
-                WorldGen.KillTile(tile.X, tile.Y, fail: false, effectOnly: false, noItem: settings.SuppressDrops);
-                destroyedTiles++;
-
-                if (Main.netMode == NetmodeID.MultiplayerClient)
-                    NetMessage.SendTileSquare(-1, tile.X, tile.Y);
-            }
-
-            if (willDestroyWall)
-            {
-                WorldGen.KillWall(tile.X, tile.Y);
-
-                if (Main.netMode == NetmodeID.MultiplayerClient)
-                    NetMessage.SendTileSquare(-1, tile.X, tile.Y);
-            }
+                Position = tile,
+                DestroyTile = willDestroyTile,
+                DestroyWall = willDestroyWall,
+                SuppressDrops = config.SuppressDrops
+            });
         }
 
-        if (snapshottedTiles.Count > 0)
+        if (validTiles.Count == 0)
         {
-            undoMgr.CommitAction(action);
-            Main.NewText($"Destroyed {destroyedTiles} tile(s)" + 
+            Main.NewText("No tiles were destroyed.", Color.Gray);
+            return;
+        }
+
+        // Branch: progressive mode (with drops/sounds) vs instant mode (silent, no drops)
+        bool useProgressive = config != null && config.EnableProgressiveMode;
+
+        if (useProgressive)
+        {
+            // Progressive: enqueue batches for timed processing
+            // Tiles are NOT killed yet — the processor will do it with natural effects
+            int batchSize = config.ProgressiveBatchSize;
+            float interval = config.ProgressiveInterval;
+
+            ProgressiveTileProcessor.EnqueueDismantling(
+                player, validTiles, action, undoMgr, batchSize, interval);
+
+            int batches = (int)Math.Ceiling((double)validTiles.Count / batchSize);
+            float totalTime = (batches - 1) * interval;
+            Main.NewText(
+                $"Dismantling {validTiles.Count} tile(s) in {batches} wave(s) (~{totalTime:F1}s)" +
                 (skipped > 0 ? $", {skipped} skipped" : ""),
                 Color.OrangeRed);
         }
         else
         {
-            Main.NewText("No tiles were destroyed.", Color.Gray);
+            // Instant: process all at once
+            // In single-player, suppress sounds/effects via WorldGen.gen for clean operation.
+            // In multiplayer, do NOT set WorldGen.gen — let KillTile send per-tile network
+            // messages so the server properly processes each destruction.
+            int destroyedTiles = 0;
+            var affectedPositions = new List<Point>();
+
+            bool isMultiplayer = Main.netMode == NetmodeID.MultiplayerClient;
+            bool wasGen = WorldGen.gen;
+
+            if (!isMultiplayer)
+                WorldGen.gen = true;
+
+            foreach (var info in validTiles)
+            {
+                if (info.DestroyTile)
+                {
+                    WorldGen.KillTile(info.Position.X, info.Position.Y,
+                        fail: false, effectOnly: false, noItem: info.SuppressDrops);
+                    destroyedTiles++;
+                    affectedPositions.Add(info.Position);
+                }
+
+                if (info.DestroyWall)
+                {
+                    WorldGen.KillWall(info.Position.X, info.Position.Y);
+                    if (!info.DestroyTile)
+                        affectedPositions.Add(info.Position);
+                }
+            }
+
+            if (!isMultiplayer)
+                WorldGen.gen = wasGen;
+
+            if (affectedPositions.Count > 0)
+                BulkTileOperations.FinalizeBatch(affectedPositions);
+
+            undoMgr.CommitAction(action);
+
+            // Play SoundOreHit (SoundID.Tink) — only when drops are suppressed
+            // (otherwise Terraria's natural tile-breaking sounds play),
+            // and only when sound effects are enabled in config.
+            if (config.SuppressDrops && config.EnableWandSounds)
+            {
+                SoundEngine.PlaySound(SoundID.Tink, player.Center); // SoundOreHit
+            }
+
+            Main.NewText($"Destroyed {destroyedTiles} tile(s)" +
+                (skipped > 0 ? $", {skipped} skipped" : ""),
+                Color.OrangeRed);
         }
     }
 
@@ -156,19 +225,26 @@ public abstract class WandOfDestructionBase : BaseCyclingWand
         }
         return true;
     }
+
+    public override void AddRecipes()
+    {
+        // Only the Instant variant has a craftable recipe.
+        // Other modes are obtained via right-click cycling in inventory.
+    }
 }
 
 // OneClick Mode - Click and drag
-public class WandOfDestructionInstant : WandOfDestructionBase
+public class WandOfDismantlingInstant : WandOfDismantlingBase
 {
     public override SelectionMode WandSelectionMode => SelectionMode.OneClick;
     public override Color ModeColor => new Color(255, 80, 80); // Red — Instant (dangerous)
-    public override int GetNextModeItemType() => ModContent.ItemType<WandOfDestructionSelect>();
+    public override int GetNextModeItemType() => ModContent.ItemType<WandOfDismantlingSelect>();
 
     public override void SetDefaults()
     {
         base.SetDefaults();
         Item.channel = true; // Enable channeling for drag
+        Item.UseSound = null; // prevent sound spam during drag — played once on selection start
     }
 
     protected override bool HandleUseItem(Player player, WandPlayer wandPlayer, Point mouseTile)
@@ -202,27 +278,47 @@ public class WandOfDestructionInstant : WandOfDestructionBase
                 bool vertical = Math.Abs(Main.MouseWorld.Y - player.Center.Y) >
                                 Math.Abs(Main.MouseWorld.X - player.Center.X);
                 wandPlayer.StartSelection(mouseTile, vertical);
+                SoundEngine.PlaySound(SoundID.Item1, player.Center);
             }
             wandPlayer.UpdateSelection(mouseTile);
         }
         else if (wandPlayer.Selection.IsActive)
         {
+            // Don't execute if mouse released over UI (e.g. NPC shop)
+            if (Main.LocalPlayer.mouseInterface)
+            {
+                wandPlayer.ClearSelection();
+                return;
+            }
+
             // Mouse released - execute only if this wand started the selection
             if (wandPlayer.IsSelectionOwnedByCurrentItem())
             {
-                ExecuteDestruction(player, wandPlayer);
+                ExecuteDismantling(player, wandPlayer);
             }
             wandPlayer.ClearSelection();
         }
     }
+
+    public override void AddRecipes()
+    {
+        CreateRecipe()
+            .AddIngredient(ItemID.Wood, 10)
+            .AddIngredient(ItemID.Rope, 20)
+            .AddRecipeGroup(WandRecipeSystem.AnyGemKey, 5)
+            .AddIngredient(ItemID.Dynamite, 50)
+            .AddIngredient(ItemID.ManaCrystal, 1)
+            .AddTile(TileID.Anvils)
+            .Register();
+    }
 }
 
 // TwoClick Mode - Click start, click end
-public class WandOfDestructionSelect : WandOfDestructionBase
+public class WandOfDismantlingSelect : WandOfDismantlingBase
 {
     public override SelectionMode WandSelectionMode => SelectionMode.TwoClick;
     public override Color ModeColor => new Color(255, 255, 80); // Yellow — Select (caution)
-    public override int GetNextModeItemType() => ModContent.ItemType<WandOfDestructionConfirm>();
+    public override int GetNextModeItemType() => ModContent.ItemType<WandOfDismantlingConfirm>();
 
     protected override bool HandleUseItem(Player player, WandPlayer wandPlayer, Point mouseTile)
     {
@@ -239,19 +335,33 @@ public class WandOfDestructionSelect : WandOfDestructionBase
         {
             // Second click - execute
             wandPlayer.UpdateSelection(mouseTile);
-            ExecuteDestruction(player, wandPlayer);
+            ExecuteDismantling(player, wandPlayer);
             wandPlayer.ClearSelection();
             return false; // Don't consume the wand
         }
     }
+
+    public override void AddRecipes()
+    {
+        WandRecipeConditions.Register(Type);
+        CreateRecipe()
+            .AddIngredient<WandOfDismantlingInstant>(1)
+            .AddCustomShimmerResult(ItemID.Wood, 10)
+            .AddCustomShimmerResult(ItemID.Rope, 20)
+            .AddCustomShimmerResult(ItemID.Amethyst, 5)
+            .AddCustomShimmerResult(ItemID.Dynamite, 50)
+            .AddCustomShimmerResult(ItemID.ManaCrystal, 1)
+            .AddCondition(WandRecipeConditions.NonCraftable)
+            .Register();
+    }
 }
 
 // ThreeClick Mode - Click start, click end, click confirm
-public class WandOfDestructionConfirm : WandOfDestructionBase
+public class WandOfDismantlingConfirm : WandOfDismantlingBase
 {
     public override SelectionMode WandSelectionMode => SelectionMode.ThreeClick;
     public override Color ModeColor => new Color(80, 255, 80); // Green — Confirm (safe)
-    public override int GetNextModeItemType() => ModContent.ItemType<WandOfDestructionStamp>();
+    public override int GetNextModeItemType() => ModContent.ItemType<WandOfDismantlingStamp>();
 
     protected override bool HandleUseItem(Player player, WandPlayer wandPlayer, Point mouseTile)
     {
@@ -275,7 +385,7 @@ public class WandOfDestructionConfirm : WandOfDestructionBase
         else
         {
             // Third click - execute
-            ExecuteDestruction(player, wandPlayer);
+            ExecuteDismantling(player, wandPlayer);
             wandPlayer.ClearSelection();
             return false; // Don't consume the wand
         }
@@ -284,5 +394,19 @@ public class WandOfDestructionConfirm : WandOfDestructionBase
     public override bool CanUseItem(Player player)
     {
         return base.CanUseItem(player);
+    }
+
+    public override void AddRecipes()
+    {
+        WandRecipeConditions.Register(Type);
+        CreateRecipe()
+            .AddIngredient<WandOfDismantlingInstant>(1)
+            .AddCustomShimmerResult(ItemID.Wood, 10)
+            .AddCustomShimmerResult(ItemID.Rope, 20)
+            .AddCustomShimmerResult(ItemID.Amethyst, 5)
+            .AddCustomShimmerResult(ItemID.Dynamite, 50)
+            .AddCustomShimmerResult(ItemID.ManaCrystal, 1)
+            .AddCondition(WandRecipeConditions.NonCraftable)
+            .Register();
     }
 }

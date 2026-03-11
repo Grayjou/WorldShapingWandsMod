@@ -1,8 +1,11 @@
 ﻿using Terraria;
+using Terraria.Audio;
+using Terraria.ID;
 using Terraria.ModLoader;
 using Microsoft.Xna.Framework;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Enums;
+using WorldShapingWandsMod.Common.Systems;
 using WorldShapingWandsMod.Common.Utilities;
 using System;
 
@@ -18,6 +21,7 @@ public class WandOfReplacementInstant : WandOfReplacementBase
     {
         base.SetDefaults();
         Item.channel = true;
+        Item.UseSound = null; // prevent sound spam during drag — played once on selection start
     }
 
     protected override bool HandleUseItem(Player player, WandPlayer wandPlayer, Point mouseTile)
@@ -38,6 +42,10 @@ public class WandOfReplacementInstant : WandOfReplacementBase
 
         if (Main.mouseLeft)
         {
+            // Don't start selection if mouse is over UI
+            if (Main.LocalPlayer.mouseInterface)
+                return;
+
             // Don't restart selection immediately after cancellation
             if (!wandPlayer.CanStartNewSelection())
                 return;
@@ -47,11 +55,19 @@ public class WandOfReplacementInstant : WandOfReplacementBase
                 bool vertical = Math.Abs(Main.MouseWorld.Y - player.Center.Y) >
                                 Math.Abs(Main.MouseWorld.X - player.Center.X);
                 wandPlayer.StartSelection(mouseTile, vertical);
+                SoundEngine.PlaySound(SoundID.Item1, player.Center);
             }
             wandPlayer.UpdateSelection(mouseTile);
         }
         else if (wandPlayer.Selection.IsActive)
         {
+            // Don't execute if mouse released over UI (e.g. NPC shop)
+            if (Main.LocalPlayer.mouseInterface)
+            {
+                wandPlayer.ClearSelection();
+                return;
+            }
+
             // Mouse released - execute only if this wand started the selection
             if (wandPlayer.IsSelectionOwnedByCurrentItem())
             {
@@ -59,5 +75,15 @@ public class WandOfReplacementInstant : WandOfReplacementBase
             }
             wandPlayer.ClearSelection();
         }
+    }
+
+    public override void AddRecipes()
+    {
+        CreateRecipe()
+            .AddRecipeGroup(WandRecipeSystem.AnyWandOfBuildingKey, 1)
+            .AddRecipeGroup(WandRecipeSystem.AnyWandOfDismantlingKey, 1)
+            .AddIngredient(ItemID.ManaCrystal, 1)
+            .AddTile(TileID.Anvils)
+            .Register();
     }
 }

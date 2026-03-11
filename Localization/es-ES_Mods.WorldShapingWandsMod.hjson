@@ -1,0 +1,274 @@
+Keybinds: {
+	"Increase Thickness.DisplayName": Aumentar Grosor
+	"Decrease Thickness.DisplayName": Disminuir Grosor
+	"Open Wand Settings.DisplayName": Abrir Configuración de Varita
+	"Undo Selection Step.DisplayName": Deshacer Paso de Selección
+}
+
+RecipeGroups: {
+	AnyGemstone: Gema Cualquiera
+	AnyWandOfBuilding: Cualquier Varita de Construcción
+	AnyWandOfDismantling: Cualquier Varita de Desmantelamiento
+}
+
+UI: {
+	Common: {
+		Shape: Forma
+		OutlineThickness: Grosor del contorno:
+		Close: Cerrar
+		// Shape hover texts
+		ShapeRectFilled: Rectángulo (Relleno)
+		ShapeRectHollow: Rectángulo (Hueco)
+		ShapeEllipseFilled: Elipse (Rellena)
+		ShapeEllipseHollow: Elipse (Hueca)
+		ShapeDiamondFilled: Diamante (Relleno)
+		ShapeDiamondHollow: Diamante (Hueco)
+		ShapeTriangleFilled: Triángulo (Relleno)
+		ShapeTriangleHollow: Triángulo (Hueco)
+		ShapeElbow: Codo
+		ShapeCardinal: Línea Cardinal
+		ShapeHalfEllipseHFilled: Media Elipse H (Rellena)
+		ShapeHalfEllipseHHollow: Media Elipse H (Hueca)
+		ShapeHalfEllipseVFilled: Media Elipse V (Rellena)
+		ShapeHalfEllipseVHollow: Media Elipse V (Hueca)
+		EqualDimensions: Igualar Dimensiones
+	}
+
+	Building: {
+		Title: Varita de Construcción
+		ObjectType: Tipo de Objeto
+		SolidBlock: Bloque Sólido
+		Platform: Plataforma
+		Rope: Cuerda
+		Rail: Riel
+		GrassSeed: Semilla de Hierba
+		PlanterBox: Macetero
+		Wall: Pared
+		Slope: Rampa
+		SlopeDefault: Bloque Completo
+		SlopeHalf: Medio Bloque
+		SlopeBottomRight: Rampa ◣ (Abajo-Derecha)
+		SlopeBottomLeft: Rampa ◢ (Abajo-Izquierda)
+		SlopeTopRight: Rampa ◤ (Arriba-Derecha)
+		SlopeTopLeft: Rampa ◥ (Arriba-Izquierda)
+		OverwriteSlope: Sobrescribir Rampa
+	}
+
+	Dismantling: {
+		Title: Varita de Desmantelamiento
+		Options: Opciones
+		DestroyTiles: Destruir Bloques
+		DestroyWalls: Destruir Paredes
+	}
+
+	Replacement: {
+		Title: Varita de Reemplazo
+		SourceType: Tipo Origen (Buscar)
+		TargetType: Tipo Destino (Reemplazar)
+		Tile: Bloque
+		Platform: Plataforma
+		Rope: Cuerda
+		Planter: Macetero
+		Rail: Riel
+		Seeds: Semillas
+		Air: Aire
+		Wall: Pared
+	}
+
+	Wiring: {
+		Title: Varita de Cableado
+		WireTypes: Tipos de Cable
+		RedWire: Cable Rojo
+		GreenWire: Cable Verde
+		BlueWire: Cable Azul
+		YellowWire: Cable Amarillo
+		Actuator: Actuador
+		Mode: Modo
+		Place: Colocar
+		Remove: Quitar
+	}
+
+	Safekeeping: {
+		Title: Varita de Preservación
+		Mode: Modo
+		Protect: Proteger
+		Unprotect: Desproteger
+		ProtectTiles: Proteger Bloques
+		ProtectWalls: Proteger Paredes
+		ClearAll: Desproteger Todo
+	}
+}
+
+Configs: {
+	WandConfig: {
+		InfiniteResources.Header: Recursos Infinitos
+
+		EnableInfiniteResource: {
+			Label: Activar Modo de Recurso Infinito
+			Tooltip: Si está activado, las varitas de construcción/reemplazo dejarán de consumir objetos después de haber colocado cierta cantidad de bloques (ver más abajo).
+		}
+
+		InfiniteResourceAmount: {
+			Label: Cantidad de Recurso Infinito
+			Tooltip: Si tienes al menos esta cantidad de un bloque en tu inventario, no se consumirá al colocarlo.\n0 = siempre infinito (nunca consume).
+		}
+
+		SelectionLimits.Header: Límites de Dimensiones de Selección
+
+		SmallSelectionCap: {
+			Label: Límite de Forma Pequeña (Codo / Cardinal)
+			Tooltip: Dimensión máxima (ancho o alto) para las formas Codo y Línea Cardinal.\nEstas formas son 1D, por lo que pueden ser más largas sin problema.
+		}
+
+		BigSelectionCap: {
+			Label: Límite de Forma Grande (Rect / Elipse / etc.)
+			Tooltip: Dimensión máxima (ancho o alto) para formas de área 2D.\nUn límite de 200 significa que la selección más grande puede ser de 200×200.
+		}
+
+		ProgressiveMode.Header: Desmantelamiento Progresivo
+		Sandbox.Header: Opciones de Sandbox
+
+		SuppressDrops: {
+			Label: Suprimir Objetos al Destruir
+			Tooltip: Cuando está activado, los Bloques destruidos por cualquier varita (desmantelamiento, reemplazo o intercambio de construcción) no soltarán objetos.\nÚtil para construcción creativa/sandbox cuando no necesitas recuperar los materiales.
+		}
+
+		BypassPickaxePower: {
+			Label: Ignorar Poder de Pico
+			Tooltip: Cuando está activado, las varitas ignoran los requisitos de poder de pico y pueden destruir o reemplazar cualquier bloque sin importar la fuerza del pico.\nÚtil para construcción creativa/sandbox.
+		}
+
+		EnableProgressiveMode: {
+			Label: Activar Modo Progresivo
+			Tooltip: Cuando está activado, las operaciones de desmantelamiento y reemplazo procesan Bloques en lotes temporizados con gotas, sonidos y efectos adecuados.\nCuando está desactivado, las operaciones son instantáneas y silenciosas (sin gotas de objetos).
+		}
+
+		ProgressiveBatchSize: {
+			Label: Tamaño del Lote
+			Tooltip: Número de Bloques procesadas por lote en modo progresivo.\n400 Bloques por lote es una cantidad satisfactoria sin causar lag.
+		}
+
+		ProgressiveInterval: {
+			Label: Intervalo entre Lotes (segundos)
+			Tooltip: Tiempo entre cada lote en modo progresivo.\n0.3 segundos da una sensación de demolición en oleadas satisfactoria.
+		}
+
+		Tooltips.Header: Opciones de Descripciones Emergentes
+
+		ShowLoreTooltips: {
+			Label: Mostrar Descripciones de Lore
+			Tooltip: Cuando está activado, mantener presionada la tecla Shift mientras pasas el cursor sobre una varita muestra su texto de lore.\nDesactívalo para ocultar el lore por completo.
+		}
+
+		Audio.Header: Audio
+
+		EnableWandSounds: {
+			Label: Activar Efectos de Sonido de Varita
+			Tooltip: Cuando está activado, las varitas reproducen efectos de sonido personalizados al realizar una acción exitosamente.\nDesactívalo para operaciones silenciosas.
+		}
+
+		DisplayName: Configuración de Varita
+	}
+}
+
+Items: {
+	WandOfDismantlingInstant: {
+		Tooltip: ""
+		DisplayName: Varita de Desmantelamiento (Instantáneo)
+	}
+
+	WandOfDismantlingSelect: {
+		Tooltip: ""
+		DisplayName: Varita de Desmantelamiento (Selección)
+	}
+
+	WandOfDismantlingConfirm: {
+		Tooltip: ""
+		DisplayName: Varita de Desmantelamiento (Confirmar)
+	}
+
+	WandOfBuildingInstant: {
+		DisplayName: Varita de Construcción (Instantáneo)
+		Tooltip: Coloca Bloques en un área seleccionada
+	}
+
+	WandOfBuildingSelect: {
+		DisplayName: Varita de Construcción (Selección)
+		Tooltip: Coloca Bloques en un área seleccionada
+	}
+
+	WandOfBuildingConfirm: {
+		DisplayName: Varita de Construcción (Confirmar)
+		Tooltip: Coloca Bloques en un área seleccionada
+	}
+
+	WandOfReplacementInstant: {
+		DisplayName: Varita de Reemplazo (Instantáneo)
+		Tooltip: Reemplaza Bloques en un área seleccionada
+	}
+
+	WandOfReplacementSelect: {
+		DisplayName: Varita de Reemplazo (Selección)
+		Tooltip: Reemplaza Bloques en un área seleccionada
+	}
+
+	WandOfReplacementConfirm: {
+		DisplayName: Varita de Reemplazo (Confirmar)
+		Tooltip: Reemplaza Bloques en un área seleccionada
+	}
+
+	WandOfWiringInstant: {
+		DisplayName: Varita de Cableado (Instantáneo)
+		Tooltip: Coloca o quita cables y actuadores en un área seleccionada
+	}
+
+	WandOfWiringSelect: {
+		DisplayName: Varita de Cableado (Selección)
+		Tooltip: Coloca o quita cables y actuadores en un área seleccionada
+	}
+
+	WandOfWiringConfirm: {
+		DisplayName: Varita de Cableado (Confirmar)
+		Tooltip: Coloca o quita cables y actuadores en un área seleccionada
+	}
+
+	WandOfBuildingStamp: {
+		DisplayName: Varita de Construcción (Sello)
+		Tooltip: Define una forma una vez, luego repítela con el sello
+	}
+
+	WandOfDismantlingStamp: {
+		Tooltip: ""
+		DisplayName: Varita de Desmantelamiento Sello
+	}
+
+	WandOfReplacementStamp: {
+		DisplayName: Varita de Reemplazo (Sello)
+		Tooltip: Define un área de reemplazo una vez, luego repítela con el sello
+	}
+
+	WandOfWiringStamp: {
+		DisplayName: Varita de Cableado (Sello)
+		Tooltip: Define un área de cableado una vez, luego repítela con el sello
+	}
+
+	WandOfSafekeepingInstant: {
+		DisplayName: Varita de Preservación (Instantánea)
+		Tooltip: Protege o desprotege Bloques en un área seleccionada
+	}
+
+	WandOfSafekeepingSelect: {
+		DisplayName: Varita de Preservación (Selección)
+		Tooltip: Protege o desprotege Bloques en un área seleccionada
+	}
+
+	WandOfSafekeepingConfirm: {
+		DisplayName: Varita de Preservación (Confirmar)
+		Tooltip: Protege o desprotege Bloques en un área seleccionada
+	}
+
+	WandOfSafekeepingStamp: {
+		DisplayName: Varita de Preservación (Sello)
+		Tooltip: Define un área de Preservación una vez, luego repítela con el sello
+	}
+}

@@ -4,9 +4,18 @@ using WorldShapingWandsMod.Common.Enums;
 namespace WorldShapingWandsMod.Common.Settings;
 
 /// <summary>
-/// Settings for the Wand of Destruction.
+/// Protect vs Unprotect mode.
 /// </summary>
-public class WandOfDestructionSettings
+public enum SafekeepingMode : byte
+{
+    Protect = 0,
+    Unprotect = 1
+}
+
+/// <summary>
+/// Settings for the Wand of Safekeeping.
+/// </summary>
+public class WandOfSafekeepingSettings
 {
     /// <summary>The selection mode for this wand.</summary>
     public SelectionMode SelectionMode { get; set; } = SelectionMode.OneClick;
@@ -14,32 +23,33 @@ public class WandOfDestructionSettings
     /// <summary>The shape configuration.</summary>
     public ShapeInfo Shape { get; set; } = ShapeInfo.Default;
 
-    /// <summary>Whether to destroy tiles.</summary>
-    public bool DestroyTiles { get; set; } = true;
+    /// <summary>Whether to protect or unprotect tiles.</summary>
+    public SafekeepingMode Mode { get; set; } = SafekeepingMode.Protect;
 
-    /// <summary>Whether to destroy walls.</summary>
-    public bool DestroyWalls { get; set; } = false;
+    /// <summary>Whether to protect tile positions.</summary>
+    public bool ProtectTiles { get; set; } = true;
 
-    /// <summary>Whether to suppress item drops when destroying tiles.</summary>
-    public bool SuppressDrops { get; set; } = false;
+    /// <summary>Whether to protect wall positions.</summary>
+    public bool ProtectWalls { get; set; } = true;
 
     /// <summary>The starting point of the selection.</summary>
     public Point StartPoint { get; set; }
 
-    /// <summary>The ending point of the selection (used in ThreeClick mode).</summary>
+    /// <summary>The ending point of the selection.</summary>
     public Point EndPoint { get; set; }
 
     /// <summary>
     /// Creates a copy of these settings.
     /// </summary>
-    public WandOfDestructionSettings Clone()
+    public WandOfSafekeepingSettings Clone()
     {
-        return new WandOfDestructionSettings
+        return new WandOfSafekeepingSettings
         {
             SelectionMode = SelectionMode,
             Shape = Shape,
-            DestroyTiles = DestroyTiles,
-            DestroyWalls = DestroyWalls,
+            Mode = Mode,
+            ProtectTiles = ProtectTiles,
+            ProtectWalls = ProtectWalls,
             StartPoint = StartPoint,
             EndPoint = EndPoint
         };
@@ -52,8 +62,9 @@ public class WandOfDestructionSettings
     {
         SelectionMode = SelectionMode.OneClick;
         Shape = ShapeInfo.Default;
-        DestroyTiles = true;
-        DestroyWalls = false;
+        Mode = SafekeepingMode.Protect;
+        ProtectTiles = true;
+        ProtectWalls = true;
         StartPoint = Point.Zero;
         EndPoint = Point.Zero;
     }
@@ -63,14 +74,14 @@ public class WandOfDestructionSettings
     /// </summary>
     public string GetDescription()
     {
-        string destruction = (DestroyTiles, DestroyWalls) switch
+        string targets = (ProtectTiles, ProtectWalls) switch
         {
             (true, true) => "Tiles & Walls",
             (true, false) => "Tiles Only",
             (false, true) => "Walls Only",
             (false, false) => "Nothing"
         };
-        return $"{SelectionMode} - {destruction} - {Shape.GetDescription()}";
+        return $"{SelectionMode} - {Mode} {targets} - {Shape.GetDescription()}";
     }
 
     /// <summary>
