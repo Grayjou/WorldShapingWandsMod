@@ -25,27 +25,43 @@ public struct ShapeInfo
     public bool EqualDimensions { get; set; }
 
     /// <summary>
+    /// How the shape is sliced to produce a half-shape.
+    /// Shapes compute partial geometry natively based on this value.
+    /// </summary>
+    public SliceMode Slice { get; set; }
+
+    /// <summary>
+    /// When true and slicing is active on a hollow shape, the diameter edge
+    /// (flat side) is drawn. When false, the diameter edge is omitted,
+    /// leaving an open-sided shape.
+    /// </summary>
+    public bool ConnectDiameter { get; set; }
+
+    /// <summary>
     /// Creates a new ShapeInfo with the specified parameters.
     /// </summary>
-    public ShapeInfo(ShapeType shape, ShapeMode fillMode, int thickness = 1, bool equalDimensions = false)
+    public ShapeInfo(ShapeType shape, ShapeMode fillMode, int thickness = 1,
+        bool equalDimensions = false, SliceMode slice = SliceMode.Full, bool connectDiameter = true)
     {
         Shape = shape;
         FillMode = fillMode;
         Thickness = thickness;
         EqualDimensions = equalDimensions;
+        Slice = slice;
+        ConnectDiameter = connectDiameter;
     }
 
     /// <summary>
     /// Creates a default ShapeInfo (Rectangle, Filled, thickness 1, no equal dimensions).
     /// </summary>
-    public static ShapeInfo Default => new(ShapeType.Rectangle, ShapeMode.Filled, 1, false);
+    public static ShapeInfo Default => new(ShapeType.Rectangle, ShapeMode.Filled, 1, false, SliceMode.Full, true);
 
     /// <summary>
     /// Returns a human-readable description of this shape configuration.
     /// </summary>
     public string GetDescription()
     {
-        return FillMode switch
+        string desc = FillMode switch
         {
             ShapeMode.Filled => $"{Shape} - Filled",
             ShapeMode.Hollow => Thickness switch
@@ -56,14 +72,20 @@ public struct ShapeInfo
             },
             _ => $"{Shape} - Unknown"
         };
+
+        if (Slice != SliceMode.Full)
+            desc += $" [{Slice}]";
+
+        return desc;
     }
 
     /// <summary>
-    /// Clamps thickness to valid ranges.
+    /// Clamps thickness to valid ranges using the configured maximum.
     /// </summary>
     public void Validate()
     {
-        Thickness = (int)MathHelper.Clamp(Thickness, 0, 50);
+        int max = Terraria.ModLoader.ModContent.GetInstance<Configs.WandConfig>()?.MaxOutlineThickness ?? 10;
+        Thickness = (int)MathHelper.Clamp(Thickness, 0, max);
     }
 
     /// <summary>
@@ -73,9 +95,9 @@ public struct ShapeInfo
     /// </summary>
     public ShapeContext ToShapeContext(Point start, Point end, bool verticalFirst = false)
     {
-        // Use thickness for both Hollow and Outline modes
-        int effectiveThickness = (FillMode == ShapeMode.Hollow) ? Thickness : 0;
-        return new ShapeContext(start, end, FillMode, effectiveThickness,
-            HorizontalBias.None, VerticalBias.None, verticalFirst, EqualDimensions);
+        // Pass thickness for all modes. CardinalLine uses thickness in Filled mode
+        // for its circular brush. Other shapes ignore thickness in Filled mode.
+        return new ShapeContext(start, end, FillMode, Thickness,
+            HorizontalBias.None, VerticalBias.None, verticalFirst, EqualDimensions, Slice, ConnectDiameter);
     }
 }

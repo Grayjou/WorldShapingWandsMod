@@ -18,6 +18,7 @@ using WorldShapingWandsMod.Common.Systems;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static WorldShapingWandsMod.Common.Utilities.Msg;
 using SlopeType = WorldShapingWandsMod.Common.Enums.SlopeType;
 
 namespace WorldShapingWandsMod.Content.Items
@@ -37,6 +38,11 @@ namespace WorldShapingWandsMod.Content.Items
 
             var wandPlayer = player.GetModPlayer<WandPlayer>();
 
+            // Clear incompatible selections (e.g., a 2-step selection on a 2-click wand).
+            // Skip for OneClick — instant wands manage their own lifecycle in HoldItem.
+            if (WandSelectionMode != SelectionMode.OneClick)
+                wandPlayer.EnsureSelectionCompatibility(WandSelectionMode);
+
             if (WandSelectionMode != SelectionMode.OneClick && !wandPlayer.TryConsumeFreshLeftClick())
                 return false;
 
@@ -47,7 +53,11 @@ namespace WorldShapingWandsMod.Content.Items
         public override void HoldItem(Player player)
         {
             var wandPlayer = player.GetModPlayer<WandPlayer>();
-            if (wandPlayer.Selection.IsActive && Main.mouseRight && Main.mouseRightRelease)
+            // Only cancel on right-click in the WORLD, not when clicking in inventory/UI.
+            // Without this guard, right-clicking the wand in inventory (to cycle mode)
+            // also triggers cancel-selection, which eats the click.
+            if (!Main.LocalPlayer.mouseInterface
+                && wandPlayer.Selection.IsActive && Main.mouseRight && Main.mouseRightRelease)
             {
                 CancelSelection(wandPlayer);
                 Main.mouseRightRelease = false;
@@ -72,7 +82,7 @@ namespace WorldShapingWandsMod.Content.Items
         protected void ExecuteBuilding(Player player, WandPlayer wandPlayer)
         {
             var settings = wandPlayer.BuildingSettings;
-            var selection = wandPlayer.Selection;
+            var selection = wandPlayer.GetVisualSelection();
             var config = ModContent.GetInstance<WandConfig>();
 
             // Wall mode uses a completely separate placement path
@@ -91,23 +101,15 @@ namespace WorldShapingWandsMod.Content.Items
             int sourceIndex = ItemTypeHelper.FindFirstItemIndex(player, condition);
             if (sourceIndex < 0)
             {
-                Main.NewText($"No suitable item found for {settings.Object}.", Color.Red);
+                Main.NewText(Get("NoSuitableItem", settings.Object), Color.Red);
                 return;
             }
 
             Item initialSourceItem = player.inventory[sourceIndex];
 
-            // Build shape context
-            var context = new ShapeContext(
-                selection.StartTile,
-                selection.EndTile,
-                settings.Shape.FillMode,
-                settings.Shape.Thickness,
-                HorizontalBias.None,
-                VerticalBias.None,
-                selection.VerticalFirst,
-                settings.Shape.EqualDimensions
-            );
+            // Build shape context (includes slice & connectDiameter from settings)
+            var context = settings.Shape.ToShapeContext(
+                selection.StartTile, selection.EndTile, selection.VerticalFirst);
 
             var tileSet = ShapeRegistry.GetShapeTiles(settings.Shape.Shape, context);
             var tilesToProcess = tileSet.Tiles.ToArray();
@@ -136,29 +138,153 @@ namespace WorldShapingWandsMod.Content.Items
                     string itemName = usingTileWandForCheck
                         ? Lang.GetItemNameValue(firstSourceItem.tileWand)
                         : firstSourceItem.Name;
-                    Main.NewText($"Need {required} {itemName}, have {totalAvailable}. Operation cancelled.", Color.Red);
+                    Main.NewText(Get("NeedHave", required, itemName, totalAvailable), Color.Red);
                     return;
                 }
             }
 
-            // Determine if consumption is needed
+            // Determine if consumption is needed (per-type check)
+            // Must count the SPECIFIC item type (or tile wand ammo) — not the broad category.
+            // Using the category-wide condition would sum all solid tiles (dirt + acidwood + stone…)
+            // and incorrectly exceed the infinite threshold even when the individual item is scarce.
             bool shouldConsume = true;
-            if (config.EnableInfiniteResource)
+            if (config.IsInfiniteForPlaceType(settings.Object))
             {
-                // Check total across all matching items
-                ItemTypeHelper.CountItems(player.inventory, i => !i.IsAir && condition(i), out int grandTotal);
-                if (config.InfiniteResourceAmount == 0)
+                bool usingTileWandForInf = initialSourceItem.tileWand >= 0;
+                Func<Item, bool> infCheckCond = usingTileWandForInf
+                    ? i => !i.IsAir && i.type == initialSourceItem.tileWand
+                    : i => !i.IsAir && i.type == initialSourceItem.type;
+
+                ItemTypeHelper.CountItems(player.inventory, infCheckCond, out int grandTotal);
+                int threshold = config.GetThresholdForPlaceType(settings.Object);
+                if (threshold == 0)
                     shouldConsume = false;
-                else if (grandTotal >= config.InfiniteResourceAmount)
+                else if (grandTotal >= threshold)
                     shouldConsume = false;
             }
 
             var undoMgr = player.GetModPlayer<UndoManager>();
             var action = undoMgr.BeginAction("Building");
 
+            bool replaceMode = player.TileReplacementEnabled;
+
+            // Branch: progressive batching for large operations
+            bool useProgressive = config.EnableProgressiveMode
+                && tilesToProcess.Length > config.ProgressiveBatchSize;
+
+            if (useProgressive)
+            {
+                // Pre-validate tiles and snapshot them for progressive processing
+                var buildTiles = new List<ProgressiveTileProcessor.TileBuildingInfo>();
+                foreach (Point tile in tilesToProcess)
+                {
+                    if (!WorldGen.InWorld(tile.X, tile.Y, 1)) continue;
+                    if (SafekeepingSystem.IsProtected(tile.X, tile.Y)) continue;
+
+                    var existingTile = Main.tile[tile.X, tile.Y];
+                    if (existingTile.HasTile)
+                    {
+                        // Grass seed mode: don't destroy the substrate, just convert
+                        if (settings.Object == PlaceType.GrassSeed)
+                        {
+                            // Grass seeds convert existing substrates (dirt→grass, mud→jungle grass, etc.)
+                            // They are NOT replacements — they modify the surface of the block.
+                            action.AddSnapshot(tile);
+                            buildTiles.Add(new ProgressiveTileProcessor.TileBuildingInfo
+                            {
+                                Position = tile,
+                                IsReplacement = false, // Not a replacement — it's a conversion
+                                SuppressDrops = true,
+                                IsGrassSeed = true
+                            });
+                            continue;
+                        }
+
+                        // Same tile type? Apply slope only — don't destroy+rebuild.
+                        // This check runs BEFORE replaceMode: slope correction is non-destructive
+                        // (no item consumed, no tile removed) so it should always be allowed.
+                        int idx0 = ItemTypeHelper.FindFirstItemIndex(player, condition);
+                        if (idx0 >= 0)
+                        {
+                            Item src0 = player.inventory[idx0];
+                            if (existingTile.TileType == (ushort)src0.createTile)
+                            {
+                                // Same type — only queue for slope overwrite, never destroy.
+                                if (settings.OverwriteSlope && NeedsSlopeChange(tile.X, tile.Y, settings.Slope))
+                                {
+                                    action.AddSnapshot(tile);
+                                    buildTiles.Add(new ProgressiveTileProcessor.TileBuildingInfo
+                                    {
+                                        Position = tile,
+                                        IsReplacement = false,
+                                        SuppressDrops = true,
+                                        IsSlopeOnly = true
+                                    });
+                                }
+                                continue;
+                            }
+
+                            // Substrate-variant skip: if the existing tile is a grass/moss
+                            // variant of the target substrate (e.g. JungleGrass is a variant
+                            // of Mud), don't replace it — the user almost certainly does not
+                            // want to strip the grass coating off tiles they're filling "with mud".
+                            if (ItemTypeHelper.IsTileVariantOf(existingTile.TileType, src0.createTile))
+                                continue;
+                        }
+
+                        if (!replaceMode) continue;
+
+                        if (!config.BypassPickaxePower && !player.HasEnoughPickPowerToHurtTile(tile.X, tile.Y)) continue;
+                        if (!WorldGen.CanKillTile(tile.X, tile.Y)) continue;
+
+                        action.AddSnapshot(tile);
+                        buildTiles.Add(new ProgressiveTileProcessor.TileBuildingInfo
+                        {
+                            Position = tile,
+                            IsReplacement = true,
+                            SuppressDrops = config.SuppressDrops
+                        });
+                    }
+                    else
+                    {
+                        action.AddSnapshot(tile);
+                        buildTiles.Add(new ProgressiveTileProcessor.TileBuildingInfo
+                        {
+                            Position = tile,
+                            IsReplacement = false,
+                            SuppressDrops = true
+                        });
+                    }
+                }
+
+                if (buildTiles.Count > 0)
+                {
+                    int batchSize = config.ProgressiveBatchSize;
+                    float interval = config.ProgressiveInterval;
+
+                    ProgressiveTileProcessor.EnqueueBuilding(
+                        player, buildTiles, action, undoMgr,
+                        batchSize, interval, shouldConsume, condition,
+                        settings.OverwriteSlope, settings.Slope,
+                        vacuumItems: config.VacuumItems);
+
+                    int batches = (int)Math.Ceiling((double)buildTiles.Count / batchSize);
+                    float totalTime = (batches - 1) * interval;
+                    Main.NewText(
+                        $"Building {buildTiles.Count} tile(s) in {batches} wave(s) (~{totalTime:F1}s)" +
+                        (shouldConsume ? "" : " (no items consumed)"),
+                        Color.Cyan);
+                }
+                else
+                {
+                    Main.NewText(Get("NoTilesPlaced"), Color.Gray);
+                }
+                return;
+            }
+
+            // Instant mode: process all at once
             int placed = 0;
             int replaced = 0;
-            bool replaceMode = player.TileReplacementEnabled;
             bool interrupted = false;
             var affectedPositions = new List<Point>();
 
@@ -180,8 +306,6 @@ namespace WorldShapingWandsMod.Content.Items
 
                 if (existingTile.HasTile)
                 {
-                    if (!replaceMode) continue;
-
                     // Re-lookup source item for this tile (supports NextBlock)
                     int idx = ItemTypeHelper.FindFirstItemIndex(player, condition);
                     if (idx < 0)
@@ -193,15 +317,51 @@ namespace WorldShapingWandsMod.Content.Items
                     Item srcItem = player.inventory[idx];
                     ushort tType = (ushort)srcItem.createTile;
 
-                    // Skip if the tile is already the exact same type AND style
-                    // (platforms share TileType but differ by placeStyle/frame)
+                    // === GRASS SEED SPECIAL PATH ===
+                    // Grass seeds convert existing substrates (dirt→grass, mud→jungle, etc.)
+                    // They don't destroy the underlying block — they modify its surface.
+                    if (settings.Object == PlaceType.GrassSeed)
+                    {
+                        action.AddSnapshot(tile);
+                        WorldGen.gen = true;
+                        if (WorldGen.PlaceTile(tile.X, tile.Y, tType, mute: true, forced: false,
+                            plr: player.whoAmI, style: srcItem.placeStyle))
+                        {
+                            placed++;
+                            if (shouldConsume) ConsumeOneItem(player, srcItem, condition);
+                            affectedPositions.Add(tile);
+                        }
+                        WorldGen.gen = wasGen;
+                        continue;
+                    }
+
+                    // Same tile type? Check if we need a slope change.
+                    // Don't destroy+rebuild just to change the slope — apply in-place.
+                    // This check runs BEFORE replaceMode: slope correction is non-destructive
+                    // (no item consumed, no tile removed) so it should always be allowed.
                     if (existingTile.TileType == tType)
                     {
-                        // For platforms and similar multi-style tiles, also compare style
-                        int existingStyle = existingTile.TileFrameX / 18;
-                        if (!TileID.Sets.Platforms[tType] || existingStyle == srcItem.placeStyle)
-                            continue;
+                        // Tile is the same type — but if OverwriteSlope is on and the slope differs,
+                        // apply the new slope in-place without consuming an item.
+                        if (settings.OverwriteSlope && NeedsSlopeChange(tile.X, tile.Y, settings.Slope))
+                        {
+                            action.AddSnapshot(tile);
+                            ApplySlope(tile.X, tile.Y, settings.Slope);
+                            affectedPositions.Add(tile);
+                            replaced++;
+                        }
+                        continue; // Either slope was applied or nothing to do
                     }
+
+                    // Substrate-variant skip: if the existing tile is a grass/moss
+                    // variant of the target substrate (e.g. JungleGrass is a variant
+                    // of Mud), don't replace it — the user almost certainly does not
+                    // want to strip the grass coating off tiles they're filling "with mud".
+                    if (ItemTypeHelper.IsTileVariantOf(existingTile.TileType, tType))
+                        continue;
+
+                    if (!replaceMode) continue;
+
                     if (!config.BypassPickaxePower && !player.HasEnoughPickPowerToHurtTile(tile.X, tile.Y)) continue;
                     if (!WorldGen.CanKillTile(tile.X, tile.Y)) continue;
 
@@ -211,7 +371,9 @@ namespace WorldShapingWandsMod.Content.Items
                     WorldGen.gen = suppressDrops;
 
                     bool didReplace = false;
-                    if (WorldGen.ReplaceTile(tile.X, tile.Y, tType, srcItem.placeStyle))
+                    // TileID.Dirt == 0: WorldGen.ReplaceTile treats tileType=0 as "no tile",
+                    // so skip it and go straight to KillTile+PlaceTile for Dirt targets.
+                    if (tType != 0 && WorldGen.ReplaceTile(tile.X, tile.Y, tType, srcItem.placeStyle))
                     {
                         didReplace = true;
                     }
@@ -272,7 +434,17 @@ namespace WorldShapingWandsMod.Content.Items
 
             // Batch network sync: one packet instead of N per-tile messages
             if (affectedPositions.Count > 0)
+            {
                 BulkTileOperations.BatchNetworkSync(BulkTileOperations.ComputeBounds(affectedPositions));
+
+                // Vacuum: collect scattered tile drops into the player's inventory.
+                // Tile replacement (KillTile) creates item drops when SuppressDrops is false.
+                if (config.VacuumItems && !config.SuppressDrops && replaced > 0)
+                {
+                    var bounds = BulkTileOperations.ComputeBounds(affectedPositions);
+                    BulkTileOperations.VacuumItemsInArea(player, bounds);
+                }
+            }
 
             int totalChanged = placed + replaced;
             if (totalChanged > 0)
@@ -296,7 +468,7 @@ namespace WorldShapingWandsMod.Content.Items
             }
             else
             {
-                Main.NewText("No tiles could be placed.", Color.Gray);
+                Main.NewText(Get("NoTilesPlaced"), Color.Gray);
             }
         }
 
@@ -313,27 +485,27 @@ namespace WorldShapingWandsMod.Content.Items
             int sourceIndex = ItemTypeHelper.FindFirstItemIndex(player, condition);
             if (sourceIndex < 0)
             {
-                Main.NewText("No wall item found in inventory.", Color.Red);
+                Main.NewText(Get("NoWallItemFound"), Color.Red);
                 return;
             }
 
-            var context = new ShapeContext(
-                selection.StartTile, selection.EndTile,
-                settings.Shape.FillMode, settings.Shape.Thickness,
-                HorizontalBias.None, VerticalBias.None,
-                selection.VerticalFirst, settings.Shape.EqualDimensions
-            );
+            var context = settings.Shape.ToShapeContext(
+                selection.StartTile, selection.EndTile, selection.VerticalFirst);
 
             var tileSet = ShapeRegistry.GetShapeTiles(settings.Shape.Shape, context);
             var tilesToProcess = tileSet.Tiles.ToArray();
 
             bool shouldConsume = true;
-            if (config.EnableInfiniteResource)
+            if (config.IsInfiniteForPlaceType(PlaceType.Wall))
             {
-                ItemTypeHelper.CountItems(player.inventory, i => !i.IsAir && condition(i), out int grandTotal);
-                if (config.InfiniteResourceAmount == 0)
+                // Count only the specific wall item type — not all wall items combined
+                Item wallSourceItem = player.inventory[sourceIndex];
+                Func<Item, bool> wallInfCond = i => !i.IsAir && i.type == wallSourceItem.type;
+                ItemTypeHelper.CountItems(player.inventory, wallInfCond, out int grandTotal);
+                int threshold = config.GetThresholdForPlaceType(PlaceType.Wall);
+                if (threshold == 0)
                     shouldConsume = false;
-                else if (grandTotal >= config.InfiniteResourceAmount)
+                else if (grandTotal >= threshold)
                     shouldConsume = false;
             }
 
@@ -344,7 +516,7 @@ namespace WorldShapingWandsMod.Content.Items
                 bool hasInfinite = ItemTypeHelper.CountItems(player.inventory, checkCond, out int totalAvailable);
                 if (!hasInfinite && totalAvailable < tilesToProcess.Length)
                 {
-                    Main.NewText($"Need {tilesToProcess.Length} {firstItem.Name}, have {totalAvailable}. Operation cancelled.", Color.Red);
+                    Main.NewText(Get("NeedHave", tilesToProcess.Length, firstItem.Name, totalAvailable), Color.Red);
                     return;
                 }
             }
@@ -352,9 +524,82 @@ namespace WorldShapingWandsMod.Content.Items
             var undoMgr = player.GetModPlayer<UndoManager>();
             var action = undoMgr.BeginAction("Building (Walls)");
 
+            bool replaceMode = player.TileReplacementEnabled;
+
+            // Branch: progressive batching for large wall operations
+            bool useProgressive = config.EnableProgressiveMode
+                && tilesToProcess.Length > config.ProgressiveBatchSize;
+
+            if (useProgressive)
+            {
+                // Pre-validate walls and snapshot them for progressive processing
+                var buildWalls = new List<ProgressiveTileProcessor.WallBuildingInfo>();
+                foreach (Point tile in tilesToProcess)
+                {
+                    if (!WorldGen.InWorld(tile.X, tile.Y, 1)) continue;
+                    if (SafekeepingSystem.IsProtected(tile.X, tile.Y)) continue;
+
+                    var t = Main.tile[tile.X, tile.Y];
+
+                    if (t.WallType != WallID.None)
+                    {
+                        if (!replaceMode) continue;
+
+                        int idx = ItemTypeHelper.FindFirstItemIndex(player, condition);
+                        if (idx < 0) continue;
+                        Item srcItem = player.inventory[idx];
+                        ushort wallType = (ushort)srcItem.createWall;
+                        if (t.WallType == wallType) continue;
+
+                        if (TileHelper.WouldTileLoseSupport(tile.X, tile.Y)) continue;
+
+                        action.AddSnapshot(tile);
+                        buildWalls.Add(new ProgressiveTileProcessor.WallBuildingInfo
+                        {
+                            Position = tile,
+                            IsReplacement = true,
+                            SuppressDrops = config.SuppressDrops
+                        });
+                    }
+                    else
+                    {
+                        action.AddSnapshot(tile);
+                        buildWalls.Add(new ProgressiveTileProcessor.WallBuildingInfo
+                        {
+                            Position = tile,
+                            IsReplacement = false,
+                            SuppressDrops = true
+                        });
+                    }
+                }
+
+                if (buildWalls.Count > 0)
+                {
+                    int batchSize = config.ProgressiveBatchSize;
+                    float interval = config.ProgressiveInterval;
+
+                    ProgressiveTileProcessor.EnqueueWallBuilding(
+                        player, buildWalls, action, undoMgr,
+                        batchSize, interval, shouldConsume, condition,
+                        vacuumItems: config.VacuumItems);
+
+                    int batches = (int)Math.Ceiling((double)buildWalls.Count / batchSize);
+                    float totalTime = (batches - 1) * interval;
+                    Main.NewText(
+                        $"Building {buildWalls.Count} wall(s) in {batches} wave(s) (~{totalTime:F1}s)" +
+                        (shouldConsume ? "" : " (no items consumed)"),
+                        Color.Cyan);
+                }
+                else
+                {
+                    Main.NewText(Get("NoWallsPlaced"), Color.Gray);
+                }
+                return;
+            }
+
+            // Instant mode: process all at once
             int placed = 0;
             int replaced = 0;
-            bool replaceMode = player.TileReplacementEnabled;
             bool interrupted = false;
             var affectedPositions = new List<Point>();
 
@@ -382,6 +627,10 @@ namespace WorldShapingWandsMod.Content.Items
                     // Wall already exists
                     if (!replaceMode) continue;
                     if (t.WallType == wallType) continue; // same wall, skip
+
+                    // Preserve tiles that depend on the wall for support (torches, candles,
+                    // banners, paintings, etc.). KillWall would silently destroy them.
+                    if (TileHelper.WouldTileLoseSupport(tile.X, tile.Y)) continue;
 
                     action.AddSnapshot(tile);
                     WorldGen.gen = config.SuppressDrops;
@@ -424,6 +673,14 @@ namespace WorldShapingWandsMod.Content.Items
                 foreach (var pos in affectedPositions)
                     Framing.WallFrame(pos.X, pos.Y);
                 BulkTileOperations.BatchNetworkSync(BulkTileOperations.ComputeBounds(affectedPositions));
+
+                // Vacuum: collect scattered wall drops into the player's inventory.
+                // Wall replacement (KillWall) creates item drops when SuppressDrops is false.
+                if (config.VacuumItems && !config.SuppressDrops && replaced > 0)
+                {
+                    var bounds = BulkTileOperations.ComputeBounds(affectedPositions);
+                    BulkTileOperations.VacuumItemsInArea(player, bounds);
+                }
             }
 
             int total = placed + replaced;
@@ -442,7 +699,7 @@ namespace WorldShapingWandsMod.Content.Items
             }
             else
             {
-                Main.NewText("No walls could be placed.", Color.Gray);
+                Main.NewText(Get("NoWallsPlaced"), Color.Gray);
             }
         }
 
@@ -458,6 +715,27 @@ namespace WorldShapingWandsMod.Content.Items
                 : i => !i.IsAir && i.type == sourceItem.type;
 
             ItemTypeHelper.ConsumeItems(player.inventory, consumeCond, 1);
+        }
+
+        /// <summary>
+        /// Checks if the tile at (x, y) has a different slope than the requested one.
+        /// Used to determine if an in-place slope update is needed when the tile type matches.
+        /// </summary>
+        private static bool NeedsSlopeChange(int x, int y, SlopeType slope)
+        {
+            var tile = Main.tile[x, y];
+            if (!tile.HasTile) return false;
+
+            return slope switch
+            {
+                SlopeType.Default => tile.IsHalfBlock || tile.Slope != Terraria.ID.SlopeType.Solid,
+                SlopeType.VerticalHalf => !tile.IsHalfBlock || tile.Slope != Terraria.ID.SlopeType.Solid,
+                SlopeType.BottomRight => tile.IsHalfBlock || tile.Slope != Terraria.ID.SlopeType.SlopeDownLeft,
+                SlopeType.BottomLeft => tile.IsHalfBlock || tile.Slope != Terraria.ID.SlopeType.SlopeDownRight,
+                SlopeType.TopRight => tile.IsHalfBlock || tile.Slope != Terraria.ID.SlopeType.SlopeUpRight,
+                SlopeType.TopLeft => tile.IsHalfBlock || tile.Slope != Terraria.ID.SlopeType.SlopeUpLeft,
+                _ => false
+            };
         }
 
         /// <summary>

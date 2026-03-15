@@ -10,10 +10,12 @@ using WorldShapingWandsMod.Common.Drawing;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Geometry;
 using WorldShapingWandsMod.Common.Items;
+using WorldShapingWandsMod.Common.Networking;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Settings;
 using WorldShapingWandsMod.Common.UI;
 using WorldShapingWandsMod.Common.Utilities;
+using static WorldShapingWandsMod.Common.Utilities.Msg;
 
 namespace WorldShapingWandsMod.Content.Items;
 
@@ -41,6 +43,11 @@ public abstract class WandOfWiringBase : BaseCyclingWand
 
         var wandPlayer = player.GetModPlayer<WandPlayer>();
 
+        // Clear incompatible selections (e.g., a 2-step selection on a 2-click wand).
+        // Skip for OneClick — instant wands manage their own lifecycle in HoldItem.
+        if (WandSelectionMode != SelectionMode.OneClick)
+            wandPlayer.EnsureSelectionCompatibility(WandSelectionMode);
+
         if (WandSelectionMode != SelectionMode.OneClick && !wandPlayer.TryConsumeFreshLeftClick())
             return false;
 
@@ -55,7 +62,9 @@ public abstract class WandOfWiringBase : BaseCyclingWand
 
         var wandPlayer = player.GetModPlayer<WandPlayer>();
 
-        if (wandPlayer.Selection.IsActive && Main.mouseRight && Main.mouseRightRelease)
+        // Only cancel on right-click in the WORLD, not when clicking in inventory/UI.
+        if (!Main.LocalPlayer.mouseInterface
+            && wandPlayer.Selection.IsActive && Main.mouseRight && Main.mouseRightRelease)
         {
             CancelSelection(wandPlayer);
             Main.mouseRightRelease = false;
@@ -91,81 +100,109 @@ public abstract class WandOfWiringBase : BaseCyclingWand
     protected void ExecuteWiring(Player player, WandPlayer wandPlayer)
     {
         var settings = wandPlayer.WiringSettings;
-        var selection = wandPlayer.Selection;
+        var selection = wandPlayer.GetVisualSelection();
 
         if (!settings.HasAnySelection)
         {
-            Main.NewText("No wires or actuators selected.", Color.Red);
+            Main.NewText(Get("NoWiresSelected"), Color.Red);
             return;
         }
 
-        // Check materials for Place mode
-        if (settings.Mode == WiringMode.Place)
+        // Check materials for Place mode (respects per-type InfiniteResource config)
+        var config = ModContent.GetInstance<WandConfig>();
+        bool infiniteWires = WiringHelper.IsInfiniteWireMode(player, config);
+        bool infiniteActuators = WiringHelper.IsInfiniteActuatorMode(player, config);
+
+        if (settings.Mode == WiringMode.Place && !infiniteWires)
         {
             int wiresNeeded = settings.WireRed || settings.WireGreen ||
                               settings.WireBlue || settings.WireYellow ? 1 : 0;
 
             if (wiresNeeded > 0 && !WiringHelper.HasItem(player, ItemID.Wire))
             {
-                Main.NewText("No wire in inventory.", Color.Red);
-                return;
-            }
-
-            if (settings.Actuator && !WiringHelper.HasItem(player, ItemID.Actuator))
-            {
-                Main.NewText("No actuators in inventory.", Color.Red);
+                Main.NewText(Get("NoWireInInventory"), Color.Red);
                 return;
             }
         }
 
-        var context = new ShapeContext(
-            selection.StartTile,
-            selection.EndTile,
-            settings.Shape.FillMode,
-            settings.Shape.Thickness,
-            HorizontalBias.None,
-            VerticalBias.None,
-            selection.VerticalFirst,
-            settings.Shape.EqualDimensions
-        );
+        if (settings.Mode == WiringMode.Place && !infiniteActuators)
+        {
+            if (settings.Actuator && !WiringHelper.HasItem(player, ItemID.Actuator))
+            {
+                Main.NewText(Get("NoActuatorsInInventory"), Color.Red);
+                return;
+            }
+        }
+
+        var context = settings.Shape.ToShapeContext(
+            selection.StartTile, selection.EndTile, selection.VerticalFirst);
 
         var tileSet = ShapeRegistry.GetShapeTiles(settings.Shape.Shape, context);
 
+        // In multiplayer, send a packet to the server instead of direct manipulation.
+        // The server will execute the operation authoritatively and broadcast to all clients.
+        if (Main.netMode == NetmodeID.MultiplayerClient)
+        {
+            // Pre-consume items on the client before sending the packet.
+            // The server applies tile changes; the client handles inventory.
+            int consumed = 0;
+            if (settings.Mode == WiringMode.Place)
+            {
+                consumed = WiringHelper.PreConsumeForOperation(
+                    tileSet.Tiles, settings.WireRed, settings.WireGreen,
+                    settings.WireBlue, settings.WireYellow, settings.Actuator, player,
+                    infiniteWires, infiniteActuators);
+            }
+
+            WandPacketHandler.SendWiringOperation(
+                selection.StartTile, selection.EndTile,
+                settings.Mode, settings.Shape.Shape, settings.Shape.FillMode,
+                settings.Shape.Thickness, settings.Shape.EqualDimensions,
+                settings.PackWireFlags(), selection.VerticalFirst,
+                player.whoAmI,
+                settings.Shape.Slice, settings.Shape.ConnectDiameter);
+
+            // Report results on the sending client
+            ReportWiringResults(settings.Mode, consumed, 0, config);
+            return;
+        }
+
+        // Single-player: execute directly with consumption
         var (placed, removed) = WiringHelper.ExecuteWiringOperation(
             tileSet.Tiles,
             settings.Mode,
             settings.WireRed, settings.WireGreen, settings.WireBlue, settings.WireYellow,
             settings.Actuator,
-            player
+            player,
+            infiniteWires,
+            infiniteActuators
         );
 
-        // Report results
-        if (settings.Mode == WiringMode.Place && placed > 0)
-        {
-            // Play GrandDesignSound (SoundID.Item64) — Blowgun / Grand Design
-            var config = ModContent.GetInstance<WandConfig>();
-            if (config.EnableWandSounds)
-                SoundEngine.PlaySound(SoundID.Item64, player.Center); // GrandDesignSound
+        ReportWiringResults(settings.Mode, placed, removed, config);
+    }
 
-            Main.NewText($"Placed {placed} wire segments.", Color.LimeGreen);
-        }
-        else if (settings.Mode == WiringMode.Remove && removed > 0)
+    private void ReportWiringResults(WiringMode mode, int placed, int removed, WandConfig config)
+    {
+        if (mode == WiringMode.Place && placed > 0)
         {
-            // Play GrandDesignSound (SoundID.Item64) — Blowgun / Grand Design
-            var config = ModContent.GetInstance<WandConfig>();
-            if (config.EnableWandSounds)
-                SoundEngine.PlaySound(SoundID.Item64, player.Center); // GrandDesignSound
+            if (config != null && config.EnableWandSounds)
+                SoundEngine.PlaySound(SoundID.Item64, Main.LocalPlayer.Center);
 
-            Main.NewText($"Removed {removed} wire segments.", Color.Cyan);
+            Main.NewText(Get("WiresPlaced", placed), Color.LimeGreen);
         }
-        else
+        else if (mode == WiringMode.Remove && removed > 0)
         {
-            Main.NewText("No changes made.", Color.Gray);
-        }
+            if (config != null && config.EnableWandSounds)
+                SoundEngine.PlaySound(SoundID.Item64, Main.LocalPlayer.Center);
 
-        // TODO: Send network packet for multiplayer
-        // if (Main.netMode == NetmodeID.MultiplayerClient)
-        //     WiringPacketHandler.SendWiringOperation(...);
+            Main.NewText(Get("WiresRemoved", removed), Color.Cyan);
+        }
+        else if (Main.netMode != NetmodeID.MultiplayerClient)
+        {
+            // Only show "no changes" in SP — in MP the server handles the operation
+            // and the client may not know the exact outcome yet
+            Main.NewText(Get("NoWiringChanges"), Color.Gray);
+        }
     }
 
     public override bool AltFunctionUse(Player player) => true;

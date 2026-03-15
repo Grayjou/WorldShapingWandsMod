@@ -1,1 +1,62 @@
-This description will show up on the steam page, check out https://steamcommunity.com/comment/Guide/formattinghelp.
+[h1]World Shaping Wands[/h1]
+
+A suite of [b]six wand families[/b] for large-scale terrain editing. Build, dismantle, replace, wire, coat, and protect regions of your world using geometric shapes with intuitive selection modes.
+
+[h2]Wand Families[/h2]
+[list]
+[*][b]Wand of Building[/b] — Place tiles, platforms, walls, rope, planter boxes, and grass seeds in bulk. Supports slope application, block exhaustion modes, and wall placement.
+[*][b]Wand of Dismantling[/b] — Mass-destroy tiles and walls within a shape. Validates pickaxe power. Can destroy containers (chests, dressers) with auto-unlock and item dropping.
+[*][b]Wand of Replacement[/b] — Swap one tile or wall type for another across an area. Substrate-variant aware (e.g., dirt ↔ grass, mud ↔ jungle grass).
+[*][b]Wand of Wiring[/b] — Place or remove red, green, blue, and yellow wire plus actuators in bulk. Full multiplayer support with server-side validation.
+[*][b]Wand of Safekeeping[/b] — Protect tiles from accidental modification. Supports persistent (saved with world) and session-only protection.
+[*][b]Wand of Coating[/b] — Paint tiles and walls, scrape paint, scrape or harvest moss. Supports illuminant and echo coatings.
+[/list]
+
+[h2]Selection Modes[/h2]
+Each wand comes in four modes — cycle between them by right-clicking the wand in your inventory:
+[list]
+[*][b]Instant[/b] — Click and drag, release to execute
+[*][b]Select[/b] — Click start point, click end point
+[*][b]Confirm[/b] — Click start, click end, click to confirm (3-step safety)
+[*][b]Stamp[/b] — Define a template, then repeat it with each click
+[/list]
+
+[h2]Shapes[/h2]
+Rectangle • Ellipse • Diamond • Triangle • Half-Ellipse (H/V) • Elbow (L-shape) • Cardinal Line
+
+Each shape supports [b]Filled[/b] and [b]Hollow[/b] modes with configurable outline thickness. Shape slicing lets you halve shapes horizontally or vertically.
+
+[h2]Key Features[/h2]
+[list]
+[*]Per-wand settings panels with draggable icon-based UI
+[*]Configurable infinite-resource mode with 3-state per-type overrides
+[*]Block exhaustion handling (NextBlock / Interrupt / Cancel)
+[*]Full undo support (20-deep stack)
+[*]Selection overlay with dimension labels and area count
+[*]Progressive placement mode (batched waves with visual effects)
+[*]Drop suppression toggle
+[*]Demon altar destruction protection
+[*]Crafting recipes with recipe groups (Any Gem, Any Gold Bar, etc.)
+[*]Shimmer decraft support (all wands decraft to Amethyst)
+[*]Thorium Mod cross-compatibility (Opal/Aquamarine gem support)
+[/list]
+
+[h2]Configuration[/h2]
+Extensive config options including:
+[list]
+[*]Infinite resource toggles per type (tiles, walls, seeds, wires, actuators)
+[*]Selection distance caps (configurable)
+[*]Progressive mode batch size and interval
+[*]Overlay render modes (Auto / AlwaysFullShape / AlwaysBoundingBox)
+[*]Sound effects toggle
+[*]Pickaxe power bypass
+[*]Max outline thickness
+[/list]
+
+[h2]Status[/h2]
+[b]Beta[/b] — All wand families are fully functional in single-player. Multiplayer support is in progress (Wiring wand has full server-side packet sync; other wands use basic tile sync).
+
+[h2]Credits[/h2]
+Developed by Grayjou.
+Inspired by [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2697243250]ImproveGame[/url] and [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2563784437]CheatSheet[/url].
+Wiring architecture informed by MagicWiring.

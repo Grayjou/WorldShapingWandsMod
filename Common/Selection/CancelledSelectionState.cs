@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using WorldShapingWandsMod.Common.Enums;
+using WorldShapingWandsMod.Common.Geometry;
 using WorldShapingWandsMod.Common.Settings;
 
 namespace WorldShapingWandsMod.Common.Selection;
@@ -7,6 +9,7 @@ namespace WorldShapingWandsMod.Common.Selection;
 /// <summary>
 /// Stores the visual state of a cancelled selection for overlay feedback.
 /// The overlay persists briefly after cancellation, changing color, then fades out.
+/// Tiles are computed once at creation time and reused every frame during the fade.
 /// </summary>
 public class CancelledSelectionState
 {
@@ -31,6 +34,12 @@ public class CancelledSelectionState
     /// <summary>Duration in ticks the overlay stays visible.</summary>
     public int DurationTicks { get; }
 
+    /// <summary>Pre-computed tile set, calculated once at creation to avoid per-frame recomputation.</summary>
+    public HashSet<Point> CachedTiles { get; }
+
+    /// <summary>Pre-computed bounding rectangle for the cancelled selection.</summary>
+    public Rectangle CachedBounds { get; }
+
     public CancelledSelectionState(
         Point startTile,
         Point endTile,
@@ -46,6 +55,12 @@ public class CancelledSelectionState
         CancelColor = cancelColor;
         CancelTick = Terraria.Main.GameUpdateCount;
         DurationTicks = durationTicks;
+
+        // Pre-compute tiles ONCE at creation — avoids O(area) recomputation every frame
+        var context = shape.ToShapeContext(startTile, endTile, verticalFirst);
+        CachedBounds = context.GetBounds();
+        var tileSet = ShapeRegistry.GetShapeTiles(shape.Shape, context);
+        CachedTiles = new HashSet<Point>(tileSet.Tiles);
     }
 
     /// <summary>How many ticks have elapsed since cancellation.</summary>

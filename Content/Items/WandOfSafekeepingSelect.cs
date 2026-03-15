@@ -7,6 +7,7 @@ using WorldShapingWandsMod.Common.Drawing;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Utilities;
+using static WorldShapingWandsMod.Common.Utilities.Msg;
 
 namespace WorldShapingWandsMod.Content.Items;
 
@@ -23,7 +24,7 @@ public class WandOfSafekeepingSelect : WandOfSafekeepingBase
             bool vertical = Math.Abs(Main.MouseWorld.Y - player.Center.Y) >
                             Math.Abs(Main.MouseWorld.X - player.Center.X);
             wandPlayer.StartSelection(mouseTile, vertical);
-            Main.NewText("Selection started. Click again to apply.", WandColors.MsgPrompt);
+            Main.NewText(Get("SelectStartClickAgain", "apply"), WandColors.MsgPrompt);
             return false;
         }
         else

@@ -6,6 +6,7 @@ using Terraria.ModLoader;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Utilities;
+using static WorldShapingWandsMod.Common.Utilities.Msg;
 
 namespace WorldShapingWandsMod.Content.Items;
 
@@ -22,14 +23,14 @@ public class WandOfWiringConfirm : WandOfWiringBase
             bool vertical = Math.Abs(Main.MouseWorld.Y - player.Center.Y) >
                             Math.Abs(Main.MouseWorld.X - player.Center.X);
             wandPlayer.StartSelection(mouseTile, vertical);
-            Main.NewText("Selection started. Click to set end point.", Color.Yellow);
+            Main.NewText(Get("SelectStartClickEnd"), Color.Yellow);
             return false; // Don't consume the wand
         }
         else if (!wandPlayer.Selection.IsLocked)
         {
             wandPlayer.UpdateSelection(mouseTile);
             wandPlayer.LockSelection();
-            Main.NewText("Click again to confirm wiring.", Color.Cyan);
+            Main.NewText(Get("ClickToConfirm"), Color.Cyan);
             return false; // Don't consume the wand
         }
         else

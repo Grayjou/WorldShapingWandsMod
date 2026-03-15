@@ -24,6 +24,26 @@ public static class WandColors
     /// <summary>Outline width in pixels for exterior edges.</summary>
     public const int OverlayOutlineWidth = 2;
 
+    // ── Large shape debounce ─────────────────────────────────
+    /// <summary>Opacity for the lightweight bounding-rect outline shown while a large shape is being resized.</summary>
+    public const float DebounceBoundingRectOpacity = 0.45f;
+
+    /// <summary>Duration (in frames) of the fade-in after the full shape is rasterized.</summary>
+    public const int DebounceFadeInFrames = 10; // ~0.17s at 60fps
+
+    // ── Start/End position markers ───────────────────────────
+    /// <summary>Color for the Start tile marker during active selection.</summary>
+    public static readonly Color StartMarker = Color.Cyan;
+
+    /// <summary>Color for the End tile marker during active selection.</summary>
+    public static readonly Color EndMarker = Color.Cyan;
+
+    /// <summary>Outline opacity for start/end position markers (0–1).</summary>
+    public const float MarkerOutlineOpacity = 0.85f;
+
+    /// <summary>Outline width in pixels for start/end position markers.</summary>
+    public const int MarkerOutlineWidth = 2;
+
     /// <summary>Dimension label opacity (0–1).</summary>
     public const float DimensionLabelOpacity = 0.8f;
 
@@ -49,6 +69,9 @@ public static class WandColors
     /// <summary>Safekeeping wand cancellation overlay color (purple).</summary>
     public static readonly Color CancelSafekeeping = new Color(180, 100, 255);
 
+    /// <summary>Coating wand cancellation overlay color (teal/cyan).</summary>
+    public static readonly Color CancelCoating = new Color(0, 200, 180);
+
     // ── Chat messages ────────────────────────────────────────
     /// <summary>Success / placement messages.</summary>
     public static readonly Color MsgSuccess = Color.Cyan;
@@ -64,6 +87,9 @@ public static class WandColors
 
     /// <summary>Safekeeping status messages.</summary>
     public static readonly Color MsgSafekeeping = Color.MediumPurple;
+
+    /// <summary>Coating (paint/scrape) result messages.</summary>
+    public static readonly Color MsgCoating = new Color(0, 220, 200); // teal
 
     /// <summary>Error / missing-item messages.</summary>
     public static readonly Color MsgError = Color.Red;
@@ -124,5 +150,14 @@ public static class WandColors
         public static readonly Color Select  = new Color(255, 255, 80);
         public static readonly Color Confirm = new Color(80, 255, 80);
         public static readonly Color Stamp   = new Color(100, 200, 255);
+    }
+
+    /// <summary>Coating wand mode colors.</summary>
+    public static class Coating
+    {
+        public static readonly Color Instant = new Color(0, 220, 200);    // Teal — Instant
+        public static readonly Color Select  = new Color(100, 230, 220);  // Light teal — Select
+        public static readonly Color Confirm = new Color(180, 255, 240);  // Pale teal — Confirm
+        public static readonly Color Stamp   = new Color(220, 255, 250);  // Very pale teal — Stamp
     }
 }

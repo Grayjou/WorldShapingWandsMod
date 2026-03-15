@@ -9,7 +9,9 @@ using Terraria.ModLoader;
 using WorldShapingWandsMod.Common.Configs;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Players;
+using WorldShapingWandsMod.Common.UI;
 using WorldShapingWandsMod.Common.Utilities;
+using static WorldShapingWandsMod.Common.Utilities.Msg;
 
 namespace WorldShapingWandsMod.Common.Items;
 
@@ -94,21 +96,99 @@ public abstract class BaseCyclingWand : ModItem
         Item.noMelee = true;
     }
 
+    /// <summary>
+    /// Checks if the cursor is currently interacting with UI in a way that should
+    /// block wand tile-interaction. Blocks when:
+    /// <list type="bullet">
+    ///   <item><description>
+    ///     <c>Main.mapFullscreen</c> — the full-screen map is open.
+    ///   </description></item>
+    ///   <item><description>
+    ///     <c>IsCursorOverPanel()</c> — cursor is physically over a wand settings panel.
+    ///   </description></item>
+    ///   <item><description>
+    ///     <c>Main.LocalPlayer.mouseInterface</c> when it is set by something OTHER
+    ///     than our own settings panel. This catches minimap drag, NPC shop, sign
+    ///     edit, inventory screen, etc. We distinguish this by only calling the
+    ///     UpdateUI path when cursor is over the panel (see WandUISystem.UpdateUI),
+    ///     so mouseInterface is NOT set by our panel when the cursor is on tiles.
+    ///     Vanilla already sets mouseInterface=true when the inventory is open,
+    ///     so there is no need to check Main.playerInventory separately.
+    ///   </description></item>
+    /// </list>
+    /// </summary>
+    protected static bool IsMouseOverUI()
+    {
+        if (Main.mapFullscreen) return true;
+        if (ModContent.GetInstance<WandUISystem>()?.IsCursorOverPanel() ?? false) return true;
+        if (Main.LocalPlayer.mouseInterface) return true;
+        return false;
+    }
+
+    // ── Debug helpers ──────────────────────────────────────────────────────
+    // Tracks last frame we printed debug so we throttle to once per ~60 frames.
+    private static int _debugLastFrame = -1;
+
+    /// <summary>
+    /// Prints a breakdown of every IsMouseOverUI() sub-check to chat.
+    /// Called automatically when an instant wand is blocked (once per second max).
+    /// Also triggered by holding [LeftAlt] + pressing [F10] at any time.
+    /// </summary>
+    protected static void DebugIsMouseOverUI(string context = "")
+    {
+        int frame = (int)Main.GameUpdateCount;
+        if (frame - _debugLastFrame < 60) return; // Throttle: once per second
+        _debugLastFrame = frame;
+
+        var uiSys = ModContent.GetInstance<WandUISystem>();
+        bool inv = Main.playerInventory;
+        bool fullMap = Main.mapFullscreen;
+        bool overPanel = uiSys?.IsCursorOverPanel() ?? false;
+        bool mouseIface = Main.LocalPlayer.mouseInterface;
+
+        // Also check each panel individually for debugging
+        var mousePos = Main.MouseScreen;
+        bool buildVis   = uiSys?.BuildingUI?.IsVisible ?? false;
+        bool dismantVis = uiSys?.DismantlingUI?.IsVisible ?? false;
+        bool replVis    = uiSys?.ReplacementUI?.IsVisible ?? false;
+        bool wiringVis  = uiSys?.WiringUI?.IsVisible ?? false;
+        bool safeVis    = uiSys?.SafekeepingUI?.IsVisible ?? false;
+        bool coatVis    = uiSys?.CoatingUI?.IsVisible ?? false;
+
+        bool buildPanel   = buildVis   && (uiSys.BuildingUI.PanelElement?.ContainsPoint(mousePos) ?? false);
+        bool dismantPanel = dismantVis && (uiSys.DismantlingUI.PanelElement?.ContainsPoint(mousePos) ?? false);
+        bool replPanel    = replVis    && (uiSys.ReplacementUI.PanelElement?.ContainsPoint(mousePos) ?? false);
+        bool wiringPanel  = wiringVis  && (uiSys.WiringUI.PanelElement?.ContainsPoint(mousePos) ?? false);
+        bool safePanel    = safeVis    && (uiSys.SafekeepingUI.PanelElement?.ContainsPoint(mousePos) ?? false);
+        bool coatPanel    = coatVis    && (uiSys.CoatingUI.PanelElement?.ContainsPoint(mousePos) ?? false);
+
+        Color dbgColor = Color.Yellow;
+        if (!string.IsNullOrEmpty(context))
+            Main.NewText($"[DBG-Wand] {context}", dbgColor);
+
+        Main.NewText(
+            $"[DBG] IsMouseOverUI: inv={inv} fullMap={fullMap} overPanel={overPanel} mouseIface={mouseIface}",
+            dbgColor);
+        Main.NewText(
+            $"[DBG] UIs open: bld={buildVis} dis={dismantVis} rep={replVis} wir={wiringVis} saf={safeVis} coat={coatVis}",
+            dbgColor);
+        Main.NewText(
+            $"[DBG] PanelHit: bld={buildPanel} dis={dismantPanel} rep={replPanel} wir={wiringPanel} saf={safePanel} coat={coatPanel}",
+            dbgColor);
+        Main.NewText(
+            $"[DBG] Mouse: screen=({(int)mousePos.X},{(int)mousePos.Y})",
+            dbgColor);
+    }
+
     public override bool CanRightClick() => true;
 
     public override void RightClick(Player player)
     {
-        // Check if we should cycle or open settings
-        var wandPlayer = player.GetModPlayer<WandPlayer>();
-        
-        if (wandPlayer.Selection.IsActive)
-        {
-            // Cancel selection instead of cycling
-            wandPlayer.ClearSelection();
-            Main.NewText("Selection cancelled.", Color.Yellow);
-            Item.stack++; // Prevent consumption
-            return;
-        }
+        // Inventory right-click always cycles mode — never cancels selection.
+        // Selection cancellation is handled by right-click while HOLDING the wand
+        // (via CanUseItem/AltFunctionUse), not via inventory interaction.
+        // Cancelling selection on mode-cycle was frustrating: the user just wants
+        // to switch from Instant to Confirm without redoing their selection.
 
         // Cycle to next mode
         int nextType = GetNextModeItemType();
@@ -118,8 +198,14 @@ public abstract class BaseCyclingWand : ModItem
         Item.SetDefaults(nextType);
         Item.stack = stack + 1; // +1 because right-click consumes one
         Item.favorited = wasFavorited;
-        
-        Main.NewText($"Switched to {ModeSuffix} mode", ModeColor);
+
+        // After SetDefaults, Item.ModItem is the new wand instance.
+        // Read ModeSuffix from it so the message names the mode we just switched TO,
+        // not the one we switched FROM (which is what 'this.ModeSuffix' would return
+        // since 'this' still refers to the old class instance).
+        string newModeSuffix = (Item.ModItem as BaseCyclingWand)?.ModeSuffix ?? ModeSuffix;
+        Color newModeColor = (Item.ModItem as BaseCyclingWand)?.ModeColor ?? ModeColor;
+        Main.NewText(Get("SwitchedToMode", newModeSuffix), newModeColor);
     }
 
     public override void ModifyTooltips(List<TooltipLine> tooltips)
@@ -134,17 +220,23 @@ public abstract class BaseCyclingWand : ModItem
         
         string modeDescription = WandSelectionMode switch
         {
-            SelectionMode.OneClick => "Click and drag to select area",
-            SelectionMode.TwoClick => "Click start, then click end",
-            SelectionMode.ThreeClick => "Click start, click end, click to confirm",
-            SelectionMode.FourClick => "Click start, click end, click to lock stamp, click to repeat",
+            SelectionMode.OneClick => Get("ModeInstant"),
+            SelectionMode.TwoClick => Get("ModeSelect"),
+            SelectionMode.ThreeClick => Get("ModeConfirm"),
+            SelectionMode.FourClick => Get("ModeStamp"),
             _ => ""
         };
         
         tooltips.Add(new TooltipLine(Mod, "ModeInfo", $"[c/{hexColor}:Mode: {ModeSuffix}]"));
         tooltips.Add(new TooltipLine(Mod, "ModeDesc", modeDescription));
-        tooltips.Add(new TooltipLine(Mod, "CycleHint", "Right-click in inventory to cycle modes"));
-        tooltips.Add(new TooltipLine(Mod, "ShimmerHint", "[c/BBBBBB:Shimmer decrafts crafted wands into ingredients]"));
+        tooltips.Add(new TooltipLine(Mod, "CycleHint", Get("CycleHint")));
+
+        // ── Pickaxe power hint for wands that interact with tiles ──────
+        if (WandBaseName is "Wand of Building" or "Wand of Dismantling" or "Wand of Replacement")
+        {
+            tooltips.Add(new TooltipLine(Mod, "PickaxeHint",
+                $"[c/888888:{Get("PickaxeHint")}]"));
+        }
 
         // ── Non-craftable variant: suppress misleading crafting tooltips ──────
         // tModLoader and mods like MoreObtainingTooltips inject tooltip lines based
@@ -163,8 +255,7 @@ public abstract class BaseCyclingWand : ModItem
                     || t.Name.StartsWith("ObtainCraft")
                 ));
 
-            tooltips.Add(new TooltipLine(Mod, "ObtainHint",
-                "[c/AAAAAA:Obtain other modes by right-clicking this wand in your inventory]"));
+            tooltips.Add(new TooltipLine(Mod, "ObtainHint", Get("ObtainHint")));
         }
 
         // ── Lore (Shift-gated) ──────────────────────────────

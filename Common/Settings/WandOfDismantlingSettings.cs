@@ -20,6 +20,13 @@ public class WandOfDismantlingSettings
     /// <summary>Whether to destroy walls.</summary>
     public bool DestroyWalls { get; set; } = false;
 
+    /// <summary>
+    /// Whether to destroy containers (chests, dressers, etc.) in the selection.
+    /// When enabled, container contents are dropped as items before the tile is destroyed.
+    /// Locked chests are automatically unlocked if the player holds the appropriate key.
+    /// </summary>
+    public bool DestroyContainers { get; set; } = false;
+
     /// <summary>The starting point of the selection.</summary>
     public Point StartPoint { get; set; }
 
@@ -37,6 +44,7 @@ public class WandOfDismantlingSettings
             Shape = Shape,
             DestroyTiles = DestroyTiles,
             DestroyWalls = DestroyWalls,
+            DestroyContainers = DestroyContainers,
             StartPoint = StartPoint,
             EndPoint = EndPoint
         };
@@ -51,6 +59,7 @@ public class WandOfDismantlingSettings
         Shape = ShapeInfo.Default;
         DestroyTiles = true;
         DestroyWalls = false;
+        DestroyContainers = false;
         StartPoint = Point.Zero;
         EndPoint = Point.Zero;
     }
@@ -67,7 +76,8 @@ public class WandOfDismantlingSettings
             (false, true) => "Walls Only",
             (false, false) => "Nothing"
         };
-        return $"{SelectionMode} - {destruction} - {Shape.GetDescription()}";
+        string containers = DestroyContainers ? " +Containers" : "";
+        return $"{SelectionMode} - {destruction}{containers} - {Shape.GetDescription()}";
     }
 
     /// <summary>

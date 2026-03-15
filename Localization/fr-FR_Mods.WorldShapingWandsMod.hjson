@@ -1,0 +1,596 @@
+Keybinds: {
+	"Increase Thickness.DisplayName": Augmenter l'épaisseur
+	"Decrease Thickness.DisplayName": Diminuer l'épaisseur
+	"Open Wand Settings.DisplayName": Ouvrir les paramètres de la baguette
+	"Undo Selection Step.DisplayName": Annuler l'étape de sélection
+}
+
+RecipeGroups: {
+	AnyGemstone: N'importe quelle gemme
+	AnyWandOfBuilding: N'importe quelle baguette de construction
+	AnyWandOfDismantling: N'importe quelle baguette de démantèlement
+}
+
+UI: {
+	Common: {
+		Shape: Forme
+		OutlineThickness: Épaisseur du contour :
+		Close: Fermer
+		// Shape hover texts
+		ShapeRectFilled: Rectangle (Plein)
+		ShapeRectHollow: Rectangle (Vide)
+		ShapeEllipseFilled: Ellipse (Pleine)
+		ShapeEllipseHollow: Ellipse (Vide)
+		ShapeDiamondFilled: Diamant (Plein)
+		ShapeDiamondHollow: Diamant (Vide)
+		ShapeTriangleFilled: Triangle (Plein)
+		ShapeTriangleHollow: Triangle (Vide)
+		ShapeElbow: Coude
+		ShapeCardinal: Ligne cardinale
+		// ShapeStraightLine: Straight Line
+		EqualDimensions: Dimensions égales
+		ConnectDiameter: Connecter le diamètre
+		// Slice: Shape Slice
+	}
+
+	Building: {
+		Title: Baguette de construction
+		ObjectType: Type d'objet
+		SolidBlock: Bloc solide
+		Platform: Plateforme
+		Rope: Corde
+		Rail: Rail
+		GrassSeed: Graine d'herbe
+		PlanterBox: Bac à plantation
+		Wall: Mur
+		Slope: Pente
+		SlopeDefault: Bloc complet
+		SlopeHalf: Demi-bloc
+		SlopeBottomRight: Pente ◣ (Bas-Droite)
+		SlopeBottomLeft: Pente ◢ (Bas-Gauche)
+		SlopeTopRight: Pente ◤ (Haut-Droite)
+		SlopeTopLeft: Pente ◥ (Haut-Gauche)
+		OverwriteSlope: Remplacer la pente
+	}
+
+	Dismantling: {
+		Title: Baguette de démantèlement
+		Options: Options
+		DestroyTiles: Détruire les blocs
+		DestroyWalls: Détruire les murs
+		DestroyContainers: Détruire les coffres
+		DestroyContainersTooltip: Actif uniquement lorsque Détruire les blocs est également activé
+	}
+
+	Replacement: {
+		Title: Baguette de remplacement
+		SourceType: Type source (Rechercher)
+		TargetType: Type cible (Remplacer)
+		Tile: Bloc
+		Platform: Plateforme
+		Rope: Corde
+		Planter: Bac
+		Rail: Rail
+		Seeds: Graines
+		Air: Air
+		Wall: Mur
+	}
+
+	Wiring: {
+		Title: Baguette de câblage
+		WireTypes: Types de fil
+		RedWire: Fil rouge
+		GreenWire: Fil vert
+		BlueWire: Fil bleu
+		YellowWire: Fil jaune
+		Actuator: Actionneur
+		Mode: Mode
+		Place: Placer
+		Remove: Retirer
+	}
+
+	Safekeeping: {
+		Title: Baguette de préservation
+		Mode: Mode
+		Protect: Protéger
+		Unprotect: Déprotéger
+		ProtectTiles: Protéger les blocs
+		ProtectWalls: Protéger les murs
+		ClearAll: Tout déprotéger
+		ClearConfirm: Cliquez pour confirmer !
+	}
+
+	Coating: {
+		// Title: Wand of Coating
+		// Mode: Mode
+		// PaintTile: Paint Tile
+		// PaintWall: Paint Wall
+		// ScrapePaint: Scrape Paint
+		// ScrapeMoss: Scrape Moss
+		// HarvestMoss: Harvest Moss
+		// PaintColor: Paint Color
+		// CoatingType: Coating
+		// Illuminant: Illuminant
+		// Echo: Echo
+	}
+}
+
+Configs: {
+	WandConfig: {
+		InfiniteResources.Header: Ressources infinies
+
+		EnableInfiniteResource: {
+			Label: Activer le mode ressources infinies
+			Tooltip: Si activé, les baguettes de construction/remplacement cesseront de consommer des objets lorsque vous en avez suffisamment dans votre inventaire (voir les seuils par type ci-dessous). Mettez un seuil à 0 pour un mode toujours infini.
+		}
+
+		InfiniteTileThreshold: {
+			Label: Seuil de blocs
+			Tooltip:
+				'''
+				Si vous avez au moins ce nombre de blocs (solides, plateformes, cordes, rails) dans votre inventaire, ils ne seront pas consommés.
+				0 = toujours infini pour les blocs.
+				'''
+		}
+
+		InfiniteWallThreshold: {
+			Label: Seuil de murs
+			Tooltip:
+				'''
+				Si vous avez au moins ce nombre d'objets de mur dans votre inventaire, ils ne seront pas consommés.
+				0 = toujours infini pour les murs.
+				'''
+		}
+
+		InfiniteGrassSeedThreshold: {
+			Label: Seuil de graines d'herbe
+			Tooltip:
+				'''
+				Si vous avez au moins ce nombre de graines d'herbe dans votre inventaire, elles ne seront pas consommées.
+				La valeur par défaut est 50 car les graines d'herbe sont plus rares que les blocs.
+				0 = toujours infini pour les graines d'herbe.
+				'''
+		}
+
+		InfiniteWireThreshold: {
+			Label: Seuil de fils
+			Tooltip:
+				'''
+				Si vous avez au moins ce nombre de fils dans votre inventaire, ils ne seront pas consommés par la Baguette de câblage.
+				0 = toujours infini pour les fils.
+				'''
+		}
+
+		InfiniteActuatorThreshold: {
+			Label: Seuil d'actuateurs
+			Tooltip:
+				'''
+				Si vous avez au moins ce nombre d'actuateurs dans votre inventaire, ils ne seront pas consommés par la Baguette de câblage.
+				0 = toujours infini pour les actuateurs.
+				'''
+		}
+
+		InfiniteTiles: {
+			Label: Blocs infinis (Remplacement)
+			Tooltip:
+				'''
+				Remplacement par type pour les blocs (solides, plateformes, cordes, rails, jardinières).
+				Default : suit le bouton principal Ressources Infinies.
+				ForceOn : toujours infini pour les blocs, même si le bouton principal est désactivé.
+				ForceOff : jamais infini pour les blocs, même si le bouton principal est activé.
+				'''
+		}
+
+		InfiniteWalls: {
+			Label: Murs infinis (Remplacement)
+			Tooltip:
+				'''
+				Remplacement par type pour les murs.
+				Default : suit le bouton principal Ressources Infinies.
+				ForceOn : toujours infini pour les murs, même si le bouton principal est désactivé.
+				ForceOff : jamais infini pour les murs, même si le bouton principal est activé.
+				'''
+		}
+
+		InfiniteGrassSeeds: {
+			Label: Graines d'herbe infinies (Remplacement)
+			Tooltip:
+				'''
+				Remplacement par type pour les graines d'herbe.
+				Default : suit le bouton principal Ressources Infinies.
+				ForceOn : toujours infini pour les graines, même si le bouton principal est désactivé.
+				ForceOff : jamais infini pour les graines, même si le bouton principal est activé.
+				'''
+		}
+
+		InfiniteWires: {
+			Label: Fils infinis (Remplacement)
+			Tooltip:
+				'''
+				Remplacement par type pour les fils.
+				Default : suit le bouton principal Ressources Infinies.
+				ForceOn : toujours infini pour les fils, même si le bouton principal est désactivé.
+				ForceOff : jamais infini pour les fils, même si le bouton principal est activé.
+				'''
+		}
+
+		InfiniteActuators: {
+			Label: Actuateurs infinis (Remplacement)
+			Tooltip:
+				'''
+				Remplacement par type pour les actuateurs.
+				Default : suit le bouton principal Ressources Infinies.
+				ForceOn : toujours infini pour les actuateurs, même si le bouton principal est désactivé.
+				ForceOff : jamais infini pour les actuateurs, même si le bouton principal est activé.
+				'''
+		}
+
+		SelectionLimits.Header: Limites des dimensions de sélection
+
+		SmallSelectionCap: {
+			Label: Limite petite forme (Coude / Cardinale)
+			Tooltip: Dimension maximale (largeur ou hauteur) pour les formes Coude et Ligne cardinale.\nCes formes sont 1D, elles peuvent donc être plus longues sans problème.
+		}
+
+		BigSelectionCap: {
+			Label: Limite grande forme (Rect / Ellipse / etc.)
+			Tooltip: Dimension maximale (largeur ou hauteur) pour les formes de zone 2D.\nUne limite de 200 signifie que la plus grande sélection possible est de 200×200.
+		}
+
+		HollowSelectionCap: {
+			Label: Limite forme creuse
+			Tooltip: Dimension maximale (largeur ou hauteur) pour les formes creuses.\nLes formes creuses produisent moins de blocs que les formes pleines, elles peuvent donc être plus grandes.\nUne limite de 400 signifie que la plus grande sélection creuse est de 400×400.
+		}
+
+		ProgressiveMode.Header: Démantèlement progressif
+		Sandbox.Header: Options Sandbox
+
+		SuppressDrops: {
+			Label: Supprimer les gouttes de blocs
+			Tooltip: Lorsque activé, les blocs détruits par n'importe quelle baguette (démantèlement, remplacement ou échange de construction) ne laisseront pas tomber d'objets.\nUtile pour la construction créative/sandbox quand vous n'avez pas besoin de récupérer les matériaux.
+		}
+
+		BypassPickaxePower: {
+			Label: Ignorer la puissance de pioche
+			Tooltip: Lorsque activé, les baguettes ignorent les exigences de puissance de pioche et peuvent détruire ou remplacer n'importe quel bloc, quelle que soit la force de la pioche.\nUtile pour la construction créative/sandbox.
+		}
+
+		AllowDemonAltarDestruction: {
+			Label: Autoriser la destruction des autels démoniaques
+			Tooltip: Lorsque activé, la Baguette de démantèlement peut détruire les Autels démoniaques et les Autels carmin.\nPar défaut, les autels sont protégés contre la destruction massive accidentelle.\nNécessite une puissance de marteau appropriée (Pwnhammer ou mieux) sauf si Ignorer la puissance de pioche est également activé.
+		}
+
+		IgnoreLockedKeyRequirements: {
+			// Label: Ignore Locked Key Requirements
+			/* Tooltip:
+				'''
+				When enabled, locked chests can be opened by wands without needing keys.
+				No keys are consumed. Useful for sandbox/builder modes.
+				''' */
+		}
+
+		AutoOpenChestsOnDestruction: {
+			// Label: Auto-Open Chests on Destruction
+			/* Tooltip:
+				'''
+				When enabled, the Wand of Dismantling automatically empties and destroys
+				chests in the selection. When disabled, chests are skipped entirely.
+				Requires the "Destroy Containers" toggle in the wand panel to also be on.
+				''' */
+		}
+
+		VacuumItems: {
+			Label: Aspirer les objets lâchés
+			Tooltip:
+				'''
+				Lorsque activé, les objets lâchés par les opérations de baguette (démantèlement,
+				remplacement, échanges de construction) sont automatiquement collectés dans votre inventaire.
+				Les objets en excès sont téléportés à votre position au lieu d'être dispersés.
+				Sans effet lorsque Supprimer les gouttes de blocs est activé (aucun objet à collecter).
+				'''
+		}
+
+		MaxOutlineThickness: {
+			Label: Épaisseur maximale du contour
+			Tooltip: Épaisseur maximale du contour pour les formes creuses.\nLa valeur par défaut est 10. Augmentez pour des contours plus larges, diminuez pour garder l'interface simple.\nLe bouton + dans les panneaux de baguette sera limité à cette valeur.
+		}
+
+		EnableProgressiveMode: {
+			Label: Activer le mode progressif
+			Tooltip: Lorsque activé, les opérations de démantèlement et de remplacement traitent les blocs par lots temporisés avec les gouttes, sons et effets appropriés.\nLorsque désactivé, les opérations sont instantanées et silencieuses (pas de gouttes de blocs).
+		}
+
+		ProgressiveBatchSize: {
+			Label: Taille du lot
+			Tooltip: Nombre de blocs traités par lot en mode progressif.\n400 blocs par lot est une quantité satisfaisante sans causer de latence.
+		}
+
+		ProgressiveInterval: {
+			Label: Intervalle entre lots (secondes)
+			Tooltip: Temps entre chaque lot en mode progressif.\n0.3 seconde donne une sensation de démolition par vagues satisfaisante.
+		}
+
+		Tooltips.Header: Options d'infobulles
+
+		ShowLoreTooltips: {
+			Label: Afficher les infobulles d'histoire
+			Tooltip: Lorsque activé, maintenir la touche Maj enfoncée en survolant une baguette affiche son texte d'histoire.\nDésactivez pour masquer complètement l'histoire.
+		}
+
+		Safekeeping.Header: Préservation
+
+		SafekeepingClearThreshold: {
+			Label: Seuil de confirmation pour Tout déprotéger
+			Tooltip: Lorsque le nombre total de blocs et murs protégés dépasse cette valeur, le bouton 'Tout déprotéger' nécessite un second clic pour confirmer.\nMettez à 0 pour désactiver la protection de confirmation.
+		}
+
+		Audio.Header: Audio
+
+		EnableWandSounds: {
+			Label: Activer les effets sonores des baguettes
+			Tooltip: Lorsque activé, les baguettes jouent des effets sonores personnalisés lors d'une action réussie.\nDésactivez pour des opérations silencieuses.
+		}
+
+		Overlay.Header: Superposition
+
+		OverlayRenderMode: {
+			Label: Mode de rendu de la superposition
+			Tooltip:
+				'''
+				Contrôle le rendu de la superposition de sélection pour les grandes formes.
+				Auto : Affiche le cadre englobant pendant le déplacement de formes de plus de 200 blocs, puis affiche la forme complète avec transition une fois la souris stabilisée. Évite le lag lors du redimensionnement rapide. (Par défaut)
+				AlwaysFullShape : Toujours rendre la forme complète immédiatement sans rebond. Peut causer du lag sur de très grandes formes mais donne un retour visuel instantané.
+				AlwaysBoundingBox : Toujours afficher seulement le contour du cadre englobant, sans calculer la forme complète. Le plus léger en performance.
+				'''
+		}
+
+		// DisplayName: Wand Config
+
+		IsInfiniteForActuators: {
+			// Tooltip: ""
+			// Label: Is Infinite For Actuators
+		}
+
+		IsInfiniteForWires: {
+			// Tooltip: ""
+			// Label: Is Infinite For Wires
+		}
+	}
+
+	InfiniteOverride: {
+		ForceOff: {
+			// Tooltip: ""
+			// Label: Force Off
+		}
+
+		ForceOn: {
+			// Tooltip: ""
+			// Label: Force On
+		}
+
+		Default: {
+			// Tooltip: ""
+			// Label: Default
+		}
+
+		// Tooltip: ""
+	}
+
+	OverlayRenderMode: {
+		// Tooltip: ""
+
+		Auto: {
+			// Label: Auto
+			// Tooltip: ""
+		}
+
+		AlwaysFullShape: {
+			// Label: Always Full Shape
+			// Tooltip: ""
+		}
+
+		AlwaysBoundingBox: {
+			// Label: Always Bounding Box
+			// Tooltip: ""
+		}
+	}
+}
+
+Items: {
+	WandOfDismantlingInstant: {
+		Tooltip: ""
+		DisplayName: Baguette de démantèlement (Instantanée)
+	}
+
+	WandOfDismantlingSelect: {
+		Tooltip: ""
+		DisplayName: Baguette de démantèlement (Sélection)
+	}
+
+	WandOfDismantlingConfirm: {
+		Tooltip: ""
+		DisplayName: Baguette de démantèlement (Confirmation)
+	}
+
+	WandOfBuildingInstant: {
+		DisplayName: Baguette de construction (Instantanée)
+		Tooltip: Place des blocs dans une zone sélectionnée
+	}
+
+	WandOfBuildingSelect: {
+		DisplayName: Baguette de construction (Sélection)
+		Tooltip: Place des blocs dans une zone sélectionnée
+	}
+
+	WandOfBuildingConfirm: {
+		DisplayName: Baguette de construction (Confirmation)
+		Tooltip: Place des blocs dans une zone sélectionnée
+	}
+
+	WandOfReplacementInstant: {
+		DisplayName: Baguette de remplacement (Instantanée)
+		Tooltip: Remplace des blocs dans une zone sélectionnée
+	}
+
+	WandOfReplacementSelect: {
+		DisplayName: Baguette de remplacement (Sélection)
+		Tooltip: Remplace des blocs dans une zone sélectionnée
+	}
+
+	WandOfReplacementConfirm: {
+		DisplayName: Baguette de remplacement (Confirmation)
+		Tooltip: Remplace des blocs dans une zone sélectionnée
+	}
+
+	WandOfWiringInstant: {
+		DisplayName: Baguette de câblage (Instantanée)
+		Tooltip: Place ou retire des fils et des actionneurs dans une zone sélectionnée
+	}
+
+	WandOfWiringSelect: {
+		DisplayName: Baguette de câblage (Sélection)
+		Tooltip: Place ou retire des fils et des actionneurs dans une zone sélectionnée
+	}
+
+	WandOfWiringConfirm: {
+		DisplayName: Baguette de câblage (Confirmation)
+		Tooltip: Place ou retire des fils et des actionneurs dans une zone sélectionnée
+	}
+
+	WandOfBuildingStamp: {
+		DisplayName: Baguette de construction (Tampon)
+		Tooltip: Définissez une forme une fois, puis reproduisez-la avec le tampon
+	}
+
+	WandOfDismantlingStamp: {
+		Tooltip: ""
+		DisplayName: Baguette de démantèlement (Tampon)
+	}
+
+	WandOfReplacementStamp: {
+		DisplayName: Baguette de remplacement (Tampon)
+		Tooltip: Définissez une zone de remplacement une fois, puis reproduisez-la avec le tampon
+	}
+
+	WandOfWiringStamp: {
+		DisplayName: Baguette de câblage (Tampon)
+		Tooltip: Définissez une zone de câblage une fois, puis reproduisez-la avec le tampon
+	}
+
+	WandOfSafekeepingInstant: {
+		DisplayName: Baguette de préservation (Instantanée)
+		Tooltip: Protège ou déprotège des blocs dans une zone sélectionnée
+	}
+
+	WandOfSafekeepingSelect: {
+		DisplayName: Baguette de préservation (Sélection)
+		Tooltip: Protège ou déprotège des blocs dans une zone sélectionnée
+	}
+
+	WandOfSafekeepingConfirm: {
+		DisplayName: Baguette de préservation (Confirmation)
+		Tooltip: Protège ou déprotège des blocs dans une zone sélectionnée
+	}
+
+	WandOfSafekeepingStamp: {
+		DisplayName: Baguette de préservation (Tampon)
+		Tooltip: Définissez une zone de préservation une fois, puis reproduisez-la avec le tampon
+	}
+
+	WandOfCoatingInstant: {
+		// DisplayName: Wand of Coating (Instant)
+		// Tooltip: Paints, scrapes, or de-mosses tiles and walls in a selected area
+	}
+
+	WandOfCoatingSelect: {
+		// DisplayName: Wand of Coating (Select)
+		// Tooltip: Paints, scrapes, or de-mosses tiles and walls in a selected area
+	}
+
+	WandOfCoatingConfirm: {
+		// DisplayName: Wand of Coating (Confirm)
+		// Tooltip: Paints, scrapes, or de-mosses tiles and walls in a selected area
+	}
+
+	WandOfCoatingStamp: {
+		// DisplayName: Wand of Coating (Stamp)
+		// Tooltip: Define a coating area once, then stamp it repeatedly
+	}
+}
+
+Conditions.NonCraftable: Non fabriquable. Changez de mode avec un clic droit dans l'inventaire.
+
+// ── Chat Messages ─────────────────────────────────────────
+// Localization keys for all in-game chat feedback messages.
+// These replace hardcoded Main.NewText() strings across the codebase.
+Messages: {
+	// ── Common ──────────────────────────────────────────────
+	SelectionCancelled: Sélection annulée.
+	SwitchedToMode: Passage en mode {0}
+	ThicknessChanged: Épaisseur : {0} — {1}
+	StampUnlocked: Tampon relâché. Cliquez pour définir un nouvel ancrage.
+	SelectionUnlocked: Sélection déverrouillée. Déplacez-vous pour ajuster le point final.
+	SelectionCleared: Sélection effacée.
+	// ── Tooltip strings ─────────────────────────────────────
+	ModeInstant: Cliquez et faites glisser pour sélectionner une zone
+	ModeSelect: Cliquez sur le début, puis sur la fin
+	ModeConfirm: Cliquez sur le début, sur la fin, puis cliquez pour confirmer
+	ModeStamp: Cliquez sur le début, sur la fin, cliquez pour sceller la forme et la position, puis cliquez pour répéter
+	CycleHint: Cliquez droit dans l'inventaire pour changer de mode
+	PickaxeHint: Utilise votre pioche la plus puissante pour les vérifications de puissance de bloc
+	ObtainHint: "[c/AAAAAA:Obtenez d'autres modes en cliquant droit sur cette baguette dans votre inventaire]"
+	// ── Building ────────────────────────────────────────────
+	NoSuitableItem: Aucun objet approprié trouvé pour {0}.
+	NeedHave: Besoin de {0} {1}, vous en avez {2}. Opération annulée.
+	NoTilesPlaced: Aucun bloc n'a pu être placé.
+	NoWallItemFound: Aucun objet de mur trouvé dans l'inventaire.
+	NoWallsPlaced: Aucun mur n'a pu être placé.
+	// ── Dismantling ─────────────────────────────────────────
+	NoTilesDestroyed: Aucun bloc n'a été détruit.
+	// ── Replacement ─────────────────────────────────────────
+	NoSourceItems: Aucun objet de {0} dans l'inventaire pour identifier le bloc source.
+	SameSourceTarget: La source et la cible sont le même bloc [i:{0}].
+	NoTargetItems: Aucun objet de {0} trouvé dans l'inventaire.
+	NoSourceInSelection: Aucun {0} trouvé dans la sélection.
+	NeedTargetItems: Besoin de {0} [i:{1}], vous en avez {2}.
+	NoTilesReplaced: Aucun bloc n'a pu être remplacé.
+	SourceMustBeWall: Le type source doit être Mur pour remplacer des murs.
+	NoWallSourceItems: Aucun objet de mur dans l'inventaire pour identifier le mur source.
+	TargetMustBeWallOrAir: Le type cible doit être Mur ou Air pour remplacer des murs.
+	SameWallSourceTarget: La source et la cible sont le même mur [i:{0}].
+	NoWallTargetItems: Aucun objet de mur trouvé pour la cible.
+	NoSourceWallsInSelection: Aucun mur {0} trouvé dans la sélection.
+	NoWallsReplaced: Aucun mur n'a pu être remplacé.
+	// ── Wiring ──────────────────────────────────────────────
+	NoWiresSelected: Aucun fil ou actionneur sélectionné.
+	NoWireInInventory: Aucun fil dans l'inventaire.
+	NoActuatorsInInventory: Aucun actionneur dans l'inventaire.
+	WiresPlaced: "{0} segments de fil placés."
+	WiresRemoved: "{0} segments de fil retirés."
+	NoWiringChanges: Aucune modification effectuée.
+	// ── Safekeeping ─────────────────────────────────────────
+	NoProtectionTargets: Aucune cible de protection sélectionnée (blocs ou murs).
+	NoPositionsToProtect: Aucune position à protéger dans la sélection.
+	NoProtectedPositions: Aucune position protégée dans la sélection.
+	ClearedProtection: Toute protection a été retirée ({0} blocs, {1} murs).
+	ClearConfirmPrompt: Cliquez à nouveau pour déprotéger {0} bloc(s) et {1} mur(s).
+	// ── Undo ────────────────────────────────────────────────
+	Undone: Annulé : {0} ({1} blocs)
+	// ── Coating ─────────────────────────────────────────────
+	// CoatingNoChanges: No changes made.
+	// CoatingPaintedTiles: Painted {0} tiles.
+	// CoatingPaintedWalls: Painted {0} walls.
+	// CoatingScrapedPaint: Scraped paint from {0} positions.
+	// CoatingScrapedMoss: Removed moss from {0} tiles.
+	// CoatingHarvestedMoss: Harvested moss from {0} tiles.
+	// ── Selection prompts (per-mode) ────────────────────────
+	SelectStartClickEnd: Sélection démarrée. Cliquez pour définir le point final.
+	SelectStartClickAgain: Sélection démarrée. Cliquez à nouveau pour {0}.
+	ClickToConfirm: Cliquez à nouveau pour confirmer.
+	ClickToConfirmOrCancel: Cliquez à nouveau pour confirmer, ou clic droit pour annuler.
+	EndPointSet: Point final défini. Cliquez à nouveau pour confirmer.
+	// ── Stamp prompts ───────────────────────────────────────
+	StampClickEnd: Tampon : cliquez pour définir le point final.
+	StampClickLock: Tampon : cliquez pour fixer la position de l'ancrage.
+	StampLocked: Tampon défini ! Cliquez pour {0}. Clic droit pour réinitialiser.
+}

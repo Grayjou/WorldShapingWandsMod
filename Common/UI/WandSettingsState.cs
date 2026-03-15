@@ -3,7 +3,9 @@ using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.GameContent.UI.Elements;
 using Terraria.UI;
+using Terraria.ModLoader;
 using WorldShapingWandsMod.Common.Enums;
+using WorldShapingWandsMod.Common.Configs;
 using WorldShapingWandsMod.Common.Players;
 
 namespace WorldShapingWandsMod.Common.UI;
@@ -95,14 +97,15 @@ public class WandSettingsState : UIState
 
     private void CreateShapeButtons(float yOffset)
     {
-        string[] shapes = { "Rect", "Ellipse", "Diamond", "Tri", "Elbow", "Simple Line" };
+        string[] shapes = { "Rect", "Ellipse", "Diamond", "Tri", "Elbow", "Simple Line", "Free Line" };
         ShapeType[] shapeTypes = { 
             ShapeType.Rectangle, 
             ShapeType.Ellipse, 
             ShapeType.Diamond, 
             ShapeType.Triangle, 
             ShapeType.Elbow,
-            ShapeType.CardinalLine 
+            ShapeType.CardinalLine,
+            ShapeType.StraightLine 
         };
 
         _shapeButtons = new UIPanel[shapes.Length];
@@ -193,7 +196,8 @@ public class WandSettingsState : UIState
         plusBtn.OnLeftClick += (evt, elem) =>
         {
             var settings = Main.LocalPlayer.GetModPlayer<WandPlayer>().Settings;
-            settings.Thickness = System.Math.Min(50, settings.Thickness + 1);
+            int max = ModContent.GetInstance<Configs.WandConfig>()?.MaxOutlineThickness ?? 10;
+            settings.Thickness = System.Math.Min(max, settings.Thickness + 1);
             UpdateButtonStates();
         };
         _mainPanel.Append(plusBtn);
@@ -211,7 +215,8 @@ public class WandSettingsState : UIState
             ShapeType.Diamond, 
             ShapeType.Triangle, 
             ShapeType.Elbow,
-            ShapeType.CardinalLine 
+            ShapeType.CardinalLine,
+            ShapeType.StraightLine 
         };
         
         for (int i = 0; i < _shapeButtons.Length; i++)

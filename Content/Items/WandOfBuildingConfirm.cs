@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Utilities;
+using static WorldShapingWandsMod.Common.Utilities.Msg;
 using System;
 
 namespace WorldShapingWandsMod.Content.Items
@@ -22,14 +23,14 @@ namespace WorldShapingWandsMod.Content.Items
                 bool vertical = Math.Abs(Main.MouseWorld.Y - player.Center.Y) >
                                 Math.Abs(Main.MouseWorld.X - player.Center.X);
                 wandPlayer.StartSelection(mouseTile, vertical);
-                Main.NewText("Selection started. Click to set end point.", Color.Cyan);
+                Main.NewText(Get("SelectStartClickEnd"), Color.Cyan);
                 return false; // Don't consume the wand
             }
             else if (!wandPlayer.Selection.IsLocked)
             {
                 wandPlayer.UpdateSelection(mouseTile);
                 wandPlayer.LockSelection();
-                Main.NewText("End point set. Click again to confirm.", Color.Yellow);
+                Main.NewText(Get("EndPointSet"), Color.Yellow);
                 return false; // Don't consume the wand
             }
             else

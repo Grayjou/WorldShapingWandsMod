@@ -12,22 +12,27 @@ namespace WorldShapingWandsMod.Common.Geometry.Shapes
     /// Direction is determined by the angle from Start to End using 45° sectors.
     /// Length = Max(|dx|, |dy|) in tiles.
     /// Thickness uses a "circular brush" approach: for each tile along the center line,
-    /// all tiles within radius = thickness/2 are included (Euclidean distance).
-    /// This eliminates the checker pattern that perpendicular expansion caused on diagonals.
-    /// Odd widths only; even values fall back to width-1 (except 0 → 1px line).
+    /// all tiles within a circle of diameter = thickness are included.
+    /// Both odd and even thicknesses are supported; even values produce a bottom-right
+    /// biased brush (standard raster convention). For diameter ≥ 4, uses EllipseShape's
+    /// IncrementalFast rasterization algorithm for proper circle shapes.
     /// </summary>
     public class CardinalLineShape : IShapeProvider
     {
         public ShapeType ShapeType => ShapeType.CardinalLine;
 
         /// <summary>
-        /// Cache of circle offsets keyed by radius, to avoid recomputing per-tile.
+        /// Cache of circle offsets keyed by thickness (diameter), to avoid recomputing per-tile.
         /// </summary>
         private static readonly Dictionary<int, List<Point>> _circleOffsetCache = new();
 
         public ShapeTileSet GetTiles(ShapeContext context)
         {
             var tiles = GenerateCardinalLineTiles(context);
+
+            if (context.Slice != SliceMode.Full)
+                return SliceHelper.ApplySlicing(tiles, context);
+
             return OutlineHelper.Apply(tiles, context.Mode, context.Thickness);
         }
 
@@ -60,18 +65,19 @@ namespace WorldShapingWandsMod.Common.Geometry.Shapes
         {
             var (dir, length) = GetDirectionAndLength(context);
             int effectiveThickness = GetEffectiveThickness(context);
-            int radius = effectiveThickness / 2;
-            int radiusSq = radius * radius;
 
-            // Check if the point is within circular brush distance of any center-line tile
+            // Use the same brush offsets as tile generation for consistency
+            var offsets = GetCircleOffsets(effectiveThickness);
+            var offsetSet = new HashSet<Point>(offsets);
+
+            // Check if the point is within brush distance of any center-line tile
             for (int i = 0; i <= length; i++)
             {
                 int cx = context.Start.X + dir.X * i;
                 int cy = context.Start.Y + dir.Y * i;
-                int dx = point.X - cx;
-                int dy = point.Y - cy;
+                Point delta = new Point(point.X - cx, point.Y - cy);
 
-                if (dx * dx + dy * dy <= radiusSq)
+                if (offsetSet.Contains(delta))
                     return true;
             }
 
@@ -80,19 +86,18 @@ namespace WorldShapingWandsMod.Common.Geometry.Shapes
 
         /// <summary>
         /// Generates tiles using a circular brush along the center line.
-        /// For each point on the center line, stamps all tiles within a circle of
-        /// radius = effectiveThickness / 2. The circle offsets are cached per radius
-        /// for performance.
+        /// For each point on the center line, stamps all tiles within a circle
+        /// of the given thickness (diameter). Both odd and even thicknesses are
+        /// supported; even values produce a bottom-right biased brush.
         /// </summary>
         private static HashSet<Point> GenerateCardinalLineTiles(ShapeContext context)
         {
             var tiles = new HashSet<Point>();
             var (dir, length) = GetDirectionAndLength(context);
             int effectiveThickness = GetEffectiveThickness(context);
-            int radius = effectiveThickness / 2;
 
-            // Get or compute cached circle offsets for this radius
-            var offsets = GetCircleOffsets(radius);
+            // Get or compute cached circle offsets for this thickness (diameter)
+            var offsets = GetCircleOffsets(effectiveThickness);
 
             for (int i = 0; i <= length; i++)
             {
@@ -109,28 +114,27 @@ namespace WorldShapingWandsMod.Common.Geometry.Shapes
         }
 
         /// <summary>
-        /// Returns cached circle offsets for a given radius.
-        /// A radius of 0 returns just the center tile (0,0).
-        /// Uses Euclidean distance: dx² + dy² ≤ radius².
+        /// Returns cached circle offsets for a given thickness (diameter).
+        /// Delegates to EllipseShape.GetCircleBrushOffsets which uses the
+        /// IncrementalFast algorithm for diameter ≥ 4, and simple Euclidean
+        /// distance for smaller sizes.
+        /// Even diameters produce a bottom-right offset (standard raster convention).
         /// </summary>
-        private static List<Point> GetCircleOffsets(int radius)
+        private static List<Point> GetCircleOffsets(int diameter)
         {
-            if (_circleOffsetCache.TryGetValue(radius, out var cached))
+            return GetCircleOffsetsStatic(diameter);
+        }
+
+        /// <summary>
+        /// Public accessor for circle brush offsets, shared with StraightLineShape.
+        /// </summary>
+        public static List<Point> GetCircleOffsetsStatic(int diameter)
+        {
+            if (_circleOffsetCache.TryGetValue(diameter, out var cached))
                 return cached;
 
-            var offsets = new List<Point>();
-            int radiusSq = radius * radius;
-
-            for (int dy = -radius; dy <= radius; dy++)
-            {
-                for (int dx = -radius; dx <= radius; dx++)
-                {
-                    if (dx * dx + dy * dy <= radiusSq)
-                        offsets.Add(new Point(dx, dy));
-                }
-            }
-
-            _circleOffsetCache[radius] = offsets;
+            var offsets = EllipseShape.GetCircleBrushOffsets(diameter);
+            _circleOffsetCache[diameter] = offsets;
             return offsets;
         }
 
@@ -183,19 +187,13 @@ namespace WorldShapingWandsMod.Common.Geometry.Shapes
         }
 
         /// <summary>
-        /// Calculates effective thickness. Odd values are used directly.
-        /// Even values > 0 fall back to value - 1. Zero stays as 1.
+        /// Calculates effective thickness. Both odd and even values are allowed.
+        /// Even thickness produces a slightly off-center line, which is standard
+        /// raster editor behavior. Zero or negative values default to 1.
         /// </summary>
         private static int GetEffectiveThickness(ShapeContext context)
         {
             int thickness = context.Thickness;
-            if (thickness <= 0)
-                return 1;
-
-            // Force odd: even values fall back to thickness - 1
-            if (thickness % 2 == 0)
-                thickness -= 1;
-
             return Math.Max(1, thickness);
         }
     }

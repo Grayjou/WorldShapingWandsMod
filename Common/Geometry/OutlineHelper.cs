@@ -10,7 +10,8 @@ namespace WorldShapingWandsMod.Common.Geometry;
 /// Centralized outline generation with unified thickness semantics.
 /// Shapes only need to provide filled tiles — this handles mode logic.
 /// </summary>
-public static class OutlineHelper
+public static class    
+OutlineHelper
 {
     /// <summary>
     /// Given a set of filled tiles and a mode+thickness, produces the final tile set.

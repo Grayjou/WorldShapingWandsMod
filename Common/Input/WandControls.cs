@@ -5,6 +5,7 @@ using Terraria;
 using Terraria.ModLoader;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.UI;
+using static WorldShapingWandsMod.Common.Utilities.Msg;
 
 namespace WorldShapingWandsMod.Common.Input;
 
@@ -45,14 +46,14 @@ public class WandControls : ModSystem
         {
             settings.Thickness = Math.Min(settings.Thickness + 1, 50);
             settings.Validate();
-            Main.NewText($"Thickness: {settings.Thickness} — {settings.GetDescription()}", Color.Cyan);
+            Main.NewText(Get("ThicknessChanged", settings.Thickness, settings.GetDescription()), Color.Cyan);
         }
 
         if (DecreaseThickness?.JustPressed == true)
         {
             settings.Thickness = Math.Max(settings.Thickness - 1, 0);
             settings.Validate();
-            Main.NewText($"Thickness: {settings.Thickness} — {settings.GetDescription()}", Color.Cyan);
+            Main.NewText(Get("ThicknessChanged", settings.Thickness, settings.GetDescription()), Color.Cyan);
         }
 
         if (OpenWandUI?.JustPressed == true)
@@ -70,17 +71,17 @@ public class WandControls : ModSystem
             if (wandPlayer.IsStampLocked)
             {
                 wandPlayer.UnlockStamp();
-                Main.NewText("Stamp unlocked. Click to set new anchor.", Color.Yellow);
+                Main.NewText(Get("StampUnlocked"), Color.Yellow);
             }
             else if (wandPlayer.Selection.IsLocked)
             {
                 wandPlayer.UnlockSelection();
-                Main.NewText("Selection unlocked. Move to adjust end point.", Color.Yellow);
+                Main.NewText(Get("SelectionUnlocked"), Color.Yellow);
             }
             else
             {
                 wandPlayer.ClearSelection();
-                Main.NewText("Selection cleared.", Color.Yellow);
+                Main.NewText(Get("SelectionCleared"), Color.Yellow);
             }
         }
     }

@@ -8,6 +8,7 @@ using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Systems;
 using WorldShapingWandsMod.Common.Utilities;
 using System;
+using WorldShapingWandsMod.Common.Drawing;
 
 namespace WorldShapingWandsMod.Content.Items;
 
@@ -43,37 +44,49 @@ public class WandOfReplacementInstant : WandOfReplacementBase
         if (Main.mouseLeft)
         {
             // Don't start selection if mouse is over UI
-            if (Main.LocalPlayer.mouseInterface)
+            // IsMouseOverUI() checks both mouseInterface AND panel hover,
+            // because HoldItem runs before UI.Update sets mouseInterface.
+            if (IsMouseOverUI())
+            {
+                DebugIsMouseOverUI("WandOfReplacementInstant blocked");
                 return;
+            }
 
             // Don't restart selection immediately after cancellation
             if (!wandPlayer.CanStartNewSelection())
                 return;
 
-            if (!wandPlayer.Selection.IsActive)
+            if (!wandPlayer.InstantSelection.IsActive)
             {
                 bool vertical = Math.Abs(Main.MouseWorld.Y - player.Center.Y) >
                                 Math.Abs(Main.MouseWorld.X - player.Center.X);
-                wandPlayer.StartSelection(mouseTile, vertical);
+                wandPlayer.StartInstantSelection(mouseTile, vertical);
                 SoundEngine.PlaySound(SoundID.Item1, player.Center);
             }
-            wandPlayer.UpdateSelection(mouseTile);
+            wandPlayer.UpdateInstantSelection(mouseTile);
+
+            // Right-click during a drag cancels the selection without executing.
+            if (Main.mouseRight && wandPlayer.InstantSelection.IsActive)
+            {
+                wandPlayer.CancelInstantSelection(WandColors.CancelReplacement, wandPlayer.ReplacementSettings.Shape);
+                return;
+            }
         }
-        else if (wandPlayer.Selection.IsActive)
+        else if (wandPlayer.InstantSelection.IsActive)
         {
             // Don't execute if mouse released over UI (e.g. NPC shop)
-            if (Main.LocalPlayer.mouseInterface)
+            if (IsMouseOverUI())
             {
-                wandPlayer.ClearSelection();
+                wandPlayer.CancelInstantSelection(WandColors.CancelReplacement, wandPlayer.ReplacementSettings.Shape);
                 return;
             }
 
             // Mouse released - execute only if this wand started the selection
-            if (wandPlayer.IsSelectionOwnedByCurrentItem())
+            if (wandPlayer.IsInstantSelectionOwnedByCurrentItem())
             {
                 ExecuteReplacement(player, wandPlayer);
             }
-            wandPlayer.ClearSelection();
+            wandPlayer.ClearInstantSelection();
         }
     }
 

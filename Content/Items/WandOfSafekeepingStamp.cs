@@ -7,6 +7,7 @@ using WorldShapingWandsMod.Common.Drawing;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Utilities;
+using static WorldShapingWandsMod.Common.Utilities.Msg;
 
 namespace WorldShapingWandsMod.Content.Items;
 
@@ -24,7 +25,7 @@ public class WandOfSafekeepingStamp : WandOfSafekeepingBase
             bool vertical = Math.Abs(Main.MouseWorld.Y - player.Center.Y) >
                             Math.Abs(Main.MouseWorld.X - player.Center.X);
             wandPlayer.StartSelection(mouseTile, vertical);
-            Main.NewText("Stamp: click to set end point.", WandColors.MsgPrompt);
+            Main.NewText(Get("StampClickEnd"), WandColors.MsgPrompt);
             return false;
         }
         else if (!wandPlayer.Selection.IsLocked)
@@ -32,14 +33,14 @@ public class WandOfSafekeepingStamp : WandOfSafekeepingBase
             // 2nd click — set end point and lock shape
             wandPlayer.UpdateSelection(mouseTile);
             wandPlayer.LockSelection();
-            Main.NewText("Stamp: click to lock anchor position.", WandColors.MsgConfirm);
+            Main.NewText(Get("StampClickLock"), WandColors.MsgConfirm);
             return false;
         }
         else if (!wandPlayer.IsStampLocked)
         {
             // 3rd click — lock the stamp template
             wandPlayer.LockStamp(mouseTile);
-            Main.NewText("Stamp locked! Click to apply. Right-click to reset.", Color.LimeGreen);
+            Main.NewText(Get("StampLocked", "apply"), Color.LimeGreen);
             return false;
         }
         else

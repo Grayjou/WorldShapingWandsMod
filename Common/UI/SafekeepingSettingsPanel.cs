@@ -6,17 +6,22 @@ using Terraria.GameContent.UI.Elements;
 using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.UI;
+using WorldShapingWandsMod.Common.Configs;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Settings;
 using WorldShapingWandsMod.Common.Systems;
 using WorldShapingWandsMod.Common.UI.Elements;
+using static WorldShapingWandsMod.Common.Utilities.Msg;
 
 namespace WorldShapingWandsMod.Common.UI;
 
 public class SafekeepingSettingsPanel : UIState
 {
     public bool IsVisible { get; set; }
+
+    /// <summary>Exposes the inner draggable panel for accurate ContainsPoint checks in WandUISystem.</summary>
+    public UIElement PanelElement => _mainPanel;
 
     private UIDraggablePanel _mainPanel;
 
@@ -31,21 +36,31 @@ public class SafekeepingSettingsPanel : UIState
     private UIIconButton _ellipseFilledBtn, _ellipseHollowBtn;
     private UIIconButton _diamondFilledBtn, _diamondHollowBtn;
     private UIIconButton _triangleFilledBtn, _triangleHollowBtn;
-    private UIIconButton _halfEllipseHFilledBtn, _halfEllipseHHollowBtn;
-    private UIIconButton _halfEllipseVFilledBtn, _halfEllipseVHollowBtn;
     private UIIconButton _edgeBtn;
     private UIIconButton _cardinalBtn;
+    private UIIconButton _straightLineBtn;
 
     private UIText _thicknessValue;
 
     // Equal Dimensions toggle
     private UIToggleButton _equalDimensionsBtn;
 
+    // Slice grid
+    private UISliceGrid _sliceGrid;
+
+    // Connect diameter toggle
+    private UIToggleButton _connectDiameterBtn;
+
+    // Clear All confirmation state
+    private bool _clearConfirmPending;
+    private double _clearConfirmExpiry;
+    private UITextPanel<string> _clearBtn;
+
     private const string UIPrefix = "Mods.WorldShapingWandsMod.UI";
     private static string L(string key) => Language.GetTextValue($"{UIPrefix}.{key}");
 
     private const float PanelWidth = 320f;
-    private const float PanelHeight = 508f;
+    private const float PanelHeight = 628f;
     private const float Padding = 10f;
     private const float ButtonWidth = 140f;
     private const float ButtonHeight = 28f;
@@ -116,10 +131,7 @@ public class SafekeepingSettingsPanel : UIState
         var texTriangleHollow = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeTriangleHollow", AssetRequestMode.ImmediateLoad);
         var texElbow           = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeElbow", AssetRequestMode.ImmediateLoad);
         var texCardinal       = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeCardinal", AssetRequestMode.ImmediateLoad);
-        var texHalfEHFilled   = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeHalfEllipseHFilled", AssetRequestMode.ImmediateLoad);
-        var texHalfEHHollow   = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeHalfEllipseHHollow", AssetRequestMode.ImmediateLoad);
-        var texHalfEVFilled   = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeHalfEllipseVFilled", AssetRequestMode.ImmediateLoad);
-        var texHalfEVHollow   = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeHalfEllipseVHollow", AssetRequestMode.ImmediateLoad);
+        var texStraightLine   = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeStraightLine", AssetRequestMode.ImmediateLoad);
 
         float totalShapeWidth = IconBtnSize * 5 + IconGap * 4;
         float shapeStartX = (PanelWidth - totalShapeWidth) / 2f - Padding;
@@ -150,16 +162,25 @@ public class SafekeepingSettingsPanel : UIState
         _mainPanel.Append(_cardinalBtn);
         y += IconBtnSize + IconGap;
 
-        // Row 3: half-ellipse shapes
-        _halfEllipseHFilledBtn = MakeIconBtn(texHalfEHFilled, L("Common.ShapeHalfEllipseHFilled"), shapeStartX + (IconBtnSize + IconGap) * 0, y);
-        _halfEllipseHHollowBtn = MakeIconBtn(texHalfEHHollow, L("Common.ShapeHalfEllipseHHollow"), shapeStartX + (IconBtnSize + IconGap) * 1, y);
-        _halfEllipseVFilledBtn = MakeIconBtn(texHalfEVFilled, L("Common.ShapeHalfEllipseVFilled"), shapeStartX + (IconBtnSize + IconGap) * 2, y);
-        _halfEllipseVHollowBtn = MakeIconBtn(texHalfEVHollow, L("Common.ShapeHalfEllipseVHollow"), shapeStartX + (IconBtnSize + IconGap) * 3, y);
-        _mainPanel.Append(_halfEllipseHFilledBtn);
-        _mainPanel.Append(_halfEllipseHHollowBtn);
-        _mainPanel.Append(_halfEllipseVFilledBtn);
-        _mainPanel.Append(_halfEllipseVHollowBtn);
+        // Row 3: additional line shapes
+        _straightLineBtn   = MakeIconBtn(texStraightLine,   L("Common.ShapeStraightLine"),   shapeStartX + (IconBtnSize + IconGap) * 0, y);
+        _mainPanel.Append(_straightLineBtn);
         y += IconBtnSize + 12f;
+
+        // === SLICE SECTION ===
+        var sliceSection = new UISectionTitle(L("Common.Slice"));
+        sliceSection.Width.Set(0f, 1f);
+        sliceSection.Height.Set(22f, 0f);
+        sliceSection.Top.Set(y, 0f);
+        _mainPanel.Append(sliceSection);
+        y += 28f;
+
+        _sliceGrid = new UISliceGrid();
+        _sliceGrid.HAlign = 0.5f;
+        _sliceGrid.Top.Set(y, 0f);
+        _sliceGrid.OnChanged += OnSliceChanged;
+        _mainPanel.Append(_sliceGrid);
+        y += _sliceGrid.Height.Pixels + 12f;
 
         // Thickness
         var thicknessLabel = new UIText(L("Common.OutlineThickness"), 0.85f);
@@ -199,20 +220,51 @@ public class SafekeepingSettingsPanel : UIState
         _mainPanel.Append(_equalDimensionsBtn);
         y += 38f;
 
+        // === CONNECT DIAMETER TOGGLE ===
+        _connectDiameterBtn = new UIToggleButton(L("Common.ConnectDiameter"), true);
+        _connectDiameterBtn.Width.Set(200f, 0f);
+        _connectDiameterBtn.Height.Set(28f, 0f);
+        _connectDiameterBtn.HAlign = 0.5f;
+        _connectDiameterBtn.Top.Set(y, 0f);
+        _connectDiameterBtn.OnToggled += (_, _) => ToggleConnectDiameter();
+        _mainPanel.Append(_connectDiameterBtn);
+        y += 38f;
+
         // Clear All button
-        var clearBtn = new UITextPanel<string>(L("Safekeeping.ClearAll"), 0.85f, false);
-        clearBtn.Width.Set(120f, 0f);
-        clearBtn.Height.Set(30f, 0f);
-        clearBtn.HAlign = 0.5f;
-        clearBtn.Top.Set(y, 0f);
-        clearBtn.OnLeftClick += (_, _) =>
+        _clearBtn = new UITextPanel<string>(L("Safekeeping.ClearAll"), 0.85f, false);
+        _clearBtn.Width.Set(120f, 0f);
+        _clearBtn.Height.Set(30f, 0f);
+        _clearBtn.HAlign = 0.5f;
+        _clearBtn.Top.Set(y, 0f);
+        _clearBtn.OnLeftClick += (_, _) =>
         {
             int tiles = SafekeepingSystem.ProtectedTileCount;
             int walls = SafekeepingSystem.ProtectedWallCount;
+            int totalProtected = tiles + walls;
+
+            // Check if confirmation is needed (count exceeds configurable threshold)
+            var config = ModContent.GetInstance<WandConfig>();
+            int threshold = config?.SafekeepingClearThreshold ?? 50;
+
+            if (threshold > 0 && totalProtected >= threshold && !_clearConfirmPending)
+            {
+                // First click: show confirmation prompt
+                _clearConfirmPending = true;
+                _clearConfirmExpiry = Main.GameUpdateCount + 180; // 3 seconds to confirm
+                _clearBtn.SetText(L("Safekeeping.ClearConfirm"));
+                _clearBtn.BackgroundColor = new Color(180, 60, 60);
+                Main.NewText(Get("ClearConfirmPrompt", tiles, walls), Color.Orange);
+                return;
+            }
+
+            // Execute the clear
+            _clearConfirmPending = false;
+            _clearBtn.SetText(L("Safekeeping.ClearAll"));
+            _clearBtn.BackgroundColor = new Color(63, 82, 151) * 0.7f;
             SafekeepingSystem.ClearAll();
-            Main.NewText($"Cleared all protection ({tiles} tiles, {walls} walls).", Color.LightCoral);
+            Main.NewText(Get("ClearedProtection", tiles, walls), Color.LightCoral);
         };
-        _mainPanel.Append(clearBtn);
+        _mainPanel.Append(_clearBtn);
         y += 38f;
 
         // Close button
@@ -235,16 +287,13 @@ public class SafekeepingSettingsPanel : UIState
         _rectHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.Rectangle, ShapeMode.Hollow);
         _edgeBtn.OnToggled += (_, _) => SetShape(ShapeType.Elbow, ShapeMode.Filled);
         _cardinalBtn.OnToggled += (_, _) => SetShape(ShapeType.CardinalLine, ShapeMode.Filled);
+        _straightLineBtn.OnToggled += (_, _) => SetShape(ShapeType.StraightLine, ShapeMode.Filled);
         _ellipseFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.Ellipse, ShapeMode.Filled);
         _ellipseHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.Ellipse, ShapeMode.Hollow);
         _diamondFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.Diamond, ShapeMode.Filled);
         _diamondHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.Diamond, ShapeMode.Hollow);
         _triangleFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.Triangle, ShapeMode.Filled);
         _triangleHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.Triangle, ShapeMode.Hollow);
-        _halfEllipseHFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.HalfEllipseH, ShapeMode.Filled);
-        _halfEllipseHHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.HalfEllipseH, ShapeMode.Hollow);
-        _halfEllipseVFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.HalfEllipseV, ShapeMode.Filled);
-        _halfEllipseVHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.HalfEllipseV, ShapeMode.Hollow);
     }
 
     private WandOfSafekeepingSettings GetSettings() =>
@@ -254,7 +303,7 @@ public class SafekeepingSettingsPanel : UIState
     {
         var settings = GetSettings();
         if (settings == null) return;
-        settings.Shape = new ShapeInfo(type, mode, settings.Shape.Thickness, settings.Shape.EqualDimensions);
+        settings.Shape = new ShapeInfo(type, mode, settings.Shape.Thickness, settings.Shape.EqualDimensions, settings.Shape.Slice, settings.Shape.ConnectDiameter);
         UpdateShapeButtons();
     }
 
@@ -263,7 +312,8 @@ public class SafekeepingSettingsPanel : UIState
         var settings = GetSettings();
         if (settings == null) return;
         var shape = settings.Shape;
-        shape.Thickness = System.Math.Clamp(shape.Thickness + delta, 0, 50);
+        int max = ModContent.GetInstance<Configs.WandConfig>()?.MaxOutlineThickness ?? 10;
+        shape.Thickness = System.Math.Clamp(shape.Thickness + delta, 0, max);
         settings.Shape = shape;
         UpdateThicknessDisplay();
     }
@@ -319,16 +369,13 @@ public class SafekeepingSettingsPanel : UIState
         _rectHollowBtn.Toggled = shape.Shape == ShapeType.Rectangle && shape.FillMode == ShapeMode.Hollow;
         _edgeBtn.Toggled = shape.Shape == ShapeType.Elbow;
         _cardinalBtn.Toggled = shape.Shape == ShapeType.CardinalLine;
+        _straightLineBtn.Toggled = shape.Shape == ShapeType.StraightLine;
         _ellipseFilledBtn.Toggled = shape.Shape == ShapeType.Ellipse && shape.FillMode == ShapeMode.Filled;
         _ellipseHollowBtn.Toggled = shape.Shape == ShapeType.Ellipse && shape.FillMode == ShapeMode.Hollow;
         _diamondFilledBtn.Toggled = shape.Shape == ShapeType.Diamond && shape.FillMode == ShapeMode.Filled;
         _diamondHollowBtn.Toggled = shape.Shape == ShapeType.Diamond && shape.FillMode == ShapeMode.Hollow;
         _triangleFilledBtn.Toggled = shape.Shape == ShapeType.Triangle && shape.FillMode == ShapeMode.Filled;
         _triangleHollowBtn.Toggled = shape.Shape == ShapeType.Triangle && shape.FillMode == ShapeMode.Hollow;
-        _halfEllipseHFilledBtn.Toggled = shape.Shape == ShapeType.HalfEllipseH && shape.FillMode == ShapeMode.Filled;
-        _halfEllipseHHollowBtn.Toggled = shape.Shape == ShapeType.HalfEllipseH && shape.FillMode == ShapeMode.Hollow;
-        _halfEllipseVFilledBtn.Toggled = shape.Shape == ShapeType.HalfEllipseV && shape.FillMode == ShapeMode.Filled;
-        _halfEllipseVHollowBtn.Toggled = shape.Shape == ShapeType.HalfEllipseV && shape.FillMode == ShapeMode.Hollow;
     }
 
     private void UpdateThicknessDisplay()
@@ -346,6 +393,24 @@ public class SafekeepingSettingsPanel : UIState
         settings.Shape = shape;
     }
 
+    private void ToggleConnectDiameter()
+    {
+        var settings = GetSettings();
+        if (settings == null) return;
+        var shape = settings.Shape;
+        shape.ConnectDiameter = _connectDiameterBtn.Toggled;
+        settings.Shape = shape;
+    }
+
+    private void OnSliceChanged(SliceMode slice)
+    {
+        var settings = GetSettings();
+        if (settings == null) return;
+        var shape = settings.Shape;
+        shape.Slice = slice;
+        settings.Shape = shape;
+    }
+
     private void UpdateEqualDimensionsButton()
     {
         var settings = GetSettings();
@@ -360,12 +425,36 @@ public class SafekeepingSettingsPanel : UIState
         UpdateShapeButtons();
         UpdateThicknessDisplay();
         UpdateEqualDimensionsButton();
+        UpdateSliceGrid();
+        UpdateConnectDiameterButton();
+    }
+
+    private void UpdateConnectDiameterButton()
+    {
+        var settings = GetSettings();
+        if (settings == null || _connectDiameterBtn == null) return;
+        _connectDiameterBtn.Toggled = settings.Shape.ConnectDiameter;
+    }
+
+    private void UpdateSliceGrid()
+    {
+        var settings = GetSettings();
+        if (settings == null || _sliceGrid == null) return;
+        _sliceGrid.SetValue(settings.Shape.Slice);
     }
 
     public override void Update(GameTime gameTime)
     {
         base.Update(gameTime);
         SyncFromSettings();
+
+        // Expire the ClearAll confirmation after timeout
+        if (_clearConfirmPending && Main.GameUpdateCount > _clearConfirmExpiry)
+        {
+            _clearConfirmPending = false;
+            _clearBtn.SetText(L("Safekeeping.ClearAll"));
+            _clearBtn.BackgroundColor = new Color(63, 82, 151) * 0.7f;
+        }
 
         if (_mainPanel.ContainsPoint(Main.MouseScreen))
             Main.LocalPlayer.mouseInterface = true;

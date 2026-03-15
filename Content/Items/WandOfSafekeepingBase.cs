@@ -14,6 +14,7 @@ using WorldShapingWandsMod.Common.Settings;
 using WorldShapingWandsMod.Common.Systems;
 using WorldShapingWandsMod.Common.UI;
 using WorldShapingWandsMod.Common.Utilities;
+using static WorldShapingWandsMod.Common.Utilities.Msg;
 
 namespace WorldShapingWandsMod.Content.Items;
 
@@ -38,6 +39,11 @@ public abstract class WandOfSafekeepingBase : BaseCyclingWand
 
         var wandPlayer = player.GetModPlayer<WandPlayer>();
 
+        // Clear incompatible selections (e.g., a 2-step selection on a 2-click wand).
+        // Skip for OneClick — instant wands manage their own lifecycle in HoldItem.
+        if (WandSelectionMode != SelectionMode.OneClick)
+            wandPlayer.EnsureSelectionCompatibility(WandSelectionMode);
+
         if (WandSelectionMode != SelectionMode.OneClick && !wandPlayer.TryConsumeFreshLeftClick())
             return false;
 
@@ -49,7 +55,9 @@ public abstract class WandOfSafekeepingBase : BaseCyclingWand
     {
         var wandPlayer = player.GetModPlayer<WandPlayer>();
 
-        if (wandPlayer.Selection.IsActive && Main.mouseRight && Main.mouseRightRelease)
+        // Only cancel on right-click in the WORLD, not when clicking in inventory/UI.
+        if (!Main.LocalPlayer.mouseInterface
+            && wandPlayer.Selection.IsActive && Main.mouseRight && Main.mouseRightRelease)
         {
             CancelSelection(wandPlayer);
             Main.mouseRightRelease = false;
@@ -72,24 +80,16 @@ public abstract class WandOfSafekeepingBase : BaseCyclingWand
     protected void ExecuteSafekeeping(Player player, WandPlayer wandPlayer)
     {
         var settings = wandPlayer.SafekeepingSettings;
-        var selection = wandPlayer.Selection;
+        var selection = wandPlayer.GetVisualSelection();
 
         if (!settings.ProtectTiles && !settings.ProtectWalls)
         {
-            Main.NewText("No protection targets selected (tiles or walls).", WandColors.MsgError);
+            Main.NewText(Get("NoProtectionTargets"), WandColors.MsgError);
             return;
         }
 
-        var context = new ShapeContext(
-            selection.StartTile,
-            selection.EndTile,
-            settings.Shape.FillMode,
-            settings.Shape.Thickness,
-            HorizontalBias.None,
-            VerticalBias.None,
-            selection.VerticalFirst,
-            settings.Shape.EqualDimensions
-        );
+        var context = settings.Shape.ToShapeContext(
+            selection.StartTile, selection.EndTile, selection.VerticalFirst);
 
         var tileSet = ShapeRegistry.GetShapeTiles(settings.Shape.Shape, context);
 
@@ -158,10 +158,10 @@ public abstract class WandOfSafekeepingBase : BaseCyclingWand
 
             if (parts.Count > 0)
             {
-                // Play IceBlockPlace (SoundID.Item30) — short, crispy freeze sound
+                // Play Quiet click sound (SoundID.MaxMana) at half volume — short, crispy sound
                 var config = ModContent.GetInstance<WandConfig>();
                 if (config.EnableWandSounds)
-                    SoundEngine.PlaySound(SoundID.Item30, player.Center); // IceBlockPlace
+                    SoundEngine.PlaySound(SoundID.MaxMana with { Volume = 0.5f }, player.Center);
 
                 string detail = $"Protected {string.Join(", ", parts)}";
                 if (skipped > 0)
@@ -170,7 +170,7 @@ public abstract class WandOfSafekeepingBase : BaseCyclingWand
             }
             else
             {
-                Main.NewText("No positions to protect in selection.", WandColors.MsgInfo);
+                Main.NewText(Get("NoPositionsToProtect"), WandColors.MsgInfo);
             }
         }
         else
@@ -182,11 +182,16 @@ public abstract class WandOfSafekeepingBase : BaseCyclingWand
 
             if (parts.Count > 0)
             {
+                // Play Unlock sound for unprotect operations
+                var config = ModContent.GetInstance<WandConfig>();
+                if (config.EnableWandSounds)
+                    SoundEngine.PlaySound(SoundID.Unlock, player.Center);
+
                 Main.NewText($"Unprotected {string.Join(", ", parts)}", Color.LightGreen);
             }
             else
             {
-                Main.NewText("No protected positions in selection.", WandColors.MsgInfo);
+                Main.NewText(Get("NoProtectedPositions"), WandColors.MsgInfo);
             }
         }
     }

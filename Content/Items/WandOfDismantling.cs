@@ -17,6 +17,7 @@ using WorldShapingWandsMod.Common.Systems;
 using WorldShapingWandsMod.Common.UI;
 using WorldShapingWandsMod.Common.Undo;
 using WorldShapingWandsMod.Common.Utilities;
+using static WorldShapingWandsMod.Common.Utilities.Msg;
 
 namespace WorldShapingWandsMod.Content.Items;
 
@@ -36,6 +37,11 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
 
         var wandPlayer = player.GetModPlayer<WandPlayer>();
 
+        // Clear incompatible selections (e.g., a 2-step selection on a 2-click wand).
+        // Skip for OneClick — instant wands manage their own lifecycle in HoldItem.
+        if (WandSelectionMode != SelectionMode.OneClick)
+            wandPlayer.EnsureSelectionCompatibility(WandSelectionMode);
+
         if (WandSelectionMode != SelectionMode.OneClick && !wandPlayer.TryConsumeFreshLeftClick())
             return false;
 
@@ -49,8 +55,9 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
     {
         var wandPlayer = player.GetModPlayer<WandPlayer>();
         
-        // Cancel on right-click while selecting
-        if (wandPlayer.Selection.IsActive && Main.mouseRight && Main.mouseRightRelease)
+        // Only cancel on right-click in the WORLD, not when clicking in inventory/UI.
+        if (!Main.LocalPlayer.mouseInterface
+            && wandPlayer.Selection.IsActive && Main.mouseRight && Main.mouseRightRelease)
         {
             CancelSelection(wandPlayer);
             Main.mouseRightRelease = false; // Consume the click to prevent other actions
@@ -66,41 +73,110 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
     protected void ExecuteDismantling(Player player, WandPlayer wandPlayer)
     {
         var settings = wandPlayer.DismantlingSettings;
-        var selection = wandPlayer.Selection;
+        var selection = wandPlayer.GetVisualSelection();
         var config = ModContent.GetInstance<WandConfig>();
         
-        var context = new ShapeContext(
-            selection.StartTile,
-            selection.EndTile,
-            settings.Shape.FillMode,
-            settings.Shape.Thickness,
-            HorizontalBias.None,
-            VerticalBias.None,
-            selection.VerticalFirst,
-            settings.Shape.EqualDimensions
-        );
+        var context = settings.Shape.ToShapeContext(
+            selection.StartTile, selection.EndTile, selection.VerticalFirst);
 
         var tileSet = ShapeRegistry.GetShapeTiles(settings.Shape.Shape, context);
         var undoMgr = player.GetModPlayer<UndoManager>();
         var action = undoMgr.BeginAction("Dismantling");
 
-        // Pre-validate all tiles and snapshot them
+        // Pre-declare collections shared between container pass and tile pass
         var validTiles = new List<ProgressiveTileProcessor.TileDismantlingInfo>();
         var snapshottedTiles = new HashSet<Point>();
         int skipped = 0;
 
-        foreach (Point tile in tileSet.Tiles)
+        // === CONTAINER DESTRUCTION PASS ===
+        // Must happen BEFORE tile destruction — Chest.FindChest needs tiles intact.
+        var containerTiles = new HashSet<Point>();
+        int containersDestroyed = 0;
+        int containerItemsDropped = 0;
+
+        if (settings.DestroyContainers && settings.DestroyTiles)
+        {
+            var containers = ContainerHelper.FindContainers(tileSet.Tiles);
+            foreach (var container in containers)
+            {
+                if (SafekeepingSystem.IsProtected(container.TopLeft.X, container.TopLeft.Y))
+                    continue;
+
+                // Skip locked containers unless AutoOpenChestsOnDestruction is enabled
+                if (container.IsLocked && !config.AutoOpenChestsOnDestruction)
+                    continue;
+
+                // Snapshot all container tiles before destruction
+                var data = Terraria.ObjectData.TileObjectData.GetTileData(container.TileType, 0);
+                int cw = data?.Width ?? 2;
+                int ch = data?.Height ?? 2;
+                for (int dx = 0; dx < cw; dx++)
+                    for (int dy = 0; dy < ch; dy++)
+                    {
+                        var pt = new Point(container.TopLeft.X + dx, container.TopLeft.Y + dy);
+                        if (!snapshottedTiles.Contains(pt))
+                        {
+                            action.AddSnapshot(pt);
+                            snapshottedTiles.Add(pt);
+                        }
+                        containerTiles.Add(pt);
+                    }
+
+                var (dropped, destroyed) = ContainerHelper.DestroyContainer(
+                    player, container, config.SuppressDrops);
+
+                if (destroyed)
+                {
+                    containersDestroyed++;
+                    containerItemsDropped += dropped;
+                }
+            }
+        }
+
+        // Pre-validate all tiles and snapshot them
+        // Sort tiles top-to-bottom (ascending Y) so multi-tile objects (trees, tall plants,
+        // furniture) above are destroyed first, freeing the support tiles below.
+        // Without this, WorldGen.CanKillTile returns false for blocks under trees during
+        // pre-validation, causing them to be skipped even though the tree would be gone
+        // by the time we reach that block during execution.
+        var sortedTiles = tileSet.Tiles.ToArray();
+        Array.Sort(sortedTiles, (a, b) => a.Y != b.Y ? a.Y.CompareTo(b.Y) : a.X.CompareTo(b.X));
+
+        foreach (Point tile in sortedTiles)
         {
             if (!WorldGen.InWorld(tile.X, tile.Y, 1)) continue;
             if (SafekeepingSystem.IsProtected(tile.X, tile.Y)) { skipped++; continue; }
 
+            // Skip tiles already destroyed by the container pass
+            if (containerTiles.Contains(tile)) continue;
+
+            var tileData = Main.tile[tile.X, tile.Y];
+
+            // Skip empty space (no tile and no wall) silently — don't count as "skipped"
+            if (!tileData.HasTile && tileData.WallType <= WallID.None) continue;
+
+            // Include tiles that pass pickaxe power check even if CanKillTile currently
+            // returns false — the tile above may be removed by the time this one is
+            // processed (e.g., blocks under trees). The actual CanKillTile check is
+            // deferred to execution time in both instant and progressive paths.
             bool willDestroyTile = settings.DestroyTiles
-                && Main.tile[tile.X, tile.Y].HasTile
-                && (config.BypassPickaxePower || player.HasEnoughPickPowerToHurtTile(tile.X, tile.Y))
-                && WorldGen.CanKillTile(tile.X, tile.Y);
+                && tileData.HasTile
+                && (config.BypassPickaxePower || player.HasEnoughPickPowerToHurtTile(tile.X, tile.Y));
+
+            // Demon Altars: skip unless explicitly allowed in config.
+            // When AllowDemonAltarDestruction is OFF, altars are always protected.
+            // When it IS ON, require either sufficient hammer power (≥80 = Pwnhammer tier)
+            // or the BypassPickaxePower config to also be enabled.
+            if (willDestroyTile && tileData.TileType == TileID.DemonAltar)
+            {
+                if (!config.AllowDemonAltarDestruction)
+                    willDestroyTile = false;
+                else if (GetPlayerMaxHammerPower(player) < 80 && !config.BypassPickaxePower)
+                    willDestroyTile = false;
+            }
 
             bool willDestroyWall = settings.DestroyWalls
-                && Main.tile[tile.X, tile.Y].WallType > WallID.None;
+                && tileData.WallType > WallID.None;
 
             if (!willDestroyTile && !willDestroyWall) { skipped++; continue; }
 
@@ -120,9 +196,27 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
             });
         }
 
-        if (validTiles.Count == 0)
+        if (validTiles.Count == 0 && containersDestroyed == 0)
         {
-            Main.NewText("No tiles were destroyed.", Color.Gray);
+            Main.NewText(Get("NoTilesDestroyed"), Color.Gray);
+            return;
+        }
+
+        // Build container message suffix for result reporting
+        string containerMsg = containersDestroyed > 0
+            ? $", {containersDestroyed} container(s) cleared"
+              + (containerItemsDropped > 0 ? $" ({containerItemsDropped} item stack(s) dropped)" : "")
+            : "";
+
+        // If only containers were destroyed with no remaining tiles, commit and return
+        if (validTiles.Count == 0 && containersDestroyed > 0)
+        {
+            undoMgr.CommitAction(action);
+            if (config.EnableWandSounds)
+                SoundEngine.PlaySound(SoundID.Tink, player.Center);
+            Main.NewText($"Cleared {containersDestroyed} container(s)" +
+                (containerItemsDropped > 0 ? $" ({containerItemsDropped} item stack(s) dropped)" : ""),
+                Color.OrangeRed);
             return;
         }
 
@@ -137,27 +231,31 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
             float interval = config.ProgressiveInterval;
 
             ProgressiveTileProcessor.EnqueueDismantling(
-                player, validTiles, action, undoMgr, batchSize, interval);
+                player, validTiles, action, undoMgr, batchSize, interval,
+                vacuumItems: config.VacuumItems);
 
             int batches = (int)Math.Ceiling((double)validTiles.Count / batchSize);
             float totalTime = (batches - 1) * interval;
             Main.NewText(
                 $"Dismantling {validTiles.Count} tile(s) in {batches} wave(s) (~{totalTime:F1}s)" +
-                (skipped > 0 ? $", {skipped} skipped" : ""),
+                (skipped > 0 ? $", {skipped} skipped" : "") + containerMsg,
                 Color.OrangeRed);
         }
         else
         {
             // Instant: process all at once
-            // In single-player, suppress sounds/effects via WorldGen.gen for clean operation.
-            // In multiplayer, do NOT set WorldGen.gen — let KillTile send per-tile network
-            // messages so the server properly processes each destruction.
+            // In single-player: set WorldGen.gen = true to suppress per-tile sounds/dust/drops,
+            // then FinalizeBatch sends a single batched network sync (no-op in SP anyway).
+            // In multiplayer: leave WorldGen.gen = false so each KillTile/KillWall sends its
+            // own TileManipulation message to the server. Only do BatchFrameUpdate afterwards
+            // (no BatchNetworkSync — the per-tile messages already handle server sync).
+            // Combining WorldGen.gen=true with BatchNetworkSync in MP causes a dual-sync
+            // race condition where the server may reject or revert the batched state update.
             int destroyedTiles = 0;
             var affectedPositions = new List<Point>();
-
             bool isMultiplayer = Main.netMode == NetmodeID.MultiplayerClient;
-            bool wasGen = WorldGen.gen;
 
+            bool wasGen = WorldGen.gen;
             if (!isMultiplayer)
                 WorldGen.gen = true;
 
@@ -165,10 +263,25 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
             {
                 if (info.DestroyTile)
                 {
-                    WorldGen.KillTile(info.Position.X, info.Position.Y,
-                        fail: false, effectOnly: false, noItem: info.SuppressDrops);
-                    destroyedTiles++;
-                    affectedPositions.Add(info.Position);
+                    // Re-check CanKillTile at execution time: a tile that was unkillable
+                    // during pre-validation (e.g., block under a tree) may now be killable
+                    // because the tree above was already destroyed in this same pass.
+                    if (!Main.tile[info.Position.X, info.Position.Y].HasTile)
+                    {
+                        // Tile was already destroyed (e.g., part of a multi-tile object
+                        // that collapsed when its anchor was killed)
+                    }
+                    else if (!WorldGen.CanKillTile(info.Position.X, info.Position.Y))
+                    {
+                        // Still can't kill — skip it
+                    }
+                    else
+                    {
+                        WorldGen.KillTile(info.Position.X, info.Position.Y,
+                            fail: false, effectOnly: false, noItem: info.SuppressDrops);
+                        destroyedTiles++;
+                        affectedPositions.Add(info.Position);
+                    }
                 }
 
                 if (info.DestroyWall)
@@ -179,11 +292,24 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
                 }
             }
 
-            if (!isMultiplayer)
-                WorldGen.gen = wasGen;
+            WorldGen.gen = wasGen;
 
             if (affectedPositions.Count > 0)
-                BulkTileOperations.FinalizeBatch(affectedPositions);
+            {
+                if (isMultiplayer)
+                    BulkTileOperations.FinalizeFrameOnly(affectedPositions);
+                else
+                    BulkTileOperations.FinalizeBatch(affectedPositions);
+
+                // Vacuum: collect scattered item drops into the player's inventory.
+                // In SP instant mode, WorldGen.gen=true already suppresses all drops,
+                // so this only matters in MP where gen stays false and drops are created.
+                if (config.VacuumItems && !config.SuppressDrops)
+                {
+                    var bounds = BulkTileOperations.ComputeBounds(affectedPositions);
+                    BulkTileOperations.VacuumItemsInArea(player, bounds);
+                }
+            }
 
             undoMgr.CommitAction(action);
 
@@ -196,7 +322,7 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
             }
 
             Main.NewText($"Destroyed {destroyedTiles} tile(s)" +
-                (skipped > 0 ? $", {skipped} skipped" : ""),
+                (skipped > 0 ? $", {skipped} skipped" : "") + containerMsg,
                 Color.OrangeRed);
         }
     }
@@ -224,6 +350,24 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
             return false;
         }
         return true;
+    }
+
+    /// <summary>
+    /// Returns the highest hammer power among all items in the player's inventory.
+    /// Used to determine if the player can break a Demon Altar (vanilla requires ≥80,
+    /// i.e. Pwnhammer tier) without relying on <c>Main.hardMode</c>, which can be
+    /// misleading when mods grant high-power hammers before hardmode triggers.
+    /// </summary>
+    private static int GetPlayerMaxHammerPower(Player player)
+    {
+        int max = 0;
+        for (int i = 0; i < player.inventory.Length; i++)
+        {
+            var item = player.inventory[i];
+            if (!item.IsAir && item.hammer > max)
+                max = item.hammer;
+        }
+        return max;
     }
 
     public override void AddRecipes()
@@ -266,37 +410,46 @@ public class WandOfDismantlingInstant : WandOfDismantlingBase
         if (Main.mouseLeft)
         {
             // Don't start selection if mouse is over UI
-            if (Main.LocalPlayer.mouseInterface)
+            // IsMouseOverUI() checks both mouseInterface AND panel hover,
+            // because HoldItem runs before UI.Update sets mouseInterface.
+            if (IsMouseOverUI())
                 return;
 
             // Don't restart selection immediately after cancellation
             if (!wandPlayer.CanStartNewSelection())
                 return;
 
-            if (!wandPlayer.Selection.IsActive)
+            if (!wandPlayer.InstantSelection.IsActive)
             {
                 bool vertical = Math.Abs(Main.MouseWorld.Y - player.Center.Y) >
                                 Math.Abs(Main.MouseWorld.X - player.Center.X);
-                wandPlayer.StartSelection(mouseTile, vertical);
+                wandPlayer.StartInstantSelection(mouseTile, vertical);
                 SoundEngine.PlaySound(SoundID.Item1, player.Center);
             }
-            wandPlayer.UpdateSelection(mouseTile);
+            wandPlayer.UpdateInstantSelection(mouseTile);
+
+            // Right-click during a drag cancels the selection without executing.
+            if (Main.mouseRight && wandPlayer.InstantSelection.IsActive)
+            {
+                wandPlayer.ClearInstantSelection();
+                return;
+            }
         }
-        else if (wandPlayer.Selection.IsActive)
+        else if (wandPlayer.InstantSelection.IsActive)
         {
             // Don't execute if mouse released over UI (e.g. NPC shop)
-            if (Main.LocalPlayer.mouseInterface)
+            if (IsMouseOverUI())
             {
-                wandPlayer.ClearSelection();
+                wandPlayer.ClearInstantSelection();
                 return;
             }
 
             // Mouse released - execute only if this wand started the selection
-            if (wandPlayer.IsSelectionOwnedByCurrentItem())
+            if (wandPlayer.IsInstantSelectionOwnedByCurrentItem())
             {
                 ExecuteDismantling(player, wandPlayer);
             }
-            wandPlayer.ClearSelection();
+            wandPlayer.ClearInstantSelection();
         }
     }
 
@@ -328,7 +481,7 @@ public class WandOfDismantlingSelect : WandOfDismantlingBase
             bool vertical = Math.Abs(Main.MouseWorld.Y - player.Center.Y) >
                             Math.Abs(Main.MouseWorld.X - player.Center.X);
             wandPlayer.StartSelection(mouseTile, vertical);
-            Main.NewText("Selection started. Click again to confirm area.", Color.Cyan);
+            Main.NewText(Get("SelectStartClickAgain", "confirm area"), Color.Cyan);
             return false; // Don't consume the wand
         }
         else
@@ -371,7 +524,7 @@ public class WandOfDismantlingConfirm : WandOfDismantlingBase
             bool vertical = Math.Abs(Main.MouseWorld.Y - player.Center.Y) >
                             Math.Abs(Main.MouseWorld.X - player.Center.X);
             wandPlayer.StartSelection(mouseTile, vertical);
-            Main.NewText("Selection started. Click to set end point.", Color.Cyan);
+            Main.NewText(Get("SelectStartClickEnd"), Color.Cyan);
             return false; // Don't consume the wand
         }
         else if (!wandPlayer.Selection.IsLocked)
@@ -379,7 +532,7 @@ public class WandOfDismantlingConfirm : WandOfDismantlingBase
             // Second click - lock selection, await confirmation
             wandPlayer.UpdateSelection(mouseTile);
             wandPlayer.LockSelection();  // LOCK IT HERE
-            Main.NewText("Click again to confirm, or right-click to cancel.", Color.Yellow);
+            Main.NewText(Get("ClickToConfirmOrCancel"), Color.Yellow);
             return false; // Don't consume the wand
         }
         else

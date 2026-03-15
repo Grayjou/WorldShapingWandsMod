@@ -5,6 +5,7 @@ using WorldShapingWandsMod.Common.Configs;
 using WorldShapingWandsMod.Common.Drawing;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Geometry;
+using WorldShapingWandsMod.Common.Items;
 using WorldShapingWandsMod.Common.Selection;
 using WorldShapingWandsMod.Common.Settings;
 using WorldShapingWandsMod.Common.Utilities;
@@ -17,14 +18,76 @@ namespace WorldShapingWandsMod.Common.Players;
 /// </summary>
 public class WandPlayer : ModPlayer
 {
-    public SelectionState Selection { get; private set; } = SelectionState.Empty;
+    // ── Dual-selection storage ──────────────────────────────────────
+    // Large shapes (Rectangle, Ellipse, Diamond, Triangle, HalfEllipse) and
+    // small shapes (Elbow, CardinalLine) each get their own selection slot.
+    // This prevents cross-shape-category state leaks (e.g., a 1000x1 line
+    // selection becoming a 1000x1000 ellipse when switching wands) while
+    // preserving selections across item switches (potions, weapons, doors).
+    private SelectionState _largeSelection = SelectionState.Empty;
+    private SelectionState _smallSelection = SelectionState.Empty;
+    private int _largeSelectionOwner;
+    private int _smallSelectionOwner;
+
+    // ── Isolated instant selection ──────────────────────────────────
+    // Instant wands operate on a completely separate selection state
+    // that never interferes with the dual-slot system used by
+    // Select/Confirm/Stamp wands. The instant selection is ephemeral —
+    // it lives only for the duration of a single click-drag and is
+    // cleared on mouse release, cancel, or item swap. This prevents
+    // instant wand drag operations from overwriting stored selections
+    // in the large/small slots.
+    private SelectionState _instantSelection = SelectionState.Empty;
+    private int _instantSelectionOwner;
+
+    /// <summary>
+    /// Returns true if the given shape type belongs to the "small" category
+    /// (1D shapes: lines and elbows). All other shapes are "large" (2D area shapes).
+    /// </summary>
+    public static bool IsSmallShape(ShapeType shape)
+        => shape == ShapeType.Elbow || shape == ShapeType.CardinalLine || shape == ShapeType.StraightLine;
+
+    /// <summary>
+    /// Gets or sets the active selection for the current wand's shape category.
+    /// </summary>
+    public SelectionState Selection
+    {
+        get
+        {
+            ShapeType current = GetCurrentShapeType();
+            return IsSmallShape(current) ? _smallSelection : _largeSelection;
+        }
+        private set
+        {
+            ShapeType current = GetCurrentShapeType();
+            if (IsSmallShape(current))
+                _smallSelection = value;
+            else
+                _largeSelection = value;
+        }
+    }
 
     /// <summary>
     /// Tracks the Type (item ID) of the wand that started the current selection.
     /// Used to prevent cross-wand selection execution (e.g., switching from Confirm to Instant
     /// with an active selection should NOT execute that selection).
     /// </summary>
-    public int SelectionOwnerItemType { get; private set; }
+    public int SelectionOwnerItemType
+    {
+        get
+        {
+            ShapeType current = GetCurrentShapeType();
+            return IsSmallShape(current) ? _smallSelectionOwner : _largeSelectionOwner;
+        }
+        private set
+        {
+            ShapeType current = GetCurrentShapeType();
+            if (IsSmallShape(current))
+                _smallSelectionOwner = value;
+            else
+                _largeSelectionOwner = value;
+        }
+    }
 
     // === Stamp mode state ===
     /// <summary>Whether the stamp template has been locked (3rd click done).</summary>
@@ -33,6 +96,14 @@ public class WandPlayer : ModPlayer
     public Point StampDelta { get; private set; }
     /// <summary>The anchor offset within the stamp rectangle that the mouse was on at lock time.</summary>
     public Point StampAnchorOffset { get; private set; }
+
+    /// <summary>
+    /// Tracks how many selection clicks have been completed in the current selection.
+    /// 0 = no selection, 1 = start set, 2 = end locked, 3 = stamp locked.
+    /// Used for cross-wand click-step compatibility: a wand with N click steps
+    /// can use an existing selection only if SelectionClickStep &lt; N.
+    /// </summary>
+    public int SelectionClickStep { get; private set; }
 
     private bool _lastMouseLeft;
     private ulong _lastConsumedLeftClickTick;
@@ -51,6 +122,7 @@ public class WandPlayer : ModPlayer
     public WandOfReplacementSettings ReplacementSettings { get; private set; } = new();
     public WandOfWiringSettings WiringSettings { get; private set; } = new();
     public WandOfSafekeepingSettings SafekeepingSettings { get; private set; } = new();
+    public WandOfCoatingSettings CoatingSettings { get; private set; } = new();
 
     // Keep global settings for backward compatibility with test commands
     public WandSettings Settings { get; private set; } = new WandSettings();
@@ -77,6 +149,7 @@ public class WandPlayer : ModPlayer
         Settings.VerticalFirst = verticalFirst;
         Selection = SelectionState.Create(start, start, verticalFirst);
         SelectionOwnerItemType = Player.HeldItem?.type ?? 0;
+        SelectionClickStep = 1;
     }
 
     public void UpdateSelection(Point end, bool wasClamped = false)
@@ -92,7 +165,8 @@ public class WandPlayer : ModPlayer
 
     /// <summary>
     /// Clamps the end point so the selection dimensions don't exceed the config cap.
-    /// Uses SmallSelectionCap for Elbow/CardinalLine, BigSelectionCap for everything else.
+    /// Uses SmallSelectionCap for Elbow/CardinalLine, HollowSelectionCap for hollow big shapes,
+    /// and BigSelectionCap for filled big shapes.
     /// </summary>
     private Point ClampEndToCaps(Point start, Point end)
     {
@@ -100,9 +174,13 @@ public class WandPlayer : ModPlayer
         if (config == null) return end;
 
         ShapeType currentShape = GetCurrentShapeType();
-        int cap = (currentShape == ShapeType.Elbow || currentShape == ShapeType.CardinalLine)
-            ? config.SmallSelectionCap
-            : config.BigSelectionCap;
+        int cap;
+        if (currentShape == ShapeType.Elbow || currentShape == ShapeType.CardinalLine || currentShape == ShapeType.StraightLine)
+            cap = config.SmallSelectionCap;
+        else if (GetCurrentFillMode() == ShapeMode.Hollow)
+            cap = config.HollowSelectionCap;
+        else
+            cap = config.BigSelectionCap;
 
         int dx = end.X - start.X;
         int dy = end.Y - start.Y;
@@ -132,14 +210,39 @@ public class WandPlayer : ModPlayer
             return WiringSettings.Shape.Shape;
         if (Player.HeldItem?.ModItem is WandOfSafekeepingBase)
             return SafekeepingSettings.Shape.Shape;
+        if (Player.HeldItem?.ModItem is WandOfCoatingBase)
+            return CoatingSettings.Shape.Shape;
         return Settings.ShapeType;
+    }
+
+    /// <summary>
+    /// Determines which ShapeMode (Filled/Hollow) is currently active based on the held wand.
+    /// </summary>
+    private ShapeMode GetCurrentFillMode()
+    {
+        if (Player.HeldItem?.ModItem is WandOfBuildingBase)
+            return BuildingSettings.Shape.FillMode;
+        if (Player.HeldItem?.ModItem is WandOfDismantlingBase)
+            return DismantlingSettings.Shape.FillMode;
+        if (Player.HeldItem?.ModItem is WandOfReplacementBase)
+            return ReplacementSettings.Shape.FillMode;
+        if (Player.HeldItem?.ModItem is WandOfWiringBase)
+            return WiringSettings.Shape.FillMode;
+        if (Player.HeldItem?.ModItem is WandOfSafekeepingBase)
+            return SafekeepingSettings.Shape.FillMode;
+        if (Player.HeldItem?.ModItem is WandOfCoatingBase)
+            return CoatingSettings.Shape.FillMode;
+        return Settings.ShapeMode;
     }
 
     // NEW: Lock the selection to prevent endpoint updates
     public void LockSelection()
     {
         if (Selection.IsActive)
+        {
             Selection = Selection.WithLocked(true);
+            SelectionClickStep = 2;
+        }
     }
 
     // NEW: Unlock if needed (e.g., user wants to adjust)
@@ -158,11 +261,118 @@ public class WandPlayer : ModPlayer
 
     public void ClearSelection()
     {
-        Selection = SelectionState.Empty;
-        SelectionOwnerItemType = 0;
+        _largeSelection = SelectionState.Empty;
+        _smallSelection = SelectionState.Empty;
+        _largeSelectionOwner = 0;
+        _smallSelectionOwner = 0;
+        _instantSelection = SelectionState.Empty;
+        _instantSelectionOwner = 0;
         IsStampLocked = false;
         StampDelta = Point.Zero;
         StampAnchorOffset = Point.Zero;
+        SelectionClickStep = 0;
+    }
+
+    /// <summary>
+    /// Clears only the active shape-category slot (large or small), preserving the other.
+    /// Used by non-instant wands that need to clear just their category.
+    /// Stamp state (IsStampLocked, StampDelta, StampAnchorOffset, SelectionClickStep) is
+    /// intentionally NOT cleared — it belongs to whichever stamp wand created it and
+    /// may live in the opposite slot. Stamp wands manage their own lifecycle via
+    /// LockStamp/UnlockStamp/CancelSelection.
+    /// </summary>
+    public void ClearActiveSelection()
+    {
+        ShapeType current = GetCurrentShapeType();
+        if (IsSmallShape(current))
+        {
+            _smallSelection = SelectionState.Empty;
+            _smallSelectionOwner = 0;
+        }
+        else
+        {
+            _largeSelection = SelectionState.Empty;
+            _largeSelectionOwner = 0;
+        }
+    }
+
+    // ── Instant selection methods ───────────────────────────────────
+    // These operate on _instantSelection, completely bypassing the
+    // dual-slot (large/small) system. Instant wands call these instead
+    // of StartSelection/UpdateSelection/ClearActiveSelection.
+
+    /// <summary>
+    /// The isolated instant selection state. Read-only from outside WandPlayer.
+    /// Only set by StartInstantSelection/UpdateInstantSelection/ClearInstantSelection.
+    /// </summary>
+    public SelectionState InstantSelection => _instantSelection;
+
+    /// <summary>
+    /// Returns true if the instant selection was started by the currently held item.
+    /// Used by instant wands to avoid executing a selection started by a different wand.
+    /// </summary>
+    public bool IsInstantSelectionOwnedByCurrentItem()
+    {
+        if (!_instantSelection.IsActive) return false;
+        int currentType = Player.HeldItem?.type ?? 0;
+        return currentType != 0 && currentType == _instantSelectionOwner;
+    }
+
+    /// <summary>
+    /// Begins a new instant selection at the given starting tile.
+    /// Does NOT touch the dual-slot system (large/small) at all.
+    /// </summary>
+    public void StartInstantSelection(Point start, bool verticalFirst)
+    {
+        _instantSelection = SelectionState.Create(start, start, verticalFirst);
+        _instantSelectionOwner = Player.HeldItem?.type ?? 0;
+    }
+
+    /// <summary>
+    /// Updates the endpoint of the active instant selection, applying dimension capping.
+    /// Does NOT touch the dual-slot system (large/small) at all.
+    /// </summary>
+    public void UpdateInstantSelection(Point end)
+    {
+        if (_instantSelection.IsActive)
+        {
+            var capped = ClampEndToCaps(_instantSelection.StartTile, end);
+            bool wasClamped = capped != end;
+            _instantSelection = _instantSelection.WithEnd(capped, wasClamped);
+        }
+    }
+
+    /// <summary>
+    /// Clears the instant selection. Called on mouse release or item swap.
+    /// Does NOT touch the dual-slot system, stamp state, or anything else.
+    /// Does NOT show a cancel animation — use <see cref="CancelInstantSelection"/> for that.
+    /// </summary>
+    public void ClearInstantSelection()
+    {
+        _instantSelection = SelectionState.Empty;
+        _instantSelectionOwner = 0;
+    }
+
+    /// <summary>
+    /// Cancels the instant selection with the same visual feedback (colour-changed overlay)
+    /// that <see cref="CancelSelection(Color, ShapeInfo)"/> produces for two-click wands.
+    /// </summary>
+    public void CancelInstantSelection(Color cancelColor, ShapeInfo shape)
+    {
+        if (_instantSelection.IsActive)
+        {
+            CancelledSelection = new CancelledSelectionState(
+                _instantSelection.StartTile,
+                _instantSelection.EndTile,
+                _instantSelection.VerticalFirst,
+                shape,
+                cancelColor,
+                WandColors.CancelOverlayDurationTicks);
+        }
+
+        _instantSelection = SelectionState.Empty;
+        _instantSelectionOwner = 0;
+        _justCancelled = true;
     }
 
     public void CancelSelection()
@@ -173,6 +383,7 @@ public class WandPlayer : ModPlayer
     /// <summary>
     /// Cancels the current selection with visual feedback.
     /// Snapshots the selection for a brief colour-changed overlay.
+    /// Only clears the active shape-category slot (large or small).
     /// </summary>
     public void CancelSelection(Color cancelColor, ShapeInfo shape)
     {
@@ -189,6 +400,7 @@ public class WandPlayer : ModPlayer
 
         Selection = SelectionState.Empty;
         SelectionOwnerItemType = 0;
+        SelectionClickStep = 0;
         IsStampLocked = false;
         StampDelta = Point.Zero;
         StampAnchorOffset = Point.Zero;
@@ -212,9 +424,11 @@ public class WandPlayer : ModPlayer
         int minY = System.Math.Min(start.Y, end.Y);
         StampAnchorOffset = new Point(mouseTile.X - minX, mouseTile.Y - minY);
         IsStampLocked = true;
+        SelectionClickStep = 3;
 
         // Lock the selection so PostUpdate doesn't move the endpoint
         LockSelection();
+        SelectionClickStep = 3; // Restore to 3 (LockSelection sets it to 2)
     }
 
     /// <summary>
@@ -300,6 +514,73 @@ public class WandPlayer : ModPlayer
         return currentType != 0 && currentType == SelectionOwnerItemType;
     }
 
+    /// <summary>
+    /// Returns true if the active selection is compatible with the given wand mode.
+    /// A selection with N completed click steps is compatible with a wand that has
+    /// more than N total click steps (i.e., the wand has remaining steps to handle it).
+    /// Instant (OneClick=0) wands always start fresh — they're never compatible with
+    /// existing multi-click selections.
+    /// </summary>
+    public bool IsSelectionCompatible(SelectionMode wandMode)
+    {
+        if (!Selection.IsActive) return true; // No selection = always compatible (will start new)
+        int wandClickCount = (int)wandMode + 1; // OneClick=1, TwoClick=2, ThreeClick=3, FourClick=4
+        return SelectionClickStep < wandClickCount;
+    }
+
+    /// <summary>
+    /// Returns true if there is an active selection that should be visually displayed.
+    /// For non-instant wands: checks dual-slot compatibility (suppresses incompatible inherited selections).
+    /// For instant wands: checks the isolated instant selection (never shows dual-slot data).
+    /// </summary>
+    public bool IsSelectionVisuallyActive()
+    {
+        if (!IsHoldingWandItem()) return false;
+
+        var wandItem = Player.HeldItem?.ModItem as BaseCyclingWand;
+        if (wandItem == null) return false;
+
+        // Instant wands use the isolated instant selection — never dual-slot
+        if (wandItem.WandSelectionMode == SelectionMode.OneClick)
+            return _instantSelection.IsActive && IsInstantSelectionOwnedByCurrentItem();
+
+        // Non-instant wands use the dual-slot system
+        if (!Selection.IsActive) return false;
+        return IsSelectionCompatible(wandItem.WandSelectionMode);
+    }
+
+    /// <summary>
+    /// Returns the selection state that the overlay should render.
+    /// For instant wands: returns the isolated instant selection.
+    /// For non-instant wands: returns the dual-slot selection.
+    /// </summary>
+    public SelectionState GetVisualSelection()
+    {
+        var wandItem = Player.HeldItem?.ModItem as BaseCyclingWand;
+        if (wandItem != null && wandItem.WandSelectionMode == SelectionMode.OneClick)
+            return _instantSelection;
+        return Selection;
+    }
+
+    /// <summary>
+    /// Clears the active selection if it's incompatible with the given wand mode.
+    /// Called from UseItem when a non-OneClick wand actually clicks — at that point
+    /// we know the player intends to use THIS wand, so the old selection is discarded.
+    /// </summary>
+    public void EnsureSelectionCompatibility(SelectionMode wandMode)
+    {
+        if (Selection.IsActive && !IsSelectionCompatible(wandMode))
+        {
+            // Silently clear — don't show cancel animation, just reset
+            Selection = SelectionState.Empty;
+            SelectionOwnerItemType = 0;
+            SelectionClickStep = 0;
+            IsStampLocked = false;
+            StampDelta = Point.Zero;
+            StampAnchorOffset = Point.Zero;
+        }
+    }
+
     public void ResetCancellationFlag()
     {
         _justCancelled = false;
@@ -315,25 +596,38 @@ public class WandPlayer : ModPlayer
 
     public override void PostUpdate()
     {
-        // Detect wand switches (scroll wheel, hotbar clicks) and clear selection
-        // to prevent cross-wand state leaks (e.g., CardinalLine selection viewed 
-        // through a FilledTriangle + EqualDimensions = 999×999 area lag).
-        int currentHeldType = Player.HeldItem?.type ?? 0;
-        if (_lastHeldItemType != 0 && currentHeldType != _lastHeldItemType && Selection.IsActive)
-        {
-            // Only clear if switching away from a wand item (not from non-wand to wand)
-            if (SelectionOwnerItemType != 0)
-            {
-                ClearSelection();
-            }
-        }
-        _lastHeldItemType = currentHeldType;
+        // The dual-selection system (large vs small shape slots) inherently prevents
+        // cross-shape-category state leaks. A 1000×1 CardinalLine selection is stored
+        // in the "small" slot and won't appear when viewing a Rectangle/Ellipse (large slot).
+        // No need to clear selections on item switches — the player can use potions,
+        // fight enemies, open doors, and switch back to their wand without losing work.
 
-        // Update selection preview in real-time when selection is active AND not locked
-        if (Selection.IsActive && !Selection.IsLocked && IsHoldingWandItem())
+        // Clear instant selection on item swap — instant selections are ephemeral
+        // and should not survive switching to a different item.
+        int currentItemType = Player.HeldItem?.type ?? 0;
+        if (currentItemType != _lastHeldItemType && _instantSelection.IsActive)
         {
-            Point mouseTile = GeometryHelper.WorldToTile(Main.MouseWorld);
-            UpdateSelection(mouseTile);
+            ClearInstantSelection();
+        }
+        _lastHeldItemType = currentItemType;
+
+        // Selection compatibility is handled VISUALLY (IsSelectionVisuallyActive)
+        // and DESTRUCTIVELY only on click (EnsureSelectionCompatibility in UseItem).
+        // PostUpdate no longer clears incompatible selections — switching wands
+        // preserves the selection so the player can switch back without losing work.
+
+        // Update dual-slot selection preview in real-time when selection is active,
+        // visually compatible, AND not locked. Incompatible selections are preserved
+        // but not updated. Instant selections are updated by the wand's HoldItem.
+        if (Selection.IsActive && !Selection.IsLocked && IsHoldingWandItem() && IsSelectionVisuallyActive())
+        {
+            var wandItem = Player.HeldItem?.ModItem as BaseCyclingWand;
+            // Only update dual-slot for non-instant wands (instant wands manage their own)
+            if (wandItem != null && wandItem.WandSelectionMode != SelectionMode.OneClick)
+            {
+                Point mouseTile = GeometryHelper.WorldToTile(Main.MouseWorld);
+                UpdateSelection(mouseTile);
+            }
         }
 
         // Expire cancelled selection overlay once its duration has elapsed
@@ -359,6 +653,7 @@ public class WandPlayer : ModPlayer
             || Player.HeldItem?.ModItem is WandOfReplacementBase
             || Player.HeldItem?.ModItem is WandOfWiringBase
             || Player.HeldItem?.ModItem is WandOfSafekeepingBase
+            || Player.HeldItem?.ModItem is WandOfCoatingBase
             ;
     }
 
@@ -373,5 +668,6 @@ public class WandPlayer : ModPlayer
         ReplacementSettings.ResetToDefaults();
         WiringSettings.ResetToDefaults();
         SafekeepingSettings.ResetToDefaults();
+        CoatingSettings.ResetToDefaults();
     }
 }

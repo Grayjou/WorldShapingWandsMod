@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Utilities;
+using static WorldShapingWandsMod.Common.Utilities.Msg;
 
 namespace WorldShapingWandsMod.Content.Items;
 
@@ -21,14 +22,14 @@ public class WandOfReplacementConfirm : WandOfReplacementBase
             bool vertical = System.Math.Abs(Main.MouseWorld.Y - player.Center.Y) >
                             System.Math.Abs(Main.MouseWorld.X - player.Center.X);
             wandPlayer.StartSelection(mouseTile, vertical);
-            Main.NewText("Selection started. Click to set end point.", Color.MediumPurple);
+            Main.NewText(Get("SelectStartClickEnd"), Color.MediumPurple);
             return false; // Don't consume the wand
         }
         else if (!wandPlayer.Selection.IsLocked)
         {
             wandPlayer.UpdateSelection(mouseTile);
             wandPlayer.LockSelection();
-            Main.NewText("Click again to confirm replacement.", Color.Yellow);
+            Main.NewText(Get("ClickToConfirm"), Color.Yellow);
             return false; // Don't consume the wand
         }
         else

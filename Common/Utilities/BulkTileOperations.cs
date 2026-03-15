@@ -135,9 +135,116 @@ public static class BulkTileOperations
     }
 
     /// <summary>
+    /// Frame-update-only finalization: re-frames tiles but skips network sync.
+    /// Use this in MP when individual tile operations (KillTile, PlaceTile etc.)
+    /// already sent their own per-tile network messages (i.e. WorldGen.gen was NOT set).
+    /// Calling BatchNetworkSync on top of per-tile messages creates a dual-sync
+    /// race condition where the server's individual tile validations conflict
+    /// with the batched state update.
+    /// </summary>
+    public static void FinalizeFrameOnly(IEnumerable<Point> affectedPositions)
+    {
+        var bounds = ComputeBounds(affectedPositions);
+        BatchFrameUpdate(bounds);
+    }
+
+    /// <summary>
     /// Maximum tile dimension for a single network sync packet.
     /// Terraria's internal buffer can handle fairly large packets, but we chunk
     /// at 200×200 to stay well within limits and avoid noticeable hitches.
     /// </summary>
     private const int MaxSyncChunkSize = 200;
+
+    /// <summary>
+    /// Vacuums ground items within the affected tile bounds directly into the player's
+    /// inventory. Items that don't fit are teleported to the player's position so they
+    /// group together rather than scattering across the operation area.
+    /// 
+    /// <para>This solves the Terraria 400-ground-item cap: when hundreds of tiles/walls
+    /// are destroyed at once, <c>Item.NewItem</c> quickly fills <c>Main.item[]</c> slots
+    /// and older items despawn. By vacuuming immediately after destruction, items are
+    /// rescued from the ground and given to the player before they can despawn.</para>
+    /// 
+    /// <para>Only items within the affected area (plus a small margin) are vacuumed.
+    /// Items elsewhere in the world are not touched.</para>
+    /// </summary>
+    /// <param name="player">The player who receives the items.</param>
+    /// <param name="bounds">Tile-coordinate bounding box of the operation area.</param>
+    public static void VacuumItemsInArea(Player player, Rectangle bounds)
+    {
+        if (bounds.IsEmpty || player == null) return;
+
+        // Convert tile bounds to world coordinates (pixels), with a 2-tile margin
+        // so items that bounced slightly outside the tile area are still caught.
+        int margin = 32; // 2 tiles in pixels
+        int worldLeft = (bounds.X * 16) - margin;
+        int worldTop = (bounds.Y * 16) - margin;
+        int worldRight = ((bounds.X + bounds.Width) * 16) + margin;
+        int worldBottom = ((bounds.Y + bounds.Height) * 16) + margin;
+
+        for (int i = 0; i < Main.maxItems; i++)
+        {
+            var item = Main.item[i];
+            if (!item.active || item.IsAir) continue;
+
+            // Check if item is within the operation area
+            float cx = item.position.X + item.width / 2f;
+            float cy = item.position.Y + item.height / 2f;
+            if (cx < worldLeft || cx > worldRight || cy < worldTop || cy > worldBottom)
+                continue;
+
+            // Try to add to player inventory (existing stacks first, then empty slots)
+            bool absorbed = TryAbsorbItem(player, item);
+            if (absorbed)
+            {
+                // Item fully absorbed — deactivate ground item
+                item.active = false;
+                item.TurnToAir();
+                if (Main.netMode == NetmodeID.MultiplayerClient)
+                    NetMessage.SendData(MessageID.SyncItem, -1, -1, null, i);
+            }
+            else
+            {
+                // Inventory full — teleport the item to the player's position
+                // so it groups with other overflow items instead of being scattered
+                item.position = player.Center;
+                item.velocity = Microsoft.Xna.Framework.Vector2.Zero;
+                if (Main.netMode == NetmodeID.MultiplayerClient)
+                    NetMessage.SendData(MessageID.SyncItem, -1, -1, null, i);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Attempts to absorb a ground item into the player's inventory.
+    /// Fills existing partial stacks first, then empty slots.
+    /// Returns true if the item was fully absorbed (stack reduced to 0).
+    /// </summary>
+    private static bool TryAbsorbItem(Player player, Item groundItem)
+    {
+        // Fill existing stacks
+        for (int i = 0; i < 58 && groundItem.stack > 0; i++)
+        {
+            var slot = player.inventory[i];
+            if (slot.type == groundItem.type && slot.stack < slot.maxStack)
+            {
+                int canAdd = Math.Min(groundItem.stack, slot.maxStack - slot.stack);
+                slot.stack += canAdd;
+                groundItem.stack -= canAdd;
+            }
+        }
+
+        // Fill empty slots
+        for (int i = 0; i < 58 && groundItem.stack > 0; i++)
+        {
+            if (player.inventory[i].IsAir)
+            {
+                player.inventory[i] = groundItem.Clone();
+                player.inventory[i].stack = groundItem.stack;
+                groundItem.stack = 0;
+            }
+        }
+
+        return groundItem.stack <= 0;
+    }
 }

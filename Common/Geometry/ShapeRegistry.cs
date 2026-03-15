@@ -2,8 +2,10 @@ using Microsoft.Xna.Framework;
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Geometry.Shapes;
+using WorldShapingWandsMod.Common.Utilities;
 
 namespace WorldShapingWandsMod.Common.Geometry;
 
@@ -22,8 +24,7 @@ public static class ShapeRegistry
         Register(new TriangleShape());
         Register(new ElbowShape());
         Register(new CardinalLineShape());
-        Register(new HalfEllipseHShape());
-        Register(new HalfEllipseVShape());
+        Register(new StraightLineShape());
 
         _initialized = true;
     }
@@ -57,6 +58,8 @@ public static class ShapeRegistry
 
         /// <summary>
         /// Main entry point: calculates tiles for any shape type.
+        /// Slicing is handled natively by each shape provider via the context's
+        /// <see cref="ShapeContext.Slice"/> and <see cref="ShapeContext.ConnectDiameter"/> properties.
         /// </summary>
         public static ShapeTileSet GetShapeTiles(ShapeType shapeType, ShapeContext context)
         {

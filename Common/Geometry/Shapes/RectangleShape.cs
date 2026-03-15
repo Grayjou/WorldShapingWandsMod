@@ -13,6 +13,10 @@ public class RectangleShape : IShapeProvider
     {
         var bounds = context.GetBounds();
         var filledTiles = GetFilledTiles(bounds).ToHashSet();
+
+        if (context.Slice != SliceMode.Full)
+            return SliceHelper.ApplySlicing(filledTiles, context);
+
         return OutlineHelper.Apply(filledTiles, context.Mode, context.Thickness);
     }
 

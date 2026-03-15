@@ -6,6 +6,7 @@ using Terraria.ModLoader;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Utilities;
+using static WorldShapingWandsMod.Common.Utilities.Msg;
 
 namespace WorldShapingWandsMod.Content.Items;
 
@@ -23,7 +24,7 @@ public class WandOfDismantlingStamp : WandOfDismantlingBase
             bool vertical = Math.Abs(Main.MouseWorld.Y - player.Center.Y) >
                             Math.Abs(Main.MouseWorld.X - player.Center.X);
             wandPlayer.StartSelection(mouseTile, vertical);
-            Main.NewText("Stamp: click to set end point.", Color.Cyan);
+            Main.NewText(Get("StampClickEnd"), Color.Cyan);
             return false;
         }
         else if (!wandPlayer.Selection.IsLocked)
@@ -31,14 +32,14 @@ public class WandOfDismantlingStamp : WandOfDismantlingBase
             // 2nd click — set end point and lock shape
             wandPlayer.UpdateSelection(mouseTile);
             wandPlayer.LockSelection();
-            Main.NewText("Stamp: click to lock anchor position.", Color.Yellow);
+            Main.NewText(Get("StampClickLock"), Color.Yellow);
             return false;
         }
         else if (!wandPlayer.IsStampLocked)
         {
             // 3rd click — lock the stamp template
             wandPlayer.LockStamp(mouseTile);
-            Main.NewText("Stamp locked! Click to destroy. Right-click to reset.", Color.LimeGreen);
+            Main.NewText(Get("StampLocked", "destroy"), Color.LimeGreen);
             return false;
         }
         else

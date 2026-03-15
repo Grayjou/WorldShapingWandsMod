@@ -14,7 +14,11 @@ RecipeGroups: {
 UI: {
 	Common: {
 		Shape: Forma
-		OutlineThickness: Grosor del contorno:
+		OutlineThickness:
+			'''
+			Grosor
+			del contorno:
+			'''
 		Close: Cerrar
 		// Shape hover texts
 		ShapeRectFilled: Rectángulo (Relleno)
@@ -27,11 +31,10 @@ UI: {
 		ShapeTriangleHollow: Triángulo (Hueco)
 		ShapeElbow: Codo
 		ShapeCardinal: Línea Cardinal
-		ShapeHalfEllipseHFilled: Media Elipse H (Rellena)
-		ShapeHalfEllipseHHollow: Media Elipse H (Hueca)
-		ShapeHalfEllipseVFilled: Media Elipse V (Rellena)
-		ShapeHalfEllipseVHollow: Media Elipse V (Hueca)
+		// ShapeStraightLine: Straight Line
 		EqualDimensions: Igualar Dimensiones
+		ConnectDiameter: Conectar Diámetro
+		// Slice: Shape Slice
 	}
 
 	Building: {
@@ -59,6 +62,8 @@ UI: {
 		Options: Opciones
 		DestroyTiles: Destruir Bloques
 		DestroyWalls: Destruir Paredes
+		DestroyContainers: Destruir Cofres
+		DestroyContainersTooltip: Solo activo cuando Destruir Bloques también está activado
 	}
 
 	Replacement: {
@@ -96,6 +101,21 @@ UI: {
 		ProtectTiles: Proteger Bloques
 		ProtectWalls: Proteger Paredes
 		ClearAll: Desproteger Todo
+		ClearConfirm: clic para confirmar
+	}
+
+	Coating: {
+		// Title: Wand of Coating
+		// Mode: Mode
+		// PaintTile: Paint Tile
+		// PaintWall: Paint Wall
+		// ScrapePaint: Scrape Paint
+		// ScrapeMoss: Scrape Moss
+		// HarvestMoss: Harvest Moss
+		// PaintColor: Paint Color
+		// CoatingType: Coating
+		// Illuminant: Illuminant
+		// Echo: Echo
 	}
 }
 
@@ -105,12 +125,114 @@ Configs: {
 
 		EnableInfiniteResource: {
 			Label: Activar Modo de Recurso Infinito
-			Tooltip: Si está activado, las varitas de construcción/reemplazo dejarán de consumir objetos después de haber colocado cierta cantidad de bloques (ver más abajo).
+			Tooltip:
+				'''
+				Si está activado, las varitas de construcción/reemplazo dejarán de consumir objetos
+				si tienes al menos cierta cantidad en el inventario (ver límites por tipo abajo).
+				Pon un límite a 0 para modo siempre infinito.
+				'''
 		}
 
-		InfiniteResourceAmount: {
-			Label: Cantidad de Recurso Infinito
-			Tooltip: Si tienes al menos esta cantidad de un bloque en tu inventario, no se consumirá al colocarlo.\n0 = siempre infinito (nunca consume).
+		InfiniteTileThreshold: {
+			Label: Mínimo de Bloques (Infinito)
+			Tooltip:
+				'''
+				Si tienes al menos esta cantidad de un bloque (sólidos, plataformas, cuerdas, rieles) en tu inventario, 
+				no se consumirá.
+				0 = siempre infinito para bloques.
+				'''
+		}
+
+		InfiniteWallThreshold: {
+			Label: Mínimo de Paredes (Infinito)
+			Tooltip:
+				'''
+				Si tienes al menos esta cantidad de un objeto de pared en tu inventario, no se consumirá.
+				0 = siempre infinito para paredes.
+				'''
+		}
+
+		InfiniteGrassSeedThreshold: {
+			Label: Mínimo de Semillas de Hierba (Infinito)
+			Tooltip:
+				'''
+				Si tienes al menos esta cantidad de semillas de hierba en tu inventario, no se consumirán.
+				El valor predeterminado es 50 porque las semillas de hierba son más raras que los bloques.
+				0 = siempre infinito para semillas de hierba.
+				'''
+		}
+
+		InfiniteWireThreshold: {
+			Label: Mínimo de Cables (Infinito)
+			Tooltip:
+				'''
+				Si tienes al menos esta cantidad de cable en tu inventario, no se consumirá por la Varita de Cableado.
+				0 = siempre infinito para cables.
+				'''
+		}
+
+		InfiniteActuatorThreshold: {
+			Label: Mínimo de Actuadores (Infinito)
+			Tooltip:
+				'''
+				Si tienes al menos esta cantidad de actuadores en tu inventario, no se consumirán por la Varita de Cableado.
+				0 = siempre infinito para actuadores.
+				'''
+		}
+
+		InfiniteTiles: {
+			Label: Bloques Infinitos (Anulación)
+			Tooltip:
+				'''
+				Anulación por tipo para bloques (sólidos, plataformas, cuerdas, rieles, macetas).
+				Default: sigue el interruptor principal de Recurso Infinito.
+				ForceOn: siempre infinito para bloques, incluso si el interruptor principal está desactivado.
+				ForceOff: nunca infinito para bloques, incluso si el interruptor principal está activado.
+				'''
+		}
+
+		InfiniteWalls: {
+			Label: Paredes Infinitas (Anulación)
+			Tooltip:
+				'''
+				Anulación por tipo para paredes.
+				Default: sigue el interruptor principal de Recurso Infinito.
+				ForceOn: siempre infinito para paredes, incluso si el interruptor principal está desactivado.
+				ForceOff: nunca infinito para paredes, incluso si el interruptor principal está activado.
+				'''
+		}
+
+		InfiniteGrassSeeds: {
+			Label: Semillas de Hierba Infinitas (Anulación)
+			Tooltip:
+				'''
+				Anulación por tipo para semillas de hierba.
+				Default: sigue el interruptor principal de Recurso Infinito.
+				ForceOn: siempre infinito para semillas, incluso si el interruptor principal está desactivado.
+				ForceOff: nunca infinito para semillas, incluso si el interruptor principal está activado.
+				'''
+		}
+
+		InfiniteWires: {
+			Label: Cables Infinitos (Anulación)
+			Tooltip:
+				'''
+				Anulación por tipo para cables.
+				Default: sigue el interruptor principal de Recurso Infinito.
+				ForceOn: siempre infinito para cables, incluso si el interruptor principal está desactivado.
+				ForceOff: nunca infinito para cables, incluso si el interruptor principal está activado.
+				'''
+		}
+
+		InfiniteActuators: {
+			Label: Actuadores Infinitos (Anulación)
+			Tooltip:
+				'''
+				Anulación por tipo para actuadores.
+				Default: sigue el interruptor principal de Recurso Infinito.
+				ForceOn: siempre infinito para actuadores, incluso si el interruptor principal está desactivado.
+				ForceOff: nunca infinito para actuadores, incluso si el interruptor principal está activado.
+				'''
 		}
 
 		SelectionLimits.Header: Límites de Dimensiones de Selección
@@ -125,8 +247,13 @@ Configs: {
 			Tooltip: Dimensión máxima (ancho o alto) para formas de área 2D.\nUn límite de 200 significa que la selección más grande puede ser de 200×200.
 		}
 
+		HollowSelectionCap: {
+			Label: Límite de Forma Hueca
+			Tooltip: Dimensión máxima (ancho o alto) para formas huecas.\nLas formas huecas producen menos bloques que las formas rellenas, por lo que pueden ser más grandes.\nUn límite de 400 significa que la selección hueca más grande puede ser de 400×400.
+		}
+
 		ProgressiveMode.Header: Desmantelamiento Progresivo
-		Sandbox.Header: Opciones de Sandbox
+		Sandbox.Header: Opciones de Modo Libre
 
 		SuppressDrops: {
 			Label: Suprimir Objetos al Destruir
@@ -138,6 +265,46 @@ Configs: {
 			Tooltip: Cuando está activado, las varitas ignoran los requisitos de poder de pico y pueden destruir o reemplazar cualquier bloque sin importar la fuerza del pico.\nÚtil para construcción creativa/sandbox.
 		}
 
+		AllowDemonAltarDestruction: {
+			Label: Permitir Destrucción de Altares Demoníacos
+			Tooltip: Cuando está activado, la Varita de Desmantelamiento puede destruir Altares Demoníacos y Altares Carmesí.\nPor defecto, los altares están protegidos contra la destrucción masiva accidental.\nRequiere poder de martillo apropiado (Pwnhammer o mejor) a menos que Ignorar Poder de Pico también esté activado.
+		}
+
+		IgnoreLockedKeyRequirements: {
+			// Label: Ignore Locked Key Requirements
+			/* Tooltip:
+				'''
+				When enabled, locked chests can be opened by wands without needing keys.
+				No keys are consumed. Useful for sandbox/builder modes.
+				''' */
+		}
+
+		AutoOpenChestsOnDestruction: {
+			// Label: Auto-Open Chests on Destruction
+			/* Tooltip:
+				'''
+				When enabled, the Wand of Dismantling automatically empties and destroys
+				chests in the selection. When disabled, chests are skipped entirely.
+				Requires the "Destroy Containers" toggle in the wand panel to also be on.
+				''' */
+		}
+
+		VacuumItems: {
+			Label: Aspirar Objetos Soltados
+			Tooltip:
+				'''
+				Cuando está activado, los objetos soltados por operaciones de varita (desmantelamiento,
+				reemplazo, intercambios de construcción) se recolectan automáticamente en tu inventario.
+				Los objetos excedentes se teletransportan a tu posición en lugar de dispersarse.
+				No tiene efecto cuando Suprimir Objetos al Destruir está activado (no hay objetos que recolectar).
+				'''
+		}
+
+		MaxOutlineThickness: {
+			Label: Grosor Máximo de Contorno
+			Tooltip: Grosor máximo del contorno para formas huecas.\nEl valor predeterminado es 10. Aumenta para contornos más grandes, disminuye para mantener la UI simple.\nEl botón + en los paneles de varita se limitará a este valor.
+		}
+
 		EnableProgressiveMode: {
 			Label: Activar Modo Progresivo
 			Tooltip: Cuando está activado, las operaciones de desmantelamiento y reemplazo procesan Bloques en lotes temporizados con gotas, sonidos y efectos adecuados.\nCuando está desactivado, las operaciones son instantáneas y silenciosas (sin gotas de objetos).
@@ -145,7 +312,7 @@ Configs: {
 
 		ProgressiveBatchSize: {
 			Label: Tamaño del Lote
-			Tooltip: Número de Bloques procesadas por lote en modo progresivo.\n400 Bloques por lote es una cantidad satisfactoria sin causar lag.
+			Tooltip: Número de Bloques procesados por lote en modo progresivo.\n400 Bloques por lote es una cantidad satisfactoria sin causar lag.
 		}
 
 		ProgressiveInterval: {
@@ -160,6 +327,18 @@ Configs: {
 			Tooltip: Cuando está activado, mantener presionada la tecla Shift mientras pasas el cursor sobre una varita muestra su texto de lore.\nDesactívalo para ocultar el lore por completo.
 		}
 
+		Safekeeping.Header: Preservación
+
+		SafekeepingClearThreshold: {
+			Label: Mínimo para pedir confirmación
+			Tooltip:
+				'''
+				Cuando el número de bloques y paredes protegidos en la selección es mayor o igual a este valor, 
+				se requerirá confirmación adicional para borrar toda la protección.
+				Esto evita desproteger accidentalmente grandes áreas.
+				'''
+		}
+
 		Audio.Header: Audio
 
 		EnableWandSounds: {
@@ -167,7 +346,68 @@ Configs: {
 			Tooltip: Cuando está activado, las varitas reproducen efectos de sonido personalizados al realizar una acción exitosamente.\nDesactívalo para operaciones silenciosas.
 		}
 
+		Overlay.Header: Superposición
+
+		OverlayRenderMode: {
+			Label: Modo de Renderizado de Superposición
+			Tooltip:
+				'''
+				Controla cómo se renderiza la superposición de selección para formas grandes.
+				Auto: Muestra el cuadro delimitador mientras arrastras formas mayores a 200 bloques, luego muestra la forma completa con transición cuando el ratón se estabiliza. Evita lag durante el redimensionamiento rápido. (Predeterminado)
+				AlwaysFullShape: Siempre renderiza la forma completa inmediatamente sin rebote. Puede causar lag en formas muy grandes pero da retroalimentación visual instantánea.
+				AlwaysBoundingBox: Siempre muestra solo el contorno del cuadro delimitador, sin calcular la forma completa. Más ligero en rendimiento.
+				'''
+		}
+
 		DisplayName: Configuración de Varita
+
+		IsInfiniteForActuators: {
+			Tooltip: ""
+			Label: Actuadores Infinitos
+		}
+
+		IsInfiniteForWires: {
+			Tooltip: ""
+			Label: Cable Infinito
+		}
+	}
+
+	InfiniteOverride: {
+		ForceOff: {
+			// Tooltip: ""
+			// Label: Force Off
+		}
+
+		ForceOn: {
+			// Tooltip: ""
+			// Label: Force On
+		}
+
+		Default: {
+			// Tooltip: ""
+			// Label: Default
+		}
+
+		// Tooltip: ""
+	}
+
+	OverlayRenderMode: {
+		// Tooltip: ""
+
+		Auto: {
+			// Label: Auto
+			// Tooltip: ""
+		}
+
+		AlwaysFullShape: {
+			// Label: Always Full Shape
+			// Tooltip: ""
+		}
+
+		AlwaysBoundingBox: {
+			// Label: Always Bounding Box
+			// Tooltip: ""
+		}
 	}
 }
 
@@ -239,7 +479,7 @@ Items: {
 
 	WandOfDismantlingStamp: {
 		Tooltip: ""
-		DisplayName: Varita de Desmantelamiento Sello
+		DisplayName: Varita de Desmantelamiento (Sello)
 	}
 
 	WandOfReplacementStamp: {
@@ -271,4 +511,101 @@ Items: {
 		DisplayName: Varita de Preservación (Sello)
 		Tooltip: Define un área de Preservación una vez, luego repítela con el sello
 	}
+
+	WandOfCoatingInstant: {
+		// DisplayName: Wand of Coating (Instant)
+		// Tooltip: Paints, scrapes, or de-mosses tiles and walls in a selected area
+	}
+
+	WandOfCoatingSelect: {
+		// DisplayName: Wand of Coating (Select)
+		// Tooltip: Paints, scrapes, or de-mosses tiles and walls in a selected area
+	}
+
+	WandOfCoatingConfirm: {
+		// DisplayName: Wand of Coating (Confirm)
+		// Tooltip: Paints, scrapes, or de-mosses tiles and walls in a selected area
+	}
+
+	WandOfCoatingStamp: {
+		// DisplayName: Wand of Coating (Stamp)
+		// Tooltip: Define a coating area once, then stamp it repeatedly
+	}
+}
+
+Conditions.NonCraftable: No fabricable. Cicla modo con clic derecho en el inventario.
+
+// ── Chat Messages ─────────────────────────────────────────
+// Localization keys for all in-game chat feedback messages.
+// These replace hardcoded Main.NewText() strings across the codebase.
+Messages: {
+	// ── Common ──────────────────────────────────────────────
+	SelectionCancelled: Selección cancelada.
+	SwitchedToMode: Cambiado a modo {0}
+	ThicknessChanged: Grosor: {0} — {1}
+	StampUnlocked: Sello retirado. Haz clic para establecer un nuevo anclaje.
+	SelectionUnlocked: Selección desbloqueada. Muévete para ajustar el punto final.
+	SelectionCleared: Selección borrada.
+	// ── Tooltip strings ─────────────────────────────────────
+	ModeInstant: Haz clic y arrastra para seleccionar área
+	ModeSelect: Haz clic en inicio, luego en fin
+	ModeConfirm: Haz clic en inicio, en fin, y luego haz clic para confirmar
+	ModeStamp: Haz clic en inicio, en fin, haz clic para sellar la forma y posición, luego haz clic para repetir
+	CycleHint: Haz clic derecho en el inventario para cambiar de modo
+	PickaxeHint: Usa tu pico más fuerte para verificaciones de poder de bloque
+	ObtainHint: "[c/AAAAAA:Obtén otros modos haciendo clic derecho en esta varita en tu inventario]"
+	// ── Building ────────────────────────────────────────────
+	NoSuitableItem: No se encontró un objeto adecuado para {0}.
+	NeedHave: Necesitas {0} {1}, tienes {2}. Operación cancelada.
+	NoTilesPlaced: No se pudo colocar ningún bloque.
+	NoWallItemFound: No se encontró ningún objeto de pared en el inventario.
+	NoWallsPlaced: No se pudo colocar ninguna pared.
+	// ── Dismantling ─────────────────────────────────────────
+	NoTilesDestroyed: No se destruyó ningún bloque.
+	// ── Replacement ─────────────────────────────────────────
+	NoSourceItems: No hay objetos de {0} en el inventario para identificar el bloque de origen.
+	SameSourceTarget: El origen y el destino son el mismo bloque [i:{0}].
+	NoTargetItems: No se encontraron objetos de {0} en el inventario.
+	NoSourceInSelection: No se encontró {0} en la selección.
+	NeedTargetItems: Necesitas {0} [i:{1}], tienes {2}.
+	NoTilesReplaced: No se pudo reemplazar ningún bloque.
+	SourceMustBeWall: El tipo de origen debe ser Pared para reemplazar paredes.
+	NoWallSourceItems: No hay objetos de pared en el inventario para identificar la pared de origen.
+	TargetMustBeWallOrAir: El tipo de destino debe ser Pared o Aire para reemplazar paredes.
+	SameWallSourceTarget: El origen y el destino son la misma pared [i:{0}].
+	NoWallTargetItems: No se encontraron objetos de pared para el destino.
+	NoSourceWallsInSelection: No se encontraron paredes de {0} en la selección.
+	NoWallsReplaced: No se pudo reemplazar ninguna pared.
+	// ── Wiring ──────────────────────────────────────────────
+	NoWiresSelected: No se seleccionaron cables ni actuadores.
+	NoWireInInventory: No hay cable en el inventario.
+	NoActuatorsInInventory: No hay actuadores en el inventario.
+	WiresPlaced: Se colocaron {0} segmentos de cable.
+	WiresRemoved: Se eliminaron {0} segmentos de cable.
+	NoWiringChanges: No se realizaron cambios.
+	// ── Safekeeping ─────────────────────────────────────────
+	NoProtectionTargets: No se seleccionaron objetivos de protección (bloques o paredes).
+	NoPositionsToProtect: No hay posiciones para proteger en la selección.
+	NoProtectedPositions: No hay posiciones protegidas en la selección.
+	ClearedProtection: Se desprotegió todo ({0} bloques, {1} paredes).
+	ClearConfirmPrompt: Haz clic de nuevo para desproteger {0} bloque(s) y {1} pared(es).
+	// ── Undo ────────────────────────────────────────────────
+	Undone: retirado: {0} ({1} bloques)
+	// ── Coating ─────────────────────────────────────────────
+	// CoatingNoChanges: No changes made.
+	// CoatingPaintedTiles: Painted {0} tiles.
+	// CoatingPaintedWalls: Painted {0} walls.
+	// CoatingScrapedPaint: Scraped paint from {0} positions.
+	// CoatingScrapedMoss: Removed moss from {0} tiles.
+	// CoatingHarvestedMoss: Harvested moss from {0} tiles.
+	// ── Selection prompts (per-mode) ────────────────────────
+	// SelectStartClickEnd: Selection started. Click to set end point.
+	// SelectStartClickAgain: Selection started. Click again to {0}.
+	// ClickToConfirm: Click again to confirm.
+	// ClickToConfirmOrCancel: Click again to confirm, or right-click to cancel.
+	EndPointSet: Punto final establecido. Haz clic de nuevo para confirmar.
+	// ── Stamp prompts ───────────────────────────────────────
+	// StampClickEnd: Stamp: click to set end point.
+	// StampClickLock: Stamp: click to lock anchor position.
+	StampLocked: ¡Sello establecido! Haz clic para {0}. Clic derecho para reiniciar.
 }

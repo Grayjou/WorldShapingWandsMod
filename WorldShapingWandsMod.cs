@@ -1,5 +1,7 @@
+using System.IO;
 using Terraria.ModLoader;
 using WorldShapingWandsMod.Common.Geometry;
+using WorldShapingWandsMod.Common.Networking;
 
 namespace WorldShapingWandsMod;
 
@@ -17,5 +19,10 @@ public class WorldShapingWandsMod : Mod
     {
         ShapeRegistry.Unload();
         Instance = null;
+    }
+
+    public override void HandlePacket(BinaryReader reader, int whoAmI)
+    {
+        WandPacketHandler.HandlePacket(reader, whoAmI);
     }
 }

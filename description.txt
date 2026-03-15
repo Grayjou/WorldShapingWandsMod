@@ -1,13 +1,20 @@
-World Shaping Wands — A suite of five wand families for large-scale terrain
-editing. Build, dismantle, replace, wire, and protect regions using geometric
-shapes with multiple selection modes.
+World Shaping Wands — A suite of six wand families for large-scale terrain
+editing. Build, dismantle, replace, wire, coat, and protect regions using
+geometric shapes with multiple selection modes.
 
 Wand Families:
   • Wand of Building — Place tiles, platforms, walls, rope, and more in bulk.
+    Supports slope overwrite and block exhaustion modes.
   • Wand of Dismantling — Mass-destroy tiles and walls within a shape.
+    Includes container destruction with auto-unlock and item dropping.
   • Wand of Replacement — Swap one tile type for another across an area.
+    Substrate-variant aware (dirt ↔ grass, mud ↔ jungle grass, etc.).
   • Wand of Wiring — Place or remove wire colours and actuators in bulk.
+    Full multiplayer packet support with server-side validation.
   • Wand of Safekeeping — Protect tiles from accidental modification.
+    Persistent (saved with world) and session-only protection modes.
+  • Wand of Coating — Paint tiles and walls, scrape paint, scrape or
+    harvest moss. Supports illuminant and echo coatings.
 
 Selection Modes (each wand has all four):
   Instant — Click and drag. Executes on release.
@@ -17,21 +24,32 @@ Selection Modes (each wand has all four):
 
 Shape Types: Rectangle, Ellipse, Diamond, Triangle, Half-Ellipse (H/V),
   Elbow (L-shape), and Cardinal Line. Each supports Filled and Hollow modes
-  with configurable outline thickness.
+  with configurable outline thickness and shape slicing (Full/Half-H/Half-V).
 
 Key Features:
-  • Per-wand settings UI panels with icon buttons
-  • Configurable infinite-resource mode
+  • Per-wand settings UI panels with draggable icon buttons
+  • Configurable infinite-resource mode with 3-state per-type overrides
+    (Default / ForceOn / ForceOff for tiles, walls, seeds, wires, actuators)
   • Block exhaustion modes (NextBlock / Interrupt / Cancel)
   • Full undo support (20-deep stack)
   • Tile protection system (persistent + session)
-  • Selection overlay with dimension labels
-  • Substrate-variant awareness (e.g., dirt ↔ grass)
-  • Progressive placement mode (batched waves)
+  • Selection overlay with dimension labels, 3 render modes
+    (Auto / AlwaysFullShape / AlwaysBoundingBox)
+  • Progressive placement mode (batched waves with visual effects)
   • Drop suppression toggle
+  • Container destruction with auto-unlock for locked chests
+  • Demon altar destruction protection toggle
+  • Shape slicing (halve shapes horizontally or vertically)
+  • Even thickness algorithm for symmetrical outlines
 
-Known Limitations (alpha):
-  • Single-player focus — multiplayer sync is basic (SendTileSquare only)
+Known Limitations (beta):
+  • Multiplayer support is in progress — wiring has full packet sync,
+    other wands use basic tile sync (functional but not server-validated)
   • No preview/commit workflow yet (planned for future)
   • Multi-tile objects (furniture, doors) are skipped by building wand
   • Undo may leave multi-tile objects in broken states
+  • French and Spanish localizations are structural placeholders
+
+Acknowledgments:
+  Inspired by ImproveGame (Quality of Life) and CheatSheet.
+  Wiring system architecture informed by MagicWiring.

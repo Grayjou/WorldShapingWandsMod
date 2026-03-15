@@ -10,11 +10,15 @@ bin/
 .DS_Store
 Thumbs.db
 
-ImportedSummaries
-ClonedAutofish
-ClonedMagicWiring
-ClonedMoreObtainingTooltips
-ClonedImproveGame
+# Local Python/virtual env
+.venv/
+
+# Project generated or local files
+ImportedSummaries/
 recipe_draft.txt
 asset_dupe.py
 generic_asset_gen.py
+
+# Development notes and clone directories
+dev_notes/
+Cloned*/

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Terraria;
 using Terraria.ModLoader;
 using WorldShapingWandsMod.Common.Undo;
+using static WorldShapingWandsMod.Common.Utilities.Msg;
 
 namespace WorldShapingWandsMod.Common.Undo;
 
@@ -45,7 +46,7 @@ public class UndoManager : ModPlayer
 
         var action = _undoStack.Pop();
         action.Undo();
-        Main.NewText($"Undone: {action.Description} ({action.Snapshots.Count} tiles)", Color.Yellow);
+        Main.NewText(Get("Undone", action.Description, action.Snapshots.Count), Color.Yellow);
         return true;
     }
 

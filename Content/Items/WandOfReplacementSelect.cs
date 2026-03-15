@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Utilities;
+using static WorldShapingWandsMod.Common.Utilities.Msg;
 
 namespace WorldShapingWandsMod.Content.Items;
 
@@ -21,7 +22,7 @@ public class WandOfReplacementSelect : WandOfReplacementBase
             bool vertical = System.Math.Abs(Main.MouseWorld.Y - player.Center.Y) >
                             System.Math.Abs(Main.MouseWorld.X - player.Center.X);
             wandPlayer.StartSelection(mouseTile, vertical);
-            Main.NewText("Selection started. Click again to replace.", Color.MediumPurple);
+            Main.NewText(Get("SelectStartClickAgain", "replace"), Color.MediumPurple);
             return false; // Don't consume the wand
         }
         else

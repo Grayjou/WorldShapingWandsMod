@@ -133,6 +133,10 @@ def _draw_edge(d, w, h):
 def _draw_cardinal(d, w, h):
     d.line([(1, h-2), (w-2, 1)], fill=C_LINE, width=2)
 
+def _draw_straight_line(d, w, h):
+    """Free-angle line: draw at ~30° to distinguish from cardinal 45°."""
+    d.line([(1, h-4), (w-2, 2)], fill=C_LINE, width=2)
+
 # ====== Object Type drawing helpers ======
 C_OBJ = (200, 180, 140, 255)  # warm tan for object type icons
 
@@ -334,6 +338,7 @@ shape_triangle_filled = _shape_icon("ShapeTriangleFilled", _draw_triangle_filled
 shape_triangle_hollow = _shape_icon("ShapeTriangleHollow", _draw_triangle_hollow)
 shape_edge           = _shape_icon("ShapeEdge",           _draw_edge)
 shape_cardinal       = _shape_icon("ShapeCardinal",       _draw_cardinal)
+shape_straight_line  = _shape_icon("ShapeStraightLine",  _draw_straight_line)
 shape_half_ellipse_h_filled = _shape_icon("ShapeHalfEllipseHFilled", _draw_half_ellipse_h_filled)
 shape_half_ellipse_h_hollow = _shape_icon("ShapeHalfEllipseHHollow", _draw_half_ellipse_h_hollow)
 shape_half_ellipse_v_filled = _shape_icon("ShapeHalfEllipseVFilled", _draw_half_ellipse_v_filled)
@@ -402,6 +407,7 @@ assets = [
     shape_triangle_hollow,
     shape_edge,
     shape_cardinal,
+    shape_straight_line,
     shape_half_ellipse_h_filled,
     shape_half_ellipse_h_hollow,
     shape_half_ellipse_v_filled,

@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Utilities;
+using static WorldShapingWandsMod.Common.Utilities.Msg;
 using System;
 
 namespace WorldShapingWandsMod.Content.Items
@@ -22,7 +23,7 @@ namespace WorldShapingWandsMod.Content.Items
                 bool vertical = Math.Abs(Main.MouseWorld.Y - player.Center.Y) >
                                 Math.Abs(Main.MouseWorld.X - player.Center.X);
                 wandPlayer.StartSelection(mouseTile, vertical);
-                Main.NewText("Selection started. Click again to place.", Color.Cyan);
+                Main.NewText(Get("SelectStartClickAgain", "place"), Color.Cyan);
                 return false; // Don't consume the wand
             }
             else

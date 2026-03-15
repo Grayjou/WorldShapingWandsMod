@@ -4,6 +4,7 @@ using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
+using WorldShapingWandsMod.Common.Drawing;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Systems;
@@ -41,36 +42,48 @@ public class WandOfSafekeepingInstant : WandOfSafekeepingBase
 
         if (Main.mouseLeft)
         {
-            if (Main.LocalPlayer.mouseInterface)
+            // IsMouseOverUI() checks both mouseInterface AND panel hover,
+            // because HoldItem runs before UI.Update sets mouseInterface.
+            if (IsMouseOverUI())
+            {
+                DebugIsMouseOverUI("WandOfSafekeepingInstant blocked");
                 return;
+            }
 
             if (!wandPlayer.CanStartNewSelection())
                 return;
 
-            if (!wandPlayer.Selection.IsActive)
+            if (!wandPlayer.InstantSelection.IsActive)
             {
                 bool vertical = Math.Abs(Main.MouseWorld.Y - player.Center.Y) >
                                 Math.Abs(Main.MouseWorld.X - player.Center.X);
-                wandPlayer.StartSelection(mouseTile, vertical);
+                wandPlayer.StartInstantSelection(mouseTile, vertical);
                 SoundEngine.PlaySound(SoundID.Item1, player.Center);
             }
 
-            wandPlayer.UpdateSelection(mouseTile);
+            wandPlayer.UpdateInstantSelection(mouseTile);
+
+            // Right-click during a drag cancels the selection without executing.
+            if (Main.mouseRight && wandPlayer.InstantSelection.IsActive)
+            {
+                wandPlayer.CancelInstantSelection(WandColors.CancelSafekeeping, wandPlayer.SafekeepingSettings.Shape);
+                return;
+            }
         }
-        else if (wandPlayer.Selection.IsActive)
+        else if (wandPlayer.InstantSelection.IsActive)
         {
             // Don't execute if mouse released over UI
-            if (Main.LocalPlayer.mouseInterface)
+            if (IsMouseOverUI())
             {
-                wandPlayer.ClearSelection();
+                wandPlayer.CancelInstantSelection(WandColors.CancelSafekeeping, wandPlayer.SafekeepingSettings.Shape);
                 return;
             }
 
-            if (wandPlayer.IsSelectionOwnedByCurrentItem())
+            if (wandPlayer.IsInstantSelectionOwnedByCurrentItem())
             {
                 ExecuteSafekeeping(player, wandPlayer);
             }
-            wandPlayer.ClearSelection();
+            wandPlayer.ClearInstantSelection();
         }
     }
 

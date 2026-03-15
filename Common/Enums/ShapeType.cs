@@ -2,6 +2,9 @@ namespace WorldShapingWandsMod.Common.Enums;
 
 /// <summary>
 /// Defines the geometric shape to be drawn or filled.
+/// Half-shape variants (e.g. half-ellipse, half-diamond) are produced
+/// by combining a base shape with <see cref="SliceMode"/>, not via
+/// separate enum values.
 /// </summary>
 public enum ShapeType : byte
 {
@@ -11,6 +14,5 @@ public enum ShapeType : byte
     Triangle = 3,
     Elbow = 4,
     CardinalLine = 5,
-    HalfEllipseH = 6,
-    HalfEllipseV = 7,
+    StraightLine = 6,
 }

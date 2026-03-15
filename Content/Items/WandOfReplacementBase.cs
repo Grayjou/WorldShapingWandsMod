@@ -16,6 +16,7 @@ using WorldShapingWandsMod.Common.Systems;
 using WorldShapingWandsMod.Common.UI;
 using WorldShapingWandsMod.Common.Undo;
 using WorldShapingWandsMod.Common.Utilities;
+using static WorldShapingWandsMod.Common.Utilities.Msg;
 
 namespace WorldShapingWandsMod.Content.Items;
 
@@ -34,6 +35,11 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
 
         var wandPlayer = player.GetModPlayer<WandPlayer>();
 
+        // Clear incompatible selections (e.g., a 2-step selection on a 2-click wand).
+        // Skip for OneClick — instant wands manage their own lifecycle in HoldItem.
+        if (WandSelectionMode != SelectionMode.OneClick)
+            wandPlayer.EnsureSelectionCompatibility(WandSelectionMode);
+
         if (WandSelectionMode != SelectionMode.OneClick && !wandPlayer.TryConsumeFreshLeftClick())
             return false;
 
@@ -45,7 +51,9 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
     {
         var wandPlayer = player.GetModPlayer<WandPlayer>();
         
-        if (wandPlayer.Selection.IsActive && Main.mouseRight && Main.mouseRightRelease)
+        // Only cancel on right-click in the WORLD, not when clicking in inventory/UI.
+        if (!Main.LocalPlayer.mouseInterface
+            && wandPlayer.Selection.IsActive && Main.mouseRight && Main.mouseRightRelease)
         {
             CancelSelection(wandPlayer);
             Main.mouseRightRelease = false;
@@ -133,7 +141,7 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
     protected void ExecuteReplacement(Player player, WandPlayer wandPlayer)
     {
         var settings = wandPlayer.ReplacementSettings;
-        var selection = wandPlayer.Selection;
+        var selection = wandPlayer.GetVisualSelection();
         var config = ModContent.GetInstance<WandConfig>();
 
         // Wall replacement uses a completely separate path
@@ -148,7 +156,7 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
         Item sourceItem = ItemTypeHelper.FindFirstItem(player, srcCondition);
         if (sourceItem == null)
         {
-            Main.NewText($"No {settings.OldObject} items in inventory to identify source tile.", WandColors.MsgError);
+            Main.NewText(Get("NoSourceItems", settings.OldObject), WandColors.MsgError);
             return;
         }
         ushort sourceType = (ushort)sourceItem.createTile;
@@ -169,24 +177,16 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
                 // Check if there ARE items of the target type but they're all the same as source
                 Item anyTarget = ItemTypeHelper.FindFirstItem(player, baseTgtCondition);
                 if (anyTarget != null && (ushort)anyTarget.createTile == sourceType)
-                    Main.NewText($"Source and target are the same tile [i:{anyTarget.type}].", WandColors.MsgInfo);
+                    Main.NewText(Get("SameSourceTarget", anyTarget.type), WandColors.MsgInfo);
                 else
-                    Main.NewText($"No {settings.NewObject} items found in inventory.", WandColors.MsgError);
+                    Main.NewText(Get("NoTargetItems", settings.NewObject), WandColors.MsgError);
                 return;
             }
             targetType = (ushort)targetItem.createTile;
         }
 
-        var context = new ShapeContext(
-            selection.StartTile,
-            selection.EndTile,
-            settings.Shape.FillMode,
-            settings.Shape.Thickness,
-            HorizontalBias.None,
-            VerticalBias.None,
-            selection.VerticalFirst,
-            settings.Shape.EqualDimensions
-        );
+        var context = settings.Shape.ToShapeContext(
+            selection.StartTile, selection.EndTile, selection.VerticalFirst);
 
         var tileSet = ShapeRegistry.GetShapeTiles(settings.Shape.Shape, context);
 
@@ -204,18 +204,21 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
 
         if (needed == 0)
         {
-            Main.NewText($"No {sourceItem.Name} found in selection.", WandColors.MsgInfo);
+            Main.NewText(Get("NoSourceInSelection", sourceItem.Name), WandColors.MsgInfo);
             return;
         }
 
         // Determine if consumption is needed (same rules as building wand)
+        // Count only the SPECIFIC target item type — not all items in the category.
         bool shouldConsume = true;
-        if (settings.NewObject != ObjectType.Air && config != null && config.EnableInfiniteResource)
+        if (settings.NewObject != ObjectType.Air && config != null && config.IsInfiniteForObjectType(settings.NewObject))
         {
-            ItemTypeHelper.CountItems(player.inventory, targetCondition, out int grandTotal);
-            if (config.InfiniteResourceAmount == 0)
+            Func<Item, bool> infCheckCond = i => !i.IsAir && i.type == targetItem.type;
+            ItemTypeHelper.CountItems(player.inventory, infCheckCond, out int grandTotal);
+            int threshold = config.GetThresholdForObjectType(settings.NewObject);
+            if (threshold == 0)
                 shouldConsume = false;
-            else if (grandTotal >= config.InfiniteResourceAmount)
+            else if (grandTotal >= threshold)
                 shouldConsume = false;
         }
 
@@ -262,14 +265,15 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
             {
                 Position = tile,
                 SourceType = sourceType,
-                TargetType = settings.NewObject != ObjectType.Air ? targetType : (ushort)0,
+                TargetType = targetType,
+                IsErase = settings.NewObject == ObjectType.Air,
                 SuppressDrops = config.SuppressDrops
             });
         }
 
         if (validTiles.Count == 0)
         {
-            Main.NewText("No tiles could be replaced.", WandColors.MsgInfo);
+            Main.NewText(Get("NoTilesReplaced"), WandColors.MsgInfo);
             return;
         }
 
@@ -284,7 +288,8 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
 
             ProgressiveTileProcessor.EnqueueReplacement(
                 player, validTiles, action, undoMgr, batchSize, interval,
-                shouldConsume, targetCondition, sourceItem, targetItem, settings.NewObject);
+                shouldConsume, targetCondition, sourceItem, targetItem, settings.NewObject,
+                vacuumItems: config.VacuumItems);
 
             int batches = (int)Math.Ceiling((double)validTiles.Count / batchSize);
             float totalTime = (batches - 1) * interval;
@@ -298,12 +303,13 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
         else
         {
             // Instant: process all at once
-            // In single-player, suppress sounds/effects via WorldGen.gen for clean operation.
-            // In multiplayer, do NOT set WorldGen.gen — let KillTile/PlaceTile send per-tile
-            // network messages so the server properly processes each replacement.
+            // In single-player: set WorldGen.gen = true to suppress per-tile sounds/dust/drops,
+            // then FinalizeBatch sends a batched network sync (no-op in SP anyway).
+            // In multiplayer: leave WorldGen.gen = false so each KillTile/PlaceTile/ReplaceTile
+            // sends its own TileManipulation message to the server. Only do BatchFrameUpdate
+            // afterwards (no BatchNetworkSync — the per-tile messages already handle sync).
             bool isMultiplayer = Main.netMode == NetmodeID.MultiplayerClient;
             bool wasGen = WorldGen.gen;
-
             if (!isMultiplayer)
                 WorldGen.gen = true;
 
@@ -321,10 +327,11 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
 
                 bool didReplace = false;
 
-                if (info.TargetType > 0)
+                if (!info.IsErase)
                 {
-                    // Try ReplaceTile first — handles tiles under multi-tile objects (chests, etc.)
-                    if (WorldGen.ReplaceTile(info.Position.X, info.Position.Y, info.TargetType, 0))
+                    // TileID.Dirt == 0: WorldGen.ReplaceTile treats tileType=0 as "no tile",
+                    // so skip it for Dirt targets and use KillTile+PlaceTile instead.
+                    if (info.TargetType != 0 && WorldGen.ReplaceTile(info.Position.X, info.Position.Y, info.TargetType, 0))
                     {
                         didReplace = true;
                     }
@@ -367,11 +374,24 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
                 }
             }
 
-            if (!isMultiplayer)
-                WorldGen.gen = wasGen;
+            WorldGen.gen = wasGen;
 
             if (affectedPositions.Count > 0)
-                BulkTileOperations.FinalizeBatch(affectedPositions);
+            {
+                if (isMultiplayer)
+                    BulkTileOperations.FinalizeFrameOnly(affectedPositions);
+                else
+                    BulkTileOperations.FinalizeBatch(affectedPositions);
+
+                // Vacuum: collect scattered tile drops into the player's inventory.
+                // In SP, WorldGen.gen=true suppresses all drops, so this only fires in MP
+                // or when drops somehow slip through (e.g., ReplaceTile doesn't use noItem).
+                if (config.VacuumItems && !config.SuppressDrops)
+                {
+                    var bounds = BulkTileOperations.ComputeBounds(affectedPositions);
+                    BulkTileOperations.VacuumItemsInArea(player, bounds);
+                }
+            }
 
             if (replaced > 0)
             {
@@ -395,7 +415,7 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
             }
             else
             {
-                Main.NewText("No tiles could be replaced.", WandColors.MsgInfo);
+                Main.NewText(Get("NoTilesReplaced"), WandColors.MsgInfo);
             }
         }
     }
@@ -410,7 +430,7 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
         // Both source and target must be Wall (or target can be Air to erase walls)
         if (settings.OldObject != ObjectType.Wall)
         {
-            Main.NewText("Source type must be Wall for wall replacement.", WandColors.MsgError);
+            Main.NewText(Get("SourceMustBeWall"), WandColors.MsgError);
             return;
         }
 
@@ -419,7 +439,7 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
         Item sourceItem = ItemTypeHelper.FindFirstItem(player, srcCondition);
         if (sourceItem == null)
         {
-            Main.NewText("No wall items in inventory to identify source wall.", WandColors.MsgError);
+            Main.NewText(Get("NoWallSourceItems"), WandColors.MsgError);
             return;
         }
         ushort sourceWallType = (ushort)sourceItem.createWall;
@@ -434,7 +454,7 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
         {
             if (settings.NewObject != ObjectType.Wall)
             {
-                Main.NewText("Target type must be Wall or Air for wall replacement.", WandColors.MsgError);
+                Main.NewText(Get("TargetMustBeWallOrAir"), WandColors.MsgError);
                 return;
             }
 
@@ -446,19 +466,16 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
             {
                 Item anyTarget = ItemTypeHelper.FindFirstItem(player, baseTgtCondition);
                 if (anyTarget != null && (ushort)anyTarget.createWall == sourceWallType)
-                    Main.NewText($"Source and target are the same wall [i:{anyTarget.type}].", WandColors.MsgInfo);
+                    Main.NewText(Get("SameWallSourceTarget", anyTarget.type), WandColors.MsgInfo);
                 else
-                    Main.NewText("No wall items found for target.", WandColors.MsgError);
+                    Main.NewText(Get("NoWallTargetItems"), WandColors.MsgError);
                 return;
             }
             targetWallType = (ushort)targetItem.createWall;
         }
 
-        var context = new ShapeContext(
-            selection.StartTile, selection.EndTile,
-            settings.Shape.FillMode, settings.Shape.Thickness,
-            HorizontalBias.None, VerticalBias.None,
-            selection.VerticalFirst, settings.Shape.EqualDimensions);
+        var context = settings.Shape.ToShapeContext(
+            selection.StartTile, selection.EndTile, selection.VerticalFirst);
 
         var tileSet = ShapeRegistry.GetShapeTiles(settings.Shape.Shape, context);
 
@@ -474,18 +491,20 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
 
         if (needed == 0)
         {
-            Main.NewText($"No {sourceItem.Name} walls found in selection.", WandColors.MsgInfo);
+            Main.NewText(Get("NoSourceWallsInSelection", sourceItem.Name), WandColors.MsgInfo);
             return;
         }
 
-        // Check target availability
+        // Check target availability — count only the specific wall item type
         bool shouldConsume = true;
-        if (!eraseMode && config != null && config.EnableInfiniteResource)
+        if (!eraseMode && config != null && config.IsInfiniteForObjectType(ObjectType.Wall))
         {
-            ItemTypeHelper.CountItems(player.inventory, targetCondition, out int grandTotal);
-            if (config.InfiniteResourceAmount == 0)
+            Func<Item, bool> wallInfCond = i => !i.IsAir && i.type == targetItem.type;
+            ItemTypeHelper.CountItems(player.inventory, wallInfCond, out int grandTotal);
+            int threshold = config.GetThresholdForObjectType(ObjectType.Wall);
+            if (threshold == 0)
                 shouldConsume = false;
-            else if (grandTotal >= config.InfiniteResourceAmount)
+            else if (grandTotal >= threshold)
                 shouldConsume = false;
         }
 
@@ -494,7 +513,7 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
             ItemTypeHelper.CountItems(player.inventory, targetCondition, out int available);
             if (available < needed)
             {
-                Main.NewText($"Need {needed} [i:{targetItem.type}], have {available}.", WandColors.MsgError);
+                Main.NewText(Get("NeedTargetItems", needed, targetItem.type, available), WandColors.MsgError);
                 return;
             }
         }
@@ -506,12 +525,10 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
 
         int replaced = 0;
         var affectedPositions = new List<Point>();
-
         bool isMultiplayer = Main.netMode == NetmodeID.MultiplayerClient;
-        bool wasGen = WorldGen.gen;
 
-        if (!isMultiplayer)
-            WorldGen.gen = true;
+        bool wasGen = WorldGen.gen;
+        bool suppressDrops = config.SuppressDrops;
 
         foreach (Point tile in tileSet.Tiles)
         {
@@ -521,7 +538,17 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
             var t = Main.tile[tile.X, tile.Y];
             if (t.WallType != sourceWallType) continue;
 
+            // Preserve tiles that depend on the wall for support (torches, candles,
+            // banners, paintings, etc.). KillWall would silently destroy them.
+            if (TileHelper.WouldTileLoseSupport(tile.X, tile.Y)) continue;
+
             action.AddSnapshot(tile);
+
+            // Only suppress drops when config says so — NOT unconditionally.
+            // In SP, WorldGen.gen controls whether KillWall drops wall items.
+            // In MP, leave gen=false so per-tile net messages are sent.
+            if (!isMultiplayer)
+                WorldGen.gen = suppressDrops;
 
             if (eraseMode)
             {
@@ -545,16 +572,27 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
                     }
                 }
             }
-        }
 
-        if (!isMultiplayer)
             WorldGen.gen = wasGen;
+        }
 
         if (affectedPositions.Count > 0)
         {
             foreach (var pos in affectedPositions)
                 Framing.WallFrame(pos.X, pos.Y);
-            BulkTileOperations.FinalizeBatch(affectedPositions);
+
+            if (isMultiplayer)
+                BulkTileOperations.FinalizeFrameOnly(affectedPositions);
+            else
+                BulkTileOperations.FinalizeBatch(affectedPositions);
+
+            // Vacuum: collect scattered wall drops into the player's inventory.
+            // When SuppressDrops is false, KillWall creates item drops on the ground.
+            if (config.VacuumItems && !suppressDrops)
+            {
+                var bounds = BulkTileOperations.ComputeBounds(affectedPositions);
+                BulkTileOperations.VacuumItemsInArea(player, bounds);
+            }
         }
 
         if (replaced > 0)
@@ -578,7 +616,7 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
         }
         else
         {
-            Main.NewText("No walls could be replaced.", WandColors.MsgInfo);
+            Main.NewText(Get("NoWallsReplaced"), WandColors.MsgInfo);
         }
     }
 
@@ -611,4 +649,5 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
         // Only the Instant variant has a craftable recipe.
         // Other modes are obtained via right-click cycling in inventory.
     }
+
 }

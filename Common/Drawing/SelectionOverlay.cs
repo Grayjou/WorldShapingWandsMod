@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.ModLoader;
+using WorldShapingWandsMod.Common.Configs;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Geometry;
 using WorldShapingWandsMod.Common.Geometry.Shapes;
@@ -38,6 +39,18 @@ public class SelectionOverlay : ModSystem
     private int _cachedAreaCount = -1;
     private const int AreaDebounceFrames = 10; // ~0.17 seconds at 60fps
 
+    // ────────────────────────────────────────────────────────────
+    //  Large Shape Debounce — for shapes whose dimensions exceed
+    //  LargeShapeThreshold, defer full rasterization until the
+    //  mouse stops moving. Draw a simple bounding-rect outline
+    //  during the debounce period instead.
+    // ────────────────────────────────────────────────────────────
+    private const int LargeShapeThreshold = 200;
+    private const int LargeShapeDebounceFrames = 8; // ~0.13s at 60fps
+    private Point _debounceLastEnd;
+    private int _debounceStableFrames;
+    private float _debounceFadeIn; // 0→1 fade-in alpha after rasterization completes
+
     private void InvalidateCache()
     {
         _cacheValid = false;
@@ -54,7 +67,9 @@ public class SelectionOverlay : ModSystem
             && _cacheShape.Shape == shapeSettings.Shape
             && _cacheShape.FillMode == shapeSettings.FillMode
             && _cacheShape.Thickness == shapeSettings.Thickness
-            && _cacheShape.EqualDimensions == shapeSettings.EqualDimensions)
+            && _cacheShape.EqualDimensions == shapeSettings.EqualDimensions
+            && _cacheShape.Slice == shapeSettings.Slice
+            && _cacheShape.ConnectDiameter == shapeSettings.ConnectDiameter)
         {
             return _cachedTiles;
         }
@@ -87,14 +102,16 @@ public class SelectionOverlay : ModSystem
             DrawCancelledSelection(wandPlayer.CancelledSelection);
         }
 
-        // Draw the active selection overlay
-        if (wandPlayer.Selection.IsActive && wandPlayer.Settings.ShouldShowPreview(isHoldingWand))
+        // Draw the active selection overlay — only when visually compatible with held wand.
+        // Incompatible selections are preserved in memory but not drawn; the cursor
+        // highlight below provides feedback instead (as if no selection exists).
+        if (wandPlayer.IsSelectionVisuallyActive() && wandPlayer.Settings.ShouldShowPreview(isHoldingWand))
         {
             var shapeSettings = GetCurrentShapeSettings(player, wandPlayer);
             DrawSelection(wandPlayer, shapeSettings);
         }
-        // Draw cursor highlight when holding a wand but no selection is active
-        else if (isHoldingWand && !wandPlayer.Selection.IsActive)
+        // Draw cursor highlight when holding a wand but no visually active selection
+        else if (isHoldingWand && !wandPlayer.IsSelectionVisuallyActive())
         {
             var shapeSettings = GetCurrentShapeSettings(player, wandPlayer);
             DrawCursorHighlight(shapeSettings);
@@ -123,9 +140,13 @@ public class SelectionOverlay : ModSystem
         {
             return wandPlayer.SafekeepingSettings.Shape;
         }
+        else if (player.HeldItem?.ModItem is WandOfCoatingBase)
+        {
+            return wandPlayer.CoatingSettings.Shape;
+        }
         else
         {
-            return new ShapeInfo(wandPlayer.Settings.ShapeType, wandPlayer.Settings.ShapeMode, wandPlayer.Settings.Thickness); // fallback
+            return new ShapeInfo(wandPlayer.Settings.ShapeType, wandPlayer.Settings.ShapeMode, wandPlayer.Settings.Thickness, slice: wandPlayer.Settings.Slice); // fallback
         }
     }
 
@@ -135,24 +156,88 @@ public class SelectionOverlay : ModSystem
             || player.HeldItem?.ModItem is WandOfBuildingBase
             || player.HeldItem?.ModItem is WandOfReplacementBase
             || player.HeldItem?.ModItem is WandOfWiringBase
-            || player.HeldItem?.ModItem is WandOfSafekeepingBase;
+            || player.HeldItem?.ModItem is WandOfSafekeepingBase
+            || player.HeldItem?.ModItem is WandOfCoatingBase;
     }
 
     private void DrawSelection(WandPlayer wandPlayer, ShapeInfo shapeSettings)
     {
         var settings = wandPlayer.Settings;
-        var selection = wandPlayer.Selection;
+        var selection = wandPlayer.GetVisualSelection();
 
+        // ── Large shape debounce ────────────────────────────────
+        // For shapes whose dimensions exceed LargeShapeThreshold,
+        // defer full rasterization while the endpoint is changing.
+        // Show a lightweight bounding-rect outline instead.
+        var context = shapeSettings.ToShapeContext(selection.StartTile, selection.EndTile, selection.VerticalFirst);
+        var bounds = context.GetBounds();
+        int maxDim = Math.Max(bounds.Width, bounds.Height);
+
+        // Apply overlay render mode from config
+        var renderMode = ModContent.GetInstance<WandConfig>()?.OverlayRenderMode ?? OverlayRenderMode.Auto;
+
+        // Track endpoint stability
+        if (selection.EndTile != _debounceLastEnd)
+        {
+            _debounceLastEnd = selection.EndTile;
+            _debounceStableFrames = 0;
+            // If the shape is large AND we're in Auto mode, invalidate cache and
+            // reset fade-in so we don't render a stale expensive shape while dragging.
+            // In AlwaysFullShape mode, skip the fade-in reset to avoid flickering.
+            if (maxDim > LargeShapeThreshold && renderMode == OverlayRenderMode.Auto)
+            {
+                InvalidateCache();
+                _debounceFadeIn = 0f;
+            }
+        }
+        else
+        {
+            _debounceStableFrames++;
+        }
+
+        bool isLargeAndDragging = maxDim > LargeShapeThreshold
+                                && _debounceStableFrames < LargeShapeDebounceFrames;
+
+        if (renderMode == OverlayRenderMode.AlwaysFullShape)
+            isLargeAndDragging = false; // never use bbox fallback
+        else if (renderMode == OverlayRenderMode.AlwaysBoundingBox && maxDim > 1)
+            isLargeAndDragging = true; // always use bbox fallback
+
+        // Trivially-computed shapes (O(N) with no expensive rasterization) never need
+        // the debounce bounding-box fallback — they render instantly at any size.
+        if (shapeSettings.Shape == ShapeType.CardinalLine
+            || shapeSettings.Shape == ShapeType.Elbow
+            || shapeSettings.Shape == ShapeType.StraightLine)
+            isLargeAndDragging = false;
+
+        if (isLargeAndDragging)
+        {
+            // Draw lightweight bounding-rect preview + dimension label
+            DrawBoundingRectPreview(selection, bounds, settings.ShowDimensions, shapeSettings, context);
+            return;
+        }
+
+        // ── Normal path: compute full shape ─────────────────────
         var tiles = GetOrComputeTiles(shapeSettings, selection.StartTile, selection.EndTile, selection.VerticalFirst);
 
         if (tiles.Count == 0) return;
+
+        // Advance fade-in after rasterization completes on a large shape.
+        // In AlwaysFullShape mode the fade-in was already skipped above, so
+        // _debounceFadeIn is never reset – skip the alpha ramp entirely.
+        float alphaMultiplier = 1f;
+        if (renderMode == OverlayRenderMode.Auto && maxDim > LargeShapeThreshold && _debounceFadeIn < 1f)
+        {
+            _debounceFadeIn = Math.Min(1f, _debounceFadeIn + 1f / WandColors.DebounceFadeInFrames);
+            alphaMultiplier = _debounceFadeIn;
+        }
 
         Color baseColor = selection.WasClamped && (Main.GameUpdateCount % 30 < 15)
             ? WandColors.OverlayClamped
             : WandColors.OverlayBase;
 
-        Color fillColor = baseColor * WandColors.OverlayFillOpacity;
-        Color outlineColor = baseColor * WandColors.OverlayOutlineOpacity;
+        Color fillColor = baseColor * (WandColors.OverlayFillOpacity * alphaMultiplier);
+        Color outlineColor = baseColor * (WandColors.OverlayOutlineOpacity * alphaMultiplier);
 
         Main.spriteBatch.Begin(
             SpriteSortMode.Deferred,
@@ -226,6 +311,69 @@ public class SelectionOverlay : ModSystem
             }
         }
 
+        // Pass 3: Draw Start/End position markers — outlined cyan squares
+        // When EqualDimensions is true, the raw EndTile (mouse position) may differ
+        // from the actual effective End position (which is computed by GetBounds()).
+        // We derive the effective End from the bounds rectangle: it's the corner
+        // diagonally opposite to Start, respecting the drag direction.
+        //
+        // For CardinalLine shapes, the end point snaps to one of 8 cardinal/diagonal
+        // directions, so the actual endpoint differs from the mouse position.
+        // We compute the effective end using the direction + length from the shape.
+        Point effectiveEnd = selection.EndTile;
+        if (shapeSettings.Shape == ShapeType.CardinalLine)
+        {
+            // Cardinal lines snap to 8 directions; compute actual endpoint
+            var ctx = shapeSettings.ToShapeContext(selection.StartTile, selection.EndTile, selection.VerticalFirst);
+            int dx = ctx.End.X - ctx.Start.X;
+            int dy = ctx.End.Y - ctx.Start.Y;
+            if (dx != 0 || dy != 0)
+            {
+                double angle = Math.Atan2(dy, dx);
+                if (angle < 0) angle += Math.PI * 2;
+                const double sector = Math.PI / 4.0;
+                const double halfSector = Math.PI / 8.0;
+
+                Point dir;
+                if (angle < halfSector || angle >= 2 * Math.PI - halfSector)
+                    dir = new Point(1, 0);
+                else if (angle < halfSector + sector)
+                    dir = new Point(1, 1);
+                else if (angle < halfSector + 2 * sector)
+                    dir = new Point(0, 1);
+                else if (angle < halfSector + 3 * sector)
+                    dir = new Point(-1, 1);
+                else if (angle < halfSector + 4 * sector)
+                    dir = new Point(-1, 0);
+                else if (angle < halfSector + 5 * sector)
+                    dir = new Point(-1, -1);
+                else if (angle < halfSector + 6 * sector)
+                    dir = new Point(0, -1);
+                else
+                    dir = new Point(1, -1);
+
+                int length = Math.Max(Math.Abs(dx), Math.Abs(dy));
+                effectiveEnd = new Point(
+                    selection.StartTile.X + dir.X * length,
+                    selection.StartTile.Y + dir.Y * length);
+            }
+        }
+        else if (shapeSettings.EqualDimensions)
+        {
+            var ctx = shapeSettings.ToShapeContext(selection.StartTile, selection.EndTile, selection.VerticalFirst);
+            var eqBounds = ctx.GetBounds();
+
+            // The effective End is the corner of the EqualDimensions-adjusted bounds
+            // opposite to Start. Drag direction determines which corner that is.
+            effectiveEnd = new Point(
+                selection.EndTile.X >= selection.StartTile.X ? eqBounds.Right - 1 : eqBounds.Left,
+                selection.EndTile.Y >= selection.StartTile.Y ? eqBounds.Bottom - 1 : eqBounds.Top
+            );
+        }
+
+        DrawPositionMarker(pixel, selection.StartTile, WandColors.StartMarker);
+        DrawPositionMarker(pixel, effectiveEnd, WandColors.EndMarker);
+
         Main.spriteBatch.End();
 
         if (settings.ShowDimensions)
@@ -233,6 +381,87 @@ public class SelectionOverlay : ModSystem
             var dimContext = shapeSettings.ToShapeContext(selection.StartTile, selection.EndTile, selection.VerticalFirst);
             DrawDimensionLabel(shapeSettings.Shape, dimContext, tiles);
         }
+    }
+
+    /// <summary>
+    /// Draws a lightweight bounding-rectangle outline while a large shape is being
+    /// resized. Much cheaper than full rasterization — just 4 axis-aligned lines —
+    /// so it runs smoothly even for 500×500 selections. Once the endpoint stabilises,
+    /// <see cref="DrawSelection"/> takes over with the fully rasterised shape.
+    /// </summary>
+    private void DrawBoundingRectPreview(
+        SelectionState selection, Rectangle bounds,
+        bool showDimensions, ShapeInfo shapeSettings, ShapeContext context)
+    {
+        Color outlineColor = (selection.WasClamped && (Main.GameUpdateCount % 30 < 15)
+            ? WandColors.OverlayClamped
+            : WandColors.OverlayBase) * WandColors.DebounceBoundingRectOpacity;
+
+        Main.spriteBatch.Begin(
+            SpriteSortMode.Deferred,
+            BlendState.AlphaBlend,
+            SamplerState.PointClamp,
+            DepthStencilState.None,
+            RasterizerState.CullCounterClockwise,
+            null,
+            Main.GameViewMatrix.TransformationMatrix
+        );
+
+        var pixel = TextureAssets.MagicPixel.Value;
+        int ow = WandColors.OverlayOutlineWidth;
+
+        // World-pixel rectangle of the bounds
+        int wx = bounds.X * 16;
+        int wy = bounds.Y * 16;
+        int ww = bounds.Width * 16;
+        int wh = bounds.Height * 16;
+
+        // Screen coordinates
+        int sx = (int)(wx - Main.screenPosition.X);
+        int sy = (int)(wy - Main.screenPosition.Y);
+
+        // Four edges
+        Main.spriteBatch.Draw(pixel, new Rectangle(sx, sy, ww, ow), outlineColor);                // Top
+        Main.spriteBatch.Draw(pixel, new Rectangle(sx, sy + wh - ow, ww, ow), outlineColor);      // Bottom
+        Main.spriteBatch.Draw(pixel, new Rectangle(sx, sy, ow, wh), outlineColor);                // Left
+        Main.spriteBatch.Draw(pixel, new Rectangle(sx + ww - ow, sy, ow, wh), outlineColor);      // Right
+
+        // Start/End markers
+        DrawPositionMarker(pixel, selection.StartTile, WandColors.StartMarker);
+        DrawPositionMarker(pixel, selection.EndTile, WandColors.EndMarker);
+
+        Main.spriteBatch.End();
+
+        if (showDimensions)
+        {
+            DrawDimensionLabel(shapeSettings.Shape, context, null);
+        }
+    }
+
+    /// <summary>
+    /// Draws a single-tile outlined marker at the given world tile position.
+    /// Used to highlight the Start and End points during an active selection,
+    /// providing clear visual feedback of the selection anchors for precise placement.
+    /// </summary>
+    private void DrawPositionMarker(Texture2D pixel, Point tile, Color color)
+    {
+        Vector2 screenPos = new Vector2(tile.X * 16, tile.Y * 16) - Main.screenPosition;
+
+        // Cull off-screen markers
+        if (screenPos.X < -16 || screenPos.X > Main.screenWidth + 16 ||
+            screenPos.Y < -16 || screenPos.Y > Main.screenHeight + 16)
+            return;
+
+        int sx = (int)screenPos.X;
+        int sy = (int)screenPos.Y;
+        int mw = WandColors.MarkerOutlineWidth;
+        Color markerColor = color * WandColors.MarkerOutlineOpacity;
+
+        // Draw all four edges of a single-tile outline
+        Main.spriteBatch.Draw(pixel, new Rectangle(sx, sy, 16, mw), markerColor);               // Top
+        Main.spriteBatch.Draw(pixel, new Rectangle(sx, sy + 16 - mw, 16, mw), markerColor);     // Bottom
+        Main.spriteBatch.Draw(pixel, new Rectangle(sx, sy, mw, 16), markerColor);               // Left
+        Main.spriteBatch.Draw(pixel, new Rectangle(sx + 16 - mw, sy, mw, 16), markerColor);     // Right
     }
 
     /// <summary>
@@ -251,25 +480,17 @@ public class SelectionOverlay : ModSystem
         // Determine highlight tiles
         List<Point> highlightTiles;
 
-        if (shapeSettings.Shape == ShapeType.CardinalLine && shapeSettings.Thickness > 1)
+        if ((shapeSettings.Shape == ShapeType.CardinalLine || shapeSettings.Shape == ShapeType.StraightLine) && shapeSettings.Thickness > 1)
         {
-            // Show circle brush preview for thick cardinal lines
-            int thickness = shapeSettings.Thickness;
-            if (thickness % 2 == 0) thickness -= 1;
-            thickness = Math.Max(1, thickness);
-            int radius = thickness / 2;
+            // Show circle brush preview for thick cardinal lines.
+            // Uses EllipseShape's IncrementalFast algorithm for ≥ 4 diameter,
+            // matching the actual brush shape used by CardinalLineShape.
+            int thickness = Math.Max(1, shapeSettings.Thickness);
+            var offsets = EllipseShape.GetCircleBrushOffsets(thickness);
 
-            // Reuse the cached circle offsets from CardinalLineShape
-            highlightTiles = new List<Point>();
-            int radiusSq = radius * radius;
-            for (int dy = -radius; dy <= radius; dy++)
-            {
-                for (int dx = -radius; dx <= radius; dx++)
-                {
-                    if (dx * dx + dy * dy <= radiusSq)
-                        highlightTiles.Add(new Point(mouseTile.X + dx, mouseTile.Y + dy));
-                }
-            }
+            highlightTiles = new List<Point>(offsets.Count);
+            foreach (var offset in offsets)
+                highlightTiles.Add(new Point(mouseTile.X + offset.X, mouseTile.Y + offset.Y));
         }
         else
         {
@@ -392,11 +613,9 @@ public class SelectionOverlay : ModSystem
         float opacity = cancelState.Opacity;
         if (opacity <= 0f) return;
 
-        var context = cancelState.Shape.ToShapeContext(cancelState.StartTile, cancelState.EndTile, cancelState.VerticalFirst);
-        var tileSet = ShapeRegistry.GetShapeTiles(cancelState.Shape.Shape, context);
-        var tiles = new HashSet<Point>(tileSet.Tiles);
-
-        if (tiles.Count == 0) return;
+        // Use pre-computed tiles — no per-frame recomputation
+        var tiles = cancelState.CachedTiles;
+        if (tiles == null || tiles.Count == 0) return;
 
         Color baseColor = cancelState.CancelColor;
         Color fillColor = baseColor * (WandColors.OverlayFillOpacity * opacity);
@@ -452,7 +671,7 @@ public class SelectionOverlay : ModSystem
         Main.spriteBatch.End();
 
         // Draw fading "Cancelled" text at the center of the selection
-        DrawCancelledText(cancelState, context.GetBounds(), opacity);
+        DrawCancelledText(cancelState, cancelState.CachedBounds, opacity);
     }
 
     /// <summary>

@@ -7,6 +7,7 @@ using WorldShapingWandsMod.Common.Drawing;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Utilities;
+using static WorldShapingWandsMod.Common.Utilities.Msg;
 
 namespace WorldShapingWandsMod.Content.Items;
 
@@ -23,14 +24,14 @@ public class WandOfSafekeepingConfirm : WandOfSafekeepingBase
             bool vertical = Math.Abs(Main.MouseWorld.Y - player.Center.Y) >
                             Math.Abs(Main.MouseWorld.X - player.Center.X);
             wandPlayer.StartSelection(mouseTile, vertical);
-            Main.NewText("Selection started. Click to set end point.", WandColors.MsgPrompt);
+            Main.NewText(Get("SelectStartClickEnd"), WandColors.MsgPrompt);
             return false;
         }
         else if (!wandPlayer.Selection.IsLocked)
         {
             wandPlayer.UpdateSelection(mouseTile);
             wandPlayer.LockSelection();
-            Main.NewText("Click again to confirm, or right-click to cancel.", WandColors.MsgConfirm);
+            Main.NewText(Get("ClickToConfirmOrCancel"), WandColors.MsgConfirm);
             return false;
         }
         else

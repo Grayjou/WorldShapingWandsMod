@@ -13,6 +13,8 @@ public class WandSettings
     public ShapeType ShapeType { get; set; } = ShapeType.Rectangle;
     public ShapeMode ShapeMode { get; set; } = ShapeMode.Filled;
     public int Thickness { get; set; } = 1;
+    public SliceMode Slice { get; set; } = SliceMode.Full;
+    public bool ConnectDiameter { get; set; } = true;
 
     // Bias/Anchoring
     public HorizontalBias HorizontalBias { get; set; } = HorizontalBias.None;
@@ -34,7 +36,7 @@ public class WandSettings
     public ShapeContext ToShapeContext(Point start, Point end)
     {
         return new ShapeContext(start, end, ShapeMode, EffectiveThickness,
-            HorizontalBias, VerticalBias, VerticalFirst);
+            HorizontalBias, VerticalBias, VerticalFirst, slice: Slice, connectDiameter: ConnectDiameter);
     }
 
     /// <summary>
@@ -47,6 +49,8 @@ public class WandSettings
             ShapeType = ShapeType,
             ShapeMode = ShapeMode,
             Thickness = Thickness,
+            Slice = Slice,
+            ConnectDiameter = ConnectDiameter,
             HorizontalBias = HorizontalBias,
             VerticalBias = VerticalBias,
             VerticalFirst = VerticalFirst,
@@ -63,6 +67,8 @@ public class WandSettings
         ShapeType = ShapeType.Rectangle;
         ShapeMode = ShapeMode.Filled;
         Thickness = 1;
+        Slice = SliceMode.Full;
+        ConnectDiameter = true;
         HorizontalBias = HorizontalBias.None;
         VerticalBias = VerticalBias.None;
         VerticalFirst = false;
@@ -75,7 +81,7 @@ public class WandSettings
     /// </summary>
     public string GetDescription()
     {
-        return ShapeMode switch
+        string desc = ShapeMode switch
         {
             ShapeMode.Filled => $"{ShapeType} - Filled",
             ShapeMode.Hollow => Thickness switch
@@ -86,6 +92,11 @@ public class WandSettings
             },
             _ => $"{ShapeType} - Unknown"
         };
+
+        if (Slice != SliceMode.Full)
+            desc += $" [{Slice}]";
+
+        return desc;
     }
 
     /// <summary>
@@ -93,7 +104,8 @@ public class WandSettings
     /// </summary>
     public void Validate()
     {
-        Thickness = (int)MathHelper.Clamp(Thickness, 0, 50);
+        int max = Terraria.ModLoader.ModContent.GetInstance<Configs.WandConfig>()?.MaxOutlineThickness ?? 10;
+        Thickness = (int)MathHelper.Clamp(Thickness, 0, max);
     }
 
     /// <summary>

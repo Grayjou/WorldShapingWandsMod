@@ -24,6 +24,10 @@ public class DiamondShape : IShapeProvider
     {
         var bounds = context.GetBounds();
         var filledTiles = GetFilledTiles(bounds).ToHashSet();
+
+        if (context.Slice != SliceMode.Full)
+            return SliceHelper.ApplySlicing(filledTiles, context);
+
         return OutlineHelper.Apply(filledTiles, context.Mode, context.Thickness);
     }
 
@@ -80,11 +84,17 @@ public class DiamondShape : IShapeProvider
 
         // Diamond equation in ×2 units: |dx2|*H + |dy2|*W <= W*H
         // => max |dx2| = W * (H - dy2) / H
+        //
+        // Use ceiling division so that rows near the tips of an even-dimension diamond
+        // are never left empty. Integer truncation gives maxDx2=0 when the numerator
+        // is a small positive value less than H, which (for even W) yields an empty row
+        // because 2*x+1 can never equal an even cx2. Ceiling gives maxDx2≥1 whenever
+        // the row is geometrically inside the diamond, producing a proper 1-tile tip.
         long numer = (long)W * ((long)H - dy2);
         if (numer < 0)
             return (0, -1);          // row outside diamond
 
-        int maxDx2 = (int)(numer / H);
+        int maxDx2 = (int)((numer + H - 1) / H);  // ceiling division (long-safe)
 
         // Solve  cx2 - maxDx2 <= 2*x + 1 <= cx2 + maxDx2
         int startX = CeilDiv(cx2 - maxDx2 - 1, 2);

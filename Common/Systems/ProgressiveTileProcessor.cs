@@ -8,6 +8,7 @@ using WorldShapingWandsMod.Common.Drawing;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Undo;
 using WorldShapingWandsMod.Common.Utilities;
+using static WorldShapingWandsMod.Common.Utilities.Msg;
 
 namespace WorldShapingWandsMod.Common.Systems;
 
@@ -39,7 +40,8 @@ public class ProgressiveTileProcessor : ModSystem
         UndoAction undoAction,
         UndoManager undoManager,
         int batchSize,
-        float intervalSeconds)
+        float intervalSeconds,
+        bool vacuumItems = true)
     {
         if (tiles.Count == 0) return;
 
@@ -55,7 +57,8 @@ public class ProgressiveTileProcessor : ModSystem
             TicksUntilNextBatch = 0, // Process first batch immediately
             CurrentIndex = 0,
             AffectedPositions = new List<Point>(),
-            TotalProcessed = 0
+            TotalProcessed = 0,
+            VacuumItems = vacuumItems
         };
 
         _activeOperations.Add(op);
@@ -76,7 +79,8 @@ public class ProgressiveTileProcessor : ModSystem
         Func<Item, bool> targetCondition,
         Item sourceItem,
         Item targetItem,
-        ObjectType newObjectType)
+        ObjectType newObjectType,
+        bool vacuumItems = true)
     {
         if (tiles.Count == 0) return;
 
@@ -97,7 +101,88 @@ public class ProgressiveTileProcessor : ModSystem
             TargetCondition = targetCondition,
             SourceItem = sourceItem,
             TargetItem = targetItem,
-            NewObjectType = newObjectType
+            NewObjectType = newObjectType,
+            VacuumItems = vacuumItems
+        };
+
+        _activeOperations.Add(op);
+    }
+
+    /// <summary>
+    /// Enqueues a building (placement + replacement) operation to be processed progressively.
+    /// Tiles will be placed/replaced in batches with proper sounds and effects.
+    /// </summary>
+    public static void EnqueueBuilding(
+        Player player,
+        List<TileBuildingInfo> tiles,
+        UndoAction undoAction,
+        UndoManager undoManager,
+        int batchSize,
+        float intervalSeconds,
+        bool shouldConsume,
+        Func<Item, bool> buildCondition,
+        bool overwriteSlope,
+        Enums.SlopeType slopeType,
+        bool vacuumItems = true)
+    {
+        if (tiles.Count == 0) return;
+
+        var op = new ProgressiveOperation
+        {
+            Type = OperationType.Building,
+            Player = player,
+            BuildingTiles = tiles,
+            UndoAction = undoAction,
+            UndoManager = undoManager,
+            BatchSize = batchSize,
+            IntervalTicks = (int)(intervalSeconds * 60f),
+            TicksUntilNextBatch = 0,
+            CurrentIndex = 0,
+            AffectedPositions = new List<Point>(),
+            TotalProcessed = 0,
+            ShouldConsume = shouldConsume,
+            BuildCondition = buildCondition,
+            OverwriteSlope = overwriteSlope,
+            SlopeType = slopeType,
+            VacuumItems = vacuumItems
+        };
+
+        _activeOperations.Add(op);
+    }
+
+    /// <summary>
+    /// Enqueues a wall building (placement + replacement) operation to be processed progressively.
+    /// Walls will be placed/replaced in batches with proper sounds and effects.
+    /// </summary>
+    public static void EnqueueWallBuilding(
+        Player player,
+        List<WallBuildingInfo> walls,
+        UndoAction undoAction,
+        UndoManager undoManager,
+        int batchSize,
+        float intervalSeconds,
+        bool shouldConsume,
+        Func<Item, bool> buildCondition,
+        bool vacuumItems = true)
+    {
+        if (walls.Count == 0) return;
+
+        var op = new ProgressiveOperation
+        {
+            Type = OperationType.WallBuilding,
+            Player = player,
+            WallBuildingTiles = walls,
+            UndoAction = undoAction,
+            UndoManager = undoManager,
+            BatchSize = batchSize,
+            IntervalTicks = (int)(intervalSeconds * 60f),
+            TicksUntilNextBatch = 0,
+            CurrentIndex = 0,
+            AffectedPositions = new List<Point>(),
+            TotalProcessed = 0,
+            ShouldConsume = shouldConsume,
+            BuildCondition = buildCondition,
+            VacuumItems = vacuumItems
         };
 
         _activeOperations.Add(op);
@@ -141,6 +226,10 @@ public class ProgressiveTileProcessor : ModSystem
                 return ProcessDismantlingBatch(op);
             case OperationType.Replacement:
                 return ProcessReplacementBatch(op);
+            case OperationType.Building:
+                return ProcessBuildingBatch(op);
+            case OperationType.WallBuilding:
+                return ProcessWallBuildingBatch(op);
             default:
                 return true;
         }
@@ -157,10 +246,23 @@ public class ProgressiveTileProcessor : ModSystem
 
             if (info.DestroyTile)
             {
-                WorldGen.KillTile(info.Position.X, info.Position.Y,
-                    fail: false, effectOnly: false, noItem: info.SuppressDrops);
-                op.TotalProcessed++;
-                batchPositions.Add(info.Position);
+                // Re-check at execution time: tile may now be killable because
+                // objects above it were destroyed in a prior batch or earlier in this batch.
+                if (!Main.tile[info.Position.X, info.Position.Y].HasTile)
+                {
+                    // Already gone (part of a multi-tile object that collapsed)
+                }
+                else if (!WorldGen.CanKillTile(info.Position.X, info.Position.Y))
+                {
+                    // Still can't kill — skip
+                }
+                else
+                {
+                    WorldGen.KillTile(info.Position.X, info.Position.Y,
+                        fail: false, effectOnly: false, noItem: info.SuppressDrops);
+                    op.TotalProcessed++;
+                    batchPositions.Add(info.Position);
+                }
             }
 
             if (info.DestroyWall)
@@ -172,10 +274,28 @@ public class ProgressiveTileProcessor : ModSystem
         }
 
         // Batch frame update + network sync for this batch's affected tiles
+        // In MP, per-tile KillTile/KillWall messages already handle server sync,
+        // so only do frame updates (no BatchNetworkSync to avoid dual-sync).
         if (batchPositions.Count > 0)
         {
             op.AffectedPositions.AddRange(batchPositions);
-            BulkTileOperations.FinalizeBatch(batchPositions);
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+                BulkTileOperations.FinalizeFrameOnly(batchPositions);
+            else
+                BulkTileOperations.FinalizeBatch(batchPositions);
+
+            // Vacuum: collect scattered drops into the player's inventory per-batch.
+            // Progressive mode doesn't set WorldGen.gen, so KillTile/KillWall create
+            // item drops on the ground. Vacuuming per-batch prevents hitting the
+            // Main.maxItems (400) cap and losing items between waves.
+            bool anyDrops = op.VacuumItems
+                && op.DismantlingTiles.Count > 0
+                && !op.DismantlingTiles[op.CurrentIndex > 0 ? op.CurrentIndex - 1 : 0].SuppressDrops;
+            if (anyDrops)
+            {
+                var bounds = BulkTileOperations.ComputeBounds(batchPositions);
+                BulkTileOperations.VacuumItemsInArea(op.Player, bounds);
+            }
         }
 
         op.CurrentIndex = end;
@@ -203,10 +323,11 @@ public class ProgressiveTileProcessor : ModSystem
 
             bool didReplace = false;
 
-            if (info.TargetType > 0)
+            if (!info.IsErase)
             {
-                // Try ReplaceTile first — handles tiles under multi-tile objects (chests, etc.)
-                if (WorldGen.ReplaceTile(info.Position.X, info.Position.Y, info.TargetType, 0))
+                // TileID.Dirt == 0: WorldGen.ReplaceTile treats tileType=0 as "no tile",
+                // so skip it for Dirt targets and use KillTile+PlaceTile instead.
+                if (info.TargetType != 0 && WorldGen.ReplaceTile(info.Position.X, info.Position.Y, info.TargetType, 0))
                 {
                     didReplace = true;
                 }
@@ -252,15 +373,289 @@ public class ProgressiveTileProcessor : ModSystem
         }
 
         // Batch frame update + network sync for this batch
+        // In MP, per-tile messages already handle server sync — only frame update.
         if (batchPositions.Count > 0)
         {
             op.AffectedPositions.AddRange(batchPositions);
-            BulkTileOperations.FinalizeBatch(batchPositions);
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+                BulkTileOperations.FinalizeFrameOnly(batchPositions);
+            else
+                BulkTileOperations.FinalizeBatch(batchPositions);
+
+            // Vacuum: collect scattered tile drops into the player's inventory per-batch.
+            bool anyDrops = op.VacuumItems
+                && op.ReplacementTiles.Count > 0
+                && !op.ReplacementTiles[op.CurrentIndex > 0 ? op.CurrentIndex - 1 : 0].SuppressDrops;
+            if (anyDrops)
+            {
+                var bounds = BulkTileOperations.ComputeBounds(batchPositions);
+                BulkTileOperations.VacuumItemsInArea(op.Player, bounds);
+            }
         }
 
         op.TotalProcessed += batchReplaced;
         op.CurrentIndex = end;
         return op.CurrentIndex >= op.ReplacementTiles.Count;
+    }
+
+    private static bool ProcessBuildingBatch(ProgressiveOperation op)
+    {
+        int end = Math.Min(op.CurrentIndex + op.BatchSize, op.BuildingTiles.Count);
+        var batchPositions = new List<Point>();
+        int batchPlaced = 0;
+
+        bool wasGen = WorldGen.gen;
+
+        for (int i = op.CurrentIndex; i < end; i++)
+        {
+            var info = op.BuildingTiles[i];
+
+            if (!WorldGen.InWorld(info.Position.X, info.Position.Y, 1)) continue;
+
+            // Re-find source item for each tile (supports NextBlock exhaustion)
+            int idx = ItemTypeHelper.FindFirstItemIndex(op.Player, op.BuildCondition);
+            if (idx < 0)
+                continue; // no more items, skip remaining
+
+            Item srcItem = op.Player.inventory[idx];
+            ushort tType = (ushort)srcItem.createTile;
+            var existingTile = Main.tile[info.Position.X, info.Position.Y];
+
+            // Slope-only: same-type tile, just apply the slope change
+            if (info.IsSlopeOnly)
+            {
+                if (op.OverwriteSlope)
+                    ApplyBuildSlope(info.Position.X, info.Position.Y, op.SlopeType);
+                batchPlaced++;
+                batchPositions.Add(info.Position);
+                continue;
+            }
+
+            // Grass seed conversion: don't destroy substrate, just call PlaceTile to convert
+            if (info.IsGrassSeed && existingTile.HasTile)
+            {
+                WorldGen.gen = true;
+                if (WorldGen.PlaceTile(info.Position.X, info.Position.Y, tType,
+                    mute: true, forced: false, plr: op.Player.whoAmI,
+                    style: srcItem.placeStyle))
+                {
+                    batchPlaced++;
+                    if (op.ShouldConsume)
+                        ConsumeOneBuildItem(op.Player, srcItem, op.BuildCondition);
+                    batchPositions.Add(info.Position);
+                }
+                WorldGen.gen = wasGen;
+                continue;
+            }
+
+            if (info.IsReplacement && existingTile.HasTile)
+            {
+                // Replacement path
+                WorldGen.gen = info.SuppressDrops;
+
+                bool didReplace = false;
+                // TileID.Dirt == 0: WorldGen.ReplaceTile treats tileType=0 as "no tile",
+                // so skip it and go straight to KillTile+PlaceTile for Dirt targets.
+                if (tType != 0 && WorldGen.ReplaceTile(info.Position.X, info.Position.Y, tType, srcItem.placeStyle))
+                {
+                    didReplace = true;
+                }
+                else
+                {
+                    WorldGen.KillTile(info.Position.X, info.Position.Y,
+                        fail: false, effectOnly: false, noItem: info.SuppressDrops);
+                    if (!Main.tile[info.Position.X, info.Position.Y].HasTile &&
+                        WorldGen.PlaceTile(info.Position.X, info.Position.Y, tType,
+                            mute: true, forced: false, plr: op.Player.whoAmI,
+                            style: srcItem.placeStyle))
+                    {
+                        didReplace = true;
+                    }
+                }
+
+                WorldGen.gen = wasGen;
+
+                if (didReplace)
+                {
+                    if (op.OverwriteSlope)
+                        ApplyBuildSlope(info.Position.X, info.Position.Y, op.SlopeType);
+                    batchPlaced++;
+                    if (op.ShouldConsume)
+                        ConsumeOneBuildItem(op.Player, srcItem, op.BuildCondition);
+                    batchPositions.Add(info.Position);
+                }
+            }
+            else if (!existingTile.HasTile)
+            {
+                // Placement path
+                WorldGen.gen = true;
+
+                if (WorldGen.PlaceTile(info.Position.X, info.Position.Y, tType,
+                    mute: true, forced: false, plr: op.Player.whoAmI,
+                    style: srcItem.placeStyle))
+                {
+                    if (op.OverwriteSlope)
+                        ApplyBuildSlope(info.Position.X, info.Position.Y, op.SlopeType);
+                    batchPlaced++;
+                    if (op.ShouldConsume)
+                        ConsumeOneBuildItem(op.Player, srcItem, op.BuildCondition);
+                    batchPositions.Add(info.Position);
+                }
+
+                WorldGen.gen = wasGen;
+            }
+        }
+
+        if (batchPositions.Count > 0)
+        {
+            op.AffectedPositions.AddRange(batchPositions);
+            BulkTileOperations.BatchNetworkSync(BulkTileOperations.ComputeBounds(batchPositions));
+
+            // Vacuum: collect scattered tile drops from replacements per-batch.
+            // Only needed when replacement tiles had SuppressDrops = false.
+            bool anyDrops = op.VacuumItems
+                && op.BuildingTiles.Count > 0
+                && !op.BuildingTiles[op.CurrentIndex > 0 ? op.CurrentIndex - 1 : 0].SuppressDrops;
+            if (anyDrops)
+            {
+                var bounds = BulkTileOperations.ComputeBounds(batchPositions);
+                BulkTileOperations.VacuumItemsInArea(op.Player, bounds);
+            }
+        }
+
+        op.TotalProcessed += batchPlaced;
+        op.CurrentIndex = end;
+        return op.CurrentIndex >= op.BuildingTiles.Count;
+    }
+
+    private static bool ProcessWallBuildingBatch(ProgressiveOperation op)
+    {
+        int end = Math.Min(op.CurrentIndex + op.BatchSize, op.WallBuildingTiles.Count);
+        var batchPositions = new List<Point>();
+        int batchPlaced = 0;
+
+        bool wasGen = WorldGen.gen;
+
+        for (int i = op.CurrentIndex; i < end; i++)
+        {
+            var info = op.WallBuildingTiles[i];
+
+            if (!WorldGen.InWorld(info.Position.X, info.Position.Y, 1)) continue;
+
+            // Re-find source wall item for each tile (supports exhaustion)
+            int idx = ItemTypeHelper.FindFirstItemIndex(op.Player, op.BuildCondition);
+            if (idx < 0)
+                continue; // no more items
+
+            Item srcItem = op.Player.inventory[idx];
+            ushort wallType = (ushort)srcItem.createWall;
+            var t = Main.tile[info.Position.X, info.Position.Y];
+
+            if (info.IsReplacement && t.WallType != WallID.None)
+            {
+                // Replace existing wall
+                if (t.WallType == wallType) continue; // same wall, skip
+
+                WorldGen.gen = info.SuppressDrops;
+                WorldGen.KillWall(info.Position.X, info.Position.Y, fail: false);
+                if (t.WallType == WallID.None)
+                {
+                    WorldGen.PlaceWall(info.Position.X, info.Position.Y, wallType, mute: true);
+                    if (t.WallType == wallType)
+                    {
+                        batchPlaced++;
+                        if (op.ShouldConsume)
+                            ItemTypeHelper.ConsumeItems(op.Player.inventory,
+                                it => !it.IsAir && it.type == srcItem.type, 1);
+                        batchPositions.Add(info.Position);
+                    }
+                }
+                WorldGen.gen = wasGen;
+            }
+            else if (t.WallType == WallID.None)
+            {
+                // Place on empty slot
+                WorldGen.gen = true;
+                WorldGen.PlaceWall(info.Position.X, info.Position.Y, wallType, mute: true);
+                if (t.WallType == wallType)
+                {
+                    batchPlaced++;
+                    if (op.ShouldConsume)
+                        ItemTypeHelper.ConsumeItems(op.Player.inventory,
+                            it => !it.IsAir && it.type == srcItem.type, 1);
+                    batchPositions.Add(info.Position);
+                }
+                WorldGen.gen = wasGen;
+            }
+        }
+
+        if (batchPositions.Count > 0)
+        {
+            op.AffectedPositions.AddRange(batchPositions);
+            foreach (var pos in batchPositions)
+                Framing.WallFrame(pos.X, pos.Y);
+            BulkTileOperations.BatchNetworkSync(BulkTileOperations.ComputeBounds(batchPositions));
+
+            // Vacuum: collect scattered wall drops from replacements per-batch.
+            bool anyDrops = op.VacuumItems
+                && op.WallBuildingTiles.Count > 0
+                && !op.WallBuildingTiles[op.CurrentIndex > 0 ? op.CurrentIndex - 1 : 0].SuppressDrops;
+            if (anyDrops)
+            {
+                var bounds = BulkTileOperations.ComputeBounds(batchPositions);
+                BulkTileOperations.VacuumItemsInArea(op.Player, bounds);
+            }
+        }
+
+        op.TotalProcessed += batchPlaced;
+        op.CurrentIndex = end;
+        return op.CurrentIndex >= op.WallBuildingTiles.Count;
+    }
+
+    /// <summary>
+    /// Applies slope/half-block settings for progressive building operations.
+    /// </summary>
+    private static void ApplyBuildSlope(int x, int y, Enums.SlopeType slope)
+    {
+        var tile = Main.tile[x, y];
+        if (!tile.HasTile) return;
+
+        if (slope == Enums.SlopeType.Default)
+        {
+            tile.IsHalfBlock = false;
+            tile.Slope = Terraria.ID.SlopeType.Solid;
+        }
+        else if (slope == Enums.SlopeType.VerticalHalf)
+        {
+            tile.IsHalfBlock = true;
+            tile.Slope = Terraria.ID.SlopeType.Solid;
+        }
+        else
+        {
+            tile.IsHalfBlock = false;
+            tile.Slope = slope switch
+            {
+                Enums.SlopeType.BottomRight => Terraria.ID.SlopeType.SlopeDownLeft,
+                Enums.SlopeType.BottomLeft  => Terraria.ID.SlopeType.SlopeDownRight,
+                Enums.SlopeType.TopRight    => Terraria.ID.SlopeType.SlopeUpRight,
+                Enums.SlopeType.TopLeft     => Terraria.ID.SlopeType.SlopeUpLeft,
+                _ => Terraria.ID.SlopeType.Solid
+            };
+        }
+        WorldGen.SquareTileFrame(x, y);
+    }
+
+    /// <summary>
+    /// Consumes one item for building. Handles tile wand ammo vs direct consumption.
+    /// </summary>
+    private static void ConsumeOneBuildItem(Player player, Item sourceItem, Func<Item, bool> placeCondition)
+    {
+        bool usingTileWand = sourceItem.tileWand >= 0;
+        Func<Item, bool> consumeCond = usingTileWand
+            ? i => !i.IsAir && i.type == sourceItem.tileWand
+            : i => !i.IsAir && i.type == sourceItem.type;
+
+        ItemTypeHelper.ConsumeItems(player.inventory, consumeCond, 1);
     }
 
     /// <summary>
@@ -305,7 +700,39 @@ public class ProgressiveTileProcessor : ModSystem
                 }
                 else
                 {
-                    Main.NewText("No tiles could be replaced.", WandColors.MsgInfo);
+                    Main.NewText(Get("NoTilesReplaced"), WandColors.MsgInfo);
+                }
+                break;
+
+            case OperationType.Building:
+                if (op.TotalProcessed > 0)
+                {
+                    op.UndoManager.CommitAction(op.UndoAction);
+                    Main.NewText(
+                        $"Placed {op.TotalProcessed} tile(s)" +
+                        (op.ShouldConsume ? "" : " (no items consumed)") +
+                        " (progressive)",
+                        Color.Cyan);
+                }
+                else
+                {
+                    Main.NewText(Get("NoTilesPlaced"), WandColors.MsgInfo);
+                }
+                break;
+
+            case OperationType.WallBuilding:
+                if (op.TotalProcessed > 0)
+                {
+                    op.UndoManager.CommitAction(op.UndoAction);
+                    Main.NewText(
+                        $"Placed {op.TotalProcessed} wall(s)" +
+                        (op.ShouldConsume ? "" : " (no items consumed)") +
+                        " (progressive)",
+                        Color.Cyan);
+                }
+                else
+                {
+                    Main.NewText(Get("NoWallsPlaced"), WandColors.MsgInfo);
                 }
                 break;
         }
@@ -318,7 +745,7 @@ public class ProgressiveTileProcessor : ModSystem
 
     // ===== Data types =====
 
-    private enum OperationType { Dismantling, Replacement }
+    private enum OperationType { Dismantling, Replacement, Building, WallBuilding }
 
     /// <summary>Pre-validated tile info for progressive destruction.</summary>
     public struct TileDismantlingInfo
@@ -334,7 +761,26 @@ public class ProgressiveTileProcessor : ModSystem
     {
         public Point Position;
         public ushort SourceType;
-        public ushort TargetType; // 0 = Air (erase only)
+        public ushort TargetType;   // target tile type; 0 = TileID.Dirt when IsErase is false
+        public bool IsErase;        // true = erase to Air (ignore TargetType)
+        public bool SuppressDrops;
+    }
+
+    /// <summary>Pre-validated tile info for progressive building (placement + replacement).</summary>
+    public struct TileBuildingInfo
+    {
+        public Point Position;
+        public bool IsReplacement;      // true = existing tile to replace; false = empty tile to place
+        public bool SuppressDrops;
+        public bool IsGrassSeed;        // true = grass seed conversion (don't destroy substrate)
+        public bool IsSlopeOnly;        // true = same-type tile, only apply slope change
+    }
+
+    /// <summary>Pre-validated wall info for progressive wall building (placement + replacement).</summary>
+    public struct WallBuildingInfo
+    {
+        public Point Position;
+        public bool IsReplacement;      // true = existing wall to replace; false = empty slot to place
         public bool SuppressDrops;
     }
 
@@ -354,6 +800,13 @@ public class ProgressiveTileProcessor : ModSystem
         public Item TargetItem;
         public ObjectType NewObjectType;
 
+        // Building data
+        public List<TileBuildingInfo> BuildingTiles;
+        public List<WallBuildingInfo> WallBuildingTiles;
+        public Func<Item, bool> BuildCondition;     // condition to find source items
+        public bool OverwriteSlope;
+        public Enums.SlopeType SlopeType;
+
         // Shared state
         public UndoAction UndoAction;
         public UndoManager UndoManager;
@@ -363,5 +816,6 @@ public class ProgressiveTileProcessor : ModSystem
         public int CurrentIndex;
         public List<Point> AffectedPositions;
         public int TotalProcessed;
+        public bool VacuumItems; // Whether to vacuum scattered drops after each batch
     }
 }

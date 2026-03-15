@@ -6,6 +6,7 @@ using Terraria.ModLoader;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Utilities;
+using static WorldShapingWandsMod.Common.Utilities.Msg;
 
 namespace WorldShapingWandsMod.Content.Items;
 
@@ -22,7 +23,7 @@ public class WandOfWiringSelect : WandOfWiringBase
             bool vertical = Math.Abs(Main.MouseWorld.Y - player.Center.Y) >
                             Math.Abs(Main.MouseWorld.X - player.Center.X);
             wandPlayer.StartSelection(mouseTile, vertical);
-            Main.NewText("Selection started. Click again to wire.", Color.Yellow);
+            Main.NewText(Get("SelectStartClickAgain", "wire"), Color.Yellow);
             return false; // Don't consume the wand
         }
         else

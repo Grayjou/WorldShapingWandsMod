@@ -21,6 +21,13 @@ public class UIIconButton : UIElement
     public bool Toggled { get; set; }
     public bool IsRadio { get; set; } = true;
 
+    /// <summary>
+    /// When true and <see cref="IsRadio"/> is also true, clicking an already-toggled
+    /// radio button will deselect it (set <see cref="Toggled"/> to false) and fire
+    /// <see cref="OnToggled"/>. Default is false (standard radio: cannot deselect).
+    /// </summary>
+    public bool AllowDeselect { get; set; }
+
     /// <summary>Background color when selected.</summary>
     public Color ActiveColor { get; set; } = new Color(80, 200, 80);
 
@@ -83,7 +90,7 @@ public class UIIconButton : UIElement
 
     public override void LeftClick(UIMouseEvent evt)
     {
-        if (IsRadio && Toggled)
+        if (IsRadio && Toggled && !AllowDeselect)
             return;
 
         Toggled = !Toggled;

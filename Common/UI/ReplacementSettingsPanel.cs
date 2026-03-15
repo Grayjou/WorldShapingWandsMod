@@ -9,6 +9,7 @@ using Terraria.UI;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Settings;
+using WorldShapingWandsMod.Common.Configs;
 using WorldShapingWandsMod.Common.UI.Elements;
 
 namespace WorldShapingWandsMod.Common.UI;
@@ -17,6 +18,9 @@ public class ReplacementSettingsPanel : UIState
 {
     public bool IsVisible { get; set; }
 
+    /// <summary>Exposes the inner draggable panel for accurate ContainsPoint checks in WandUISystem.</summary>
+    public UIElement PanelElement => _mainPanel;
+
     private UIDraggablePanel _mainPanel;
 
     // Shape buttons (icon-based)
@@ -24,29 +28,34 @@ public class ReplacementSettingsPanel : UIState
     private UIIconButton _ellipseFilledBtn, _ellipseHollowBtn;
     private UIIconButton _diamondFilledBtn, _diamondHollowBtn;
     private UIIconButton _triangleFilledBtn, _triangleHollowBtn;
-    private UIIconButton _halfEllipseHFilledBtn, _halfEllipseHHollowBtn;
-    private UIIconButton _halfEllipseVFilledBtn, _halfEllipseVHollowBtn;
     private UIIconButton _edgeBtn;
     private UIIconButton _cardinalBtn;
+    private UIIconButton _straightLineBtn;
 
     private UIText _thicknessValue;
 
     // Equal Dimensions toggle
     private UIToggleButton _equalDimensionsBtn;
 
+    // Slice grid
+    private UISliceGrid _sliceGrid;
+
+    // Connect diameter toggle
+    private UIToggleButton _connectDiameterBtn;
+
     // Source (OldObject) type buttons (icon-based)
     private UIIconButton _srcTileBtn, _srcPlatformBtn, _srcRopeBtn;
-    private UIIconButton _srcPlanterBtn, _srcRailBtn, _srcSeedsBtn, _srcWallBtn;
+    private UIIconButton _srcPlanterBtn, _srcWallBtn;
 
     // Target (NewObject) type buttons (icon-based)
     private UIIconButton _tgtTileBtn, _tgtPlatformBtn, _tgtRopeBtn;
-    private UIIconButton _tgtPlanterBtn, _tgtRailBtn, _tgtSeedsBtn, _tgtAirBtn, _tgtWallBtn;
+    private UIIconButton _tgtPlanterBtn, _tgtAirBtn;
 
     private const string UIPrefix = "Mods.WorldShapingWandsMod.UI";
     private static string L(string key) => Language.GetTextValue($"{UIPrefix}.{key}");
 
     private const float PanelWidth = 320f;
-    private const float PanelHeight = 548f;
+    private const float PanelHeight = 668f;
     private const float Padding = 10f;
     private const float IconBtnSize = 36f;
     private const float IconGap = 6f;
@@ -72,8 +81,6 @@ public class ReplacementSettingsPanel : UIState
         var texPlatform  = mod.Assets.Request<Texture2D>("Assets/Icons/ObjPlatform", AssetRequestMode.ImmediateLoad);
         var texRope      = mod.Assets.Request<Texture2D>("Assets/Icons/ObjRope", AssetRequestMode.ImmediateLoad);
         var texPlanter   = mod.Assets.Request<Texture2D>("Assets/Icons/ObjPlanter", AssetRequestMode.ImmediateLoad);
-        var texRail      = mod.Assets.Request<Texture2D>("Assets/Icons/ObjRail", AssetRequestMode.ImmediateLoad);
-        var texSeeds     = mod.Assets.Request<Texture2D>("Assets/Icons/ObjSeeds", AssetRequestMode.ImmediateLoad);
         var texAir       = mod.Assets.Request<Texture2D>("Assets/Icons/ObjAir", AssetRequestMode.ImmediateLoad);
         var texWall      = mod.Assets.Request<Texture2D>("Assets/Icons/ObjWall", AssetRequestMode.ImmediateLoad);
 
@@ -93,23 +100,19 @@ public class ReplacementSettingsPanel : UIState
         _mainPanel.Append(srcSection);
         y += 28f;
 
-        // Row of 7 source type icons, centered
-        float totalSrcWidth = IconBtnSize * 7 + IconGap * 6;
+        // Row of 5 source type icons, centered
+        float totalSrcWidth = IconBtnSize * 5 + IconGap * 4;
         float srcStartX = (PanelWidth - totalSrcWidth) / 2f - Padding;
 
         _srcTileBtn     = MakeIconBtn(texTile,     L("Replacement.Tile"),     srcStartX + (IconBtnSize + IconGap) * 0, y);
         _srcPlatformBtn = MakeIconBtn(texPlatform, L("Replacement.Platform"), srcStartX + (IconBtnSize + IconGap) * 1, y);
         _srcRopeBtn     = MakeIconBtn(texRope,     L("Replacement.Rope"),     srcStartX + (IconBtnSize + IconGap) * 2, y);
         _srcPlanterBtn  = MakeIconBtn(texPlanter,  L("Replacement.Planter"),  srcStartX + (IconBtnSize + IconGap) * 3, y);
-        _srcRailBtn     = MakeIconBtn(texRail,     L("Replacement.Rail"),     srcStartX + (IconBtnSize + IconGap) * 4, y);
-        _srcSeedsBtn    = MakeIconBtn(texSeeds,    L("Replacement.Seeds"),    srcStartX + (IconBtnSize + IconGap) * 5, y);
-        _srcWallBtn     = MakeIconBtn(texWall,     L("Replacement.Wall"),     srcStartX + (IconBtnSize + IconGap) * 6, y);
+        _srcWallBtn     = MakeIconBtn(texWall,     L("Replacement.Wall"),     srcStartX + (IconBtnSize + IconGap) * 4, y);
         _mainPanel.Append(_srcTileBtn);
         _mainPanel.Append(_srcPlatformBtn);
         _mainPanel.Append(_srcRopeBtn);
         _mainPanel.Append(_srcPlanterBtn);
-        _mainPanel.Append(_srcRailBtn);
-        _mainPanel.Append(_srcSeedsBtn);
         _mainPanel.Append(_srcWallBtn);
         y += IconBtnSize + 12f;
 
@@ -121,25 +124,28 @@ public class ReplacementSettingsPanel : UIState
         _mainPanel.Append(tgtSection);
         y += 28f;
 
-        // Row of 8 target type icons, centered
-        float totalTgtWidth = IconBtnSize * 8 + IconGap * 7;
+        // Row of 5 target type icons, centered
+        // Wall is omitted — auto-inferred when source is Wall (walls can only replace walls).
+        float totalTgtWidth = IconBtnSize * 5 + IconGap * 4;
         float tgtStartX = (PanelWidth - totalTgtWidth) / 2f - Padding;
 
         _tgtTileBtn     = MakeIconBtn(texTile,     L("Replacement.Tile"),     tgtStartX + (IconBtnSize + IconGap) * 0, y);
         _tgtPlatformBtn = MakeIconBtn(texPlatform, L("Replacement.Platform"), tgtStartX + (IconBtnSize + IconGap) * 1, y);
         _tgtRopeBtn     = MakeIconBtn(texRope,     L("Replacement.Rope"),     tgtStartX + (IconBtnSize + IconGap) * 2, y);
         _tgtPlanterBtn  = MakeIconBtn(texPlanter,  L("Replacement.Planter"),  tgtStartX + (IconBtnSize + IconGap) * 3, y);
-        _tgtRailBtn     = MakeIconBtn(texRail,     L("Replacement.Rail"),     tgtStartX + (IconBtnSize + IconGap) * 4, y);
-        _tgtSeedsBtn    = MakeIconBtn(texSeeds,    L("Replacement.Seeds"),    tgtStartX + (IconBtnSize + IconGap) * 5, y);
-        _tgtWallBtn     = MakeIconBtn(texWall,     L("Replacement.Wall"),     tgtStartX + (IconBtnSize + IconGap) * 6, y);
-        _tgtAirBtn      = MakeIconBtn(texAir,      L("Replacement.Air"),      tgtStartX + (IconBtnSize + IconGap) * 7, y);
+        _tgtAirBtn      = MakeIconBtn(texAir,      L("Replacement.Air"),      tgtStartX + (IconBtnSize + IconGap) * 4, y);
+
+        // Allow deselection: clicking an already-selected target type deselects it,
+        // meaning "replace with same type as source" (e.g. wall→wall).
+        _tgtTileBtn.AllowDeselect = true;
+        _tgtPlatformBtn.AllowDeselect = true;
+        _tgtRopeBtn.AllowDeselect = true;
+        _tgtPlanterBtn.AllowDeselect = true;
+        _tgtAirBtn.AllowDeselect = true;
         _mainPanel.Append(_tgtTileBtn);
         _mainPanel.Append(_tgtPlatformBtn);
         _mainPanel.Append(_tgtRopeBtn);
         _mainPanel.Append(_tgtPlanterBtn);
-        _mainPanel.Append(_tgtRailBtn);
-        _mainPanel.Append(_tgtSeedsBtn);
-        _mainPanel.Append(_tgtWallBtn);
         _mainPanel.Append(_tgtAirBtn);
         y += IconBtnSize + 12f;
 
@@ -160,12 +166,9 @@ public class ReplacementSettingsPanel : UIState
         var texDiamondHollow  = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeDiamondHollow", AssetRequestMode.ImmediateLoad);
         var texTriangleFilled = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeTriangleFilled", AssetRequestMode.ImmediateLoad);
         var texTriangleHollow = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeTriangleHollow", AssetRequestMode.ImmediateLoad);
-        var texHalfEHFilled   = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeHalfEllipseHFilled", AssetRequestMode.ImmediateLoad);
-        var texHalfEHHollow   = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeHalfEllipseHHollow", AssetRequestMode.ImmediateLoad);
-        var texHalfEVFilled   = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeHalfEllipseVFilled", AssetRequestMode.ImmediateLoad);
-        var texHalfEVHollow   = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeHalfEllipseVHollow", AssetRequestMode.ImmediateLoad);
         var texElbow           = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeElbow", AssetRequestMode.ImmediateLoad);
         var texCardinal       = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeCardinal", AssetRequestMode.ImmediateLoad);
+        var texStraightLine   = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeStraightLine", AssetRequestMode.ImmediateLoad);
 
         float totalShapeWidth = IconBtnSize * 5 + IconGap * 4;
         float shapeStartX = (PanelWidth - totalShapeWidth) / 2f - Padding;
@@ -196,19 +199,25 @@ public class ReplacementSettingsPanel : UIState
         _mainPanel.Append(_cardinalBtn);
         y += IconBtnSize + IconGap;
 
-        // Shape row 3: Half-Ellipses
-        float totalRow3Width = IconBtnSize * 4 + IconGap * 3;
-        float row3StartX = (PanelWidth - totalRow3Width) / 2f - Padding;
-
-        _halfEllipseHFilledBtn = MakeIconBtn(texHalfEHFilled, L("Common.ShapeHalfEllipseHFilled"), row3StartX + (IconBtnSize + IconGap) * 0, y);
-        _halfEllipseHHollowBtn = MakeIconBtn(texHalfEHHollow, L("Common.ShapeHalfEllipseHHollow"), row3StartX + (IconBtnSize + IconGap) * 1, y);
-        _halfEllipseVFilledBtn = MakeIconBtn(texHalfEVFilled, L("Common.ShapeHalfEllipseVFilled"), row3StartX + (IconBtnSize + IconGap) * 2, y);
-        _halfEllipseVHollowBtn = MakeIconBtn(texHalfEVHollow, L("Common.ShapeHalfEllipseVHollow"), row3StartX + (IconBtnSize + IconGap) * 3, y);
-        _mainPanel.Append(_halfEllipseHFilledBtn);
-        _mainPanel.Append(_halfEllipseHHollowBtn);
-        _mainPanel.Append(_halfEllipseVFilledBtn);
-        _mainPanel.Append(_halfEllipseVHollowBtn);
+        // Row 3: additional line shapes
+        _straightLineBtn   = MakeIconBtn(texStraightLine,   L("Common.ShapeStraightLine"),   shapeStartX + (IconBtnSize + IconGap) * 0, y);
+        _mainPanel.Append(_straightLineBtn);
         y += IconBtnSize + 12f;
+
+        // === SLICE SECTION ===
+        var sliceSection = new UISectionTitle(L("Common.Slice"));
+        sliceSection.Width.Set(0f, 1f);
+        sliceSection.Height.Set(22f, 0f);
+        sliceSection.Top.Set(y, 0f);
+        _mainPanel.Append(sliceSection);
+        y += 28f;
+
+        _sliceGrid = new UISliceGrid();
+        _sliceGrid.HAlign = 0.5f;
+        _sliceGrid.Top.Set(y, 0f);
+        _sliceGrid.OnChanged += OnSliceChanged;
+        _mainPanel.Append(_sliceGrid);
+        y += _sliceGrid.Height.Pixels + 12f;
 
         // Thickness
         var thicknessLabel = new UIText(L("Common.OutlineThickness"), 0.85f);
@@ -248,6 +257,16 @@ public class ReplacementSettingsPanel : UIState
         _mainPanel.Append(_equalDimensionsBtn);
         y += 38f;
 
+        // === CONNECT DIAMETER TOGGLE ===
+        _connectDiameterBtn = new UIToggleButton(L("Common.ConnectDiameter"), true);
+        _connectDiameterBtn.Width.Set(200f, 0f);
+        _connectDiameterBtn.Height.Set(28f, 0f);
+        _connectDiameterBtn.HAlign = 0.5f;
+        _connectDiameterBtn.Top.Set(y, 0f);
+        _connectDiameterBtn.OnToggled += (_, _) => ToggleConnectDiameter();
+        _mainPanel.Append(_connectDiameterBtn);
+        y += 38f;
+
         // Close button
         var closeBtn = new UITextPanel<string>(L("Common.Close"), 0.9f, false);
         closeBtn.Width.Set(80f, 0f);
@@ -262,24 +281,19 @@ public class ReplacementSettingsPanel : UIState
         _rectHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.Rectangle, ShapeMode.Hollow);
         _edgeBtn.OnToggled += (_, _) => SetShape(ShapeType.Elbow, ShapeMode.Filled);
         _cardinalBtn.OnToggled += (_, _) => SetShape(ShapeType.CardinalLine, ShapeMode.Filled);
+        _straightLineBtn.OnToggled += (_, _) => SetShape(ShapeType.StraightLine, ShapeMode.Filled);
         _ellipseFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.Ellipse, ShapeMode.Filled);
         _ellipseHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.Ellipse, ShapeMode.Hollow);
         _diamondFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.Diamond, ShapeMode.Filled);
         _diamondHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.Diamond, ShapeMode.Hollow);
         _triangleFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.Triangle, ShapeMode.Filled);
         _triangleHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.Triangle, ShapeMode.Hollow);
-        _halfEllipseHFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.HalfEllipseH, ShapeMode.Filled);
-        _halfEllipseHHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.HalfEllipseH, ShapeMode.Hollow);
-        _halfEllipseVFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.HalfEllipseV, ShapeMode.Filled);
-        _halfEllipseVHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.HalfEllipseV, ShapeMode.Hollow);
 
         // Source type events
         _srcTileBtn.OnToggled += (_, _) => SetSourceType(ObjectType.Tile);
         _srcPlatformBtn.OnToggled += (_, _) => SetSourceType(ObjectType.Platform);
         _srcRopeBtn.OnToggled += (_, _) => SetSourceType(ObjectType.Rope);
         _srcPlanterBtn.OnToggled += (_, _) => SetSourceType(ObjectType.PlanterBox);
-        _srcRailBtn.OnToggled += (_, _) => SetSourceType(ObjectType.Rail);
-        _srcSeedsBtn.OnToggled += (_, _) => SetSourceType(ObjectType.Seeds);
         _srcWallBtn.OnToggled += (_, _) => SetSourceType(ObjectType.Wall);
 
         // Target type events
@@ -287,9 +301,6 @@ public class ReplacementSettingsPanel : UIState
         _tgtPlatformBtn.OnToggled += (_, _) => SetTargetType(ObjectType.Platform);
         _tgtRopeBtn.OnToggled += (_, _) => SetTargetType(ObjectType.Rope);
         _tgtPlanterBtn.OnToggled += (_, _) => SetTargetType(ObjectType.PlanterBox);
-        _tgtRailBtn.OnToggled += (_, _) => SetTargetType(ObjectType.Rail);
-        _tgtSeedsBtn.OnToggled += (_, _) => SetTargetType(ObjectType.Seeds);
-        _tgtWallBtn.OnToggled += (_, _) => SetTargetType(ObjectType.Wall);
         _tgtAirBtn.OnToggled += (_, _) => SetTargetType(ObjectType.Air);
     }
 
@@ -300,7 +311,7 @@ public class ReplacementSettingsPanel : UIState
     {
         var settings = GetSettings();
         if (settings == null) return;
-        settings.Shape = new ShapeInfo(type, mode, settings.Shape.Thickness, settings.Shape.EqualDimensions);
+        settings.Shape = new ShapeInfo(type, mode, settings.Shape.Thickness, settings.Shape.EqualDimensions, settings.Shape.Slice, settings.Shape.ConnectDiameter);
         UpdateShapeButtons();
     }
 
@@ -310,13 +321,37 @@ public class ReplacementSettingsPanel : UIState
         if (settings == null) return;
         settings.OldObject = type;
         UpdateSourceButtons();
+
+        // Auto-infer target when source is Wall: walls can only be replaced with walls (or Air).
+        // When switching away from Wall source, reset target to Tile if it was auto-set to Wall.
+        if (type == ObjectType.Wall)
+        {
+            if (settings.NewObject != ObjectType.Air)
+            {
+                settings.NewObject = ObjectType.Wall;
+                UpdateTargetButtons();
+            }
+        }
+        else if (settings.NewObject == ObjectType.Wall)
+        {
+            // Was Wall-target from auto-infer, revert to Tile since source is no longer Wall
+            settings.NewObject = ObjectType.Tile;
+            UpdateTargetButtons();
+        }
     }
 
     private void SetTargetType(ObjectType type)
     {
         var settings = GetSettings();
         if (settings == null) return;
-        settings.NewObject = type;
+
+        // Toggle behavior: clicking the already-selected target type deselects it,
+        // reverting to "same type as source" (NewObject = OldObject).
+        if (settings.NewObject == type)
+            settings.NewObject = settings.OldObject;
+        else
+            settings.NewObject = type;
+
         UpdateTargetButtons();
     }
 
@@ -325,7 +360,8 @@ public class ReplacementSettingsPanel : UIState
         var settings = GetSettings();
         if (settings == null) return;
         var shape = settings.Shape;
-        shape.Thickness = System.Math.Clamp(shape.Thickness + delta, 0, 50);
+        int max = ModContent.GetInstance<Configs.WandConfig>()?.MaxOutlineThickness ?? 10;
+        shape.Thickness = System.Math.Clamp(shape.Thickness + delta, 0, max);
         settings.Shape = shape;
         UpdateThicknessDisplay();
     }
@@ -336,6 +372,24 @@ public class ReplacementSettingsPanel : UIState
         if (settings == null) return;
         var shape = settings.Shape;
         shape.EqualDimensions = _equalDimensionsBtn.Toggled;
+        settings.Shape = shape;
+    }
+
+    private void ToggleConnectDiameter()
+    {
+        var settings = GetSettings();
+        if (settings == null) return;
+        var shape = settings.Shape;
+        shape.ConnectDiameter = _connectDiameterBtn.Toggled;
+        settings.Shape = shape;
+    }
+
+    private void OnSliceChanged(SliceMode slice)
+    {
+        var settings = GetSettings();
+        if (settings == null) return;
+        var shape = settings.Shape;
+        shape.Slice = slice;
         settings.Shape = shape;
     }
 
@@ -360,16 +414,13 @@ public class ReplacementSettingsPanel : UIState
         _rectHollowBtn.Toggled = shape.Shape == ShapeType.Rectangle && shape.FillMode == ShapeMode.Hollow;
         _edgeBtn.Toggled = shape.Shape == ShapeType.Elbow;
         _cardinalBtn.Toggled = shape.Shape == ShapeType.CardinalLine;
+        _straightLineBtn.Toggled = shape.Shape == ShapeType.StraightLine;
         _ellipseFilledBtn.Toggled = shape.Shape == ShapeType.Ellipse && shape.FillMode == ShapeMode.Filled;
         _ellipseHollowBtn.Toggled = shape.Shape == ShapeType.Ellipse && shape.FillMode == ShapeMode.Hollow;
         _diamondFilledBtn.Toggled = shape.Shape == ShapeType.Diamond && shape.FillMode == ShapeMode.Filled;
         _diamondHollowBtn.Toggled = shape.Shape == ShapeType.Diamond && shape.FillMode == ShapeMode.Hollow;
         _triangleFilledBtn.Toggled = shape.Shape == ShapeType.Triangle && shape.FillMode == ShapeMode.Filled;
         _triangleHollowBtn.Toggled = shape.Shape == ShapeType.Triangle && shape.FillMode == ShapeMode.Hollow;
-        _halfEllipseHFilledBtn.Toggled = shape.Shape == ShapeType.HalfEllipseH && shape.FillMode == ShapeMode.Filled;
-        _halfEllipseHHollowBtn.Toggled = shape.Shape == ShapeType.HalfEllipseH && shape.FillMode == ShapeMode.Hollow;
-        _halfEllipseVFilledBtn.Toggled = shape.Shape == ShapeType.HalfEllipseV && shape.FillMode == ShapeMode.Filled;
-        _halfEllipseVHollowBtn.Toggled = shape.Shape == ShapeType.HalfEllipseV && shape.FillMode == ShapeMode.Hollow;
     }
 
     private void UpdateThicknessDisplay()
@@ -388,8 +439,6 @@ public class ReplacementSettingsPanel : UIState
         _srcPlatformBtn.Toggled = src == ObjectType.Platform;
         _srcRopeBtn.Toggled = src == ObjectType.Rope;
         _srcPlanterBtn.Toggled = src == ObjectType.PlanterBox;
-        _srcRailBtn.Toggled = src == ObjectType.Rail;
-        _srcSeedsBtn.Toggled = src == ObjectType.Seeds;
         _srcWallBtn.Toggled = src == ObjectType.Wall;
     }
 
@@ -399,13 +448,14 @@ public class ReplacementSettingsPanel : UIState
         if (settings == null) return;
         var tgt = settings.NewObject;
 
+        // When source is Wall, target is auto-inferred to Wall (or Air for erasing).
+        // The visible target buttons only show non-Wall types + Air.
+        // If the internal NewObject is Wall (auto-set), none of the visible buttons are toggled
+        // (the "Wall" state is implicit from the source selection).
         _tgtTileBtn.Toggled = tgt == ObjectType.Tile;
         _tgtPlatformBtn.Toggled = tgt == ObjectType.Platform;
         _tgtRopeBtn.Toggled = tgt == ObjectType.Rope;
         _tgtPlanterBtn.Toggled = tgt == ObjectType.PlanterBox;
-        _tgtRailBtn.Toggled = tgt == ObjectType.Rail;
-        _tgtSeedsBtn.Toggled = tgt == ObjectType.Seeds;
-        _tgtWallBtn.Toggled = tgt == ObjectType.Wall;
         _tgtAirBtn.Toggled = tgt == ObjectType.Air;
     }
 
@@ -416,6 +466,15 @@ public class ReplacementSettingsPanel : UIState
         UpdateSourceButtons();
         UpdateTargetButtons();
         UpdateEqualDimensionsButton();
+        UpdateSliceGrid();
+        UpdateConnectDiameterButton();
+    }
+
+    private void UpdateConnectDiameterButton()
+    {
+        var settings = GetSettings();
+        if (settings == null || _connectDiameterBtn == null) return;
+        _connectDiameterBtn.Toggled = settings.Shape.ConnectDiameter;
     }
 
     private void UpdateEqualDimensionsButton()
@@ -423,6 +482,13 @@ public class ReplacementSettingsPanel : UIState
         var settings = GetSettings();
         if (settings == null || _equalDimensionsBtn == null) return;
         _equalDimensionsBtn.Toggled = settings.Shape.EqualDimensions;
+    }
+
+    private void UpdateSliceGrid()
+    {
+        var settings = GetSettings();
+        if (settings == null || _sliceGrid == null) return;
+        _sliceGrid.SetValue(settings.Shape.Slice);
     }
 
     public override void Update(GameTime gameTime)

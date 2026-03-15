@@ -18,6 +18,9 @@ public class UIToggleButton : UIElement
     public Color? TintColor { get; set; } = null;
     public Color OffColor { get; set; } = new Color(60, 60, 60);
 
+    /// <summary>Tooltip text shown on hover. Null or empty = no tooltip.</summary>
+    public string HoverText { get; set; }
+
     public event MouseEvent OnToggled;
 
     public UIToggleButton(string text, bool initialState = false)
@@ -56,6 +59,11 @@ public class UIToggleButton : UIElement
             new Rectangle(rect.X, rect.Y, 1, rect.Height), borderColor);
         spriteBatch.Draw(TextureAssets.MagicPixel.Value,
             new Rectangle(rect.Right - 1, rect.Y, 1, rect.Height), borderColor);
+
+        if (IsMouseHovering && !string.IsNullOrEmpty(HoverText))
+        {
+            Main.hoverItemName = HoverText;
+        }
     }
 
     public override void LeftClick(UIMouseEvent evt)

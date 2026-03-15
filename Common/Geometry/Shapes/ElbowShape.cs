@@ -21,6 +21,10 @@ namespace WorldShapingWandsMod.Common.Geometry.Shapes
         public ShapeTileSet GetTiles(ShapeContext context)
         {
             var tiles = GenerateElbowTiles(context);
+
+            if (context.Slice != SliceMode.Full)
+                return SliceHelper.ApplySlicing(tiles, context);
+
             return OutlineHelper.Apply(tiles, context.Mode, context.Thickness);
         }
 
