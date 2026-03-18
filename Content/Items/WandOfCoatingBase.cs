@@ -10,6 +10,7 @@ using WorldShapingWandsMod.Common.Drawing;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Geometry;
 using WorldShapingWandsMod.Common.Items;
+using WorldShapingWandsMod.Common.Networking;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Settings;
 using WorldShapingWandsMod.Common.UI;
@@ -78,6 +79,21 @@ public abstract class WandOfCoatingBase : BaseCyclingWand
     {
         var settings = wandPlayer.CoatingSettings;
         var selection = wandPlayer.GetVisualSelection();
+
+        // --- MP: send packet to server and return early ---
+        if (Main.netMode == NetmodeID.MultiplayerClient)
+        {
+            WandPacketHandler.SendCoatingOperation(
+                selection.StartTile, selection.EndTile,
+                settings.Shape.Shape, settings.Shape.FillMode,
+                settings.Shape.Thickness, settings.Shape.EqualDimensions,
+                selection.VerticalFirst, player.whoAmI,
+                settings.Mode, settings.PaintColor,
+                settings.ApplyIlluminant, settings.IgnoreIlluminant,
+                settings.ApplyEcho, settings.IgnoreEcho,
+                settings.Shape.Slice, settings.Shape.ConnectDiameter);
+            return;
+        }
 
         var context = settings.Shape.ToShapeContext(
             selection.StartTile, selection.EndTile, selection.VerticalFirst);
@@ -150,8 +166,12 @@ public abstract class WandOfCoatingBase : BaseCyclingWand
 #pragma warning disable CS0618
         return settings.Mode switch
         {
-            CoatingMode.PaintTile   => ApplyPaintTile(x, y, settings.PaintColor, settings.ApplyIlluminant, settings.ApplyEcho),
-            CoatingMode.PaintWall   => ApplyPaintWall(x, y, settings.PaintColor, settings.ApplyIlluminant, settings.ApplyEcho),
+            CoatingMode.PaintTile   => ApplyPaintTile(x, y, settings.PaintColor,
+                settings.ApplyIlluminant, settings.IgnoreIlluminant,
+                settings.ApplyEcho, settings.IgnoreEcho),
+            CoatingMode.PaintWall   => ApplyPaintWall(x, y, settings.PaintColor,
+                settings.ApplyIlluminant, settings.IgnoreIlluminant,
+                settings.ApplyEcho, settings.IgnoreEcho),
             CoatingMode.ScrapePaint => ApplyScrapePaint(x, y),
             CoatingMode.ScrapeMoss  => ApplyScrapeMoss(x, y),
             CoatingMode.HarvestMoss => ApplyHarvestMoss(x, y),
@@ -160,7 +180,16 @@ public abstract class WandOfCoatingBase : BaseCyclingWand
 #pragma warning restore CS0618
     }
 
-    private static bool ApplyPaintTile(int x, int y, byte color, bool applyIlluminant, bool applyEcho)
+    /// <summary>
+    /// Special paint color value meaning "don't change the existing paint".
+    /// When selected, the wand only applies/removes coatings without touching paint.
+    /// Stored as byte 255 to avoid conflicting with vanilla PaintID range (0–30).
+    /// </summary>
+    public const byte IgnorePaintColor = 255;
+
+    private static bool ApplyPaintTile(int x, int y, byte color,
+        bool applyIlluminant, bool ignoreIlluminant,
+        bool applyEcho, bool ignoreEcho)
     {
         var tile = Main.tile[x, y];
         if (!tile.HasTile)
@@ -168,31 +197,44 @@ public abstract class WandOfCoatingBase : BaseCyclingWand
 
         bool changed = false;
 
-        // Apply paint color if different, or remove paint when color is 0 (None)
-        if (tile.TileColor != color)
+        // Apply paint color if different, or remove paint when color is 0 (None).
+        // IgnorePaintColor (255) = don't touch the existing paint at all.
+        if (color != IgnorePaintColor && tile.TileColor != color)
         {
             WorldGen.paintTile(x, y, color, true);
             changed = true;
         }
 
-        // Apply Illuminant coating if requested and not already present
-        if (applyIlluminant && !tile.IsTileFullbright)
-        {
-            WorldGen.paintCoatTile(x, y, 1, true);
-            changed = true;
-        }
+        // Apply or remove coatings based on toggle state.
+        // paintCoatTile(x,y,0) removes BOTH Illuminant and Echo at once,
+        // so we must carefully re-apply the one we want to keep.
+        // When ignoreXxx is true, keep the existing state for that coating.
+        bool hasIlluminant = tile.IsTileFullbright;
+        bool hasEcho = tile.IsTileInvisible;
+        bool wantIlluminant = ignoreIlluminant ? hasIlluminant : applyIlluminant;
+        bool wantEcho = ignoreEcho ? hasEcho : applyEcho;
 
-        // Apply Echo coating if requested and not already present
-        if (applyEcho && !tile.IsTileInvisible)
+        if (hasIlluminant != wantIlluminant || hasEcho != wantEcho)
         {
-            WorldGen.paintCoatTile(x, y, 2, true);
+            // Clear all coatings first if we need to remove at least one
+            if ((hasIlluminant && !wantIlluminant) || (hasEcho && !wantEcho))
+                WorldGen.paintCoatTile(x, y, 0, true);
+
+            // (Re-)apply the coatings we want
+            if (wantIlluminant && !tile.IsTileFullbright)
+                WorldGen.paintCoatTile(x, y, 1, true);
+            if (wantEcho && !tile.IsTileInvisible)
+                WorldGen.paintCoatTile(x, y, 2, true);
+
             changed = true;
         }
 
         return changed;
     }
 
-    private static bool ApplyPaintWall(int x, int y, byte color, bool applyIlluminant, bool applyEcho)
+    private static bool ApplyPaintWall(int x, int y, byte color,
+        bool applyIlluminant, bool ignoreIlluminant,
+        bool applyEcho, bool ignoreEcho)
     {
         var tile = Main.tile[x, y];
         if (tile.WallType == WallID.None)
@@ -200,24 +242,35 @@ public abstract class WandOfCoatingBase : BaseCyclingWand
 
         bool changed = false;
 
-        // Apply paint color if different, or remove paint when color is 0 (None)
-        if (tile.WallColor != color)
+        // Apply paint color if different, or remove paint when color is 0 (None).
+        // IgnorePaintColor (255) = don't touch the existing paint at all.
+        if (color != IgnorePaintColor && tile.WallColor != color)
         {
             WorldGen.paintWall(x, y, color, true);
             changed = true;
         }
 
-        // Apply Illuminant coating if requested and not already present
-        if (applyIlluminant && !tile.IsWallFullbright)
-        {
-            WorldGen.paintCoatWall(x, y, 1, true);
-            changed = true;
-        }
+        // Apply or remove coatings based on toggle state.
+        // paintCoatWall(x,y,0) removes BOTH Illuminant and Echo at once,
+        // so we must carefully re-apply the one we want to keep.
+        // When ignoreXxx is true, keep the existing state for that coating.
+        bool hasIlluminant = tile.IsWallFullbright;
+        bool hasEcho = tile.IsWallInvisible;
+        bool wantIlluminant = ignoreIlluminant ? hasIlluminant : applyIlluminant;
+        bool wantEcho = ignoreEcho ? hasEcho : applyEcho;
 
-        // Apply Echo coating if requested and not already present
-        if (applyEcho && !tile.IsWallInvisible)
+        if (hasIlluminant != wantIlluminant || hasEcho != wantEcho)
         {
-            WorldGen.paintCoatWall(x, y, 2, true);
+            // Clear all coatings first if we need to remove at least one
+            if ((hasIlluminant && !wantIlluminant) || (hasEcho && !wantEcho))
+                WorldGen.paintCoatWall(x, y, 0, true);
+
+            // (Re-)apply the coatings we want
+            if (wantIlluminant && !tile.IsWallFullbright)
+                WorldGen.paintCoatWall(x, y, 1, true);
+            if (wantEcho && !tile.IsWallInvisible)
+                WorldGen.paintCoatWall(x, y, 2, true);
+
             changed = true;
         }
 

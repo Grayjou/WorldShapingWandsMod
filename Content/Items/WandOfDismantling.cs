@@ -11,6 +11,7 @@ using WorldShapingWandsMod.Common.Drawing;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Geometry;
 using WorldShapingWandsMod.Common.Items;
+using WorldShapingWandsMod.Common.Networking;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Settings;
 using WorldShapingWandsMod.Common.Systems;
@@ -75,7 +76,20 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
         var settings = wandPlayer.DismantlingSettings;
         var selection = wandPlayer.GetVisualSelection();
         var config = ModContent.GetInstance<WandConfig>();
-        
+
+        // ── Multiplayer: send packet to server instead of executing locally ──
+        if (Main.netMode == NetmodeID.MultiplayerClient)
+        {
+            WandPacketHandler.SendDismantlingOperation(
+                selection.StartTile, selection.EndTile,
+                settings.Shape.Shape, settings.Shape.FillMode,
+                settings.Shape.Thickness, settings.Shape.EqualDimensions,
+                selection.VerticalFirst, player.whoAmI,
+                settings.DestroyTiles, settings.DestroyWalls, settings.DestroyContainers,
+                settings.Shape.Slice, settings.Shape.ConnectDiameter);
+            return;
+        }
+
         var context = settings.Shape.ToShapeContext(
             selection.StartTile, selection.EndTile, selection.VerticalFirst);
 
@@ -244,20 +258,38 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
         else
         {
             // Instant: process all at once
-            // In single-player: set WorldGen.gen = true to suppress per-tile sounds/dust/drops,
-            // then FinalizeBatch sends a single batched network sync (no-op in SP anyway).
-            // In multiplayer: leave WorldGen.gen = false so each KillTile/KillWall sends its
-            // own TileManipulation message to the server. Only do BatchFrameUpdate afterwards
-            // (no BatchNetworkSync — the per-tile messages already handle server sync).
-            // Combining WorldGen.gen=true with BatchNetworkSync in MP causes a dual-sync
-            // race condition where the server may reject or revert the batched state update.
+            // In single-player, WorldGen.gen controls per-tile sounds/dust/gore AND item drops.
+            // We only set gen=true when we actually want to suppress drops:
+            //   - SuppressDrops=true → gen=true (no items created, vacuum irrelevant)
+            //   - SuppressDrops=false + VacuumItems=true → gen=false (items spawn, vacuum collects them)
+            //   - SuppressDrops=false + VacuumItems=false → gen=false (items stay on ground)
+            // In multiplayer: always leave gen=false so each KillTile/KillWall sends its
+            // own TileManipulation message to the server.
             int destroyedTiles = 0;
             var affectedPositions = new List<Point>();
             bool isMultiplayer = Main.netMode == NetmodeID.MultiplayerClient;
+            bool wantVacuum = config.VacuumItems && !config.SuppressDrops;
+
+            // Pre-compute the full operation bounds from ALL tiles (not just destroyed ones)
+            // so that periodic vacuum sweeps cover cascaded drops from multi-tile objects
+            // (trees, bamboo, etc.) that spawn items well outside the explicit tile set.
+            Rectangle fullOperationBounds = Rectangle.Empty;
+            if (wantVacuum)
+                fullOperationBounds = BulkTileOperations.ComputeBounds(
+                    validTiles.ConvertAll(t => t.Position));
 
             bool wasGen = WorldGen.gen;
-            if (!isMultiplayer)
+            if (!isMultiplayer && config.SuppressDrops)
                 WorldGen.gen = true;
+
+            // Periodic vacuum interval: sweep ground items every N tile destructions
+            // to prevent hitting Terraria's 400-item ground cap (Main.maxItems).
+            // Each KillTile can cascade via SquareTileFrame to destroy adjacent
+            // unsupported tiles (trees, bamboo, torches), creating many more items
+            // than the explicit tile count. A sweep every 200 tiles keeps the
+            // ground item count well below 400 even with heavy cascading.
+            const int VacuumSweepInterval = 200;
+            int tilesSinceVacuum = 0;
 
             foreach (var info in validTiles)
             {
@@ -281,6 +313,7 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
                             fail: false, effectOnly: false, noItem: info.SuppressDrops);
                         destroyedTiles++;
                         affectedPositions.Add(info.Position);
+                        tilesSinceVacuum++;
                     }
                 }
 
@@ -289,6 +322,16 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
                     WorldGen.KillWall(info.Position.X, info.Position.Y);
                     if (!info.DestroyTile)
                         affectedPositions.Add(info.Position);
+                }
+
+                // Periodic vacuum sweep: collect items before the 400-item cap is hit.
+                // Uses the full operation bounds (pre-computed from ALL tiles) so that
+                // cascaded drops from trees/bamboo/multi-tile objects above/beside the
+                // selection are also captured.
+                if (wantVacuum && tilesSinceVacuum >= VacuumSweepInterval)
+                {
+                    BulkTileOperations.VacuumItemsInArea(player, fullOperationBounds);
+                    tilesSinceVacuum = 0;
                 }
             }
 
@@ -301,13 +344,12 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
                 else
                     BulkTileOperations.FinalizeBatch(affectedPositions);
 
-                // Vacuum: collect scattered item drops into the player's inventory.
-                // In SP instant mode, WorldGen.gen=true already suppresses all drops,
-                // so this only matters in MP where gen stays false and drops are created.
-                if (config.VacuumItems && !config.SuppressDrops)
+                // Final vacuum sweep: catch any remaining items from the last batch
+                // of tile destructions and from FinalizeBatch's frame updates
+                // (which can cascade-destroy additional unsupported tiles).
+                if (wantVacuum)
                 {
-                    var bounds = BulkTileOperations.ComputeBounds(affectedPositions);
-                    BulkTileOperations.VacuumItemsInArea(player, bounds);
+                    BulkTileOperations.VacuumItemsInArea(player, fullOperationBounds);
                 }
             }
 

@@ -176,9 +176,13 @@ public static class BulkTileOperations
 
         // Convert tile bounds to world coordinates (pixels), with a 2-tile margin
         // so items that bounced slightly outside the tile area are still caught.
+        // The top margin is much larger (40 tiles = 640px) to catch drops from
+        // multi-tile objects like trees, tall plants, and sunflowers that spawn
+        // their drops at the top of the object — well above the selection area.
         int margin = 32; // 2 tiles in pixels
+        int topMargin = 640; // 40 tiles in pixels — trees can be 16-30 tiles tall
         int worldLeft = (bounds.X * 16) - margin;
-        int worldTop = (bounds.Y * 16) - margin;
+        int worldTop = (bounds.Y * 16) - topMargin;
         int worldRight = ((bounds.X + bounds.Width) * 16) + margin;
         int worldBottom = ((bounds.Y + bounds.Height) * 16) + margin;
 
@@ -193,58 +197,14 @@ public static class BulkTileOperations
             if (cx < worldLeft || cx > worldRight || cy < worldTop || cy > worldBottom)
                 continue;
 
-            // Try to add to player inventory (existing stacks first, then empty slots)
-            bool absorbed = TryAbsorbItem(player, item);
-            if (absorbed)
-            {
-                // Item fully absorbed — deactivate ground item
-                item.active = false;
-                item.TurnToAir();
-                if (Main.netMode == NetmodeID.MultiplayerClient)
-                    NetMessage.SendData(MessageID.SyncItem, -1, -1, null, i);
-            }
-            else
-            {
-                // Inventory full — teleport the item to the player's position
-                // so it groups with other overflow items instead of being scattered
-                item.position = player.Center;
-                item.velocity = Microsoft.Xna.Framework.Vector2.Zero;
-                if (Main.netMode == NetmodeID.MultiplayerClient)
-                    NetMessage.SendData(MessageID.SyncItem, -1, -1, null, i);
-            }
+            // Teleport the item to the player's feet so Terraria's native pickup
+            // system handles it: proper pickup sound, chat message, and full
+            // compatibility with smart-pickup mods. This avoids the ghost-insert
+            // issue where directly editing player.inventory bypasses all feedback.
+            item.position = player.Center;
+            item.velocity = Microsoft.Xna.Framework.Vector2.Zero;
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+                NetMessage.SendData(MessageID.SyncItem, -1, -1, null, i);
         }
-    }
-
-    /// <summary>
-    /// Attempts to absorb a ground item into the player's inventory.
-    /// Fills existing partial stacks first, then empty slots.
-    /// Returns true if the item was fully absorbed (stack reduced to 0).
-    /// </summary>
-    private static bool TryAbsorbItem(Player player, Item groundItem)
-    {
-        // Fill existing stacks
-        for (int i = 0; i < 58 && groundItem.stack > 0; i++)
-        {
-            var slot = player.inventory[i];
-            if (slot.type == groundItem.type && slot.stack < slot.maxStack)
-            {
-                int canAdd = Math.Min(groundItem.stack, slot.maxStack - slot.stack);
-                slot.stack += canAdd;
-                groundItem.stack -= canAdd;
-            }
-        }
-
-        // Fill empty slots
-        for (int i = 0; i < 58 && groundItem.stack > 0; i++)
-        {
-            if (player.inventory[i].IsAir)
-            {
-                player.inventory[i] = groundItem.Clone();
-                player.inventory[i].stack = groundItem.stack;
-                groundItem.stack = 0;
-            }
-        }
-
-        return groundItem.stack <= 0;
     }
 }

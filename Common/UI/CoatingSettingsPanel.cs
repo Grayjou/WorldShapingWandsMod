@@ -13,6 +13,7 @@ using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Settings;
 using WorldShapingWandsMod.Common.UI.Elements;
+using WorldShapingWandsMod.Content.Items;
 using static WorldShapingWandsMod.Common.Utilities.Msg;
 
 namespace WorldShapingWandsMod.Common.UI;
@@ -72,9 +73,11 @@ public class CoatingSettingsPanel : UIState
     // Paint color swatch size and layout
     private const float SwatchSize = 22f;
     private const float SwatchGap  = 4f;
-    private const int   SwatchCols = 6;
-    // 30 colors + 1 "no paint" entry = 31 swatches → ceil(31/6) = 6 rows
-    private const int   SwatchRows = 6;
+    private const int   SwatchCols = 8;
+    // 30 colors + 1 "no paint" + 1 "Ignore" = 32 swatches → ceil(32/8) = 4 rows
+    private const int   SwatchRows = 4;
+    /// <summary>Total number of paint swatches including None (0) and Ignore (255).</summary>
+    private const int   SwatchCount = 32;
 
     // Vanilla paint RGB values indexed by PaintID (0–30).
     // Index 0 = transparent/none (shown as an eraser swatch).
@@ -197,31 +200,33 @@ public class CoatingSettingsPanel : UIState
         _colorPickerContainer.Width.Set(0f, 1f);
         _colorPickerContainer.Top.Set(y, 0f);
 
-        // Build the 6×6 grid of paint swatches (colors 0–30 = 31 entries, last cell empty)
+        // Build the 8×4 grid of paint swatches (colors 0–30 + Ignore = 32 entries)
         // Color 0 (index 0) = "No Paint" (eraser X symbol)
-        _colorButtons = new UIPaintColorButton[31];
+        // Last entry (array index 31) = "Ignore" (paint byte 255)
+        _colorButtons = new UIPaintColorButton[SwatchCount];
         float totalWidth = SwatchCols * SwatchSize + (SwatchCols - 1) * SwatchGap;
         float startX = (PanelWidth - 2 * Padding - totalWidth) / 2f;
 
-        for (int i = 0; i <= 30; i++)
+        for (int i = 0; i < SwatchCount; i++)
         {
-            int colorIndex = i;
+            int arrayIndex = i;
+            // Array index 0–30 → paint color 0–30; index 31 → paint color 255 (Ignore)
+            byte paintByte = (byte)(i < 31 ? i : WandOfCoatingBase.IgnorePaintColor);
+            Color swatchColor = i < 31 ? PaintColors[i] : Color.Transparent;
+            string swatchName = i < 31 ? PaintColorNames[i] : L("Coating.Ignore");
+
             int col = i % SwatchCols;
             int row = i / SwatchCols;
             float sx = startX + col * (SwatchSize + SwatchGap);
             float sy = row * (SwatchSize + SwatchGap);
 
-            var btn = new UIPaintColorButton(
-                (byte)colorIndex,
-                PaintColors[colorIndex],
-                PaintColorNames[colorIndex]
-            );
+            var btn = new UIPaintColorButton(paintByte, swatchColor, swatchName);
             btn.Width.Set(SwatchSize, 0f);
             btn.Height.Set(SwatchSize, 0f);
             btn.Left.Set(sx, 0f);
             btn.Top.Set(sy, 0f);
-            btn.OnLeftClick += (_, _) => SetPaintColor((byte)colorIndex);
-            _colorButtons[i] = btn;
+            btn.OnLeftClick += (_, _) => SetPaintColor(paintByte);
+            _colorButtons[arrayIndex] = btn;
             _colorPickerContainer.Append(btn);
         }
 
@@ -312,11 +317,13 @@ public class CoatingSettingsPanel : UIState
         minusBtn.Left.Set(col1 + 130f, 0f);
         minusBtn.Top.Set(y - 2f, 0f);
         minusBtn.OnLeftClick += (_, _) => AdjustThickness(-1);
+        minusBtn.OnScrollWheel += (evt, _) => AdjustThickness(evt.ScrollWheelValue > 0 ? 1 : -1);
         _mainPanel.Append(minusBtn);
 
         _thicknessValue = new UIText("1", 0.9f);
         _thicknessValue.Left.Set(col1 + 170f, 0f);
         _thicknessValue.Top.Set(y, 0f);
+        _thicknessValue.OnScrollWheel += (evt, _) => AdjustThickness(evt.ScrollWheelValue > 0 ? 1 : -1);
         _mainPanel.Append(_thicknessValue);
 
         var plusBtn = new UITextPanel<string>("+", 0.8f, false);
@@ -325,6 +332,7 @@ public class CoatingSettingsPanel : UIState
         plusBtn.Left.Set(col1 + 200f, 0f);
         plusBtn.Top.Set(y - 2f, 0f);
         plusBtn.OnLeftClick += (_, _) => AdjustThickness(1);
+        plusBtn.OnScrollWheel += (evt, _) => AdjustThickness(evt.ScrollWheelValue > 0 ? 1 : -1);
         _mainPanel.Append(plusBtn);
         y += 42f;
 
@@ -398,36 +406,111 @@ public class CoatingSettingsPanel : UIState
     }
 
     /// <summary>
-    /// Toggles the Illuminant coating on/off independently of Echo.
-    /// Both coatings can be active simultaneously.
+    /// Cycles the Illuminant coating through three states:
+    ///   Apply (on) → Remove (off) → Ignore → Apply …
     /// </summary>
     private void ToggleIlluminant()
     {
         var settings = GetSettings();
         if (settings == null) return;
-        settings.ApplyIlluminant = !settings.ApplyIlluminant;
+
+        if (settings.IgnoreIlluminant)
+        {
+            // Ignore → Apply
+            settings.ApplyIlluminant = true;
+            settings.IgnoreIlluminant = false;
+        }
+        else if (settings.ApplyIlluminant)
+        {
+            // Apply → Remove
+            settings.ApplyIlluminant = false;
+        }
+        else
+        {
+            // Remove → Ignore
+            settings.IgnoreIlluminant = true;
+        }
+
         UpdateCoatingButtons();
     }
 
     /// <summary>
-    /// Toggles the Echo coating on/off independently of Illuminant.
-    /// Both coatings can be active simultaneously.
+    /// Cycles the Echo coating through three states:
+    ///   Apply (on) → Remove (off) → Ignore → Apply …
     /// </summary>
     private void ToggleEcho()
     {
         var settings = GetSettings();
         if (settings == null) return;
-        settings.ApplyEcho = !settings.ApplyEcho;
+
+        if (settings.IgnoreEcho)
+        {
+            // Ignore → Apply
+            settings.ApplyEcho = true;
+            settings.IgnoreEcho = false;
+        }
+        else if (settings.ApplyEcho)
+        {
+            // Apply → Remove
+            settings.ApplyEcho = false;
+        }
+        else
+        {
+            // Remove → Ignore
+            settings.IgnoreEcho = true;
+        }
+
         UpdateCoatingButtons();
     }
 
+    /// <summary>
+    /// Updates the visual state of the Illuminant/Echo toggle buttons to reflect
+    /// the current tri-state: Apply (green), Remove (red-ish), Ignore (gray-blue).
+    /// </summary>
     private void UpdateCoatingButtons()
     {
         var settings = GetSettings();
         if (settings == null) return;
 
-        _illuminantBtn.Toggled = settings.ApplyIlluminant;
-        _echoBtn.Toggled       = settings.ApplyEcho;
+        // Illuminant tri-state visual
+        if (settings.IgnoreIlluminant)
+        {
+            _illuminantBtn.Toggled = false;
+            _illuminantBtn.TintColor = new Color(120, 120, 140); // gray-blue = Ignore
+            _illuminantBtn.SetText(L("Coating.Illuminant") + ": " + L("Coating.Ignore"));
+        }
+        else if (settings.ApplyIlluminant)
+        {
+            _illuminantBtn.Toggled = true;
+            _illuminantBtn.TintColor = new Color(255, 255, 180); // warm yellow = Apply
+            _illuminantBtn.SetText(L("Coating.Illuminant") + ": " + L("Coating.On"));
+        }
+        else
+        {
+            _illuminantBtn.Toggled = true;
+            _illuminantBtn.TintColor = new Color(180, 70, 70); // red-ish = Remove
+            _illuminantBtn.SetText(L("Coating.Illuminant") + ": " + L("Coating.Off"));
+        }
+
+        // Echo tri-state visual
+        if (settings.IgnoreEcho)
+        {
+            _echoBtn.Toggled = false;
+            _echoBtn.TintColor = new Color(120, 120, 140);
+            _echoBtn.SetText(L("Coating.Echo") + ": " + L("Coating.Ignore"));
+        }
+        else if (settings.ApplyEcho)
+        {
+            _echoBtn.Toggled = true;
+            _echoBtn.TintColor = new Color(180, 180, 255);
+            _echoBtn.SetText(L("Coating.Echo") + ": " + L("Coating.On"));
+        }
+        else
+        {
+            _echoBtn.Toggled = true;
+            _echoBtn.TintColor = new Color(180, 70, 70);
+            _echoBtn.SetText(L("Coating.Echo") + ": " + L("Coating.Off"));
+        }
     }
 
     private void SetShape(ShapeType type, ShapeMode mode)
@@ -528,10 +611,11 @@ public class CoatingSettingsPanel : UIState
         var settings = GetSettings();
         if (settings == null || _colorButtons == null) return;
 
-        for (int i = 0; i <= 30; i++)
+        for (int i = 0; i < SwatchCount; i++)
         {
-            if (_colorButtons[i] != null)
-                _colorButtons[i].IsSelected = (settings.PaintColor == i);
+            if (_colorButtons[i] == null) continue;
+            byte paintByte = (byte)(i < 31 ? i : WandOfCoatingBase.IgnorePaintColor);
+            _colorButtons[i].IsSelected = (settings.PaintColor == paintByte);
         }
     }
 
@@ -638,8 +722,9 @@ public class CoatingSettingsPanel : UIState
             var dims = GetDimensions();
             var rect = dims.ToRectangle();
 
-            // Background: the paint color (or dark gray for "no paint")
-            Color bg = _colorIndex == 0 ? new Color(40, 40, 40) : _color;
+            // Background: the paint color (or dark gray for "no paint" / "ignore")
+            Color bg = _colorIndex == 0 || _colorIndex == WandOfCoatingBase.IgnorePaintColor
+                ? new Color(40, 40, 40) : _color;
             spriteBatch.Draw(TextureAssets.MagicPixel.Value, rect, bg);
 
             // For "no paint" (index 0): draw a simple X
@@ -653,6 +738,14 @@ public class CoatingSettingsPanel : UIState
                 spriteBatch.Draw(TextureAssets.MagicPixel.Value,
                     new Rectangle(rect.X + 3, rect.Bottom - 5, rect.Width - 6, 2),
                     Color.Red * 0.85f);
+            }
+
+            // For "Ignore" (255): draw a horizontal dash "—"
+            if (_colorIndex == WandOfCoatingBase.IgnorePaintColor)
+            {
+                spriteBatch.Draw(TextureAssets.MagicPixel.Value,
+                    new Rectangle(rect.X + 4, rect.Y + rect.Height / 2 - 1, rect.Width - 8, 2),
+                    Color.LightGray * 0.9f);
             }
 
             // Selection outline: bright white border when selected

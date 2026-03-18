@@ -205,9 +205,12 @@ public class SelectionOverlay : ModSystem
 
         // Trivially-computed shapes (O(N) with no expensive rasterization) never need
         // the debounce bounding-box fallback — they render instantly at any size.
-        if (shapeSettings.Shape == ShapeType.CardinalLine
+        // Rectangle also skips because bounding box IS the rectangle — they're equivalent.
+        bool isTrivialShape = shapeSettings.Shape == ShapeType.CardinalLine
             || shapeSettings.Shape == ShapeType.Elbow
-            || shapeSettings.Shape == ShapeType.StraightLine)
+            || shapeSettings.Shape == ShapeType.StraightLine
+            || shapeSettings.Shape == ShapeType.Rectangle;
+        if (isTrivialShape)
             isLargeAndDragging = false;
 
         if (isLargeAndDragging)
@@ -225,8 +228,10 @@ public class SelectionOverlay : ModSystem
         // Advance fade-in after rasterization completes on a large shape.
         // In AlwaysFullShape mode the fade-in was already skipped above, so
         // _debounceFadeIn is never reset – skip the alpha ramp entirely.
+        // Trivially-computed shapes also skip — they render instantly at any size,
+        // so the fade-in alpha just causes flickering.
         float alphaMultiplier = 1f;
-        if (renderMode == OverlayRenderMode.Auto && maxDim > LargeShapeThreshold && _debounceFadeIn < 1f)
+        if (renderMode == OverlayRenderMode.Auto && !isTrivialShape && maxDim > LargeShapeThreshold && _debounceFadeIn < 1f)
         {
             _debounceFadeIn = Math.Min(1f, _debounceFadeIn + 1f / WandColors.DebounceFadeInFrames);
             alphaMultiplier = _debounceFadeIn;

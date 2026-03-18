@@ -116,6 +116,9 @@ UI: {
 		// CoatingType: Coating
 		// Illuminant: Illuminant
 		// Echo: Echo
+		// Ignore: Ignore
+		// On: On
+		// Off: Off
 	}
 }
 

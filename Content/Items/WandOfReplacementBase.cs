@@ -9,6 +9,7 @@ using WorldShapingWandsMod.Common.Drawing;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Geometry;
 using WorldShapingWandsMod.Common.Items;
+using WorldShapingWandsMod.Common.Networking;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Selection;
 using WorldShapingWandsMod.Common.Settings;
@@ -185,6 +186,21 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
             targetType = (ushort)targetItem.createTile;
         }
 
+        // --- MP: send packet to server and return early ---
+        if (Main.netMode == NetmodeID.MultiplayerClient)
+        {
+            WandPacketHandler.SendReplacementOperation(
+                selection.StartTile, selection.EndTile,
+                settings.Shape.Shape, settings.Shape.FillMode,
+                settings.Shape.Thickness, settings.Shape.EqualDimensions,
+                selection.VerticalFirst, player.whoAmI,
+                settings.OldObject, settings.NewObject,
+                sourceType, targetType,
+                (short)(targetItem?.type ?? 0), isWallMode: false,
+                settings.Shape.Slice, settings.Shape.ConnectDiameter);
+            return;
+        }
+
         var context = settings.Shape.ToShapeContext(
             selection.StartTile, selection.EndTile, selection.VerticalFirst);
 
@@ -303,15 +319,28 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
         else
         {
             // Instant: process all at once
-            // In single-player: set WorldGen.gen = true to suppress per-tile sounds/dust/drops,
-            // then FinalizeBatch sends a batched network sync (no-op in SP anyway).
-            // In multiplayer: leave WorldGen.gen = false so each KillTile/PlaceTile/ReplaceTile
-            // sends its own TileManipulation message to the server. Only do BatchFrameUpdate
-            // afterwards (no BatchNetworkSync — the per-tile messages already handle sync).
+            // In single-player, WorldGen.gen controls per-tile sounds/dust/gore AND item drops.
+            // Only set gen=true when we actually want to suppress drops:
+            //   - SuppressDrops=true → gen=true (no items created)
+            //   - SuppressDrops=false → gen=false (items spawn; vacuum collects them if enabled)
+            // In multiplayer: always leave gen=false so each KillTile/PlaceTile/ReplaceTile
+            // sends its own TileManipulation message to the server.
             bool isMultiplayer = Main.netMode == NetmodeID.MultiplayerClient;
+            bool wantVacuum = config.VacuumItems && !config.SuppressDrops;
             bool wasGen = WorldGen.gen;
-            if (!isMultiplayer)
+            if (!isMultiplayer && config.SuppressDrops)
                 WorldGen.gen = true;
+
+            // Pre-compute full operation bounds for periodic vacuum sweeps
+            Rectangle fullOperationBounds = Rectangle.Empty;
+            if (wantVacuum)
+                fullOperationBounds = BulkTileOperations.ComputeBounds(
+                    validTiles.ConvertAll(t => t.Position));
+
+            // Periodic vacuum: sweep every N tile replacements to prevent
+            // hitting Terraria's 400-item ground cap (Main.maxItems).
+            const int VacuumSweepInterval = 200;
+            int tilesSinceVacuum = 0;
 
             foreach (var info in validTiles)
             {
@@ -371,6 +400,14 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
 
                     replaced++;
                     affectedPositions.Add(info.Position);
+                    tilesSinceVacuum++;
+                }
+
+                // Periodic vacuum sweep to prevent 400-item cap overflow.
+                if (wantVacuum && tilesSinceVacuum >= VacuumSweepInterval)
+                {
+                    BulkTileOperations.VacuumItemsInArea(player, fullOperationBounds);
+                    tilesSinceVacuum = 0;
                 }
             }
 
@@ -383,13 +420,11 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
                 else
                     BulkTileOperations.FinalizeBatch(affectedPositions);
 
-                // Vacuum: collect scattered tile drops into the player's inventory.
-                // In SP, WorldGen.gen=true suppresses all drops, so this only fires in MP
-                // or when drops somehow slip through (e.g., ReplaceTile doesn't use noItem).
-                if (config.VacuumItems && !config.SuppressDrops)
+                // Final vacuum sweep: catch remaining items from the last group
+                // and from FinalizeBatch's cascading frame updates.
+                if (wantVacuum)
                 {
-                    var bounds = BulkTileOperations.ComputeBounds(affectedPositions);
-                    BulkTileOperations.VacuumItemsInArea(player, bounds);
+                    BulkTileOperations.VacuumItemsInArea(player, fullOperationBounds);
                 }
             }
 
@@ -474,6 +509,21 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
             targetWallType = (ushort)targetItem.createWall;
         }
 
+        // --- MP: send packet to server and return early ---
+        if (Main.netMode == NetmodeID.MultiplayerClient)
+        {
+            WandPacketHandler.SendReplacementOperation(
+                selection.StartTile, selection.EndTile,
+                settings.Shape.Shape, settings.Shape.FillMode,
+                settings.Shape.Thickness, settings.Shape.EqualDimensions,
+                selection.VerticalFirst, player.whoAmI,
+                settings.OldObject, settings.NewObject,
+                sourceWallType, eraseMode ? (ushort)0 : targetWallType,
+                (short)(targetItem?.type ?? 0), isWallMode: true,
+                settings.Shape.Slice, settings.Shape.ConnectDiameter);
+            return;
+        }
+
         var context = settings.Shape.ToShapeContext(
             selection.StartTile, selection.EndTile, selection.VerticalFirst);
 
@@ -523,13 +573,11 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
         string tgtName = eraseMode ? "Air" : targetItem.Name;
         var action = undoMgr.BeginAction($"Replace Wall {srcName} → {tgtName}");
 
-        int replaced = 0;
-        var affectedPositions = new List<Point>();
         bool isMultiplayer = Main.netMode == NetmodeID.MultiplayerClient;
-
-        bool wasGen = WorldGen.gen;
         bool suppressDrops = config.SuppressDrops;
 
+        // Pre-validate all walls and snapshot them
+        var validWalls = new List<ProgressiveTileProcessor.WallReplacementInfo>();
         foreach (Point tile in tileSet.Tiles)
         {
             if (!WorldGen.InWorld(tile.X, tile.Y, 1)) continue;
@@ -538,85 +586,172 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
             var t = Main.tile[tile.X, tile.Y];
             if (t.WallType != sourceWallType) continue;
 
-            // Preserve tiles that depend on the wall for support (torches, candles,
-            // banners, paintings, etc.). KillWall would silently destroy them.
-            if (TileHelper.WouldTileLoseSupport(tile.X, tile.Y)) continue;
+            // Check if there's a hanging object (torch, banner, painting, etc.)
+            // that depends on this wall for support. Instead of skipping the tile,
+            // we flag it so the hanging object is destroyed (with drops) before
+            // the wall is replaced.
+            bool hasHanging = TileHelper.WouldTileLoseSupport(tile.X, tile.Y);
 
             action.AddSnapshot(tile);
 
-            // Only suppress drops when config says so — NOT unconditionally.
-            // In SP, WorldGen.gen controls whether KillWall drops wall items.
-            // In MP, leave gen=false so per-tile net messages are sent.
-            if (!isMultiplayer)
-                WorldGen.gen = suppressDrops;
-
-            if (eraseMode)
+            validWalls.Add(new ProgressiveTileProcessor.WallReplacementInfo
             {
-                WorldGen.KillWall(tile.X, tile.Y, fail: false);
-                if (t.WallType == WallID.None)
-                {
-                    replaced++;
-                    affectedPositions.Add(tile);
-                }
-            }
-            else
-            {
-                WorldGen.KillWall(tile.X, tile.Y, fail: false);
-                if (t.WallType == WallID.None)
-                {
-                    WorldGen.PlaceWall(tile.X, tile.Y, targetWallType, mute: true);
-                    if (t.WallType == targetWallType)
-                    {
-                        replaced++;
-                        affectedPositions.Add(tile);
-                    }
-                }
-            }
-
-            WorldGen.gen = wasGen;
+                Position = tile,
+                SourceWallType = sourceWallType,
+                TargetWallType = eraseMode ? (ushort)0 : targetWallType,
+                IsErase = eraseMode,
+                SuppressDrops = suppressDrops,
+                HasHangingObject = hasHanging
+            });
         }
 
-        if (affectedPositions.Count > 0)
+        if (validWalls.Count == 0)
         {
-            foreach (var pos in affectedPositions)
-                Framing.WallFrame(pos.X, pos.Y);
-
-            if (isMultiplayer)
-                BulkTileOperations.FinalizeFrameOnly(affectedPositions);
-            else
-                BulkTileOperations.FinalizeBatch(affectedPositions);
-
-            // Vacuum: collect scattered wall drops into the player's inventory.
-            // When SuppressDrops is false, KillWall creates item drops on the ground.
-            if (config.VacuumItems && !suppressDrops)
-            {
-                var bounds = BulkTileOperations.ComputeBounds(affectedPositions);
-                BulkTileOperations.VacuumItemsInArea(player, bounds);
-            }
+            Main.NewText(Get("NoWallsReplaced"), WandColors.MsgInfo);
+            return;
         }
 
-        if (replaced > 0)
+        // Branch: progressive mode (with drops/sounds) vs instant mode (silent)
+        bool useProgressive = config != null && config.EnableProgressiveMode;
+
+        if (useProgressive)
         {
-            undoMgr.CommitAction(action);
+            // Progressive: enqueue batches for timed processing
+            int batchSize = config.ProgressiveBatchSize;
+            float interval = config.ProgressiveInterval;
 
-            // Play ManaCrystalPickup (SoundID.Item29) at low volume — only when drops
-            // are suppressed and wand sounds enabled.
-            if (config.SuppressDrops && config.EnableWandSounds)
-            {
-                Terraria.Audio.SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.25f }, player.Center); // ManaCrystalPickup
-            }
+            ProgressiveTileProcessor.EnqueueWallReplacement(
+                player, validWalls, action, undoMgr, batchSize, interval,
+                shouldConsume, targetCondition, sourceItem, targetItem,
+                eraseMode ? ObjectType.Air : ObjectType.Wall,
+                targetWallType,
+                vacuumItems: config.VacuumItems);
 
-            if (!eraseMode && targetCondition != null && shouldConsume)
-                ItemTypeHelper.ConsumeItems(player.inventory, targetCondition, replaced);
-
-            string srcIcon = $"[i:{sourceItem.type}]";
-            string tgtIcon = eraseMode ? "Air" : $"[i:{targetItem.type}]";
-            Main.NewText($"Replaced {replaced} walls: {srcIcon} → {tgtIcon}" +
-                (shouldConsume ? "" : " (no items consumed)"), WandColors.MsgReplacement);
+            int batches = (int)Math.Ceiling((double)validWalls.Count / batchSize);
+            float totalTime = (batches - 1) * interval;
+            string srcIcon2 = $"[i:{sourceItem.type}]";
+            string tgtIcon2 = eraseMode ? "Air" : $"[i:{targetItem.type}]";
+            Main.NewText(
+                $"Replacing {validWalls.Count} walls: {srcIcon2} → {tgtIcon2} in {batches} wave(s) (~{totalTime:F1}s)" +
+                (shouldConsume ? "" : " (no items consumed)"),
+                WandColors.MsgReplacement);
         }
         else
         {
-            Main.NewText(Get("NoWallsReplaced"), WandColors.MsgInfo);
+            // Instant: process all at once
+            int replaced = 0;
+            var affectedPositions = new List<Point>();
+            bool wantVacuum = config.VacuumItems && !suppressDrops;
+
+            // Pre-compute full operation bounds for periodic vacuum sweeps
+            Rectangle fullOperationBounds = Rectangle.Empty;
+            if (wantVacuum)
+                fullOperationBounds = BulkTileOperations.ComputeBounds(
+                    validWalls.ConvertAll(w => w.Position));
+
+            bool wasGen = WorldGen.gen;
+
+            // Periodic vacuum: sweep every N wall replacements to prevent
+            // hitting Terraria's 400-item ground cap (Main.maxItems).
+            const int VacuumSweepInterval = 200;
+            int tilesSinceVacuum = 0;
+
+            foreach (var info in validWalls)
+            {
+                var t = Main.tile[info.Position.X, info.Position.Y];
+
+                // Verify wall still matches
+                if (t.WallType != info.SourceWallType) continue;
+
+                // Destroy hanging objects (torches, banners, paintings) that depend
+                // on this wall for support. They get their natural drops (unless suppressed).
+                if (info.HasHangingObject && t.HasTile)
+                {
+                    if (!isMultiplayer)
+                        WorldGen.gen = suppressDrops;
+                    WorldGen.KillTile(info.Position.X, info.Position.Y,
+                        fail: false, effectOnly: false, noItem: suppressDrops);
+                    WorldGen.gen = wasGen;
+                }
+
+                // Only suppress wall drops when config says so.
+                if (!isMultiplayer)
+                    WorldGen.gen = suppressDrops;
+
+                if (info.IsErase)
+                {
+                    WorldGen.KillWall(info.Position.X, info.Position.Y, fail: false);
+                    if (t.WallType == WallID.None)
+                    {
+                        replaced++;
+                        affectedPositions.Add(info.Position);
+                        tilesSinceVacuum++;
+                    }
+                }
+                else
+                {
+                    WorldGen.KillWall(info.Position.X, info.Position.Y, fail: false);
+                    if (t.WallType == WallID.None)
+                    {
+                        WorldGen.PlaceWall(info.Position.X, info.Position.Y, info.TargetWallType, mute: true);
+                        if (t.WallType == info.TargetWallType)
+                        {
+                            replaced++;
+                            affectedPositions.Add(info.Position);
+                            tilesSinceVacuum++;
+                        }
+                    }
+                }
+
+                WorldGen.gen = wasGen;
+
+                // Periodic vacuum sweep to prevent 400-item cap overflow.
+                if (wantVacuum && tilesSinceVacuum >= VacuumSweepInterval)
+                {
+                    BulkTileOperations.VacuumItemsInArea(player, fullOperationBounds);
+                    tilesSinceVacuum = 0;
+                }
+            }
+
+            if (affectedPositions.Count > 0)
+            {
+                foreach (var pos in affectedPositions)
+                    Framing.WallFrame(pos.X, pos.Y);
+
+                if (isMultiplayer)
+                    BulkTileOperations.FinalizeFrameOnly(affectedPositions);
+                else
+                    BulkTileOperations.FinalizeBatch(affectedPositions);
+
+                // Final vacuum sweep: catch remaining items from the last group
+                // and from FinalizeBatch's cascading frame updates.
+                if (wantVacuum)
+                {
+                    BulkTileOperations.VacuumItemsInArea(player, fullOperationBounds);
+                }
+            }
+
+            if (replaced > 0)
+            {
+                undoMgr.CommitAction(action);
+
+                if (config.SuppressDrops && config.EnableWandSounds)
+                {
+                    Terraria.Audio.SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.25f }, player.Center);
+                }
+
+                if (!eraseMode && targetCondition != null && shouldConsume)
+                    ItemTypeHelper.ConsumeItems(player.inventory, targetCondition, replaced);
+
+                string srcIcon = $"[i:{sourceItem.type}]";
+                string tgtIcon = eraseMode ? "Air" : $"[i:{targetItem.type}]";
+                Main.NewText($"Replaced {replaced} walls: {srcIcon} → {tgtIcon}" +
+                    (shouldConsume ? "" : " (no items consumed)"), WandColors.MsgReplacement);
+            }
+            else
+            {
+                Main.NewText(Get("NoWallsReplaced"), WandColors.MsgInfo);
+            }
         }
     }
 

@@ -188,6 +188,54 @@ public class ProgressiveTileProcessor : ModSystem
         _activeOperations.Add(op);
     }
 
+    /// <summary>
+    /// Enqueues a wall replacement operation to be processed progressively over time.
+    /// Walls will be replaced in batches with proper drops, sounds, and effects.
+    /// Hanging objects (torches, banners, etc.) that depend on the wall are destroyed
+    /// and dropped before the wall is replaced.
+    /// </summary>
+    public static void EnqueueWallReplacement(
+        Player player,
+        List<WallReplacementInfo> walls,
+        UndoAction undoAction,
+        UndoManager undoManager,
+        int batchSize,
+        float intervalSeconds,
+        bool shouldConsume,
+        Func<Item, bool> targetCondition,
+        Item sourceItem,
+        Item targetItem,
+        ObjectType newObjectType,
+        ushort targetWallType,
+        bool vacuumItems = true)
+    {
+        if (walls.Count == 0) return;
+
+        var op = new ProgressiveOperation
+        {
+            Type = OperationType.WallReplacement,
+            Player = player,
+            WallReplacementTiles = walls,
+            UndoAction = undoAction,
+            UndoManager = undoManager,
+            BatchSize = batchSize,
+            IntervalTicks = (int)(intervalSeconds * 60f),
+            TicksUntilNextBatch = 0,
+            CurrentIndex = 0,
+            AffectedPositions = new List<Point>(),
+            TotalProcessed = 0,
+            ShouldConsume = shouldConsume,
+            TargetCondition = targetCondition,
+            SourceItem = sourceItem,
+            TargetItem = targetItem,
+            NewObjectType = newObjectType,
+            WallTargetType = targetWallType,
+            VacuumItems = vacuumItems
+        };
+
+        _activeOperations.Add(op);
+    }
+
     public override void PostUpdateWorld()
     {
         if (_activeOperations.Count == 0) return;
@@ -230,6 +278,8 @@ public class ProgressiveTileProcessor : ModSystem
                 return ProcessBuildingBatch(op);
             case OperationType.WallBuilding:
                 return ProcessWallBuildingBatch(op);
+            case OperationType.WallReplacement:
+                return ProcessWallReplacementBatch(op);
             default:
                 return true;
         }
@@ -239,6 +289,24 @@ public class ProgressiveTileProcessor : ModSystem
     {
         int end = Math.Min(op.CurrentIndex + op.BatchSize, op.DismantlingTiles.Count);
         var batchPositions = new List<Point>();
+
+        // Pre-compute the full operation bounds from ALL tiles (not just this batch)
+        // so that vacuum sweeps capture cascaded drops from multi-tile objects
+        // (trees, bamboo, etc.) that spawn items outside the explicit tile set.
+        bool wantVacuum = op.VacuumItems
+            && op.DismantlingTiles.Count > 0
+            && !op.DismantlingTiles[op.CurrentIndex].SuppressDrops;
+        Rectangle fullBounds = Rectangle.Empty;
+        if (wantVacuum)
+            fullBounds = BulkTileOperations.ComputeBounds(
+                op.DismantlingTiles.ConvertAll(t => t.Position));
+
+        // Periodic vacuum interval: sweep every N tile destructions within a batch
+        // to prevent hitting Terraria's 400-item ground cap (Main.maxItems).
+        // Each KillTile can cascade via SquareTileFrame to destroy additional
+        // unsupported tiles, multiplying the item count beyond the explicit tile count.
+        const int VacuumSweepInterval = 200;
+        int tilesSinceVacuum = 0;
 
         for (int i = op.CurrentIndex; i < end; i++)
         {
@@ -262,6 +330,7 @@ public class ProgressiveTileProcessor : ModSystem
                         fail: false, effectOnly: false, noItem: info.SuppressDrops);
                     op.TotalProcessed++;
                     batchPositions.Add(info.Position);
+                    tilesSinceVacuum++;
                 }
             }
 
@@ -270,6 +339,13 @@ public class ProgressiveTileProcessor : ModSystem
                 WorldGen.KillWall(info.Position.X, info.Position.Y);
                 if (!info.DestroyTile)
                     batchPositions.Add(info.Position);
+            }
+
+            // Periodic vacuum sweep within the batch to prevent 400-item cap overflow.
+            if (wantVacuum && tilesSinceVacuum >= VacuumSweepInterval)
+            {
+                BulkTileOperations.VacuumItemsInArea(op.Player, fullBounds);
+                tilesSinceVacuum = 0;
             }
         }
 
@@ -284,17 +360,12 @@ public class ProgressiveTileProcessor : ModSystem
             else
                 BulkTileOperations.FinalizeBatch(batchPositions);
 
-            // Vacuum: collect scattered drops into the player's inventory per-batch.
-            // Progressive mode doesn't set WorldGen.gen, so KillTile/KillWall create
-            // item drops on the ground. Vacuuming per-batch prevents hitting the
-            // Main.maxItems (400) cap and losing items between waves.
-            bool anyDrops = op.VacuumItems
-                && op.DismantlingTiles.Count > 0
-                && !op.DismantlingTiles[op.CurrentIndex > 0 ? op.CurrentIndex - 1 : 0].SuppressDrops;
-            if (anyDrops)
+            // Final vacuum sweep for this batch: catch remaining items from the
+            // last group of tile destructions and from FinalizeBatch's frame updates
+            // (which can cascade-destroy additional unsupported tiles).
+            if (wantVacuum)
             {
-                var bounds = BulkTileOperations.ComputeBounds(batchPositions);
-                BulkTileOperations.VacuumItemsInArea(op.Player, bounds);
+                BulkTileOperations.VacuumItemsInArea(op.Player, fullBounds);
             }
         }
 
@@ -307,6 +378,21 @@ public class ProgressiveTileProcessor : ModSystem
         int end = Math.Min(op.CurrentIndex + op.BatchSize, op.ReplacementTiles.Count);
         var batchPositions = new List<Point>();
         int batchReplaced = 0;
+
+        // Pre-compute the full operation bounds from ALL tiles (not just this batch)
+        // so that vacuum sweeps capture cascaded drops from multi-tile objects.
+        bool wantVacuum = op.VacuumItems
+            && op.ReplacementTiles.Count > 0
+            && !op.ReplacementTiles[op.CurrentIndex].SuppressDrops;
+        Rectangle fullBounds = Rectangle.Empty;
+        if (wantVacuum)
+            fullBounds = BulkTileOperations.ComputeBounds(
+                op.ReplacementTiles.ConvertAll(t => t.Position));
+
+        // Periodic vacuum interval: sweep every N tile destructions within a batch
+        // to prevent hitting Terraria's 400-item ground cap (Main.maxItems).
+        const int VacuumSweepInterval = 200;
+        int tilesSinceVacuum = 0;
 
         for (int i = op.CurrentIndex; i < end; i++)
         {
@@ -369,6 +455,14 @@ public class ProgressiveTileProcessor : ModSystem
 
                 batchReplaced++;
                 batchPositions.Add(info.Position);
+                tilesSinceVacuum++;
+            }
+
+            // Periodic vacuum sweep within the batch to prevent 400-item cap overflow.
+            if (wantVacuum && tilesSinceVacuum >= VacuumSweepInterval)
+            {
+                BulkTileOperations.VacuumItemsInArea(op.Player, fullBounds);
+                tilesSinceVacuum = 0;
             }
         }
 
@@ -382,14 +476,11 @@ public class ProgressiveTileProcessor : ModSystem
             else
                 BulkTileOperations.FinalizeBatch(batchPositions);
 
-            // Vacuum: collect scattered tile drops into the player's inventory per-batch.
-            bool anyDrops = op.VacuumItems
-                && op.ReplacementTiles.Count > 0
-                && !op.ReplacementTiles[op.CurrentIndex > 0 ? op.CurrentIndex - 1 : 0].SuppressDrops;
-            if (anyDrops)
+            // Final vacuum sweep for this batch: catch remaining items from the
+            // last group of tile destructions and from FinalizeBatch's frame updates.
+            if (wantVacuum)
             {
-                var bounds = BulkTileOperations.ComputeBounds(batchPositions);
-                BulkTileOperations.VacuumItemsInArea(op.Player, bounds);
+                BulkTileOperations.VacuumItemsInArea(op.Player, fullBounds);
             }
         }
 
@@ -405,6 +496,21 @@ public class ProgressiveTileProcessor : ModSystem
         int batchPlaced = 0;
 
         bool wasGen = WorldGen.gen;
+
+        // Pre-compute the full operation bounds from ALL tiles (not just this batch)
+        // so that vacuum sweeps capture cascaded drops from replacement tiles.
+        bool wantVacuum = op.VacuumItems
+            && op.BuildingTiles.Count > 0
+            && !op.BuildingTiles[op.CurrentIndex].SuppressDrops;
+        Rectangle fullBounds = Rectangle.Empty;
+        if (wantVacuum)
+            fullBounds = BulkTileOperations.ComputeBounds(
+                op.BuildingTiles.ConvertAll(t => t.Position));
+
+        // Periodic vacuum interval: sweep every N tile destructions within a batch
+        // to prevent hitting Terraria's 400-item ground cap (Main.maxItems).
+        const int VacuumSweepInterval = 200;
+        int tilesSinceVacuum = 0;
 
         for (int i = op.CurrentIndex; i < end; i++)
         {
@@ -480,6 +586,7 @@ public class ProgressiveTileProcessor : ModSystem
                     if (op.OverwriteSlope)
                         ApplyBuildSlope(info.Position.X, info.Position.Y, op.SlopeType);
                     batchPlaced++;
+                    tilesSinceVacuum++;
                     if (op.ShouldConsume)
                         ConsumeOneBuildItem(op.Player, srcItem, op.BuildCondition);
                     batchPositions.Add(info.Position);
@@ -504,6 +611,13 @@ public class ProgressiveTileProcessor : ModSystem
 
                 WorldGen.gen = wasGen;
             }
+
+            // Periodic vacuum sweep within the batch to prevent 400-item cap overflow.
+            if (wantVacuum && tilesSinceVacuum >= VacuumSweepInterval)
+            {
+                BulkTileOperations.VacuumItemsInArea(op.Player, fullBounds);
+                tilesSinceVacuum = 0;
+            }
         }
 
         if (batchPositions.Count > 0)
@@ -511,15 +625,11 @@ public class ProgressiveTileProcessor : ModSystem
             op.AffectedPositions.AddRange(batchPositions);
             BulkTileOperations.BatchNetworkSync(BulkTileOperations.ComputeBounds(batchPositions));
 
-            // Vacuum: collect scattered tile drops from replacements per-batch.
-            // Only needed when replacement tiles had SuppressDrops = false.
-            bool anyDrops = op.VacuumItems
-                && op.BuildingTiles.Count > 0
-                && !op.BuildingTiles[op.CurrentIndex > 0 ? op.CurrentIndex - 1 : 0].SuppressDrops;
-            if (anyDrops)
+            // Final vacuum sweep for this batch: catch remaining items from the
+            // last group of tile destructions and from FinalizeBatch's frame updates.
+            if (wantVacuum)
             {
-                var bounds = BulkTileOperations.ComputeBounds(batchPositions);
-                BulkTileOperations.VacuumItemsInArea(op.Player, bounds);
+                BulkTileOperations.VacuumItemsInArea(op.Player, fullBounds);
             }
         }
 
@@ -535,6 +645,21 @@ public class ProgressiveTileProcessor : ModSystem
         int batchPlaced = 0;
 
         bool wasGen = WorldGen.gen;
+
+        // Pre-compute the full operation bounds from ALL wall tiles (not just this batch)
+        // so that vacuum sweeps capture drops from wall replacement paths.
+        bool wantVacuum = op.VacuumItems
+            && op.WallBuildingTiles.Count > 0
+            && !op.WallBuildingTiles[op.CurrentIndex].SuppressDrops;
+        Rectangle fullBounds = Rectangle.Empty;
+        if (wantVacuum)
+            fullBounds = BulkTileOperations.ComputeBounds(
+                op.WallBuildingTiles.ConvertAll(t => t.Position));
+
+        // Periodic vacuum interval: sweep every N tile destructions within a batch
+        // to prevent hitting Terraria's 400-item ground cap (Main.maxItems).
+        const int VacuumSweepInterval = 200;
+        int tilesSinceVacuum = 0;
 
         for (int i = op.CurrentIndex; i < end; i++)
         {
@@ -564,6 +689,7 @@ public class ProgressiveTileProcessor : ModSystem
                     if (t.WallType == wallType)
                     {
                         batchPlaced++;
+                        tilesSinceVacuum++;
                         if (op.ShouldConsume)
                             ItemTypeHelper.ConsumeItems(op.Player.inventory,
                                 it => !it.IsAir && it.type == srcItem.type, 1);
@@ -587,6 +713,13 @@ public class ProgressiveTileProcessor : ModSystem
                 }
                 WorldGen.gen = wasGen;
             }
+
+            // Periodic vacuum sweep within the batch to prevent 400-item cap overflow.
+            if (wantVacuum && tilesSinceVacuum >= VacuumSweepInterval)
+            {
+                BulkTileOperations.VacuumItemsInArea(op.Player, fullBounds);
+                tilesSinceVacuum = 0;
+            }
         }
 
         if (batchPositions.Count > 0)
@@ -596,20 +729,122 @@ public class ProgressiveTileProcessor : ModSystem
                 Framing.WallFrame(pos.X, pos.Y);
             BulkTileOperations.BatchNetworkSync(BulkTileOperations.ComputeBounds(batchPositions));
 
-            // Vacuum: collect scattered wall drops from replacements per-batch.
-            bool anyDrops = op.VacuumItems
-                && op.WallBuildingTiles.Count > 0
-                && !op.WallBuildingTiles[op.CurrentIndex > 0 ? op.CurrentIndex - 1 : 0].SuppressDrops;
-            if (anyDrops)
+            // Final vacuum sweep for this batch: catch remaining items from the
+            // last group of wall destructions and from frame updates.
+            if (wantVacuum)
             {
-                var bounds = BulkTileOperations.ComputeBounds(batchPositions);
-                BulkTileOperations.VacuumItemsInArea(op.Player, bounds);
+                BulkTileOperations.VacuumItemsInArea(op.Player, fullBounds);
             }
         }
 
         op.TotalProcessed += batchPlaced;
         op.CurrentIndex = end;
         return op.CurrentIndex >= op.WallBuildingTiles.Count;
+    }
+
+    private static bool ProcessWallReplacementBatch(ProgressiveOperation op)
+    {
+        int end = Math.Min(op.CurrentIndex + op.BatchSize, op.WallReplacementTiles.Count);
+        var batchPositions = new List<Point>();
+        int batchReplaced = 0;
+
+        bool wasGen = WorldGen.gen;
+
+        // Pre-compute the full operation bounds from ALL wall tiles (not just this batch)
+        // so that vacuum sweeps capture drops from hanging objects outside the batch.
+        bool wantVacuum = op.VacuumItems
+            && op.WallReplacementTiles.Count > 0
+            && !op.WallReplacementTiles[op.CurrentIndex].SuppressDrops;
+        Rectangle fullBounds = Rectangle.Empty;
+        if (wantVacuum)
+            fullBounds = BulkTileOperations.ComputeBounds(
+                op.WallReplacementTiles.ConvertAll(t => t.Position));
+
+        // Periodic vacuum interval: sweep every N tile destructions within a batch
+        // to prevent hitting Terraria's 400-item ground cap (Main.maxItems).
+        const int VacuumSweepInterval = 200;
+        int tilesSinceVacuum = 0;
+
+        for (int i = op.CurrentIndex; i < end; i++)
+        {
+            var info = op.WallReplacementTiles[i];
+
+            if (!WorldGen.InWorld(info.Position.X, info.Position.Y, 1)) continue;
+
+            var t = Main.tile[info.Position.X, info.Position.Y];
+
+            // Verify wall still matches (might have changed between batches)
+            if (t.WallType != info.SourceWallType) continue;
+
+            // Destroy hanging objects (torches, banners, etc.) that depend on the wall
+            if (info.HasHangingObject && t.HasTile)
+            {
+                WorldGen.KillTile(info.Position.X, info.Position.Y,
+                    fail: false, effectOnly: false, noItem: info.SuppressDrops);
+                tilesSinceVacuum++;
+            }
+
+            // Only suppress wall drops when config says so
+            if (Main.netMode != NetmodeID.MultiplayerClient)
+                WorldGen.gen = info.SuppressDrops;
+
+            if (info.IsErase)
+            {
+                WorldGen.KillWall(info.Position.X, info.Position.Y, fail: false);
+                if (t.WallType == WallID.None)
+                {
+                    batchReplaced++;
+                    batchPositions.Add(info.Position);
+                    tilesSinceVacuum++;
+                }
+            }
+            else
+            {
+                WorldGen.KillWall(info.Position.X, info.Position.Y, fail: false);
+                if (t.WallType == WallID.None)
+                {
+                    WorldGen.PlaceWall(info.Position.X, info.Position.Y, info.TargetWallType, mute: true);
+                    if (t.WallType == info.TargetWallType)
+                    {
+                        batchReplaced++;
+                        batchPositions.Add(info.Position);
+                        tilesSinceVacuum++;
+                    }
+                }
+            }
+
+            WorldGen.gen = wasGen;
+
+            // Periodic vacuum sweep within the batch to prevent 400-item cap overflow.
+            if (wantVacuum && tilesSinceVacuum >= VacuumSweepInterval)
+            {
+                BulkTileOperations.VacuumItemsInArea(op.Player, fullBounds);
+                tilesSinceVacuum = 0;
+            }
+        }
+
+        if (batchPositions.Count > 0)
+        {
+            op.AffectedPositions.AddRange(batchPositions);
+            foreach (var pos in batchPositions)
+                Framing.WallFrame(pos.X, pos.Y);
+
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+                BulkTileOperations.FinalizeFrameOnly(batchPositions);
+            else
+                BulkTileOperations.FinalizeBatch(batchPositions);
+
+            // Final vacuum sweep for this batch: catch remaining items from the
+            // last group of destructions and from FinalizeBatch's frame updates.
+            if (wantVacuum)
+            {
+                BulkTileOperations.VacuumItemsInArea(op.Player, fullBounds);
+            }
+        }
+
+        op.TotalProcessed += batchReplaced;
+        op.CurrentIndex = end;
+        return op.CurrentIndex >= op.WallReplacementTiles.Count;
     }
 
     /// <summary>
@@ -735,6 +970,35 @@ public class ProgressiveTileProcessor : ModSystem
                     Main.NewText(Get("NoWallsPlaced"), WandColors.MsgInfo);
                 }
                 break;
+
+            case OperationType.WallReplacement:
+                if (op.TotalProcessed > 0)
+                {
+                    op.UndoManager.CommitAction(op.UndoAction);
+
+                    // Consume target wall items all at once at the end
+                    if (op.NewObjectType != Enums.ObjectType.Air
+                        && op.TargetCondition != null && op.ShouldConsume)
+                    {
+                        ItemTypeHelper.ConsumeItems(op.Player.inventory,
+                            op.TargetCondition, op.TotalProcessed);
+                    }
+
+                    string srcIcon = op.SourceItem != null ? $"[i:{op.SourceItem.type}]" : "?";
+                    string tgtIcon = op.NewObjectType == Enums.ObjectType.Air
+                        ? "Air"
+                        : (op.TargetItem != null ? $"[i:{op.TargetItem.type}]" : "?");
+                    Main.NewText(
+                        $"Replaced {op.TotalProcessed} walls: {srcIcon} → {tgtIcon}" +
+                        (op.ShouldConsume ? "" : " (no items consumed)") +
+                        " (progressive)",
+                        WandColors.MsgReplacement);
+                }
+                else
+                {
+                    Main.NewText(Get("NoWallsReplaced"), WandColors.MsgInfo);
+                }
+                break;
         }
     }
 
@@ -745,7 +1009,7 @@ public class ProgressiveTileProcessor : ModSystem
 
     // ===== Data types =====
 
-    private enum OperationType { Dismantling, Replacement, Building, WallBuilding }
+    private enum OperationType { Dismantling, Replacement, Building, WallBuilding, WallReplacement }
 
     /// <summary>Pre-validated tile info for progressive destruction.</summary>
     public struct TileDismantlingInfo
@@ -784,6 +1048,17 @@ public class ProgressiveTileProcessor : ModSystem
         public bool SuppressDrops;
     }
 
+    /// <summary>Pre-validated wall info for progressive wall replacement.</summary>
+    public struct WallReplacementInfo
+    {
+        public Point Position;
+        public ushort SourceWallType;
+        public ushort TargetWallType;   // 0 when IsErase is true
+        public bool IsErase;            // true = erase wall to nothing
+        public bool SuppressDrops;
+        public bool HasHangingObject;   // true = foreground tile depends on this wall for support
+    }
+
     private class ProgressiveOperation
     {
         public OperationType Type;
@@ -806,6 +1081,10 @@ public class ProgressiveTileProcessor : ModSystem
         public Func<Item, bool> BuildCondition;     // condition to find source items
         public bool OverwriteSlope;
         public Enums.SlopeType SlopeType;
+
+        // Wall replacement data
+        public List<WallReplacementInfo> WallReplacementTiles;
+        public ushort WallTargetType;  // target wall type for wall replacement
 
         // Shared state
         public UndoAction UndoAction;

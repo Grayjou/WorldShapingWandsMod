@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using Terraria;
+using Terraria.GameInput;
 using Terraria.ModLoader;
 using Terraria.UI;
 using WorldShapingWandsMod.Content.Items;
@@ -182,6 +183,12 @@ public class WandUISystem : ModSystem
             if (IsCursorOverPanel())
             {
                 _userInterface?.Update(gameTime);
+
+                // Consume the scroll wheel delta so Terraria's hotbar doesn't scroll
+                // while the cursor is over our settings panel. Same technique used by
+                // SummonersAssociation to prevent hotbar changes during UI interaction.
+                if (PlayerInput.ScrollWheelDelta != 0)
+                    PlayerInput.ScrollWheelDelta = 0;
             }
         }
     }

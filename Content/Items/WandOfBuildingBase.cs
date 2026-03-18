@@ -13,6 +13,7 @@ using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Configs;
 using WorldShapingWandsMod.Common.Drawing;
 using WorldShapingWandsMod.Common.Items;
+using WorldShapingWandsMod.Common.Networking;
 using WorldShapingWandsMod.Common.Selection;
 using WorldShapingWandsMod.Common.Systems;
 using System;
@@ -89,6 +90,32 @@ namespace WorldShapingWandsMod.Content.Items
             if (settings.Object == PlaceType.Wall)
             {
                 ExecuteWallBuilding(player, wandPlayer, settings, selection, config);
+                return;
+            }
+
+            // ── Multiplayer: send packet to server instead of executing locally ──
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+            {
+                // Find source item for the packet (client-side pre-validation)
+                var mpBaseCondition = ItemTypeHelper.GetConditions(settings.Object);
+                Func<Item, bool> mpCondition = item => mpBaseCondition(item) && !ItemTypeHelper.IsMultiTileItem(item);
+                int mpIdx = ItemTypeHelper.FindFirstItemIndex(player, mpCondition);
+                if (mpIdx < 0)
+                {
+                    Main.NewText(Get("NoSuitableItem", settings.Object), Color.Red);
+                    return;
+                }
+
+                Item mpItem = player.inventory[mpIdx];
+                WandPacketHandler.SendBuildingOperation(
+                    selection.StartTile, selection.EndTile,
+                    settings.Shape.Shape, settings.Shape.FillMode,
+                    settings.Shape.Thickness, settings.Shape.EqualDimensions,
+                    selection.VerticalFirst, player.whoAmI,
+                    settings.Object, settings.Slope, settings.OverwriteSlope,
+                    settings.ExhaustionMode, player.TileReplacementEnabled,
+                    (short)mpItem.type, (short)mpItem.placeStyle,
+                    settings.Shape.Slice, settings.Shape.ConnectDiameter);
                 return;
             }
 
@@ -486,6 +513,22 @@ namespace WorldShapingWandsMod.Content.Items
             if (sourceIndex < 0)
             {
                 Main.NewText(Get("NoWallItemFound"), Color.Red);
+                return;
+            }
+
+            // ── Multiplayer: send packet to server instead of executing locally ──
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+            {
+                Item mpItem = player.inventory[sourceIndex];
+                WandPacketHandler.SendBuildingOperation(
+                    selection.StartTile, selection.EndTile,
+                    settings.Shape.Shape, settings.Shape.FillMode,
+                    settings.Shape.Thickness, settings.Shape.EqualDimensions,
+                    selection.VerticalFirst, player.whoAmI,
+                    PlaceType.Wall, settings.Slope, settings.OverwriteSlope,
+                    settings.ExhaustionMode, player.TileReplacementEnabled,
+                    (short)mpItem.type, (short)mpItem.placeStyle,
+                    settings.Shape.Slice, settings.Shape.ConnectDiameter);
                 return;
             }
 

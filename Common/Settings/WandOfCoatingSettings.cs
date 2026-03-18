@@ -29,11 +29,23 @@ public class WandOfCoatingSettings
     public bool ApplyIlluminant { get; set; } = false;
 
     /// <summary>
+    /// When true, Illuminant coating state is left unchanged on existing tiles.
+    /// Overrides ApplyIlluminant — the coating is neither applied nor removed.
+    /// </summary>
+    public bool IgnoreIlluminant { get; set; } = false;
+
+    /// <summary>
     /// Whether to apply Echo coating (makes tiles invisible).
     /// Applied independently of paint and Illuminant — a tile can have both coatings.
     /// Only used in PaintTile/PaintWall modes.
     /// </summary>
     public bool ApplyEcho { get; set; } = false;
+
+    /// <summary>
+    /// When true, Echo coating state is left unchanged on existing tiles.
+    /// Overrides ApplyEcho — the coating is neither applied nor removed.
+    /// </summary>
+    public bool IgnoreEcho { get; set; } = false;
 
     /// <summary>The shape configuration.</summary>
     public ShapeInfo Shape { get; set; } = ShapeInfo.Default;
@@ -54,7 +66,9 @@ public class WandOfCoatingSettings
             Mode = Mode,
             PaintColor = PaintColor,
             ApplyIlluminant = ApplyIlluminant,
+            IgnoreIlluminant = IgnoreIlluminant,
             ApplyEcho = ApplyEcho,
+            IgnoreEcho = IgnoreEcho,
             Shape = Shape,
             StartPoint = StartPoint,
             EndPoint = EndPoint
@@ -69,7 +83,9 @@ public class WandOfCoatingSettings
         Mode = CoatingMode.PaintTile;
         PaintColor = 26; // White (PaintID.White = 26)
         ApplyIlluminant = false;
+        IgnoreIlluminant = false;
         ApplyEcho = false;
+        IgnoreEcho = false;
         Shape = ShapeInfo.Default;
         StartPoint = Point.Zero;
         EndPoint = Point.Zero;

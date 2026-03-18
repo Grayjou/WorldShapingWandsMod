@@ -194,11 +194,13 @@ public class SafekeepingSettingsPanel : UIState
         minusBtn.Left.Set(col1 + 130f, 0f);
         minusBtn.Top.Set(y - 2f, 0f);
         minusBtn.OnLeftClick += (_, _) => AdjustThickness(-1);
+        minusBtn.OnScrollWheel += (evt, _) => AdjustThickness(evt.ScrollWheelValue > 0 ? 1 : -1);
         _mainPanel.Append(minusBtn);
 
         _thicknessValue = new UIText("1", 0.9f);
         _thicknessValue.Left.Set(col1 + 170f, 0f);
         _thicknessValue.Top.Set(y, 0f);
+        _thicknessValue.OnScrollWheel += (evt, _) => AdjustThickness(evt.ScrollWheelValue > 0 ? 1 : -1);
         _mainPanel.Append(_thicknessValue);
 
         var plusBtn = new UITextPanel<string>("+", 0.8f, false);
@@ -207,6 +209,7 @@ public class SafekeepingSettingsPanel : UIState
         plusBtn.Left.Set(col1 + 200f, 0f);
         plusBtn.Top.Set(y - 2f, 0f);
         plusBtn.OnLeftClick += (_, _) => AdjustThickness(1);
+        plusBtn.OnScrollWheel += (evt, _) => AdjustThickness(evt.ScrollWheelValue > 0 ? 1 : -1);
         _mainPanel.Append(plusBtn);
         y += 42f;
 

@@ -1,0 +1,629 @@
+Keybinds: {
+	// "Increase Thickness.DisplayName": Increase  Thickness
+	// "Decrease Thickness.DisplayName": Decrease  Thickness
+	// "Open Wand Settings.DisplayName": Open Wand Settings
+	// "Undo Selection Step.DisplayName": Undo Selection Step
+}
+
+RecipeGroups: {
+	// AnyGemstone: Any Gemstone
+	// AnyWandOfBuilding: Any Wand of Building
+	// AnyWandOfDismantling: Any Wand of Dismantling
+}
+
+UI: {
+	Common: {
+		// Shape: Shape
+		// OutlineThickness: Outline Thickness:
+		// Close: Close
+		// Shape hover texts
+		// ShapeRectFilled: Rectangle (Filled)
+		// ShapeRectHollow: Rectangle (Hollow)
+		// ShapeEllipseFilled: Ellipse (Filled)
+		// ShapeEllipseHollow: Ellipse (Hollow)
+		// ShapeDiamondFilled: Diamond (Filled)
+		// ShapeDiamondHollow: Diamond (Hollow)
+		// ShapeTriangleFilled: Triangle (Filled)
+		// ShapeTriangleHollow: Triangle (Hollow)
+		// ShapeElbow: Elbow
+		// ShapeCardinal: Cardinal Line
+		// ShapeStraightLine: Straight Line
+		// EqualDimensions: Equal Dimensions
+		// ConnectDiameter: Connect Diameter
+		// Slice: Shape Slice
+	}
+
+	Building: {
+		// Title: Wand of Building
+		// ObjectType: Object Type
+		// SolidBlock: Solid Block
+		// Platform: Platform
+		// Rope: Rope
+		// Rail: Rail
+		// GrassSeed: Grass Seed
+		// PlanterBox: Planter Box
+		// Wall: Wall
+		// Slope: Slope
+		// SlopeDefault: Full Block
+		// SlopeHalf: Half Block
+		// SlopeBottomRight: Slope ◣ (Down-Right)
+		// SlopeBottomLeft: Slope ◢ (Down-Left)
+		// SlopeTopRight: Slope ◤ (Up-Right)
+		// SlopeTopLeft: Slope ◥ (Up-Left)
+		// OverwriteSlope: Overwrite Slope
+	}
+
+	Dismantling: {
+		// Title: Wand of Dismantling
+		// Options: Options
+		// DestroyTiles: Destroy Tiles
+		// DestroyWalls: Destroy Walls
+		// DestroyContainers: Destroy Chests
+		// DestroyContainersTooltip: Only active when Destroy Tiles is also enabled
+	}
+
+	Replacement: {
+		// Title: Wand of Replacement
+		// SourceType: Source Type (Find)
+		// TargetType: Target Type (Replace)
+		// Tile: Tile
+		// Platform: Platform
+		// Rope: Rope
+		// Planter: Planter
+		// Rail: Rail
+		// Seeds: Seeds
+		// Air: Air
+		// Wall: Wall
+	}
+
+	Wiring: {
+		// Title: Wand of Wiring
+		// WireTypes: Wire Types
+		// RedWire: Red Wire
+		// GreenWire: Green Wire
+		// BlueWire: Blue Wire
+		// YellowWire: Yellow Wire
+		// Actuator: Actuator
+		// Mode: Mode
+		// Place: Place
+		// Remove: Remove
+	}
+
+	Safekeeping: {
+		// Title: Wand of Safekeeping
+		// Mode: Mode
+		// Protect: Protect
+		// Unprotect: Unprotect
+		// ProtectTiles: Protect Tiles
+		// ProtectWalls: Protect Walls
+		// ClearAll: Clear All
+		// ClearConfirm: Click to Confirm!
+	}
+
+	Coating: {
+		// Title: Wand of Coating
+		// Mode: Mode
+		// PaintTile: Paint Tile
+		// PaintWall: Paint Wall
+		// ScrapePaint: Scrape Paint
+		// ScrapeMoss: Scrape Moss
+		// HarvestMoss: Harvest Moss
+		// PaintColor: Paint Color
+		// CoatingType: Coating
+		// Illuminant: Illuminant
+		// Echo: Echo
+		// Ignore: Ignore
+		// On: On
+		// Off: Off
+	}
+}
+
+Configs: {
+	WandConfig: {
+		// InfiniteResources.Header: Infinite Resources
+
+		EnableInfiniteResource: {
+			// Label: Enable Infinite Resource Mode
+			// Tooltip: If enabled, building/replacement wands will stop consuming items when you hold enough in your inventory (see per-type thresholds below). Set a threshold to 0 for always-infinite.
+		}
+
+		InfiniteTileThreshold: {
+			// Label: Tile Threshold
+			/* Tooltip:
+				'''
+				If you have at least this many of a tile (blocks, platforms, ropes, rails) in your inventory, it will not be consumed. 
+				0 = always infinite for tiles.
+				''' */
+		}
+
+		InfiniteWallThreshold: {
+			// Label: Wall Threshold
+			/* Tooltip:
+				'''
+				If you have at least this many of a wall item in your inventory, it will not be consumed.
+				0 = always infinite for walls.
+				''' */
+		}
+
+		InfiniteGrassSeedThreshold: {
+			// Label: Grass Seed Threshold
+			/* Tooltip:
+				'''
+				If you have at least this many grass seeds in your inventory, they will not be consumed.
+				Default is 50 because grass seeds are rarer than blocks.
+				0 = always infinite for grass seeds.
+				''' */
+		}
+
+		InfiniteWireThreshold: {
+			// Label: Wire Threshold
+			/* Tooltip:
+				'''
+				If you have at least this many wires in your inventory, they will not be consumed by the Wand of Wiring.
+				0 = always infinite for wires.
+				''' */
+		}
+
+		InfiniteActuatorThreshold: {
+			// Label: Actuator Threshold
+			/* Tooltip:
+				'''
+				If you have at least this many actuators in your inventory, they will not be consumed by the Wand of Wiring.
+				0 = always infinite for actuators.
+				''' */
+		}
+
+		InfiniteTiles: {
+			// Label: Infinite Tiles (Override)
+			/* Tooltip:
+				'''
+				Per-type override for tiles (blocks, platforms, rope, rails, planter boxes).
+				Default: follows the master Enable Infinite Resource toggle.
+				ForceOn: always infinite for tiles, even if the master toggle is off.
+				ForceOff: never infinite for tiles, even if the master toggle is on.
+				''' */
+		}
+
+		InfiniteWalls: {
+			// Label: Infinite Walls (Override)
+			/* Tooltip:
+				'''
+				Per-type override for walls.
+				Default: follows the master Enable Infinite Resource toggle.
+				ForceOn: always infinite for walls, even if the master toggle is off.
+				ForceOff: never infinite for walls, even if the master toggle is on.
+				''' */
+		}
+
+		InfiniteGrassSeeds: {
+			// Label: Infinite Grass Seeds (Override)
+			/* Tooltip:
+				'''
+				Per-type override for grass seeds.
+				Default: follows the master Enable Infinite Resource toggle.
+				ForceOn: always infinite for seeds, even if the master toggle is off.
+				ForceOff: never infinite for seeds, even if the master toggle is on.
+				''' */
+		}
+
+		InfiniteWires: {
+			// Label: Infinite Wires (Override)
+			/* Tooltip:
+				'''
+				Per-type override for wires.
+				Default: follows the master Enable Infinite Resource toggle.
+				ForceOn: always infinite for wires, even if the master toggle is off.
+				ForceOff: never infinite for wires, even if the master toggle is on.
+				''' */
+		}
+
+		InfiniteActuators: {
+			// Label: Infinite Actuators (Override)
+			/* Tooltip:
+				'''
+				Per-type override for actuators.
+				Default: follows the master Enable Infinite Resource toggle.
+				ForceOn: always infinite for actuators, even if the master toggle is off.
+				ForceOff: never infinite for actuators, even if the master toggle is on.
+				''' */
+		}
+
+		// SelectionLimits.Header: Selection Dimension Limits
+
+		SmallSelectionCap: {
+			// Label: Small Shape Cap (Elbow / Cardinal / Straight)
+			// Tooltip: Maximum dimension (width or height) for Elbow, Cardinal Line, and Straight Line shapes.\nThese shapes are 1D so they can safely be longer.
+		}
+
+		BigSelectionCap: {
+			// Label: Big Shape Cap (Rect / Ellipse / etc.)
+			// Tooltip: Maximum dimension (width or height) for 2D area shapes.\nA cap of 200 means the largest selection is 200×200.
+		}
+
+		HollowSelectionCap: {
+			// Label: Hollow Shape Cap
+			// Tooltip: Maximum dimension (width or height) for hollow shapes.\nHollow shapes produce fewer tiles than filled shapes, so they can safely be larger.\nA cap of 400 means the largest hollow selection is 400×400.
+		}
+
+		// ProgressiveMode.Header: Progressive Dismantling
+		// Sandbox.Header: Sandbox Options
+
+		SuppressDrops: {
+			// Label: Suppress Tile Drops
+			// Tooltip: When enabled, tiles destroyed by any wand (dismantling, replacement, or building swap) will not drop items.\nUseful for creative/sandbox building where you don't need the materials back.
+		}
+
+		BypassPickaxePower: {
+			// Label: Bypass Pickaxe Power
+			// Tooltip: When enabled, wands ignore pickaxe power requirements and can destroy or replace any tile regardless of pickaxe strength.\nUseful for creative/sandbox building.
+		}
+
+		AllowDemonAltarDestruction: {
+			// Label: Allow Demon Altar Destruction
+			/* Tooltip:
+				'''
+				When enabled, the Wand of Dismantling can destroy Demon Altars and Crimson Altars.
+				By default, altars are protected from accidental mass-destruction.
+				Requires appropriate hammer power (Pwnhammer or better) unless Bypass Pickaxe Power is also on.
+				''' */
+		}
+
+		IgnoreLockedKeyRequirements: {
+			// Label: Ignore Locked Key Requirements
+			/* Tooltip:
+				'''
+				When enabled, locked chests can be opened by wands without needing keys.
+				No keys are consumed. Useful for sandbox/builder modes.
+				''' */
+		}
+
+		AutoOpenChestsOnDestruction: {
+			// Label: Auto-Open Chests on Destruction
+			/* Tooltip:
+				'''
+				When enabled, the Wand of Dismantling automatically empties and destroys
+				chests in the selection. When disabled, chests are skipped entirely.
+				Requires the "Destroy Containers" toggle in the wand panel to also be on.
+				''' */
+		}
+
+		VacuumItems: {
+			// Label: Vacuum Dropped Items
+			/* Tooltip:
+				'''
+				When enabled, items dropped by wand operations (dismantling, replacement,
+				building swaps) are automatically collected into your inventory.
+				Overflow items are teleported to your position instead of scattering.
+				Has no effect when Suppress Tile Drops is enabled (no items to collect).
+				''' */
+		}
+
+		MaxOutlineThickness: {
+			// Label: Max Outline Thickness
+			/* Tooltip:
+				'''
+				Maximum outline thickness for hollow shapes.
+				Default is 10. Increase for larger outline shapes, decrease to keep the UI simple.
+				The + button in wand panels will cap at this value.
+				''' */
+		}
+
+		EnableProgressiveMode: {
+			// Label: Enable Progressive Mode
+			// Tooltip: When enabled, Dismantling and replacement operations process tiles in timed batches with proper drops, sounds, and effects.\nWhen disabled, operations are instant and silent (no tile drops).
+		}
+
+		ProgressiveBatchSize: {
+			// Label: Batch Size
+			/* Tooltip:
+				'''
+				Number of tiles processed per batch in progressive mode.
+				400 tiles per batch is a satisfying amount without lag.
+				''' */
+		}
+
+		ProgressiveInterval: {
+			// Label: Batch Interval (seconds)
+			// Tooltip: Time between each batch in progressive mode.\n0.3 seconds gives a satisfying wave-like demolition feel.
+		}
+
+		// Tooltips.Header: Tooltip Options
+
+		ShowLoreTooltips: {
+			// Label: Show Lore Tooltips
+			// Tooltip: When enabled, holding Shift while hovering a wand shows its lore text.\nDisable to hide lore entirely.
+		}
+
+		// Safekeeping.Header: Safekeeping
+
+		SafekeepingClearThreshold: {
+			// Label: Clear All Confirmation Threshold
+			// Tooltip: When the total number of protected tiles and walls exceeds this value, the Clear All button requires a second click to confirm.\nSet to 0 to disable the confirmation safeguard.
+		}
+
+		// Audio.Header: Audio
+
+		EnableWandSounds: {
+			// Label: Enable Wand Sound Effects
+			// Tooltip: When enabled, wands play custom sound effects on action success.\nDisable for silent operations.
+		}
+
+		// Overlay.Header: Overlay
+
+		OverlayRenderMode: {
+			// Label: Overlay Render Mode
+			/* Tooltip:
+				'''
+				Controls how the selection overlay is rendered for large shapes.
+				Auto: Shows a bounding box while dragging shapes larger than 200 tiles, then fades in the full shape once the mouse stabilizes. This prevents lag during rapid resizing. (Default)
+				AlwaysFullShape: Always renders the full shape overlay immediately with no debounce. May cause lag on very large shapes but gives instant visual feedback.
+				AlwaysBoundingBox: Always shows only the bounding box outline, never computing the full shape. Lightest on performance.
+				''' */
+		}
+
+		// DisplayName: Wand Config
+
+		IsInfiniteForActuators: {
+			// Tooltip: ""
+			// Label: Is Infinite For Actuators
+		}
+
+		IsInfiniteForWires: {
+			// Tooltip: ""
+			// Label: Is Infinite For Wires
+		}
+	}
+
+	InfiniteOverride: {
+		ForceOff: {
+			// Tooltip: ""
+			// Label: Force Off
+		}
+
+		ForceOn: {
+			// Tooltip: ""
+			// Label: Force On
+		}
+
+		Default: {
+			// Tooltip: ""
+			// Label: Default
+		}
+
+		// Tooltip: ""
+	}
+
+	OverlayRenderMode: {
+		// Tooltip: ""
+
+		Auto: {
+			// Label: Auto
+			// Tooltip: ""
+		}
+
+		AlwaysFullShape: {
+			// Label: Always Full Shape
+			// Tooltip: ""
+		}
+
+		AlwaysBoundingBox: {
+			// Label: Always Bounding Box
+			// Tooltip: ""
+		}
+	}
+}
+
+Items: {
+	WandOfDismantlingInstant: {
+		// Tooltip: ""
+		// DisplayName: Wand Of Dismantling Instant
+	}
+
+	WandOfDismantlingSelect: {
+		// Tooltip: ""
+		// DisplayName: Wand Of Dismantling Select
+	}
+
+	WandOfDismantlingConfirm: {
+		// Tooltip: ""
+		// DisplayName: Wand Of Dismantling Confirm
+	}
+
+	WandOfBuildingInstant: {
+		// DisplayName: Wand of Building (Instant)
+		// Tooltip: Places tiles in a selected area
+	}
+
+	WandOfBuildingSelect: {
+		// DisplayName: Wand of Building (Select)
+		// Tooltip: Places tiles in a selected area
+	}
+
+	WandOfBuildingConfirm: {
+		// DisplayName: Wand of Building (Confirm)
+		// Tooltip: Places tiles in a selected area
+	}
+
+	WandOfReplacementInstant: {
+		// DisplayName: Wand of Replacement (Instant)
+		// Tooltip: Replaces tiles in a selected area
+	}
+
+	WandOfReplacementSelect: {
+		// DisplayName: Wand of Replacement (Select)
+		// Tooltip: Replaces tiles in a selected area
+	}
+
+	WandOfReplacementConfirm: {
+		// DisplayName: Wand of Replacement (Confirm)
+		// Tooltip: Replaces tiles in a selected area
+	}
+
+	WandOfWiringInstant: {
+		// DisplayName: Wand of Wiring (Instant)
+		// Tooltip: Places or removes wires and actuators in a selected area
+	}
+
+	WandOfWiringSelect: {
+		// DisplayName: Wand of Wiring (Select)
+		// Tooltip: Places or removes wires and actuators in a selected area
+	}
+
+	WandOfWiringConfirm: {
+		// DisplayName: Wand of Wiring (Confirm)
+		// Tooltip: Places or removes wires and actuators in a selected area
+	}
+
+	WandOfBuildingStamp: {
+		// DisplayName: Wand of Building (Stamp)
+		// Tooltip: Define a shape once, then stamp it repeatedly
+	}
+
+	WandOfDismantlingStamp: {
+		// Tooltip: ""
+		// DisplayName: Wand Of Dismantling Stamp
+	}
+
+	WandOfReplacementStamp: {
+		// DisplayName: Wand of Replacement (Stamp)
+		// Tooltip: Define a replacement area once, then stamp it repeatedly
+	}
+
+	WandOfWiringStamp: {
+		// DisplayName: Wand of Wiring (Stamp)
+		// Tooltip: Define a wiring area once, then stamp it repeatedly
+	}
+
+	WandOfSafekeepingInstant: {
+		// DisplayName: Wand of Safekeeping (Instant)
+		/* Tooltip:
+			'''
+			Protects or unprotects tiles in a selected area
+			[c/AAAAAA:Protections are local to each player and won't persist in multiplayer]
+			''' */
+	}
+
+	WandOfSafekeepingSelect: {
+		// DisplayName: Wand of Safekeeping (Select)
+		/* Tooltip:
+			'''
+			Protects or unprotects tiles in a selected area
+			[c/AAAAAA:Protections are local to each player and won't persist in multiplayer]
+			''' */
+	}
+
+	WandOfSafekeepingConfirm: {
+		// DisplayName: Wand of Safekeeping (Confirm)
+		/* Tooltip:
+			'''
+			Protects or unprotects tiles in a selected area
+			[c/AAAAAA:Protections are local to each player and won't persist in multiplayer]
+			''' */
+	}
+
+	WandOfSafekeepingStamp: {
+		// DisplayName: Wand of Safekeeping (Stamp)
+		/* Tooltip:
+			'''
+			Define a protection area once, then stamp it repeatedly
+			[c/AAAAAA:Protections are local to each player and won't persist in multiplayer]
+			''' */
+	}
+
+	WandOfCoatingInstant: {
+		// DisplayName: Wand of Coating (Instant)
+		// Tooltip: Paints, scrapes, or de-mosses tiles and walls in a selected area
+	}
+
+	WandOfCoatingSelect: {
+		// DisplayName: Wand of Coating (Select)
+		// Tooltip: Paints, scrapes, or de-mosses tiles and walls in a selected area
+	}
+
+	WandOfCoatingConfirm: {
+		// DisplayName: Wand of Coating (Confirm)
+		// Tooltip: Paints, scrapes, or de-mosses tiles and walls in a selected area
+	}
+
+	WandOfCoatingStamp: {
+		// DisplayName: Wand of Coating (Stamp)
+		// Tooltip: Define a coating area once, then stamp it repeatedly
+	}
+}
+
+// Conditions.NonCraftable: Not craftable. Cycle with right click in inventory.
+
+// ── Chat Messages ─────────────────────────────────────────
+// Localization keys for all in-game chat feedback messages.
+// These replace hardcoded Main.NewText() strings across the codebase.
+Messages: {
+	// ── Common ──────────────────────────────────────────────
+	// SelectionCancelled: Selection cancelled.
+	// SwitchedToMode: Switched to {0} mode
+	// ThicknessChanged: Thickness: {0} — {1}
+	// StampUnlocked: Stamp unlocked. Click to set new anchor.
+	// SelectionUnlocked: Selection unlocked. Move to adjust end point.
+	// SelectionCleared: Selection cleared.
+	// ── Tooltip strings ─────────────────────────────────────
+	// ModeInstant: Click and drag to select area
+	// ModeSelect: Click start, then click end
+	// ModeConfirm: Click start, click end, click to confirm
+	// ModeStamp: Click start, click end, click to lock stamp, click to repeat
+	// CycleHint: Right-click in inventory to cycle modes
+	// PickaxeHint: Uses your strongest pickaxe for tile power checks
+	// ObtainHint: "[c/AAAAAA:Obtain other modes by right-clicking this wand in your inventory]"
+	// ── Building ────────────────────────────────────────────
+	// NoSuitableItem: No suitable item found for {0}.
+	// NeedHave: Need {0} {1}, have {2}. Operation cancelled.
+	// NoTilesPlaced: No tiles could be placed.
+	// NoWallItemFound: No wall item found in inventory.
+	// NoWallsPlaced: No walls could be placed.
+	// ── Dismantling ─────────────────────────────────────────
+	// NoTilesDestroyed: No tiles were destroyed.
+	// ── Replacement ─────────────────────────────────────────
+	// NoSourceItems: No {0} items in inventory to identify source tile.
+	// SameSourceTarget: Source and target are the same tile [i:{0}].
+	// NoTargetItems: No {0} items found in inventory.
+	// NoSourceInSelection: No {0} found in selection.
+	// NeedTargetItems: Need {0} [i:{1}], have {2}.
+	// NoTilesReplaced: No tiles could be replaced.
+	// SourceMustBeWall: Source type must be Wall for wall replacement.
+	// NoWallSourceItems: No wall items in inventory to identify source wall.
+	// TargetMustBeWallOrAir: Target type must be Wall or Air for wall replacement.
+	// SameWallSourceTarget: Source and target are the same wall [i:{0}].
+	// NoWallTargetItems: No wall items found for target.
+	// NoSourceWallsInSelection: No {0} walls found in selection.
+	// NoWallsReplaced: No walls could be replaced.
+	// ── Wiring ──────────────────────────────────────────────
+	// NoWiresSelected: No wires or actuators selected.
+	// NoWireInInventory: No wire in inventory.
+	// NoActuatorsInInventory: No actuators in inventory.
+	// WiresPlaced: Placed {0} wire segments.
+	// WiresRemoved: Removed {0} wire segments.
+	// NoWiringChanges: No changes made.
+	// ── Safekeeping ─────────────────────────────────────────
+	// NoProtectionTargets: No protection targets selected (tiles or walls).
+	// NoPositionsToProtect: No positions to protect in selection.
+	// NoProtectedPositions: No protected positions in selection.
+	// ClearedProtection: Cleared all protection ({0} tiles, {1} walls).
+	// ClearConfirmPrompt: Click again to clear {0} tile(s) and {1} wall(s).
+	// ── Undo ────────────────────────────────────────────────
+	// Undone: Undone: {0} ({1} tiles)
+	// ── Coating ─────────────────────────────────────────────
+	// CoatingNoChanges: No changes made.
+	// CoatingPaintedTiles: Painted {0} tiles.
+	// CoatingPaintedWalls: Painted {0} walls.
+	// CoatingScrapedPaint: Scraped paint from {0} positions.
+	// CoatingScrapedMoss: Removed moss from {0} tiles.
+	// CoatingHarvestedMoss: Harvested moss from {0} tiles.
+	// ── Selection prompts (per-mode) ────────────────────────
+	// SelectStartClickEnd: Selection started. Click to set end point.
+	// SelectStartClickAgain: Selection started. Click again to {0}.
+	// ClickToConfirm: Click again to confirm.
+	// ClickToConfirmOrCancel: Click again to confirm, or right-click to cancel.
+	// EndPointSet: End point set. Click again to confirm.
+	// ── Stamp prompts ───────────────────────────────────────
+	// StampClickEnd: Stamp: click to set end point.
+	// StampClickLock: Stamp: click to lock anchor position.
+	// StampLocked: Stamp locked! Click to {0}. Right-click to reset.
+}
