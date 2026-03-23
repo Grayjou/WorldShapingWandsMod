@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Xna.Framework;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Geometry;
@@ -60,7 +61,8 @@ public class CancelledSelectionState
         var context = shape.ToShapeContext(startTile, endTile, verticalFirst);
         CachedBounds = context.GetBounds();
         var tileSet = ShapeRegistry.GetShapeTiles(shape.Shape, context);
-        CachedTiles = new HashSet<Point>(tileSet.Tiles);
+        var finalTiles = shape.ApplyInversion(tileSet.Tiles.ToArray(), context);
+        CachedTiles = new HashSet<Point>(finalTiles);
     }
 
     /// <summary>How many ticks have elapsed since cancellation.</summary>

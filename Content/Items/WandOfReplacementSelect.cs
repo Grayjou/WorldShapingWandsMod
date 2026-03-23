@@ -27,6 +27,7 @@ public class WandOfReplacementSelect : WandOfReplacementBase
         }
         else
         {
+            if (IsOnLocalCooldown()) return false;
             wandPlayer.UpdateSelection(mouseTile);
             ExecuteReplacement(player, wandPlayer);
             wandPlayer.ClearSelection();

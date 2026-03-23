@@ -21,35 +21,35 @@ namespace WorldShapingWandsMod.Common.Drawing;
 [Autoload(Side = ModSide.Client)]
 public class SelectionOverlay : ModSystem
 {
-    // ────────────────────────────────────────────────────────────
-    //  Tile Set Cache — prevents recomputing shapes every frame.
+    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+    //  Tile Set Cache Ã¢â‚¬â€ prevents recomputing shapes every frame.
     //  Invalidated when selection endpoints or shape settings change.
-    // ────────────────────────────────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
     private HashSet<Point> _cachedTiles;
     private Point _cacheStart, _cacheEnd;
     private ShapeInfo _cacheShape;
     private bool _cacheValid;
 
-    // ────────────────────────────────────────────────────────────
-    //  Area Calculation Cache — debounced to avoid per-frame cost.
+    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+    //  Area Calculation Cache Ã¢â‚¬â€ debounced to avoid per-frame cost.
     //  Only recomputed after dimensions stay stable for N frames.
-    // ────────────────────────────────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
     private int _areaStableFrames;
     private (int W, int H) _lastAreaDimensions;
     private int _cachedAreaCount = -1;
     private const int AreaDebounceFrames = 10; // ~0.17 seconds at 60fps
 
-    // ────────────────────────────────────────────────────────────
-    //  Large Shape Debounce — for shapes whose dimensions exceed
+    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+    //  Large Shape Debounce Ã¢â‚¬â€ for shapes whose dimensions exceed
     //  LargeShapeThreshold, defer full rasterization until the
     //  mouse stops moving. Draw a simple bounding-rect outline
     //  during the debounce period instead.
-    // ────────────────────────────────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
     private const int LargeShapeThreshold = 200;
     private const int LargeShapeDebounceFrames = 8; // ~0.13s at 60fps
     private Point _debounceLastEnd;
     private int _debounceStableFrames;
-    private float _debounceFadeIn; // 0→1 fade-in alpha after rasterization completes
+    private float _debounceFadeIn; // 0Ã¢â€ â€™1 fade-in alpha after rasterization completes
 
     private void InvalidateCache()
     {
@@ -69,7 +69,8 @@ public class SelectionOverlay : ModSystem
             && _cacheShape.Thickness == shapeSettings.Thickness
             && _cacheShape.EqualDimensions == shapeSettings.EqualDimensions
             && _cacheShape.Slice == shapeSettings.Slice
-            && _cacheShape.ConnectDiameter == shapeSettings.ConnectDiameter)
+            && _cacheShape.ConnectDiameter == shapeSettings.ConnectDiameter
+            && _cacheShape.InvertSelection == shapeSettings.InvertSelection)
         {
             return _cachedTiles;
         }
@@ -77,7 +78,26 @@ public class SelectionOverlay : ModSystem
         // Recompute
         var context = shapeSettings.ToShapeContext(start, end, verticalFirst);
         var tileSet = ShapeRegistry.GetShapeTiles(shapeSettings.Shape, context);
-        _cachedTiles = new HashSet<Point>(tileSet.Tiles);
+        var tiles = new HashSet<Point>(tileSet.Tiles);
+
+        // Apply inversion: swap selected Ã¢â€ â€ unselected within bounding rectangle
+        if (shapeSettings.ShouldInvert)
+        {
+            var bounds = context.GetBounds();
+            var invertedTiles = new HashSet<Point>();
+            for (int y = bounds.Top; y < bounds.Bottom; y++)
+            {
+                for (int x = bounds.Left; x < bounds.Right; x++)
+                {
+                    var pt = new Point(x, y);
+                    if (!tiles.Contains(pt))
+                        invertedTiles.Add(pt);
+                }
+            }
+            tiles = invertedTiles;
+        }
+
+        _cachedTiles = tiles;
         _cacheStart = start;
         _cacheEnd = end;
         _cacheVerticalFirst = verticalFirst;
@@ -102,7 +122,7 @@ public class SelectionOverlay : ModSystem
             DrawCancelledSelection(wandPlayer.CancelledSelection);
         }
 
-        // Draw the active selection overlay — only when visually compatible with held wand.
+        // Draw the active selection overlay Ã¢â‚¬â€ only when visually compatible with held wand.
         // Incompatible selections are preserved in memory but not drawn; the cursor
         // highlight below provides feedback instead (as if no selection exists).
         if (wandPlayer.IsSelectionVisuallyActive() && wandPlayer.Settings.ShouldShowPreview(isHoldingWand))
@@ -165,7 +185,7 @@ public class SelectionOverlay : ModSystem
         var settings = wandPlayer.Settings;
         var selection = wandPlayer.GetVisualSelection();
 
-        // ── Large shape debounce ────────────────────────────────
+        // Ã¢â€â‚¬Ã¢â€â‚¬ Large shape debounce Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
         // For shapes whose dimensions exceed LargeShapeThreshold,
         // defer full rasterization while the endpoint is changing.
         // Show a lightweight bounding-rect outline instead.
@@ -174,7 +194,7 @@ public class SelectionOverlay : ModSystem
         int maxDim = Math.Max(bounds.Width, bounds.Height);
 
         // Apply overlay render mode from config
-        var renderMode = ModContent.GetInstance<WandConfig>()?.OverlayRenderMode ?? OverlayRenderMode.Auto;
+        var renderMode = ModContent.GetInstance<WandClientConfig>()?.OverlayRenderMode ?? OverlayRenderMode.Auto;
 
         // Track endpoint stability
         if (selection.EndTile != _debounceLastEnd)
@@ -204,8 +224,8 @@ public class SelectionOverlay : ModSystem
             isLargeAndDragging = true; // always use bbox fallback
 
         // Trivially-computed shapes (O(N) with no expensive rasterization) never need
-        // the debounce bounding-box fallback — they render instantly at any size.
-        // Rectangle also skips because bounding box IS the rectangle — they're equivalent.
+        // the debounce bounding-box fallback Ã¢â‚¬â€ they render instantly at any size.
+        // Rectangle also skips because bounding box IS the rectangle Ã¢â‚¬â€ they're equivalent.
         bool isTrivialShape = shapeSettings.Shape == ShapeType.CardinalLine
             || shapeSettings.Shape == ShapeType.Elbow
             || shapeSettings.Shape == ShapeType.StraightLine
@@ -220,15 +240,23 @@ public class SelectionOverlay : ModSystem
             return;
         }
 
-        // ── Normal path: compute full shape ─────────────────────
+        // Ã¢â€â‚¬Ã¢â€â‚¬ Normal path: compute full shape Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
         var tiles = GetOrComputeTiles(shapeSettings, selection.StartTile, selection.EndTile, selection.VerticalFirst);
 
-        if (tiles.Count == 0) return;
+        // Read alpha values from client config Ã¢â‚¬â€ allows per-player customisation.
+        var clientConfig = ModContent.GetInstance<WandClientConfig>();
+        float shapeAlpha = clientConfig?.ShapeOverlayAlpha ?? WandColors.OverlayFillOpacity;
+        float negAlpha = clientConfig?.GetEffectiveNegativeSpaceAlpha() ?? 0f;
+
+        // If shape is empty AND there's no negative space to draw (either disabled or
+        // shape isn't inverted), nothing to render.
+        if (tiles.Count == 0 && (negAlpha <= 0f || !shapeSettings.ShouldInvert))
+            return;
 
         // Advance fade-in after rasterization completes on a large shape.
         // In AlwaysFullShape mode the fade-in was already skipped above, so
-        // _debounceFadeIn is never reset – skip the alpha ramp entirely.
-        // Trivially-computed shapes also skip — they render instantly at any size,
+        // _debounceFadeIn is never reset Ã¢â‚¬â€œ skip the alpha ramp entirely.
+        // Trivially-computed shapes also skip Ã¢â‚¬â€ they render instantly at any size,
         // so the fade-in alpha just causes flickering.
         float alphaMultiplier = 1f;
         if (renderMode == OverlayRenderMode.Auto && !isTrivialShape && maxDim > LargeShapeThreshold && _debounceFadeIn < 1f)
@@ -239,9 +267,9 @@ public class SelectionOverlay : ModSystem
 
         Color baseColor = selection.WasClamped && (Main.GameUpdateCount % 30 < 15)
             ? WandColors.OverlayClamped
-            : WandColors.OverlayBase;
+            : WandColors.GetOverlayBase();
 
-        Color fillColor = baseColor * (WandColors.OverlayFillOpacity * alphaMultiplier);
+        Color fillColor = baseColor * (shapeAlpha * alphaMultiplier);
         Color outlineColor = baseColor * (WandColors.OverlayOutlineOpacity * alphaMultiplier);
 
         Main.spriteBatch.Begin(
@@ -256,6 +284,43 @@ public class SelectionOverlay : ModSystem
 
         var pixel = TextureAssets.MagicPixel.Value;
         int ow = WandColors.OverlayOutlineWidth;
+
+        // Pass 0: Negative space Ã¢â‚¬â€ draw bounding-rect tiles that are NOT in the shape
+        // at a very low alpha, giving context for where the shape sits within its bounds.
+        // Skipped when negAlpha is zero (player opted out) or for trivial shapes (Rectangle Filled)
+        // where bounding rect == shape and there is no negative space.
+        if (negAlpha > 0f)
+        {
+            Color negColor = baseColor * (negAlpha * alphaMultiplier);
+
+            // Compute from the shape context (already available above)
+            var negBounds = context.GetBounds();
+
+            // Screen-cull: only iterate the portion of the bounds rectangle visible on screen.
+            int screenMinX = (int)(Main.screenPosition.X / 16) - 1;
+            int screenMinY = (int)(Main.screenPosition.Y / 16) - 1;
+            int screenMaxX = (int)((Main.screenPosition.X + Main.screenWidth) / 16) + 1;
+            int screenMaxY = (int)((Main.screenPosition.Y + Main.screenHeight) / 16) + 1;
+
+            int startX = Math.Max(negBounds.Left, screenMinX);
+            int endX = Math.Min(negBounds.Right, screenMaxX);
+            int startY = Math.Max(negBounds.Top, screenMinY);
+            int endY = Math.Min(negBounds.Bottom, screenMaxY);
+
+            for (int y = startY; y < endY; y++)
+            {
+                for (int x = startX; x < endX; x++)
+                {
+                    if (tiles.Contains(new Point(x, y)))
+                        continue; // Skip tiles that are part of the shape Ã¢â‚¬â€ they get drawn at full alpha
+
+                    Vector2 screenPos = new Vector2(x * 16, y * 16) - Main.screenPosition;
+                    Main.spriteBatch.Draw(pixel,
+                        new Rectangle((int)screenPos.X, (int)screenPos.Y, 16, 16),
+                        negColor);
+                }
+            }
+        }
 
         // Pass 1: Fill all tiles
         foreach (var tile in tiles)
@@ -283,7 +348,7 @@ public class SelectionOverlay : ModSystem
             int sx = (int)screenPos.X;
             int sy = (int)screenPos.Y;
 
-            // Top edge — no neighbor above
+            // Top edge Ã¢â‚¬â€ no neighbor above
             if (!tiles.Contains(new Point(tile.X, tile.Y - 1)))
             {
                 Main.spriteBatch.Draw(pixel,
@@ -291,7 +356,7 @@ public class SelectionOverlay : ModSystem
                     outlineColor);
             }
 
-            // Bottom edge — no neighbor below
+            // Bottom edge Ã¢â‚¬â€ no neighbor below
             if (!tiles.Contains(new Point(tile.X, tile.Y + 1)))
             {
                 Main.spriteBatch.Draw(pixel,
@@ -299,7 +364,7 @@ public class SelectionOverlay : ModSystem
                     outlineColor);
             }
 
-            // Left edge — no neighbor to the left
+            // Left edge Ã¢â‚¬â€ no neighbor to the left
             if (!tiles.Contains(new Point(tile.X - 1, tile.Y)))
             {
                 Main.spriteBatch.Draw(pixel,
@@ -307,7 +372,7 @@ public class SelectionOverlay : ModSystem
                     outlineColor);
             }
 
-            // Right edge — no neighbor to the right
+            // Right edge Ã¢â‚¬â€ no neighbor to the right
             if (!tiles.Contains(new Point(tile.X + 1, tile.Y)))
             {
                 Main.spriteBatch.Draw(pixel,
@@ -316,7 +381,7 @@ public class SelectionOverlay : ModSystem
             }
         }
 
-        // Pass 3: Draw Start/End position markers — outlined cyan squares
+        // Pass 3: Draw Start/End position markers Ã¢â‚¬â€ outlined cyan squares
         // When EqualDimensions is true, the raw EndTile (mouse position) may differ
         // from the actual effective End position (which is computed by GetBounds()).
         // We derive the effective End from the bounds rectangle: it's the corner
@@ -390,8 +455,8 @@ public class SelectionOverlay : ModSystem
 
     /// <summary>
     /// Draws a lightweight bounding-rectangle outline while a large shape is being
-    /// resized. Much cheaper than full rasterization — just 4 axis-aligned lines —
-    /// so it runs smoothly even for 500×500 selections. Once the endpoint stabilises,
+    /// resized. Much cheaper than full rasterization Ã¢â‚¬â€ just 4 axis-aligned lines Ã¢â‚¬â€
+    /// so it runs smoothly even for 500Ãƒâ€”500 selections. Once the endpoint stabilises,
     /// <see cref="DrawSelection"/> takes over with the fully rasterised shape.
     /// </summary>
     private void DrawBoundingRectPreview(
@@ -400,7 +465,7 @@ public class SelectionOverlay : ModSystem
     {
         Color outlineColor = (selection.WasClamped && (Main.GameUpdateCount % 30 < 15)
             ? WandColors.OverlayClamped
-            : WandColors.OverlayBase) * WandColors.DebounceBoundingRectOpacity;
+            : WandColors.GetOverlayBase()) * WandColors.DebounceBoundingRectOpacity;
 
         Main.spriteBatch.Begin(
             SpriteSortMode.Deferred,
@@ -480,7 +545,10 @@ public class SelectionOverlay : ModSystem
         // Don't draw if mouse is over UI
         if (Main.LocalPlayer.mouseInterface) return;
 
-        Point mouseTile = GeometryHelper.WorldToTile(Main.MouseWorld);
+        // Use the centralised helper that reads Terraria's built-in tile target.
+        // Correctly handles zoom, resolution, and UI scale Ã¢â‚¬â€ unlike WorldToTile(Main.MouseWorld)
+        // which can have sub-tile rounding drift at non-native resolutions.
+        Point mouseTile = GeometryHelper.GetMouseTile();
 
         // Determine highlight tiles
         List<Point> highlightTiles;
@@ -488,7 +556,7 @@ public class SelectionOverlay : ModSystem
         if ((shapeSettings.Shape == ShapeType.CardinalLine || shapeSettings.Shape == ShapeType.StraightLine) && shapeSettings.Thickness > 1)
         {
             // Show circle brush preview for thick cardinal lines.
-            // Uses EllipseShape's IncrementalFast algorithm for ≥ 4 diameter,
+            // Uses EllipseShape's IncrementalFast algorithm for Ã¢â€°Â¥ 4 diameter,
             // matching the actual brush shape used by CardinalLineShape.
             int thickness = Math.Max(1, shapeSettings.Thickness);
             var offsets = EllipseShape.GetCircleBrushOffsets(thickness);
@@ -505,8 +573,8 @@ public class SelectionOverlay : ModSystem
 
         // Draw with a subtle pulse effect
         float pulse = 0.5f + 0.2f * (float)Math.Sin(Main.GameUpdateCount * 0.08);
-        Color highlightFill = WandColors.OverlayBase * (0.15f * pulse);
-        Color highlightOutline = WandColors.OverlayBase * (0.5f * pulse);
+        Color highlightFill = WandColors.GetOverlayBase() * (0.15f * pulse);
+        Color highlightOutline = WandColors.GetOverlayBase() * (0.5f * pulse);
 
         Main.spriteBatch.Begin(
             SpriteSortMode.Deferred,
@@ -555,7 +623,7 @@ public class SelectionOverlay : ModSystem
     {
         var (displayWidth, displayHeight) = ShapeRegistry.GetDisplayDimensions(shapeType, context);
 
-        // ── Area calculation (debounced) ──
+        // Ã¢â€â‚¬Ã¢â€â‚¬ Area calculation (debounced) Ã¢â€â‚¬Ã¢â€â‚¬
         var currentDims = (displayWidth, displayHeight);
         if (currentDims != _lastAreaDimensions)
         {
@@ -579,7 +647,7 @@ public class SelectionOverlay : ModSystem
 
         const float textScale = 0.9f;
 
-        // ── Configurable offset — position relative to cursor ──
+        // Ã¢â€â‚¬Ã¢â€â‚¬ Configurable offset Ã¢â‚¬â€ position relative to cursor Ã¢â€â‚¬Ã¢â€â‚¬
         // Offset places the label above and to the right of the cursor,
         // avoiding overlap with cursor icon and item icons.
         const float offsetX = 24f;
@@ -587,7 +655,7 @@ public class SelectionOverlay : ModSystem
         Vector2 cursorScreen = Main.MouseScreen;
         Vector2 screenPos = new Vector2(cursorScreen.X + offsetX, cursorScreen.Y + offsetY);
 
-        // ── Screen-bounds clamping with margin ──
+        // Ã¢â€â‚¬Ã¢â€â‚¬ Screen-bounds clamping with margin Ã¢â€â‚¬Ã¢â€â‚¬
         const float margin = 4f;
         Vector2 textSize = FontAssets.MouseText.Value.MeasureString(dimensionText) * textScale;
 
@@ -618,7 +686,7 @@ public class SelectionOverlay : ModSystem
         float opacity = cancelState.Opacity;
         if (opacity <= 0f) return;
 
-        // Use pre-computed tiles — no per-frame recomputation
+        // Use pre-computed tiles Ã¢â‚¬â€ no per-frame recomputation
         var tiles = cancelState.CachedTiles;
         if (tiles == null || tiles.Count == 0) return;
 

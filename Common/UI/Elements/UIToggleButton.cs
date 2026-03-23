@@ -18,6 +18,12 @@ public class UIToggleButton : UIElement
     public Color? TintColor { get; set; } = null;
     public Color OffColor { get; set; } = new Color(60, 60, 60);
 
+    /// <summary>
+    /// When true, the button is visually dimmed and ignores clicks.
+    /// Used to disable toggles that are irrelevant for the current shape (e.g. InvertSelection on lines).
+    /// </summary>
+    public bool Disabled { get; set; }
+
     /// <summary>Tooltip text shown on hover. Null or empty = no tooltip.</summary>
     public string HoverText { get; set; }
 
@@ -43,7 +49,9 @@ public class UIToggleButton : UIElement
             ? (TintColor ?? new Color(80, 200, 80)) 
             : OffColor;
 
-        if (IsMouseHovering)
+        if (Disabled)
+            bgColor = bgColor * 0.35f;
+        else if (IsMouseHovering)
             bgColor = Color.Lerp(bgColor, Color.White, 0.15f);
 
         // Background
@@ -51,6 +59,7 @@ public class UIToggleButton : UIElement
 
         // Border
         Color borderColor = Toggled ? Color.White * 0.5f : Color.Black * 0.5f;
+        if (Disabled) borderColor *= 0.35f;
         spriteBatch.Draw(TextureAssets.MagicPixel.Value,
             new Rectangle(rect.X, rect.Y, rect.Width, 1), borderColor);
         spriteBatch.Draw(TextureAssets.MagicPixel.Value,
@@ -68,6 +77,9 @@ public class UIToggleButton : UIElement
 
     public override void LeftClick(UIMouseEvent evt)
     {
+        if (Disabled)
+            return;
+
         if (IsRadio && Toggled)
             return;
 

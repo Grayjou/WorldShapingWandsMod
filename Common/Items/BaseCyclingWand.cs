@@ -8,7 +8,9 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using WorldShapingWandsMod.Common.Configs;
 using WorldShapingWandsMod.Common.Enums;
+using WorldShapingWandsMod.Common.Networking;
 using WorldShapingWandsMod.Common.Players;
+using WorldShapingWandsMod.Common.Selection;
 using WorldShapingWandsMod.Common.UI;
 using WorldShapingWandsMod.Common.Utilities;
 using static WorldShapingWandsMod.Common.Utilities.Msg;
@@ -96,6 +98,46 @@ public abstract class BaseCyclingWand : ModItem
         Item.noMelee = true;
     }
 
+    // ── Confirm Distance Safeguard ─────────────────────────────────────
+    /// <summary>
+    /// Checks whether the player is too far from the selection bounding box
+    /// to confirm/execute. Uses the <c>MaxConfirmDistance</c> server config.
+    /// Returns true if the click should be BLOCKED (too far).
+    /// Shows a warning message to the player when blocked.
+    /// </summary>
+    /// <param name="selection">The active selection to check distance against.</param>
+    /// <param name="mouseTile">The tile the player is clicking on.</param>
+    protected static bool IsTooFarToConfirm(SelectionState selection, Point mouseTile)
+    {
+        var config = ModContent.GetInstance<WandServerConfig>();
+        int maxDist = config?.MaxConfirmDistance ?? 50;
+        if (maxDist <= 0) return false; // Distance check disabled
+
+        int dist = selection.DistanceFromBBox(mouseTile);
+        if (dist > maxDist)
+        {
+            Main.NewText(
+                $"Too far from selection to confirm ({dist} tiles, max {maxDist}). " +
+                "Move closer or cancel with right-click.",
+                Color.OrangeRed);
+            return true;
+        }
+        return false;
+    }
+
+    // ── Rate Limiting (SP) ─────────────────────────────────────────────
+    /// <summary>
+    /// Checks the operation cooldown for single-player. Returns true if the
+    /// execution should be BLOCKED. In MP the server handles rate limiting
+    /// at the packet dispatch level.
+    /// </summary>
+    protected static bool IsOnLocalCooldown()
+    {
+        if (Main.netMode == NetmodeID.MultiplayerClient)
+            return false; // Server handles it
+        return WandPacketHandler.IsLocalPlayerOnCooldown();
+    }
+
     /// <summary>
     /// Checks if the cursor is currently interacting with UI in a way that should
     /// block wand tile-interaction. Blocks when:
@@ -123,61 +165,6 @@ public abstract class BaseCyclingWand : ModItem
         if (ModContent.GetInstance<WandUISystem>()?.IsCursorOverPanel() ?? false) return true;
         if (Main.LocalPlayer.mouseInterface) return true;
         return false;
-    }
-
-    // ── Debug helpers ──────────────────────────────────────────────────────
-    // Tracks last frame we printed debug so we throttle to once per ~60 frames.
-    private static int _debugLastFrame = -1;
-
-    /// <summary>
-    /// Prints a breakdown of every IsMouseOverUI() sub-check to chat.
-    /// Called automatically when an instant wand is blocked (once per second max).
-    /// Also triggered by holding [LeftAlt] + pressing [F10] at any time.
-    /// </summary>
-    protected static void DebugIsMouseOverUI(string context = "")
-    {
-        int frame = (int)Main.GameUpdateCount;
-        if (frame - _debugLastFrame < 60) return; // Throttle: once per second
-        _debugLastFrame = frame;
-
-        var uiSys = ModContent.GetInstance<WandUISystem>();
-        bool inv = Main.playerInventory;
-        bool fullMap = Main.mapFullscreen;
-        bool overPanel = uiSys?.IsCursorOverPanel() ?? false;
-        bool mouseIface = Main.LocalPlayer.mouseInterface;
-
-        // Also check each panel individually for debugging
-        var mousePos = Main.MouseScreen;
-        bool buildVis   = uiSys?.BuildingUI?.IsVisible ?? false;
-        bool dismantVis = uiSys?.DismantlingUI?.IsVisible ?? false;
-        bool replVis    = uiSys?.ReplacementUI?.IsVisible ?? false;
-        bool wiringVis  = uiSys?.WiringUI?.IsVisible ?? false;
-        bool safeVis    = uiSys?.SafekeepingUI?.IsVisible ?? false;
-        bool coatVis    = uiSys?.CoatingUI?.IsVisible ?? false;
-
-        bool buildPanel   = buildVis   && (uiSys.BuildingUI.PanelElement?.ContainsPoint(mousePos) ?? false);
-        bool dismantPanel = dismantVis && (uiSys.DismantlingUI.PanelElement?.ContainsPoint(mousePos) ?? false);
-        bool replPanel    = replVis    && (uiSys.ReplacementUI.PanelElement?.ContainsPoint(mousePos) ?? false);
-        bool wiringPanel  = wiringVis  && (uiSys.WiringUI.PanelElement?.ContainsPoint(mousePos) ?? false);
-        bool safePanel    = safeVis    && (uiSys.SafekeepingUI.PanelElement?.ContainsPoint(mousePos) ?? false);
-        bool coatPanel    = coatVis    && (uiSys.CoatingUI.PanelElement?.ContainsPoint(mousePos) ?? false);
-
-        Color dbgColor = Color.Yellow;
-        if (!string.IsNullOrEmpty(context))
-            Main.NewText($"[DBG-Wand] {context}", dbgColor);
-
-        Main.NewText(
-            $"[DBG] IsMouseOverUI: inv={inv} fullMap={fullMap} overPanel={overPanel} mouseIface={mouseIface}",
-            dbgColor);
-        Main.NewText(
-            $"[DBG] UIs open: bld={buildVis} dis={dismantVis} rep={replVis} wir={wiringVis} saf={safeVis} coat={coatVis}",
-            dbgColor);
-        Main.NewText(
-            $"[DBG] PanelHit: bld={buildPanel} dis={dismantPanel} rep={replPanel} wir={wiringPanel} saf={safePanel} coat={coatPanel}",
-            dbgColor);
-        Main.NewText(
-            $"[DBG] Mouse: screen=({(int)mousePos.X},{(int)mousePos.Y})",
-            dbgColor);
     }
 
     public override bool CanRightClick() => true;
@@ -259,7 +246,7 @@ public abstract class BaseCyclingWand : ModItem
         }
 
         // ── Lore (Shift-gated) ──────────────────────────────
-        var config = ModContent.GetInstance<WandConfig>();
+        var config = ModContent.GetInstance<WandClientConfig>();
         if (config?.ShowLoreTooltips == true)
         {
             bool shiftHeld = Main.keyState.IsKeyDown(Keys.LeftShift)

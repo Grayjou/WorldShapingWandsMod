@@ -207,4 +207,52 @@ public static class BulkTileOperations
                 NetMessage.SendData(MessageID.SyncItem, -1, -1, null, i);
         }
     }
+
+    /// <summary>
+    /// Server-side version of <see cref="VacuumItemsInArea"/>. Teleports items within
+    /// the operation bounds to the player's position and syncs the new position to all
+    /// clients via <c>SyncItem</c> packets.
+    ///
+    /// <para>In multiplayer, items spawned by <c>KillTile</c> exist in the server's
+    /// <c>Main.item[]</c> — the client-side vacuum can't see them yet. This method runs
+    /// on the server immediately after tile destruction to rescue items before they
+    /// scatter or hit the 400-item ground cap.</para>
+    ///
+    /// <para>Only call this when <c>Main.netMode == NetmodeID.Server</c>.</para>
+    /// </summary>
+    /// <param name="player">The player who triggered the operation (items teleport to them).</param>
+    /// <param name="bounds">Tile-coordinate bounding box of the operation area.</param>
+    public static void ServerVacuumItemsToPlayer(Player player, Rectangle bounds)
+    {
+        if (bounds.IsEmpty || player == null) return;
+        if (Main.netMode != NetmodeID.Server) return;
+
+        // Same margins as VacuumItemsInArea — keep in sync.
+        int margin = 32; // 2 tiles in pixels
+        int topMargin = 640; // 40 tiles in pixels (tree drops)
+        int worldLeft = (bounds.X * 16) - margin;
+        int worldTop = (bounds.Y * 16) - topMargin;
+        int worldRight = ((bounds.X + bounds.Width) * 16) + margin;
+        int worldBottom = ((bounds.Y + bounds.Height) * 16) + margin;
+
+        for (int i = 0; i < Main.maxItems; i++)
+        {
+            var item = Main.item[i];
+            if (!item.active || item.IsAir) continue;
+
+            float cx = item.position.X + item.width / 2f;
+            float cy = item.position.Y + item.height / 2f;
+            if (cx < worldLeft || cx > worldRight || cy < worldTop || cy > worldBottom)
+                continue;
+
+            // Teleport item to the player's feet so Terraria's native pickup
+            // system handles it: proper pickup sound, chat message, and full
+            // compatibility with smart-pickup mods.
+            item.position = player.Center;
+            item.velocity = Microsoft.Xna.Framework.Vector2.Zero;
+
+            // Sync the teleported position to all clients
+            NetMessage.SendData(MessageID.SyncItem, -1, -1, null, i);
+        }
+    }
 }

@@ -38,6 +38,7 @@ public class WandOfWiringStamp : WandOfWiringBase
         else if (!wandPlayer.IsStampLocked)
         {
             // 3rd click — lock the stamp template
+            if (IsTooFarToConfirm(wandPlayer.Selection, mouseTile)) return false;
             wandPlayer.LockStamp(mouseTile);
             Main.NewText(Get("StampLocked", "wire"), Color.LimeGreen);
             return false;
@@ -45,6 +46,8 @@ public class WandOfWiringStamp : WandOfWiringBase
         else
         {
             // 4th+ click — execute at current mouse position, keep stamp
+            if (IsTooFarToConfirm(wandPlayer.Selection, mouseTile)) return false;
+            if (IsOnLocalCooldown()) return false;
             wandPlayer.MoveStampTo(mouseTile);
             ExecuteWiring(player, wandPlayer);
             return false;
@@ -63,7 +66,7 @@ public class WandOfWiringStamp : WandOfWiringBase
         // While stamp is locked, continuously move the preview to follow the mouse
         if (wandPlayer.IsStampLocked && wandPlayer.Selection.IsActive)
         {
-            Point mouseTile = GeometryHelper.WorldToTile(Main.MouseWorld);
+            Point mouseTile = GeometryHelper.GetMouseTile();
             wandPlayer.MoveStampTo(mouseTile);
         }
     }

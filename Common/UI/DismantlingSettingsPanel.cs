@@ -1,4 +1,4 @@
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using Terraria;
@@ -23,212 +23,100 @@ public class DismantlingSettingsPanel : UIState
 
     private UIDraggablePanel _mainPanel;
 
-    // Dismantling toggles
+    // Destroy toggles
     private UIToggleButton _destroyTilesBtn, _destroyWallsBtn, _destroyContainersBtn;
 
-    // Shape buttons (icon-based)
+    // Shape buttons
     private UIIconButton _rectFilledBtn, _rectHollowBtn;
     private UIIconButton _ellipseFilledBtn, _ellipseHollowBtn;
     private UIIconButton _diamondFilledBtn, _diamondHollowBtn;
     private UIIconButton _triangleFilledBtn, _triangleHollowBtn;
-    private UIIconButton _edgeBtn;
-    private UIIconButton _cardinalBtn;
-    private UIIconButton _straightLineBtn;
+    private UIIconButton _edgeBtn, _cardinalBtn, _straightLineBtn;
 
     private UIText _thicknessValue;
 
-    // Equal Dimensions toggle
-    private UIToggleButton _equalDimensionsBtn;
+    // Toggle icon buttons
+    private UIIconButton _equalDimensionsBtn;
+    private UIIconButton _connectDiameterBtn;
+    private UIIconButton _invertSelectionBtn;
 
     // Slice grid
     private UISliceGrid _sliceGrid;
 
-    // Connect diameter toggle
-    private UIToggleButton _connectDiameterBtn;
+    // Builder (retained for debug drawing)
+    private WandPanelBuilder _builder;
 
     private const string UIPrefix = "Mods.WorldShapingWandsMod.UI";
     private static string L(string key) => Language.GetTextValue($"{UIPrefix}.{key}");
 
     private const float PanelWidth = 320f;
-    private const float PanelHeight = 600f;
     private const float Padding = 10f;
-    private const float ButtonWidth = 140f;
-    private const float ButtonHeight = 28f;
-    private const float IconBtnSize = 36f;
-    private const float IconGap = 6f;
 
     public override void OnInitialize()
     {
         _mainPanel = new UIDraggablePanel();
         _mainPanel.Width.Set(PanelWidth, 0f);
-        _mainPanel.Height.Set(PanelHeight, 0f);
         _mainPanel.HAlign = 0.5f;
         _mainPanel.VAlign = 0.5f;
-        _mainPanel.BackgroundColor = new Color(79, 44, 44, 220);  // Reddish tint
+        _mainPanel.BackgroundColor = new Color(79, 44, 44, 220);
         _mainPanel.BorderColor = new Color(60, 20, 20);
         Append(_mainPanel);
 
-        float y = 8f;
-        float col1 = Padding;
-        float col2 = PanelWidth - Padding - ButtonWidth - 12f;
-
-        // Title
-        var title = new UISectionTitle(L("Dismantling.Title"));
-        title.Width.Set(0f, 1f);
-        title.Height.Set(28f, 0f);
-        title.Top.Set(y, 0f);
-        _mainPanel.Append(title);
-        y += 36f;
-
-        // === DESTRUCTION OPTIONS ===
-        var optionsSection = new UISectionTitle(L("Dismantling.Options"));
-        optionsSection.Width.Set(0f, 1f);
-        optionsSection.Height.Set(22f, 0f);
-        optionsSection.Top.Set(y, 0f);
-        _mainPanel.Append(optionsSection);
-        y += 28f;
-
-        _destroyTilesBtn = MakeToggle(L("Dismantling.DestroyTiles"), col1, y, new Color(200, 80, 80));
-        _destroyWallsBtn = MakeToggle(L("Dismantling.DestroyWalls"), col2, y, new Color(150, 100, 80));
-        _mainPanel.Append(_destroyTilesBtn);
-        _mainPanel.Append(_destroyWallsBtn);
-        y += 36f;
-
-        _destroyContainersBtn = MakeToggle(L("Dismantling.DestroyContainers"), col1, y, new Color(180, 130, 60));
-        _destroyContainersBtn.HoverText = L("Dismantling.DestroyContainersTooltip");
-        _mainPanel.Append(_destroyContainersBtn);
-        y += 42f;
-
-        // === SHAPE SECTION ===
-        var shapeSection = new UISectionTitle(L("Common.Shape"));
-        shapeSection.Width.Set(0f, 1f);
-        shapeSection.Height.Set(22f, 0f);
-        shapeSection.Top.Set(y, 0f);
-        _mainPanel.Append(shapeSection);
-        y += 28f;
-
-        // Load shape icon textures
         var mod = ModContent.GetInstance<WorldShapingWandsMod>();
-        var texRectFilled     = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeRectFilled", AssetRequestMode.ImmediateLoad);
-        var texRectHollow     = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeRectHollow", AssetRequestMode.ImmediateLoad);
-        var texEllipseFilled  = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeEllipseFilled", AssetRequestMode.ImmediateLoad);
-        var texEllipseHollow  = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeEllipseHollow", AssetRequestMode.ImmediateLoad);
-        var texDiamondFilled  = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeDiamondFilled", AssetRequestMode.ImmediateLoad);
-        var texDiamondHollow  = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeDiamondHollow", AssetRequestMode.ImmediateLoad);
-        var texTriangleFilled = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeTriangleFilled", AssetRequestMode.ImmediateLoad);
-        var texTriangleHollow = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeTriangleHollow", AssetRequestMode.ImmediateLoad);
-        var texElbow           = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeElbow", AssetRequestMode.ImmediateLoad);
-        var texCardinal       = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeCardinal", AssetRequestMode.ImmediateLoad);
-        var texStraightLine   = mod.Assets.Request<Texture2D>("Assets/Icons/ShapeStraightLine", AssetRequestMode.ImmediateLoad);
 
-        float totalShapeWidth = IconBtnSize * 5 + IconGap * 4;
-        float shapeStartX = (PanelWidth - totalShapeWidth) / 2f - Padding;
+        _builder = new WandPanelBuilder(_mainPanel, PanelWidth, Padding);
+        _builder.AddTitle("Dismantling.Title");
 
-        _rectFilledBtn    = MakeIconBtn(texRectFilled,     L("Common.ShapeRectFilled"),    shapeStartX + (IconBtnSize + IconGap) * 0, y);
-        _rectHollowBtn    = MakeIconBtn(texRectHollow,     L("Common.ShapeRectHollow"),    shapeStartX + (IconBtnSize + IconGap) * 1, y);
-        _ellipseFilledBtn = MakeIconBtn(texEllipseFilled,  L("Common.ShapeEllipseFilled"), shapeStartX + (IconBtnSize + IconGap) * 2, y);
-        _ellipseHollowBtn = MakeIconBtn(texEllipseHollow,  L("Common.ShapeEllipseHollow"), shapeStartX + (IconBtnSize + IconGap) * 3, y);
-        _edgeBtn          = MakeIconBtn(texElbow,           L("Common.ShapeElbow"),          shapeStartX + (IconBtnSize + IconGap) * 4, y);
-        _mainPanel.Append(_rectFilledBtn);
-        _mainPanel.Append(_rectHollowBtn);
-        _mainPanel.Append(_ellipseFilledBtn);
-        _mainPanel.Append(_ellipseHollowBtn);
-        _mainPanel.Append(_edgeBtn);
-        y += IconBtnSize + IconGap;
+        // === DESTROY OPTIONS ===
+        _builder.AddSectionHeader("Dismantling.Options");
 
-        _diamondFilledBtn  = MakeIconBtn(texDiamondFilled,  L("Common.ShapeDiamondFilled"),  shapeStartX + (IconBtnSize + IconGap) * 0, y);
-        _diamondHollowBtn  = MakeIconBtn(texDiamondHollow,  L("Common.ShapeDiamondHollow"),  shapeStartX + (IconBtnSize + IconGap) * 1, y);
-        _triangleFilledBtn = MakeIconBtn(texTriangleFilled, L("Common.ShapeTriangleFilled"), shapeStartX + (IconBtnSize + IconGap) * 2, y);
-        _triangleHollowBtn = MakeIconBtn(texTriangleHollow, L("Common.ShapeTriangleHollow"), shapeStartX + (IconBtnSize + IconGap) * 3, y);
-        _cardinalBtn       = MakeIconBtn(texCardinal,       L("Common.ShapeCardinal"),       shapeStartX + (IconBtnSize + IconGap) * 4, y);
-        _mainPanel.Append(_diamondFilledBtn);
-        _mainPanel.Append(_diamondHollowBtn);
-        _mainPanel.Append(_triangleFilledBtn);
-        _mainPanel.Append(_triangleHollowBtn);
-        _mainPanel.Append(_cardinalBtn);
-        y += IconBtnSize + IconGap;
+        // Destroy toggles: Tiles, Walls on first row, Containers single
+        _builder.AddToggleRow(
+            "Dismantling.DestroyTiles", out _destroyTilesBtn, new Color(200, 100, 100),
+            "Dismantling.DestroyWalls", out _destroyWallsBtn, new Color(100, 100, 200));
+        _builder.AddToggleSingle(
+            "Dismantling.DestroyContainers", out _destroyContainersBtn, new Color(200, 200, 100));
 
-        // Row 3: additional line shapes
-        _straightLineBtn   = MakeIconBtn(texStraightLine,   L("Common.ShapeStraightLine"),   shapeStartX + (IconBtnSize + IconGap) * 0, y);
-        _mainPanel.Append(_straightLineBtn);
-        y += IconBtnSize + 12f;
+        // === SHAPE ===
+        _builder.AddFullShapeSection(out var shapes);
+        _rectFilledBtn    = shapes.RectFilled;
+        _rectHollowBtn    = shapes.RectHollow;
+        _ellipseFilledBtn = shapes.EllipseFilled;
+        _ellipseHollowBtn = shapes.EllipseHollow;
+        _diamondFilledBtn = shapes.DiamondFilled;
+        _diamondHollowBtn = shapes.DiamondHollow;
+        _triangleFilledBtn = shapes.TriangleFilled;
+        _triangleHollowBtn = shapes.TriangleHollow;
+        _edgeBtn          = shapes.Elbow;
+        _cardinalBtn      = shapes.Cardinal;
+        _straightLineBtn  = shapes.StraightLine;
 
-        // === SLICE SECTION ===
-        var sliceSection = new UISectionTitle(L("Common.Slice"));
-        sliceSection.Width.Set(0f, 1f);
-        sliceSection.Height.Set(22f, 0f);
-        sliceSection.Top.Set(y, 0f);
-        _mainPanel.Append(sliceSection);
-        y += 28f;
+        // === SLICE ===
+        _builder.AddSliceSection(out _sliceGrid, OnSliceChanged);
 
-        _sliceGrid = new UISliceGrid();
-        _sliceGrid.HAlign = 0.5f;
-        _sliceGrid.Top.Set(y, 0f);
-        _sliceGrid.OnChanged += OnSliceChanged;
-        _mainPanel.Append(_sliceGrid);
-        y += _sliceGrid.Height.Pixels + 12f;
+        // === THICKNESS ===
+        _builder.AddThicknessSection(out _thicknessValue, AdjustThickness);
 
-        // Thickness
-        var thicknessLabel = new UIText(L("Common.OutlineThickness"), 0.85f);
-        thicknessLabel.Left.Set(col1, 0f);
-        thicknessLabel.Top.Set(y, 0f);
-        _mainPanel.Append(thicknessLabel);
+        // === OPTIONS ===
+        var texEqualDim    = mod.Assets.Request<Texture2D>("Assets/Icons/ToggleEqualDim", AssetRequestMode.ImmediateLoad);
+        var texConnectDiam = mod.Assets.Request<Texture2D>("Assets/Icons/ToggleConnectDiam", AssetRequestMode.ImmediateLoad);
+        var texInvertSel   = mod.Assets.Request<Texture2D>("Assets/Icons/ToggleInvertSel", AssetRequestMode.ImmediateLoad);
 
-        var minusBtn = new UITextPanel<string>("-", 0.8f, false);
-        minusBtn.Width.Set(30f, 0f);
-        minusBtn.Height.Set(26f, 0f);
-        minusBtn.Left.Set(col1 + 130f, 0f);
-        minusBtn.Top.Set(y - 2f, 0f);
-        minusBtn.OnLeftClick += (_, _) => AdjustThickness(-1);
-        minusBtn.OnScrollWheel += (evt, _) => AdjustThickness(evt.ScrollWheelValue > 0 ? 1 : -1);
-        _mainPanel.Append(minusBtn);
+        _builder.AddOptionsSection(new WandPanelBuilder.IconDef[]
+        {
+            new(texEqualDim,    "Common.EqualDimensions",      isToggle: true),
+            new(texConnectDiam, "Common.ConnectDiameterTooltip", isToggle: true, initialState: true),
+            new(texInvertSel,   "Common.InvertSelection",      isToggle: true),
+        }, out var optBtns);
+        _equalDimensionsBtn = optBtns[0];
+        _connectDiameterBtn = optBtns[1];
+        _invertSelectionBtn = optBtns[2];
 
-        _thicknessValue = new UIText("1", 0.9f);
-        _thicknessValue.Left.Set(col1 + 170f, 0f);
-        _thicknessValue.Top.Set(y, 0f);
-        _thicknessValue.OnScrollWheel += (evt, _) => AdjustThickness(evt.ScrollWheelValue > 0 ? 1 : -1);
-        _mainPanel.Append(_thicknessValue);
+        // === CLOSE ===
+        _builder.AddCloseButton();
+        _builder.FinalizeHeight();
 
-        var plusBtn = new UITextPanel<string>("+", 0.8f, false);
-        plusBtn.Width.Set(30f, 0f);
-        plusBtn.Height.Set(26f, 0f);
-        plusBtn.Left.Set(col1 + 200f, 0f);
-        plusBtn.Top.Set(y - 2f, 0f);
-        plusBtn.OnLeftClick += (_, _) => AdjustThickness(1);
-        plusBtn.OnScrollWheel += (evt, _) => AdjustThickness(evt.ScrollWheelValue > 0 ? 1 : -1);
-        _mainPanel.Append(plusBtn);
-        y += 42f;
-
-        // === EQUAL DIMENSIONS TOGGLE ===
-        _equalDimensionsBtn = new UIToggleButton(L("Common.EqualDimensions"), false);
-        _equalDimensionsBtn.Width.Set(200f, 0f);
-        _equalDimensionsBtn.Height.Set(28f, 0f);
-        _equalDimensionsBtn.HAlign = 0.5f;
-        _equalDimensionsBtn.Top.Set(y, 0f);
-        _equalDimensionsBtn.OnToggled += (_, _) => ToggleEqualDimensions();
-        _mainPanel.Append(_equalDimensionsBtn);
-        y += 38f;
-
-        // === CONNECT DIAMETER TOGGLE ===
-        _connectDiameterBtn = new UIToggleButton(L("Common.ConnectDiameter"), true);
-        _connectDiameterBtn.Width.Set(200f, 0f);
-        _connectDiameterBtn.Height.Set(28f, 0f);
-        _connectDiameterBtn.HAlign = 0.5f;
-        _connectDiameterBtn.Top.Set(y, 0f);
-        _connectDiameterBtn.OnToggled += (_, _) => ToggleConnectDiameter();
-        _mainPanel.Append(_connectDiameterBtn);
-        y += 38f;
-
-        // Close button
-        var closeBtn = new UITextPanel<string>(L("Common.Close"), 0.9f, false);
-        closeBtn.Width.Set(80f, 0f);
-        closeBtn.Height.Set(30f, 0f);
-        closeBtn.HAlign = 0.5f;
-        closeBtn.Top.Set(y, 0f);
-        closeBtn.OnLeftClick += (_, _) => ModContent.GetInstance<WandUISystem>().CloseAllUI();
-        _mainPanel.Append(closeBtn);
-
-        // Wire up events
+        // === WIRE UP EVENTS ===
         _destroyTilesBtn.OnToggled += (_, _) => GetSettings().DestroyTiles = _destroyTilesBtn.Toggled;
         _destroyWallsBtn.OnToggled += (_, _) => GetSettings().DestroyWalls = _destroyWallsBtn.Toggled;
         _destroyContainersBtn.OnToggled += (_, _) => GetSettings().DestroyContainers = _destroyContainersBtn.Toggled;
@@ -244,6 +132,10 @@ public class DismantlingSettingsPanel : UIState
         _diamondHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.Diamond, ShapeMode.Hollow);
         _triangleFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.Triangle, ShapeMode.Filled);
         _triangleHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.Triangle, ShapeMode.Hollow);
+
+        _equalDimensionsBtn.OnToggled += (_, _) => ToggleEqualDimensions();
+        _connectDiameterBtn.OnToggled += (_, _) => ToggleConnectDiameter();
+        _invertSelectionBtn.OnToggled += (_, _) => ToggleInvertSelection();
     }
 
     private WandOfDismantlingSettings GetSettings() =>
@@ -253,7 +145,7 @@ public class DismantlingSettingsPanel : UIState
     {
         var settings = GetSettings();
         if (settings == null) return;
-        settings.Shape = new ShapeInfo(type, mode, settings.Shape.Thickness, settings.Shape.EqualDimensions, settings.Shape.Slice, settings.Shape.ConnectDiameter);
+        settings.Shape = new ShapeInfo(type, mode, settings.Shape.Thickness, settings.Shape.EqualDimensions, settings.Shape.Slice, settings.Shape.ConnectDiameter, settings.Shape.InvertSelection);
         UpdateShapeButtons();
     }
 
@@ -262,7 +154,7 @@ public class DismantlingSettingsPanel : UIState
         var settings = GetSettings();
         if (settings == null) return;
         var shape = settings.Shape;
-        int max = ModContent.GetInstance<Configs.WandConfig>()?.MaxOutlineThickness ?? 10;
+        int max = ModContent.GetInstance<WandServerConfig>()?.MaxOutlineThickness ?? 10;
         shape.Thickness = System.Math.Clamp(shape.Thickness + delta, 0, max);
         settings.Shape = shape;
         UpdateThicknessDisplay();
@@ -286,6 +178,15 @@ public class DismantlingSettingsPanel : UIState
         settings.Shape = shape;
     }
 
+    private void ToggleInvertSelection()
+    {
+        var settings = GetSettings();
+        if (settings == null) return;
+        var shape = settings.Shape;
+        shape.InvertSelection = _invertSelectionBtn.Toggled;
+        settings.Shape = shape;
+    }
+
     private void OnSliceChanged(SliceMode slice)
     {
         var settings = GetSettings();
@@ -293,29 +194,6 @@ public class DismantlingSettingsPanel : UIState
         var shape = settings.Shape;
         shape.Slice = slice;
         settings.Shape = shape;
-    }
-
-    private UIToggleButton MakeToggle(string text, float left, float top, Color? tint = null)
-    {
-        var btn = new UIToggleButton(text, false);
-        btn.Width.Set(ButtonWidth, 0f);
-        btn.Height.Set(ButtonHeight, 0f);
-        btn.Left.Set(left, 0f);
-        btn.Top.Set(top, 0f);
-        btn.IsRadio = false;
-        if (tint.HasValue) btn.TintColor = tint.Value;
-        return btn;
-    }
-
-    private UIIconButton MakeIconBtn(Asset<Texture2D> texture, string hoverText, float left, float top)
-    {
-        var btn = new UIIconButton(texture, hoverText);
-        btn.Width.Set(IconBtnSize, 0f);
-        btn.Height.Set(IconBtnSize, 0f);
-        btn.Left.Set(left, 0f);
-        btn.Top.Set(top, 0f);
-        btn.IsRadio = true;
-        return btn;
     }
 
     private void UpdateOptionsButtons()
@@ -361,6 +239,7 @@ public class DismantlingSettingsPanel : UIState
         UpdateEqualDimensionsButton();
         UpdateSliceGrid();
         UpdateConnectDiameterButton();
+        UpdateInvertSelectionButton();
     }
 
     private void UpdateConnectDiameterButton()
@@ -368,6 +247,14 @@ public class DismantlingSettingsPanel : UIState
         var settings = GetSettings();
         if (settings == null || _connectDiameterBtn == null) return;
         _connectDiameterBtn.Toggled = settings.Shape.ConnectDiameter;
+    }
+
+    private void UpdateInvertSelectionButton()
+    {
+        var settings = GetSettings();
+        if (settings == null || _invertSelectionBtn == null) return;
+        _invertSelectionBtn.Toggled = settings.Shape.InvertSelection;
+        _invertSelectionBtn.Disabled = !settings.Shape.SupportsInversion;
     }
 
     private void UpdateEqualDimensionsButton()
@@ -396,9 +283,10 @@ public class DismantlingSettingsPanel : UIState
             ModContent.GetInstance<WandUISystem>().CloseAllUI();
     }
 
-    public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
+    public override void Draw(SpriteBatch spriteBatch)
     {
         if (!IsVisible) return;
         base.Draw(spriteBatch);
+        _builder?.DrawDebugLines(spriteBatch, _mainPanel.GetDimensions());
     }
 }

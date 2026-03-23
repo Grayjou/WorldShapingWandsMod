@@ -12,13 +12,40 @@ Thumbs.db
 
 # Local Python/virtual env
 .venv/
+PythonVenvReqs/
 
 # Project generated or local files
 ImportedSummaries/
 recipe_draft.txt
-asset_dupe.py
-generic_asset_gen.py
+
+# Python scripts (development tools, not mod code)
+*.py
 
 # Development notes and clone directories
 dev_notes/
 Cloned*/
+ModReferences/
+# Session logs
+Sessions/
+Session*.txt
+2026-*.txt
+
+# Spreadsheets
+*.xlsx
+data/
+# Showcase/archive assets (not mod code)
+ShowcaseAssets/
+Archive/
+
+# Local state files
+.session_state.json
+
+# Python scripts folder
+Scripts/
+
+# Root-level docs that are personal/project-management (not shipped)
+CurrentStateAndStatus.md
+IssuesAndFixes.md
+/Roadmap.md
+/TODO_FEATURES.md
+WorldShapingWandsMod_MagicStorage*.md

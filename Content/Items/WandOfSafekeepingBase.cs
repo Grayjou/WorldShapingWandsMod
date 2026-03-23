@@ -1,5 +1,6 @@
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Linq;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -34,6 +35,13 @@ public abstract class WandOfSafekeepingBase : BaseCyclingWand
 
     public override bool? UseItem(Player player)
     {
+        // Keep the use-cycle alive while the mouse is held (channeling mode).
+        // Without this, itemAnimation expires and UseItem won't fire again.
+        if (WandSelectionMode == SelectionMode.OneClick && Item.channel)
+        {
+            player.itemAnimation = player.itemAnimationMax;
+            return Main.mouseLeft ? false : true;
+        }
         if (Main.LocalPlayer.mouseInterface)
             return false;
 
@@ -47,7 +55,7 @@ public abstract class WandOfSafekeepingBase : BaseCyclingWand
         if (WandSelectionMode != SelectionMode.OneClick && !wandPlayer.TryConsumeFreshLeftClick())
             return false;
 
-        Point mouseTile = GeometryHelper.WorldToTile(Main.MouseWorld);
+        Point mouseTile = GeometryHelper.GetMouseTile();
         return HandleUseItem(player, wandPlayer, mouseTile);
     }
 
@@ -92,12 +100,13 @@ public abstract class WandOfSafekeepingBase : BaseCyclingWand
             selection.StartTile, selection.EndTile, selection.VerticalFirst);
 
         var tileSet = ShapeRegistry.GetShapeTiles(settings.Shape.Shape, context);
+        var invertedTiles = settings.Shape.ApplyInversion(tileSet.Tiles.ToArray(), context);
 
         int tilesChanged = 0;
         int wallsChanged = 0;
         int skipped = 0;
 
-        foreach (Point tile in tileSet.Tiles)
+        foreach (Point tile in invertedTiles)
         {
             if (!WorldGen.InWorld(tile.X, tile.Y, 1))
                 continue;
@@ -159,8 +168,8 @@ public abstract class WandOfSafekeepingBase : BaseCyclingWand
             if (parts.Count > 0)
             {
                 // Play Quiet click sound (SoundID.MaxMana) at half volume — short, crispy sound
-                var config = ModContent.GetInstance<WandConfig>();
-                if (config.EnableWandSounds)
+                var config = ModContent.GetInstance<WandClientConfig>();
+                if (config?.EnableWandSounds == true)
                     SoundEngine.PlaySound(SoundID.MaxMana with { Volume = 0.5f }, player.Center);
 
                 string detail = $"Protected {string.Join(", ", parts)}";
@@ -183,8 +192,8 @@ public abstract class WandOfSafekeepingBase : BaseCyclingWand
             if (parts.Count > 0)
             {
                 // Play Unlock sound for unprotect operations
-                var config = ModContent.GetInstance<WandConfig>();
-                if (config.EnableWandSounds)
+                var config = ModContent.GetInstance<WandClientConfig>();
+                if (config?.EnableWandSounds == true)
                     SoundEngine.PlaySound(SoundID.Unlock, player.Center);
 
                 Main.NewText($"Unprotected {string.Join(", ", parts)}", Color.LightGreen);

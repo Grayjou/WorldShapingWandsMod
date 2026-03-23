@@ -29,6 +29,7 @@ public class WandOfSafekeepingSelect : WandOfSafekeepingBase
         }
         else
         {
+            if (IsOnLocalCooldown()) return false;
             wandPlayer.UpdateSelection(mouseTile);
             ExecuteSafekeeping(player, wandPlayer);
             wandPlayer.ClearSelection();

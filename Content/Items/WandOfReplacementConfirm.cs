@@ -34,6 +34,8 @@ public class WandOfReplacementConfirm : WandOfReplacementBase
         }
         else
         {
+            if (IsTooFarToConfirm(wandPlayer.Selection, mouseTile)) return false;
+            if (IsOnLocalCooldown()) return false;
             ExecuteReplacement(player, wandPlayer);
             wandPlayer.ClearSelection();
             return false; // Don't consume the wand

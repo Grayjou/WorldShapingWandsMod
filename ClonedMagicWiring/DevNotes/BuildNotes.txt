@@ -1,4 +1,0 @@
-displayName = Wand of Wiring
-author = YourName
-version = 1.0.0
-buildIgnore = .git/*,.vs/*,bin/*,obj/*

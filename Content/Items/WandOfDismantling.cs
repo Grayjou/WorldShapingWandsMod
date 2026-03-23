@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,6 +32,13 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
 
     public override bool? UseItem(Player player)
     {
+        // Keep the use-cycle alive while the mouse is held (channeling mode).
+        // Without this, itemAnimation expires and UseItem won't fire again.
+        if (WandSelectionMode == SelectionMode.OneClick && Item.channel)
+        {
+            player.itemAnimation = player.itemAnimationMax;
+            return Main.mouseLeft ? false : true;
+        }
         // Don't do anything if the mouse is over UI
         if (Main.LocalPlayer.mouseInterface)
             return false;
@@ -46,7 +53,7 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
         if (WandSelectionMode != SelectionMode.OneClick && !wandPlayer.TryConsumeFreshLeftClick())
             return false;
 
-        Point mouseTile = GeometryHelper.WorldToTile(Main.MouseWorld);
+        Point mouseTile = GeometryHelper.GetMouseTile();
 
         return HandleUseItem(player, wandPlayer, mouseTile);
     }
@@ -75,7 +82,8 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
     {
         var settings = wandPlayer.DismantlingSettings;
         var selection = wandPlayer.GetVisualSelection();
-        var config = ModContent.GetInstance<WandConfig>();
+        var config = ModContent.GetInstance<WandServerConfig>();
+        var clientCfg = ModContent.GetInstance<WandClientConfig>();
 
         // ── Multiplayer: send packet to server instead of executing locally ──
         if (Main.netMode == NetmodeID.MultiplayerClient)
@@ -86,7 +94,8 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
                 settings.Shape.Thickness, settings.Shape.EqualDimensions,
                 selection.VerticalFirst, player.whoAmI,
                 settings.DestroyTiles, settings.DestroyWalls, settings.DestroyContainers,
-                settings.Shape.Slice, settings.Shape.ConnectDiameter);
+                settings.Shape.Slice, settings.Shape.ConnectDiameter,
+                settings.Shape.InvertSelection);
             return;
         }
 
@@ -94,6 +103,7 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
             selection.StartTile, selection.EndTile, selection.VerticalFirst);
 
         var tileSet = ShapeRegistry.GetShapeTiles(settings.Shape.Shape, context);
+        var invertedTiles = settings.Shape.ApplyInversion(tileSet.Tiles.ToArray(), context);
         var undoMgr = player.GetModPlayer<UndoManager>();
         var action = undoMgr.BeginAction("Dismantling");
 
@@ -110,15 +120,26 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
 
         if (settings.DestroyContainers && settings.DestroyTiles)
         {
-            var containers = ContainerHelper.FindContainers(tileSet.Tiles);
+            var containers = ContainerHelper.FindContainers(invertedTiles);
             foreach (var container in containers)
             {
                 if (SafekeepingSystem.IsProtected(container.TopLeft.X, container.TopLeft.Y))
                     continue;
 
-                // Skip locked containers unless AutoOpenChestsOnDestruction is enabled
+                // Skip locked containers unless AutoOpenChestsOnDestruction is enabled.
+                // IMPORTANT: Still add their tiles to containerTiles so the regular tile
+                // destruction pass doesn't destroy them via WorldGen.KillTile (which would
+                // bypass the lock check entirely).
                 if (container.IsLocked && !config.AutoOpenChestsOnDestruction)
+                {
+                    var lockedData = Terraria.ObjectData.TileObjectData.GetTileData(container.TileType, 0);
+                    int lw = lockedData?.Width ?? 2;
+                    int lh = lockedData?.Height ?? 2;
+                    for (int dx = 0; dx < lw; dx++)
+                        for (int dy = 0; dy < lh; dy++)
+                            containerTiles.Add(new Point(container.TopLeft.X + dx, container.TopLeft.Y + dy));
                     continue;
+                }
 
                 // Snapshot all container tiles before destruction
                 var data = Terraria.ObjectData.TileObjectData.GetTileData(container.TileType, 0);
@@ -153,7 +174,7 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
         // Without this, WorldGen.CanKillTile returns false for blocks under trees during
         // pre-validation, causing them to be skipped even though the tree would be gone
         // by the time we reach that block during execution.
-        var sortedTiles = tileSet.Tiles.ToArray();
+        var sortedTiles = invertedTiles.ToArray();
         Array.Sort(sortedTiles, (a, b) => a.Y != b.Y ? a.Y.CompareTo(b.Y) : a.X.CompareTo(b.X));
 
         foreach (Point tile in sortedTiles)
@@ -187,6 +208,14 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
                     willDestroyTile = false;
                 else if (GetPlayerMaxHammerPower(player) < 80 && !config.BypassPickaxePower)
                     willDestroyTile = false;
+            }
+
+            // Delicate tiles: Shadow Orbs / Crimson Hearts, Plantera's Bulbs,
+            // Bee Larvae, Life Crystals, Life Fruit — skip unless explicitly allowed.
+            // These tiles have irreversible side effects (boss spawns, world flags, etc.).
+            if (willDestroyTile && IsDelicateTile(tileData.TileType) && !config.AllowDelicateTileDestruction)
+            {
+                willDestroyTile = false;
             }
 
             bool willDestroyWall = settings.DestroyWalls
@@ -226,7 +255,7 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
         if (validTiles.Count == 0 && containersDestroyed > 0)
         {
             undoMgr.CommitAction(action);
-            if (config.EnableWandSounds)
+            if (clientCfg?.EnableWandSounds == true)
                 SoundEngine.PlaySound(SoundID.Tink, player.Center);
             Main.NewText($"Cleared {containersDestroyed} container(s)" +
                 (containerItemsDropped > 0 ? $" ({containerItemsDropped} item stack(s) dropped)" : ""),
@@ -355,12 +384,13 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
 
             undoMgr.CommitAction(action);
 
-            // Play SoundOreHit (SoundID.Tink) — only when drops are suppressed
-            // (otherwise Terraria's natural tile-breaking sounds play),
-            // and only when sound effects are enabled in config.
-            if (config.SuppressDrops && config.EnableWandSounds)
+            // Play completion sound — always when wand sounds enabled.
+            // When SuppressDrops is ON (WorldGen.gen = true), Terraria suppresses all
+            // per-tile sounds, so this is the only audio feedback the player gets.
+            // When SuppressDrops is OFF, this serves as a distinct "operation complete" bookend.
+            if (clientCfg?.EnableWandSounds == true)
             {
-                SoundEngine.PlaySound(SoundID.Tink, player.Center); // SoundOreHit
+                SoundEngine.PlaySound(SoundID.Tink, player.Center);
             }
 
             Main.NewText($"Destroyed {destroyedTiles} tile(s)" +
@@ -412,6 +442,21 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
         return max;
     }
 
+    /// <summary>
+    /// Returns true if the tile type is "delicate" — destroying it has irreversible
+    /// side effects (boss spawns, world flags, unique loot).
+    /// Protected by AllowDelicateTileDestruction config.
+    /// </summary>
+    private static bool IsDelicateTile(int tileType)
+    {
+        return tileType == TileID.ShadowOrbs        // Shadow Orb / Crimson Heart
+            || tileType == TileID.PlanteraBulb       // Plantera's Bulb
+            || tileType == TileID.Larva              // Bee Larva (Queen Bee)
+            || tileType == TileID.Heart              // Life Crystal
+            || tileType == TileID.LifeFruit          // Life Fruit
+            || tileType == TileID.LihzahrdAltar;     // Lihzahrd Altar (Golem)
+    }
+
     public override void AddRecipes()
     {
         // Only the Instant variant has a craftable recipe.
@@ -447,7 +492,7 @@ public class WandOfDismantlingInstant : WandOfDismantlingBase
             return;
 
         var wandPlayer = player.GetModPlayer<WandPlayer>();
-        Point mouseTile = GeometryHelper.WorldToTile(Main.MouseWorld);
+        Point mouseTile = GeometryHelper.GetMouseTile();
 
         if (Main.mouseLeft)
         {
@@ -473,7 +518,7 @@ public class WandOfDismantlingInstant : WandOfDismantlingBase
             // Right-click during a drag cancels the selection without executing.
             if (Main.mouseRight && wandPlayer.InstantSelection.IsActive)
             {
-                wandPlayer.ClearInstantSelection();
+                wandPlayer.CancelInstantSelection(WandColors.CancelDismantling, wandPlayer.DismantlingSettings.Shape);
                 return;
             }
         }
@@ -482,12 +527,12 @@ public class WandOfDismantlingInstant : WandOfDismantlingBase
             // Don't execute if mouse released over UI (e.g. NPC shop)
             if (IsMouseOverUI())
             {
-                wandPlayer.ClearInstantSelection();
+                wandPlayer.CancelInstantSelection(WandColors.CancelDismantling, wandPlayer.DismantlingSettings.Shape);
                 return;
             }
 
             // Mouse released - execute only if this wand started the selection
-            if (wandPlayer.IsInstantSelectionOwnedByCurrentItem())
+            if (wandPlayer.IsInstantSelectionOwnedByCurrentItem() && !IsOnLocalCooldown())
             {
                 ExecuteDismantling(player, wandPlayer);
             }
@@ -501,7 +546,7 @@ public class WandOfDismantlingInstant : WandOfDismantlingBase
             .AddIngredient(ItemID.Wood, 10)
             .AddIngredient(ItemID.Rope, 20)
             .AddRecipeGroup(WandRecipeSystem.AnyGemKey, 5)
-            .AddIngredient(ItemID.Dynamite, 50)
+            .AddIngredient(ItemID.Dynamite, 100)
             .AddIngredient(ItemID.ManaCrystal, 1)
             .AddTile(TileID.Anvils)
             .Register();
@@ -529,6 +574,7 @@ public class WandOfDismantlingSelect : WandOfDismantlingBase
         else
         {
             // Second click - execute
+            if (IsOnLocalCooldown()) return false;
             wandPlayer.UpdateSelection(mouseTile);
             ExecuteDismantling(player, wandPlayer);
             wandPlayer.ClearSelection();
@@ -580,6 +626,8 @@ public class WandOfDismantlingConfirm : WandOfDismantlingBase
         else
         {
             // Third click - execute
+            if (IsTooFarToConfirm(wandPlayer.Selection, mouseTile)) return false;
+            if (IsOnLocalCooldown()) return false;
             ExecuteDismantling(player, wandPlayer);
             wandPlayer.ClearSelection();
             return false; // Don't consume the wand

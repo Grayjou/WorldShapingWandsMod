@@ -18,7 +18,7 @@ half-ellipses — with a single drag or a series of clicks.
 | **Wand of Building** | Place solid blocks, platforms, ropes, planter boxes, grass seeds, or walls in a shape. Respects inventory stock, supports infinite-resource mode, and configurable block-exhaustion behaviour (NextBlock / Cancel / Interrupt). Slope application included. Same-type slope overwrite supported. |
 | **Wand of Dismantling** | Destroy tiles and/or walls in a shape. Validates pick power and `CanKillTile`. Configurable drop suppression. Container destruction (chests, barrels) with content dropping. Demon altar protection. Optional progressive (batched) processing for large operations. |
 | **Wand of Replacement** | Replace every instance of a source tile type with a target type across a shape. Supports 5 object types (Tile, Platform, Rope, PlanterBox, Wall) plus Air. Substrate variant detection (e.g., replacing "dirt" catches all grass variants). Support detection prevents replacing tiles that would cause wall/torch collapse. |
-| **Wand of Wiring** | Place or remove red/green/blue/yellow wire and actuators in a shape. Defaults to the Elbow shape for vanilla wire-kite behaviour. Full multiplayer packet support. Wire/actuator inventory consumption with per-type infinite overrides. |
+| **Wand of Wiring** | Place or remove red/green/blue/yellow wire and actuators in a shape. Defaults to the Elbow shape for vanilla Grand Design behaviour. Full multiplayer packet support. Wire/actuator inventory consumption with per-type infinite overrides. |
 | **Wand of Safekeeping** | Protect or unprotect tiles and walls. Other wands refuse to modify protected positions. Protection persists across world saves via `TagCompound`. Visual overlay shows protected areas when holding the wand. |
 | **Wand of Coating** | Apply or remove Illuminant, Echo, and Actuated coatings in a shape. Coating type selector UI panel. |
 
@@ -128,22 +128,6 @@ WorldShapingWandsMod/
 - **Client-side safety** — All rendering systems are `[Autoload(Side = ModSide.Client)]`.
 - **Single-responsibility** — Shapes produce filled tiles only; `OutlineHelper` handles Hollow mode; overlays read but never write game state.
 
----
-
-## Documentation
-
-| Document | Description |
-|---|---|
-| [`CurrentStateAndStatus.md`](CurrentStateAndStatus.md) | Comprehensive technical reference: architecture, algorithms, file inventory, patterns |
-| [`IssuesAndFixes.md`](IssuesAndFixes.md) | Issue tracker: #1–151 across DevNotes #1–#17, with full context |
-| [`dev_notes/Roadmap.md`](dev_notes/Roadmap.md) | Phased development plan (Phases 1–8) |
-| [`dev_notes/TODO_FEATURES.md`](dev_notes/TODO_FEATURES.md) | Granular feature checklist with status markers |
-| [`dev_notes/SanityChecks.md`](dev_notes/SanityChecks.md) | Safety measures, separation of concerns, known limitations |
-| [`dev_notes/MultiplayerFixSchedule.md`](dev_notes/MultiplayerFixSchedule.md) | 7-day MP synchronization implementation plan |
-| [`dev_notes/BetaReadinessEvaluation.md`](dev_notes/BetaReadinessEvaluation.md) | Comprehensive beta release readiness assessment |
-| [`dev_notes/MagicWiringMergeSchedule.md`](dev_notes/MagicWiringMergeSchedule.md) | MagicWiring merge architecture & detailed schedule |
-
----
 
 ## Building
 

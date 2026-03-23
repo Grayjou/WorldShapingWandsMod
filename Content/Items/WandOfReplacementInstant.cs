@@ -39,7 +39,7 @@ public class WandOfReplacementInstant : WandOfReplacementBase
             return;
 
         var wandPlayer = player.GetModPlayer<WandPlayer>();
-        Point mouseTile = GeometryHelper.WorldToTile(Main.MouseWorld);
+        Point mouseTile = GeometryHelper.GetMouseTile();
 
         if (Main.mouseLeft)
         {
@@ -48,7 +48,7 @@ public class WandOfReplacementInstant : WandOfReplacementBase
             // because HoldItem runs before UI.Update sets mouseInterface.
             if (IsMouseOverUI())
             {
-                DebugIsMouseOverUI("WandOfReplacementInstant blocked");
+
                 return;
             }
 
@@ -82,7 +82,7 @@ public class WandOfReplacementInstant : WandOfReplacementBase
             }
 
             // Mouse released - execute only if this wand started the selection
-            if (wandPlayer.IsInstantSelectionOwnedByCurrentItem())
+            if (wandPlayer.IsInstantSelectionOwnedByCurrentItem() && !IsOnLocalCooldown())
             {
                 ExecuteReplacement(player, wandPlayer);
             }

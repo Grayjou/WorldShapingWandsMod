@@ -1,9 +1,0 @@
-Replace Paint Tile, Paint Wall, Scrape Moss and Harvest Moss buttons with 
-four icon buttons with the older labels as hover tooltips
-
-Add Equal Target Type to Wand of Replacement. Remove the non-selected state that assumes it. 
-More intuitive and expressive UX for the common use case of swapping one tile type for the same.
-
-Replace "Air" with "Air (Remove)" In all languages. 
-
-Implement loading_screen_tips.txt

@@ -38,7 +38,7 @@ public class WandOfSafekeepingInstant : WandOfSafekeepingBase
             return;
 
         var wandPlayer = player.GetModPlayer<WandPlayer>();
-        Point mouseTile = GeometryHelper.WorldToTile(Main.MouseWorld);
+        Point mouseTile = GeometryHelper.GetMouseTile();
 
         if (Main.mouseLeft)
         {
@@ -46,7 +46,7 @@ public class WandOfSafekeepingInstant : WandOfSafekeepingBase
             // because HoldItem runs before UI.Update sets mouseInterface.
             if (IsMouseOverUI())
             {
-                DebugIsMouseOverUI("WandOfSafekeepingInstant blocked");
+
                 return;
             }
 
@@ -79,7 +79,7 @@ public class WandOfSafekeepingInstant : WandOfSafekeepingBase
                 return;
             }
 
-            if (wandPlayer.IsInstantSelectionOwnedByCurrentItem())
+            if (wandPlayer.IsInstantSelectionOwnedByCurrentItem() && !IsOnLocalCooldown())
             {
                 ExecuteSafekeeping(player, wandPlayer);
             }

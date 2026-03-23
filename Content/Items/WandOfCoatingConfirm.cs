@@ -36,6 +36,8 @@ public class WandOfCoatingConfirm : WandOfCoatingBase
         }
         else
         {
+            if (IsTooFarToConfirm(wandPlayer.Selection, mouseTile)) return false;
+            if (IsOnLocalCooldown()) return false;
             ExecuteCoating(player, wandPlayer);
             wandPlayer.ClearSelection();
             return false;

@@ -29,6 +29,7 @@ public class WandOfCoatingSelect : WandOfCoatingBase
         }
         else
         {
+            if (IsOnLocalCooldown()) return false;
             wandPlayer.UpdateSelection(mouseTile);
             ExecuteCoating(player, wandPlayer);
             wandPlayer.ClearSelection();

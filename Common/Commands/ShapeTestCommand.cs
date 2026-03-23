@@ -27,7 +27,7 @@ public class ShapeTestCommand : ModCommand
         var player = caller.Player;
         var wandPlayer = player.GetModPlayer<WandPlayer>();
         var settings = wandPlayer.Settings;
-        Point mouseTile = GeometryHelper.WorldToTile(Main.MouseWorld);
+        Point mouseTile = GeometryHelper.GetMouseTile();
 
         switch (args[0].ToLower())
         {

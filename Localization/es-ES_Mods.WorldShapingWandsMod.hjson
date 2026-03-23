@@ -34,6 +34,13 @@ UI: {
 		// ShapeStraightLine: Straight Line
 		EqualDimensions: Igualar Dimensiones
 		ConnectDiameter: Conectar Diámetro
+		// ConnectDiameterTooltip: Connect Diameter (half shapes only)
+		// InvertSelection: Invert Selection
+		// PaintSprayer: Paint Sprayer
+		// ActuationIgnore: Actuation: Ignore
+		// ActuationOn: Actuation: ON
+		// ActuationOff: Actuation: OFF
+		// Options: Options
 		// Slice: Shape Slice
 	}
 
@@ -76,8 +83,9 @@ UI: {
 		Planter: Macetero
 		Rail: Riel
 		Seeds: Semillas
-		Air: Aire
+		Air: Aire (Eliminar)
 		Wall: Pared
+		SameType: Mismo Tipo
 	}
 
 	Wiring: {
@@ -119,158 +127,174 @@ UI: {
 		// Ignore: Ignore
 		// On: On
 		// Off: Off
+		// Repaint: Repaint
 	}
 }
 
 Configs: {
-	WandConfig: {
-		InfiniteResources.Header: Recursos Infinitos
+	WandServerConfig: {
+		// DisplayName: Server Settings
+		// InfiniteResources.Header: Infinite Resources
 
 		EnableInfiniteResource: {
-			Label: Activar Modo de Recurso Infinito
-			Tooltip:
-				'''
-				Si está activado, las varitas de construcción/reemplazo dejarán de consumir objetos
-				si tienes al menos cierta cantidad en el inventario (ver límites por tipo abajo).
-				Pon un límite a 0 para modo siempre infinito.
-				'''
+			// Label: Enable Infinite Resource Mode
+			// Tooltip: If enabled, building/replacement wands will stop consuming items when you hold enough in your inventory (see per-type thresholds below). Set a threshold to 0 for always-infinite.
 		}
 
 		InfiniteTileThreshold: {
-			Label: Mínimo de Bloques (Infinito)
-			Tooltip:
+			// Label: Tile Threshold
+			/* Tooltip:
 				'''
-				Si tienes al menos esta cantidad de un bloque (sólidos, plataformas, cuerdas, rieles) en tu inventario, 
-				no se consumirá.
-				0 = siempre infinito para bloques.
-				'''
+				If you have at least this many of a tile (blocks, platforms, ropes, rails) in your inventory, it will not be consumed. 
+				0 = always infinite for tiles.
+				''' */
 		}
 
 		InfiniteWallThreshold: {
-			Label: Mínimo de Paredes (Infinito)
-			Tooltip:
+			// Label: Wall Threshold
+			/* Tooltip:
 				'''
-				Si tienes al menos esta cantidad de un objeto de pared en tu inventario, no se consumirá.
-				0 = siempre infinito para paredes.
-				'''
+				If you have at least this many of a wall item in your inventory, it will not be consumed.
+				0 = always infinite for walls.
+				''' */
 		}
 
 		InfiniteGrassSeedThreshold: {
-			Label: Mínimo de Semillas de Hierba (Infinito)
-			Tooltip:
+			// Label: Grass Seed Threshold
+			/* Tooltip:
 				'''
-				Si tienes al menos esta cantidad de semillas de hierba en tu inventario, no se consumirán.
-				El valor predeterminado es 50 porque las semillas de hierba son más raras que los bloques.
-				0 = siempre infinito para semillas de hierba.
-				'''
+				If you have at least this many grass seeds in your inventory, they will not be consumed.
+				Default is 50 because grass seeds are rarer than blocks.
+				0 = always infinite for grass seeds.
+				''' */
 		}
 
 		InfiniteWireThreshold: {
-			Label: Mínimo de Cables (Infinito)
-			Tooltip:
+			// Label: Wire Threshold
+			/* Tooltip:
 				'''
-				Si tienes al menos esta cantidad de cable en tu inventario, no se consumirá por la Varita de Cableado.
-				0 = siempre infinito para cables.
-				'''
+				If you have at least this many wires in your inventory, they will not be consumed by the Wand of Wiring.
+				0 = always infinite for wires.
+				''' */
 		}
 
 		InfiniteActuatorThreshold: {
-			Label: Mínimo de Actuadores (Infinito)
-			Tooltip:
+			// Label: Actuator Threshold
+			/* Tooltip:
 				'''
-				Si tienes al menos esta cantidad de actuadores en tu inventario, no se consumirán por la Varita de Cableado.
-				0 = siempre infinito para actuadores.
-				'''
+				If you have at least this many actuators in your inventory, they will not be consumed by the Wand of Wiring.
+				0 = always infinite for actuators.
+				''' */
 		}
 
 		InfiniteTiles: {
-			Label: Bloques Infinitos (Anulación)
-			Tooltip:
+			// Label: Infinite Tiles (Override)
+			/* Tooltip:
 				'''
-				Anulación por tipo para bloques (sólidos, plataformas, cuerdas, rieles, macetas).
-				Default: sigue el interruptor principal de Recurso Infinito.
-				ForceOn: siempre infinito para bloques, incluso si el interruptor principal está desactivado.
-				ForceOff: nunca infinito para bloques, incluso si el interruptor principal está activado.
-				'''
+				Per-type override for tiles (blocks, platforms, rope, rails, planter boxes).
+				Default: follows the master Enable Infinite Resource toggle.
+				ForceOn: always infinite for tiles, even if the master toggle is off.
+				ForceOff: never infinite for tiles, even if the master toggle is on.
+				''' */
 		}
 
 		InfiniteWalls: {
-			Label: Paredes Infinitas (Anulación)
-			Tooltip:
+			// Label: Infinite Walls (Override)
+			/* Tooltip:
 				'''
-				Anulación por tipo para paredes.
-				Default: sigue el interruptor principal de Recurso Infinito.
-				ForceOn: siempre infinito para paredes, incluso si el interruptor principal está desactivado.
-				ForceOff: nunca infinito para paredes, incluso si el interruptor principal está activado.
-				'''
+				Per-type override for walls.
+				Default: follows the master Enable Infinite Resource toggle.
+				ForceOn: always infinite for walls, even if the master toggle is off.
+				ForceOff: never infinite for walls, even if the master toggle is on.
+				''' */
 		}
 
 		InfiniteGrassSeeds: {
-			Label: Semillas de Hierba Infinitas (Anulación)
-			Tooltip:
+			// Label: Infinite Grass Seeds (Override)
+			/* Tooltip:
 				'''
-				Anulación por tipo para semillas de hierba.
-				Default: sigue el interruptor principal de Recurso Infinito.
-				ForceOn: siempre infinito para semillas, incluso si el interruptor principal está desactivado.
-				ForceOff: nunca infinito para semillas, incluso si el interruptor principal está activado.
-				'''
+				Per-type override for grass seeds.
+				Default: follows the master Enable Infinite Resource toggle.
+				ForceOn: always infinite for seeds, even if the master toggle is off.
+				ForceOff: never infinite for seeds, even if the master toggle is on.
+				''' */
 		}
 
 		InfiniteWires: {
-			Label: Cables Infinitos (Anulación)
-			Tooltip:
+			// Label: Infinite Wires (Override)
+			/* Tooltip:
 				'''
-				Anulación por tipo para cables.
-				Default: sigue el interruptor principal de Recurso Infinito.
-				ForceOn: siempre infinito para cables, incluso si el interruptor principal está desactivado.
-				ForceOff: nunca infinito para cables, incluso si el interruptor principal está activado.
-				'''
+				Per-type override for wires.
+				Default: follows the master Enable Infinite Resource toggle.
+				ForceOn: always infinite for wires, even if the master toggle is off.
+				ForceOff: never infinite for wires, even if the master toggle is on.
+				''' */
 		}
 
 		InfiniteActuators: {
-			Label: Actuadores Infinitos (Anulación)
-			Tooltip:
+			// Label: Infinite Actuators (Override)
+			/* Tooltip:
 				'''
-				Anulación por tipo para actuadores.
-				Default: sigue el interruptor principal de Recurso Infinito.
-				ForceOn: siempre infinito para actuadores, incluso si el interruptor principal está desactivado.
-				ForceOff: nunca infinito para actuadores, incluso si el interruptor principal está activado.
-				'''
+				Per-type override for actuators.
+				Default: follows the master Enable Infinite Resource toggle.
+				ForceOn: always infinite for actuators, even if the master toggle is off.
+				ForceOff: never infinite for actuators, even if the master toggle is on.
+				''' */
 		}
 
-		SelectionLimits.Header: Límites de Dimensiones de Selección
+		// SelectionLimits.Header: Selection Dimension Limits
 
 		SmallSelectionCap: {
-			Label: Límite de Forma Pequeña (Codo / Cardinal)
-			Tooltip: Dimensión máxima (ancho o alto) para las formas Codo y Línea Cardinal.\nEstas formas son 1D, por lo que pueden ser más largas sin problema.
+			// Label: Small Shape Cap (Elbow / Cardinal / Straight)
+			// Tooltip: Maximum dimension (width or height) for Elbow, Cardinal Line, and Straight Line shapes.\nThese shapes are 1D so they can safely be longer.
 		}
 
 		BigSelectionCap: {
-			Label: Límite de Forma Grande (Rect / Elipse / etc.)
-			Tooltip: Dimensión máxima (ancho o alto) para formas de área 2D.\nUn límite de 200 significa que la selección más grande puede ser de 200×200.
+			// Label: Big Shape Cap (Rect / Ellipse / etc.)
+			// Tooltip: Maximum dimension (width or height) for 2D area shapes.\nA cap of 200 means the largest selection is 200×200.
 		}
 
 		HollowSelectionCap: {
-			Label: Límite de Forma Hueca
-			Tooltip: Dimensión máxima (ancho o alto) para formas huecas.\nLas formas huecas producen menos bloques que las formas rellenas, por lo que pueden ser más grandes.\nUn límite de 400 significa que la selección hueca más grande puede ser de 400×400.
+			// Label: Hollow Shape Cap
+			// Tooltip: Maximum dimension (width or height) for hollow shapes.\nHollow shapes produce fewer tiles than filled shapes, so they can safely be larger.\nA cap of 400 means the largest hollow selection is 400×400.
 		}
 
-		ProgressiveMode.Header: Desmantelamiento Progresivo
-		Sandbox.Header: Opciones de Modo Libre
+		// Sandbox.Header: Sandbox Options
 
 		SuppressDrops: {
-			Label: Suprimir Objetos al Destruir
-			Tooltip: Cuando está activado, los Bloques destruidos por cualquier varita (desmantelamiento, reemplazo o intercambio de construcción) no soltarán objetos.\nÚtil para construcción creativa/sandbox cuando no necesitas recuperar los materiales.
+			// Label: Suppress Tile Drops
+			// Tooltip: When enabled, tiles destroyed by any wand (dismantling, replacement, or building swap) will not drop items.\nUseful for creative/sandbox building where you don't need the materials back.
 		}
 
 		BypassPickaxePower: {
-			Label: Ignorar Poder de Pico
-			Tooltip: Cuando está activado, las varitas ignoran los requisitos de poder de pico y pueden destruir o reemplazar cualquier bloque sin importar la fuerza del pico.\nÚtil para construcción creativa/sandbox.
+			// Label: Bypass Pickaxe Power
+			// Tooltip: When enabled, wands ignore pickaxe power requirements and can destroy or replace any tile regardless of pickaxe strength.\nUseful for creative/sandbox building.
 		}
 
 		AllowDemonAltarDestruction: {
-			Label: Permitir Destrucción de Altares Demoníacos
-			Tooltip: Cuando está activado, la Varita de Desmantelamiento puede destruir Altares Demoníacos y Altares Carmesí.\nPor defecto, los altares están protegidos contra la destrucción masiva accidental.\nRequiere poder de martillo apropiado (Pwnhammer o mejor) a menos que Ignorar Poder de Pico también esté activado.
+			// Label: Allow Demon Altar Destruction
+			/* Tooltip:
+				'''
+				When enabled, the Wand of Dismantling can destroy Demon Altars and Crimson Altars.
+				By default, altars are protected from accidental mass-destruction.
+				Requires appropriate hammer power (Pwnhammer or better) unless Bypass Pickaxe Power is also on.
+				''' */
+		}
+
+		AllowDelicateTileDestruction: {
+			// Label: Allow Delicate Tile Destruction
+			/* Tooltip:
+				'''
+				When enabled, the Wand of Dismantling can destroy "delicate" tiles
+				that normally trigger world events or boss summons:
+				  • Shadow Orbs / Crimson Hearts
+				  • Plantera's Bulbs
+				  • Bee Larvae (Larva)
+				  • Life Crystals
+				  • Life Fruit
+				  • Lihzahrd Altars
+				By default these are protected from accidental mass-destruction.
+				''' */
 		}
 
 		IgnoreLockedKeyRequirements: {
@@ -293,85 +317,186 @@ Configs: {
 		}
 
 		VacuumItems: {
-			Label: Aspirar Objetos Soltados
-			Tooltip:
+			// Label: Vacuum Dropped Items
+			/* Tooltip:
 				'''
-				Cuando está activado, los objetos soltados por operaciones de varita (desmantelamiento,
-				reemplazo, intercambios de construcción) se recolectan automáticamente en tu inventario.
-				Los objetos excedentes se teletransportan a tu posición en lugar de dispersarse.
-				No tiene efecto cuando Suprimir Objetos al Destruir está activado (no hay objetos que recolectar).
+				When enabled, items dropped by wand operations (dismantling, replacement,
+				building swaps) are automatically collected into your inventory.
+				Overflow items are teleported to your position instead of scattering.
+				Has no effect when Suppress Tile Drops is enabled (no items to collect).
+				''' */
+		}
+
+		EnableUndoCommand: {
+			// Label: Enable Undo Commands (Experimental)
+			/* Tooltip:
 				'''
+				[EXPERIMENTAL] Undo is not fully stable yet.
+				Enabling may cause visual artifacts such as unnamed tiles
+				and occasional resource duplication. Not tested in multiplayer.
+				It is safe to use and will not crash your game.
+				When enabled, players can use /undo and /undoinfo chat commands
+				to undo wand operations and inspect the undo stack.
+				Default: Off
+				''' */
 		}
 
 		MaxOutlineThickness: {
-			Label: Grosor Máximo de Contorno
-			Tooltip: Grosor máximo del contorno para formas huecas.\nEl valor predeterminado es 10. Aumenta para contornos más grandes, disminuye para mantener la UI simple.\nEl botón + en los paneles de varita se limitará a este valor.
+			// Label: Max Outline Thickness
+			/* Tooltip:
+				'''
+				Maximum outline thickness for hollow shapes.
+				Default is 10. Increase for larger outline shapes, decrease to keep the UI simple.
+				The + button in wand panels will cap at this value.
+				''' */
 		}
 
+		OperationCooldownTicks: {
+			// Label: Operation Cooldown (ticks)
+			/* Tooltip:
+				'''
+				Minimum number of game ticks between wand operations for each player.
+				Prevents autoclicker or click-spam abuse. 12 ticks ≈ one swing animation.
+				Set to 0 to disable the cooldown entirely.
+				Default: 12
+				''' */
+		}
+
+		MaxConfirmDistance: {
+			// Label: Max Confirm Distance (tiles)
+			/* Tooltip:
+				'''
+				Maximum distance (in tiles) from the closest edge of the selection
+				bounding box at which a Confirm or Stamp click will be accepted.
+				Prevents accidental long-range execution of pending shapes.
+				Set to 0 to disable this safeguard.
+				Default: 50
+				''' */
+		}
+
+		// ProgressiveMode.Header: Progressive Mode
+
 		EnableProgressiveMode: {
-			Label: Activar Modo Progresivo
-			Tooltip: Cuando está activado, las operaciones de desmantelamiento y reemplazo procesan Bloques en lotes temporizados con gotas, sonidos y efectos adecuados.\nCuando está desactivado, las operaciones son instantáneas y silenciosas (sin gotas de objetos).
+			// Label: Enable Progressive Mode
+			// Tooltip: When enabled, Dismantling and replacement operations process tiles in timed batches with proper drops, sounds, and effects.\nWhen disabled, operations are instant and silent (no tile drops).
 		}
 
 		ProgressiveBatchSize: {
-			Label: Tamaño del Lote
-			Tooltip: Número de Bloques procesados por lote en modo progresivo.\n400 Bloques por lote es una cantidad satisfactoria sin causar lag.
+			// Label: Batch Size
+			/* Tooltip:
+				'''
+				Number of tiles processed per batch in progressive mode.
+				400 tiles per batch is a satisfying amount without lag.
+				''' */
 		}
 
 		ProgressiveInterval: {
-			Label: Intervalo entre Lotes (segundos)
-			Tooltip: Tiempo entre cada lote en modo progresivo.\n0.3 segundos da una sensación de demolición en oleadas satisfactoria.
+			// Label: Batch Interval (seconds)
+			// Tooltip: Time between each batch in progressive mode.\n0.3 seconds gives a satisfying wave-like demolition feel.
 		}
 
-		Tooltips.Header: Opciones de Descripciones Emergentes
-
-		ShowLoreTooltips: {
-			Label: Mostrar Descripciones de Lore
-			Tooltip: Cuando está activado, mantener presionada la tecla Shift mientras pasas el cursor sobre una varita muestra su texto de lore.\nDesactívalo para ocultar el lore por completo.
-		}
-
-		Safekeeping.Header: Preservación
+		// Safekeeping.Header: Safekeeping
 
 		SafekeepingClearThreshold: {
-			Label: Mínimo para pedir confirmación
-			Tooltip:
-				'''
-				Cuando el número de bloques y paredes protegidos en la selección es mayor o igual a este valor, 
-				se requerirá confirmación adicional para borrar toda la protección.
-				Esto evita desproteger accidentalmente grandes áreas.
-				'''
+			// Label: Clear All Confirmation Threshold
+			// Tooltip: When the total number of protected tiles and walls exceeds this value, the Clear All button requires a second click to confirm.\nSet to 0 to disable the confirmation safeguard.
 		}
-
-		Audio.Header: Audio
-
-		EnableWandSounds: {
-			Label: Activar Efectos de Sonido de Varita
-			Tooltip: Cuando está activado, las varitas reproducen efectos de sonido personalizados al realizar una acción exitosamente.\nDesactívalo para operaciones silenciosas.
-		}
-
-		Overlay.Header: Superposición
-
-		OverlayRenderMode: {
-			Label: Modo de Renderizado de Superposición
-			Tooltip:
-				'''
-				Controla cómo se renderiza la superposición de selección para formas grandes.
-				Auto: Muestra el cuadro delimitador mientras arrastras formas mayores a 200 bloques, luego muestra la forma completa con transición cuando el ratón se estabiliza. Evita lag durante el redimensionamiento rápido. (Predeterminado)
-				AlwaysFullShape: Siempre renderiza la forma completa inmediatamente sin rebote. Puede causar lag en formas muy grandes pero da retroalimentación visual instantánea.
-				AlwaysBoundingBox: Siempre muestra solo el contorno del cuadro delimitador, sin calcular la forma completa. Más ligero en rendimiento.
-				'''
-		}
-
-		DisplayName: Configuración de Varita
 
 		IsInfiniteForActuators: {
-			Tooltip: ""
-			Label: Actuadores Infinitos
+			// Tooltip: ""
+			// Label: Is Infinite For Actuators
 		}
 
 		IsInfiniteForWires: {
-			Tooltip: ""
-			Label: Cable Infinito
+			// Tooltip: ""
+			// Label: Is Infinite For Wires
+		}
+	}
+
+	WandClientConfig: {
+		// DisplayName: Client Settings
+		// Tooltips.Header: Tooltip Options
+
+		ShowLoreTooltips: {
+			// Label: Show Lore Tooltips
+			// Tooltip: When enabled, holding Shift while hovering a wand shows its lore text.\nDisable to hide lore entirely.
+		}
+
+		// Audio.Header: Audio
+
+		EnableWandSounds: {
+			// Label: Enable Wand Sound Effects
+			// Tooltip: When enabled, wands play custom sound effects on action success.\nDisable for silent operations.
+		}
+
+		// Overlay.Header: Overlay
+
+		OverlayRenderMode: {
+			// Label: Overlay Render Mode
+			/* Tooltip:
+				'''
+				Controls how the selection overlay is rendered for large shapes.
+				Auto: Shows a bounding box while dragging shapes larger than 200 tiles, then fades in the full shape once the mouse stabilizes. This prevents lag during rapid resizing. (Default)
+				AlwaysFullShape: Always renders the full shape overlay immediately with no debounce. May cause lag on very large shapes but gives instant visual feedback.
+				AlwaysBoundingBox: Always shows only the bounding box outline, never computing the full shape. Lightest on performance.
+				''' */
+		}
+
+		ShapeOverlayAlpha: {
+			// Label: Shape Overlay Opacity
+			/* Tooltip:
+				'''
+				The opacity of the shape fill overlay drawn on selected tiles.
+				Higher values make the selection more visible.
+				Must be at least 0.1 higher than Negative Space Opacity.
+				Default: 0.18
+				''' */
+		}
+
+		NegativeSpaceAlpha: {
+			// Label: Negative Space Opacity
+			/* Tooltip:
+				'''
+				The opacity of the negative space overlay drawn outside the shape
+				when Invert Selection is active. Set to 0 to hide it entirely.
+				Automatically clamped to be at least 0.1 lower than Shape Overlay Opacity.
+				Default: 0.05
+				''' */
+		}
+
+		SelectionOverlayColor: {
+			// Label: Selection Overlay Color
+			/* Tooltip:
+				'''
+				The base color used for the selection overlay highlight.
+				Adjusts the R, G, B, and A channels individually.
+				Default: LimeGreen (50, 205, 50, 255)
+				''' */
+		}
+
+		// Undo.Header: Undo
+
+		MaxUndoStackSize: {
+			// Label: Max Undo Stack Size
+			/* Tooltip:
+				'''
+				The maximum number of wand operations stored in the undo history.
+				Older entries are dropped when the limit is exceeded.
+				Higher values use more memory but allow undoing further back.
+				Default: 20
+				''' */
+		}
+
+		// Feedback.Header: Feedback
+
+		WandVerbosity: {
+			// Label: Verbose Feedback
+			/* Tooltip:
+				'''
+				When enabled, wands show detailed operation feedback messages
+				such as tile counts and placement results in chat.
+				Disable for a quieter experience.
+				''' */
 		}
 	}
 
@@ -409,6 +534,185 @@ Configs: {
 
 		AlwaysBoundingBox: {
 			// Label: Always Bounding Box
+			// Tooltip: ""
+		}
+	}
+
+	WandConfig: {
+		// DisplayName: Wand Config
+		// InfiniteResources.Header: Enable Infinite Resource Header
+
+		EnableInfiniteResource: {
+			// Label: Enable Infinite Resource
+			// Tooltip: ""
+		}
+
+		InfiniteTileThreshold: {
+			// Label: Infinite Tile Threshold
+			// Tooltip: ""
+		}
+
+		InfiniteWallThreshold: {
+			// Label: Infinite Wall Threshold
+			// Tooltip: ""
+		}
+
+		InfiniteGrassSeedThreshold: {
+			// Label: Infinite Grass Seed Threshold
+			// Tooltip: ""
+		}
+
+		InfiniteWireThreshold: {
+			// Label: Infinite Wire Threshold
+			// Tooltip: ""
+		}
+
+		InfiniteActuatorThreshold: {
+			// Label: Infinite Actuator Threshold
+			// Tooltip: ""
+		}
+
+		InfiniteTiles: {
+			// Label: Infinite Tiles
+			// Tooltip: ""
+		}
+
+		InfiniteWalls: {
+			// Label: Infinite Walls
+			// Tooltip: ""
+		}
+
+		InfiniteGrassSeeds: {
+			// Label: Infinite Grass Seeds
+			// Tooltip: ""
+		}
+
+		InfiniteWires: {
+			// Label: Infinite Wires
+			// Tooltip: ""
+		}
+
+		InfiniteActuators: {
+			// Label: Infinite Actuators
+			// Tooltip: ""
+		}
+
+		// SelectionLimits.Header: Small Selection Cap Header
+
+		SmallSelectionCap: {
+			// Label: Small Selection Cap
+			// Tooltip: ""
+		}
+
+		BigSelectionCap: {
+			// Label: Big Selection Cap
+			// Tooltip: ""
+		}
+
+		HollowSelectionCap: {
+			// Label: Hollow Selection Cap
+			// Tooltip: ""
+		}
+
+		// Sandbox.Header: Suppress Drops Header
+
+		SuppressDrops: {
+			// Label: Suppress Drops
+			// Tooltip: ""
+		}
+
+		BypassPickaxePower: {
+			// Label: Bypass Pickaxe Power
+			// Tooltip: ""
+		}
+
+		AllowDemonAltarDestruction: {
+			// Label: Allow Demon Altar Destruction
+			// Tooltip: ""
+		}
+
+		AllowDelicateTileDestruction: {
+			// Label: Allow Delicate Tile Destruction
+			// Tooltip: ""
+		}
+
+		IgnoreLockedKeyRequirements: {
+			// Label: Ignore Locked Key Requirements
+			// Tooltip: ""
+		}
+
+		AutoOpenChestsOnDestruction: {
+			// Label: Auto Open Chests On Destruction
+			// Tooltip: ""
+		}
+
+		VacuumItems: {
+			// Label: Vacuum Items
+			// Tooltip: ""
+		}
+
+		EnableUndoCommand: {
+			// Label: Enable Undo Commands
+			// Tooltip: ""
+		}
+
+		MaxOutlineThickness: {
+			// Label: Max Outline Thickness
+			// Tooltip: ""
+		}
+
+		// ProgressiveMode.Header: Enable Progressive Mode Header
+
+		EnableProgressiveMode: {
+			// Label: Enable Progressive Mode
+			// Tooltip: ""
+		}
+
+		ProgressiveBatchSize: {
+			// Label: Progressive Batch Size
+			// Tooltip: ""
+		}
+
+		ProgressiveInterval: {
+			// Label: Progressive Interval
+			// Tooltip: ""
+		}
+
+		// Tooltips.Header: Show Lore Tooltips Header
+
+		ShowLoreTooltips: {
+			// Label: Show Lore Tooltips
+			// Tooltip: ""
+		}
+
+		// Safekeeping.Header: Safekeeping Clear Threshold Header
+
+		SafekeepingClearThreshold: {
+			// Label: Safekeeping Clear Threshold
+			// Tooltip: ""
+		}
+
+		// Audio.Header: Enable Wand Sounds Header
+
+		EnableWandSounds: {
+			// Label: Enable Wand Sounds
+			// Tooltip: ""
+		}
+
+		// Overlay.Header: Overlay Render Mode Header
+
+		OverlayRenderMode: {
+			// Label: Overlay Render Mode
+			// Tooltip: ""
+		}
+
+		IsInfiniteForWires: {
+			// Label: Is Infinite For Wires
+			// Tooltip: ""
+		}
+
+		IsInfiniteForActuators: {
+			// Label: Is Infinite For Actuators
 			// Tooltip: ""
 		}
 	}
@@ -574,7 +878,7 @@ Messages: {
 	NoTilesReplaced: No se pudo reemplazar ningún bloque.
 	SourceMustBeWall: El tipo de origen debe ser Pared para reemplazar paredes.
 	NoWallSourceItems: No hay objetos de pared en el inventario para identificar la pared de origen.
-	TargetMustBeWallOrAir: El tipo de destino debe ser Pared o Aire para reemplazar paredes.
+	TargetMustBeWallOrAir: El tipo de destino debe ser Pared o Aire (Eliminar) para reemplazar paredes.
 	SameWallSourceTarget: El origen y el destino son la misma pared [i:{0}].
 	NoWallTargetItems: No se encontraron objetos de pared para el destino.
 	NoSourceWallsInSelection: No se encontraron paredes de {0} en la selección.
@@ -611,4 +915,10 @@ Messages: {
 	// StampClickEnd: Stamp: click to set end point.
 	// StampClickLock: Stamp: click to lock anchor position.
 	StampLocked: ¡Sello establecido! Haz clic para {0}. Clic derecho para reiniciar.
+}
+
+GameTips: {
+	VacuumItems: WSW: ¿Cansado de recoger objetos? Activa 'aspirar objetos' en la configuración.
+	IceBiomeReplacement: WSW: ¿El Bioma de Hielo se corrompió? Usa la Varita de Reemplazo para cambiarlos por nieve. ¡Es inmune!
+	GitHubContributions: WSW: ¿Tienes algún bug? ¿Ideas? ¿Feedback o Arte? ¡Revisa el repositorio de github! Las contribuciones son muy bienvenidas.
 }

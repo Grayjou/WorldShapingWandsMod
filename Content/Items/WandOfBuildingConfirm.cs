@@ -35,6 +35,8 @@ namespace WorldShapingWandsMod.Content.Items
             }
             else
             {
+                if (IsTooFarToConfirm(wandPlayer.Selection, mouseTile)) return false;
+                if (IsOnLocalCooldown()) return false;
                 ExecuteBuilding(player, wandPlayer);
                 wandPlayer.ClearSelection();
                 return false; // Don't consume the wand

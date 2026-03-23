@@ -2,6 +2,8 @@ using Microsoft.Xna.Framework;
 using WorldShapingWandsMod.Common.Enums;
 using System;
 
+#nullable enable
+
 namespace WorldShapingWandsMod.Common.Geometry;
 
 /// <summary>
@@ -40,6 +42,19 @@ public struct ShapeContext
     /// </summary>
     public bool ConnectDiameter { get; set; }
 
+    /// <summary>
+    /// Additional input points beyond Start and End for multi-point shapes.
+    /// Null for all current 2-point shapes (zero allocation overhead).
+    /// Future shapes (Arc=1 extra, ArcDonut=2 extra, Polygon=N-2 extra) populate this.
+    /// </summary>
+    public Point[]? ExtraPoints { get; set; }
+
+    /// <summary>
+    /// Returns the total number of defining points for this shape context.
+    /// Always at least 2 (Start + End). Multi-point shapes add ExtraPoints.
+    /// </summary>
+    public int TotalPoints => 2 + (ExtraPoints?.Length ?? 0);
+
     public ShapeContext(Point start, Point end)
     {
         Start = start;
@@ -52,6 +67,7 @@ public struct ShapeContext
         EqualDimensions = false;
         Slice = SliceMode.Full;
         ConnectDiameter = true;
+        ExtraPoints = null;
     }
 
     public ShapeContext(Point start, Point end, ShapeMode mode, int thickness, 
@@ -68,6 +84,7 @@ public struct ShapeContext
         EqualDimensions = equalDimensions;
         Slice = slice;
         ConnectDiameter = connectDiameter;
+        ExtraPoints = null;
     }
 
     /// <summary>
@@ -140,7 +157,8 @@ public struct ShapeContext
         bool? verticalFirst = null,
         bool? equalDimensions = null,
         SliceMode? slice = null,
-        bool? connectDiameter = null)
+        bool? connectDiameter = null,
+        Point[]? extraPoints = null)
     {
         return new ShapeContext(
             Start, End,
@@ -152,7 +170,10 @@ public struct ShapeContext
             equalDimensions ?? EqualDimensions,
             slice ?? Slice,
             connectDiameter ?? ConnectDiameter
-        );
+        )
+        {
+            ExtraPoints = extraPoints ?? ExtraPoints
+        };
     }
 }
 

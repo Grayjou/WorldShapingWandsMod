@@ -170,7 +170,7 @@ public class WandPlayer : ModPlayer
     /// </summary>
     private Point ClampEndToCaps(Point start, Point end)
     {
-        var config = ModContent.GetInstance<WandConfig>();
+        var config = ModContent.GetInstance<WandServerConfig>();
         if (config == null) return end;
 
         ShapeType currentShape = GetCurrentShapeType();
@@ -625,7 +625,7 @@ public class WandPlayer : ModPlayer
             // Only update dual-slot for non-instant wands (instant wands manage their own)
             if (wandItem != null && wandItem.WandSelectionMode != SelectionMode.OneClick)
             {
-                Point mouseTile = GeometryHelper.WorldToTile(Main.MouseWorld);
+                Point mouseTile = GeometryHelper.GetMouseTile();
                 UpdateSelection(mouseTile);
             }
         }

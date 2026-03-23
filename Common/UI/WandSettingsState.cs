@@ -196,7 +196,7 @@ public class WandSettingsState : UIState
         plusBtn.OnLeftClick += (evt, elem) =>
         {
             var settings = Main.LocalPlayer.GetModPlayer<WandPlayer>().Settings;
-            int max = ModContent.GetInstance<Configs.WandConfig>()?.MaxOutlineThickness ?? 10;
+            int max = ModContent.GetInstance<Configs.WandServerConfig>()?.MaxOutlineThickness ?? 10;
             settings.Thickness = System.Math.Min(max, settings.Thickness + 1);
             UpdateButtonStates();
         };

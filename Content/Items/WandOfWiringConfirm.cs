@@ -35,6 +35,8 @@ public class WandOfWiringConfirm : WandOfWiringBase
         }
         else
         {
+            if (IsTooFarToConfirm(wandPlayer.Selection, mouseTile)) return false;
+            if (IsOnLocalCooldown()) return false;
             ExecuteWiring(player, wandPlayer);
             wandPlayer.ClearSelection();
             return false; // Don't consume the wand

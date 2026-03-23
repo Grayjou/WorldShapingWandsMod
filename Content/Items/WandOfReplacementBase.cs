@@ -1,6 +1,7 @@
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -30,6 +31,13 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
 
     public override bool? UseItem(Player player)
     {
+        // Keep the use-cycle alive while the mouse is held (channeling mode).
+        // Without this, itemAnimation expires and UseItem won't fire again.
+        if (WandSelectionMode == SelectionMode.OneClick && Item.channel)
+        {
+            player.itemAnimation = player.itemAnimationMax;
+            return Main.mouseLeft ? false : true;
+        }
         // Don't do anything if the mouse is over UI
         if (Main.LocalPlayer.mouseInterface)
             return false;
@@ -44,7 +52,7 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
         if (WandSelectionMode != SelectionMode.OneClick && !wandPlayer.TryConsumeFreshLeftClick())
             return false;
 
-        Point mouseTile = GeometryHelper.WorldToTile(Main.MouseWorld);
+        Point mouseTile = GeometryHelper.GetMouseTile();
         return HandleUseItem(player, wandPlayer, mouseTile);
     }
 
@@ -143,12 +151,13 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
     {
         var settings = wandPlayer.ReplacementSettings;
         var selection = wandPlayer.GetVisualSelection();
-        var config = ModContent.GetInstance<WandConfig>();
+        var config = ModContent.GetInstance<WandServerConfig>();
+        var clientCfg = ModContent.GetInstance<WandClientConfig>();
 
         // Wall replacement uses a completely separate path
         if (settings.OldObject == ObjectType.Wall || settings.NewObject == ObjectType.Wall)
         {
-            ExecuteWallReplacement(player, wandPlayer, settings, selection, config);
+            ExecuteWallReplacement(player, wandPlayer, settings, selection, config, clientCfg);
             return;
         }
 
@@ -197,7 +206,8 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
                 settings.OldObject, settings.NewObject,
                 sourceType, targetType,
                 (short)(targetItem?.type ?? 0), isWallMode: false,
-                settings.Shape.Slice, settings.Shape.ConnectDiameter);
+                settings.Shape.Slice, settings.Shape.ConnectDiameter,
+                settings.Shape.InvertSelection, settings.PaintSprayer);
             return;
         }
 
@@ -205,10 +215,11 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
             selection.StartTile, selection.EndTile, selection.VerticalFirst);
 
         var tileSet = ShapeRegistry.GetShapeTiles(settings.Shape.Shape, context);
+        var invertedTiles = settings.Shape.ApplyInversion(tileSet.Tiles.ToArray(), context);
 
         // Count tiles that match the specific source tile type (including variants like grass→dirt)
         int needed = 0;
-        foreach (Point tile in tileSet.Tiles)
+        foreach (Point tile in invertedTiles)
         {
             if (!WorldGen.InWorld(tile.X, tile.Y, 1)) continue;
             if (SafekeepingSystem.IsProtected(tile.X, tile.Y)) continue;
@@ -259,7 +270,7 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
 
         // Pre-validate all tiles and snapshot them
         var validTiles = new List<ProgressiveTileProcessor.TileReplacementInfo>();
-        foreach (Point tile in tileSet.Tiles)
+        foreach (Point tile in invertedTiles)
         {
             if (!WorldGen.InWorld(tile.X, tile.Y, 1)) continue;
             if (SafekeepingSystem.IsProtected(tile.X, tile.Y)) continue;
@@ -283,7 +294,8 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
                 SourceType = sourceType,
                 TargetType = targetType,
                 IsErase = settings.NewObject == ObjectType.Air,
-                SuppressDrops = config.SuppressDrops
+                SuppressDrops = config.SuppressDrops,
+                PaintSprayer = settings.PaintSprayer
             });
         }
 
@@ -398,6 +410,9 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
                         placed.IsHalfBlock = oldHalf;
                     }
 
+                    if (settings.PaintSprayer && placed.HasTile)
+                        WandOfBuildingBase.ApplyPaintSprayerTile(player, info.Position.X, info.Position.Y, shouldConsume);
+
                     replaced++;
                     affectedPositions.Add(info.Position);
                     tilesSinceVacuum++;
@@ -432,12 +447,10 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
             {
                 undoMgr.CommitAction(action);
 
-                // Play ManaCrystalPickup (SoundID.Item29) at low volume — only when drops
-                // are suppressed (otherwise natural tile break/place sounds play),
-                // and only when wand sounds are enabled in config.
-                if (config.SuppressDrops && config.EnableWandSounds)
+                // Play completion sound — always when wand sounds enabled.
+                if (clientCfg?.EnableWandSounds == true)
                 {
-                    Terraria.Audio.SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.25f }, player.Center); // ManaCrystalPickup
+                    Terraria.Audio.SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.25f }, player.Center);
                 }
 
                 if (settings.NewObject != ObjectType.Air && targetCondition != null && shouldConsume)
@@ -460,7 +473,7 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
     /// instead of the tile-based replacement API.
     /// </summary>
     private void ExecuteWallReplacement(Player player, WandPlayer wandPlayer,
-        WandOfReplacementSettings settings, SelectionState selection, WandConfig config)
+        WandOfReplacementSettings settings, SelectionState selection, WandServerConfig config, WandClientConfig clientCfg)
     {
         // Both source and target must be Wall (or target can be Air to erase walls)
         if (settings.OldObject != ObjectType.Wall)
@@ -520,7 +533,8 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
                 settings.OldObject, settings.NewObject,
                 sourceWallType, eraseMode ? (ushort)0 : targetWallType,
                 (short)(targetItem?.type ?? 0), isWallMode: true,
-                settings.Shape.Slice, settings.Shape.ConnectDiameter);
+                settings.Shape.Slice, settings.Shape.ConnectDiameter,
+                settings.Shape.InvertSelection, settings.PaintSprayer);
             return;
         }
 
@@ -528,10 +542,11 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
             selection.StartTile, selection.EndTile, selection.VerticalFirst);
 
         var tileSet = ShapeRegistry.GetShapeTiles(settings.Shape.Shape, context);
+        var invertedTiles = settings.Shape.ApplyInversion(tileSet.Tiles.ToArray(), context);
 
         // Count walls that match
         int needed = 0;
-        foreach (Point tile in tileSet.Tiles)
+        foreach (Point tile in invertedTiles)
         {
             if (!WorldGen.InWorld(tile.X, tile.Y, 1)) continue;
             if (SafekeepingSystem.IsProtected(tile.X, tile.Y)) continue;
@@ -578,7 +593,7 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
 
         // Pre-validate all walls and snapshot them
         var validWalls = new List<ProgressiveTileProcessor.WallReplacementInfo>();
-        foreach (Point tile in tileSet.Tiles)
+        foreach (Point tile in invertedTiles)
         {
             if (!WorldGen.InWorld(tile.X, tile.Y, 1)) continue;
             if (SafekeepingSystem.IsProtected(tile.X, tile.Y)) continue;
@@ -601,7 +616,8 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
                 TargetWallType = eraseMode ? (ushort)0 : targetWallType,
                 IsErase = eraseMode,
                 SuppressDrops = suppressDrops,
-                HasHangingObject = hasHanging
+                HasHangingObject = hasHanging,
+                PaintSprayer = settings.PaintSprayer
             });
         }
 
@@ -696,6 +712,8 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
                         WorldGen.PlaceWall(info.Position.X, info.Position.Y, info.TargetWallType, mute: true);
                         if (t.WallType == info.TargetWallType)
                         {
+                            if (settings.PaintSprayer)
+                                WandOfBuildingBase.ApplyPaintSprayerWall(player, info.Position.X, info.Position.Y, shouldConsume);
                             replaced++;
                             affectedPositions.Add(info.Position);
                             tilesSinceVacuum++;
@@ -735,7 +753,8 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
             {
                 undoMgr.CommitAction(action);
 
-                if (config.SuppressDrops && config.EnableWandSounds)
+                // Play completion sound — always when wand sounds enabled.
+                if (clientCfg?.EnableWandSounds == true)
                 {
                     Terraria.Audio.SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.25f }, player.Center);
                 }

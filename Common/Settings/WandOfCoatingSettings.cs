@@ -47,6 +47,12 @@ public class WandOfCoatingSettings
     /// </summary>
     public bool IgnoreEcho { get; set; } = false;
 
+    /// <summary>
+    /// When true (default), the wand will repaint tiles/walls that already have a different paint color.
+    /// When false, already-painted tiles/walls are skipped — only unpainted surfaces are painted.
+    /// </summary>
+    public bool Repaint { get; set; } = true;
+
     /// <summary>The shape configuration.</summary>
     public ShapeInfo Shape { get; set; } = ShapeInfo.Default;
 
@@ -69,6 +75,7 @@ public class WandOfCoatingSettings
             IgnoreIlluminant = IgnoreIlluminant,
             ApplyEcho = ApplyEcho,
             IgnoreEcho = IgnoreEcho,
+            Repaint = Repaint,
             Shape = Shape,
             StartPoint = StartPoint,
             EndPoint = EndPoint
@@ -86,6 +93,7 @@ public class WandOfCoatingSettings
         IgnoreIlluminant = false;
         ApplyEcho = false;
         IgnoreEcho = false;
+        Repaint = true;
         Shape = ShapeInfo.Default;
         StartPoint = Point.Zero;
         EndPoint = Point.Zero;

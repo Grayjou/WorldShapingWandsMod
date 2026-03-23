@@ -26,6 +26,12 @@ public class WandRecipeSystem : ModSystem
     /// <summary>Any silver-tier bar (Silver Bar or Tungsten Bar).</summary>
     public static RecipeGroup AnySilverBar;
 
+    /// <summary>Any copper-tier bar (Copper Bar or Tin Bar).</summary>
+    public static RecipeGroup AnyCopperBar;
+
+    /// <summary>Any iron-tier bar (Iron Bar or Lead Bar).</summary>
+    public static RecipeGroup AnyIronBar;
+
     /// <summary>Any evil stone (Ebonstone Block or Crimstone Block).</summary>
     public static RecipeGroup AnyEvilStone;
 
@@ -67,7 +73,7 @@ public class WandRecipeSystem : ModSystem
         }
 
         AnyGem = new RecipeGroup(
-            () => Language.GetTextValue("Mods.WorldShapingWandsMod.RecipeGroups.Gemstone"),
+            () => Language.GetTextValue("Mods.WorldShapingWandsMod.RecipeGroups.AnyGemstone"),
             gemItems.ToArray());
         RecipeGroup.RegisterGroup(AnyGemKey, AnyGem);
 
@@ -88,6 +94,18 @@ public class WandRecipeSystem : ModSystem
             () => $"{Language.GetTextValue("LegacyMisc.37")} {Lang.GetItemNameValue(ItemID.SilverBar)}",
             ItemID.SilverBar, ItemID.TungstenBar);
         RecipeGroup.RegisterGroup(nameof(ItemID.SilverBar), AnySilverBar);
+
+        // ── AnyCopperBar ────────────────────────────────────────
+        AnyCopperBar = new RecipeGroup(
+            () => $"{Language.GetTextValue("LegacyMisc.37")} {Lang.GetItemNameValue(ItemID.CopperBar)}",
+            ItemID.CopperBar, ItemID.TinBar);
+        RecipeGroup.RegisterGroup(nameof(ItemID.CopperBar), AnyCopperBar);
+
+        // ── AnyIronBar ──────────────────────────────────────────
+        AnyIronBar = new RecipeGroup(
+            () => $"{Language.GetTextValue("LegacyMisc.37")} {Lang.GetItemNameValue(ItemID.IronBar)}",
+            ItemID.IronBar, ItemID.LeadBar);
+        RecipeGroup.RegisterGroup(nameof(ItemID.IronBar), AnyIronBar);
 
         // ── AnyEvilStone ────────────────────────────────────────
         AnyEvilStone = new RecipeGroup(

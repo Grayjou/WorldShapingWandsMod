@@ -1,4 +1,4 @@
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
 using Terraria;
@@ -37,6 +37,13 @@ public abstract class WandOfWiringBase : BaseCyclingWand
 
     public override bool? UseItem(Player player)
     {
+        // Keep the use-cycle alive while the mouse is held (channeling mode).
+        // Without this, itemAnimation expires and UseItem won't fire again.
+        if (WandSelectionMode == SelectionMode.OneClick && Item.channel)
+        {
+            player.itemAnimation = player.itemAnimationMax;
+            return Main.mouseLeft ? false : true;
+        }
         // Don't do anything if the mouse is over UI
         if (Main.LocalPlayer.mouseInterface)
             return false;
@@ -51,7 +58,7 @@ public abstract class WandOfWiringBase : BaseCyclingWand
         if (WandSelectionMode != SelectionMode.OneClick && !wandPlayer.TryConsumeFreshLeftClick())
             return false;
 
-        Point mouseTile = GeometryHelper.WorldToTile(Main.MouseWorld);
+        Point mouseTile = GeometryHelper.GetMouseTile();
         return HandleUseItem(player, wandPlayer, mouseTile);
     }
 
@@ -109,7 +116,8 @@ public abstract class WandOfWiringBase : BaseCyclingWand
         }
 
         // Check materials for Place mode (respects per-type InfiniteResource config)
-        var config = ModContent.GetInstance<WandConfig>();
+        var config = ModContent.GetInstance<WandServerConfig>();
+        var clientCfg = ModContent.GetInstance<WandClientConfig>();
         bool infiniteWires = WiringHelper.IsInfiniteWireMode(player, config);
         bool infiniteActuators = WiringHelper.IsInfiniteActuatorMode(player, config);
 
@@ -138,6 +146,7 @@ public abstract class WandOfWiringBase : BaseCyclingWand
             selection.StartTile, selection.EndTile, selection.VerticalFirst);
 
         var tileSet = ShapeRegistry.GetShapeTiles(settings.Shape.Shape, context);
+        var invertedTiles = settings.Shape.ApplyInversion(tileSet.Tiles.ToArray(), context);
 
         // In multiplayer, send a packet to the server instead of direct manipulation.
         // The server will execute the operation authoritatively and broadcast to all clients.
@@ -149,7 +158,7 @@ public abstract class WandOfWiringBase : BaseCyclingWand
             if (settings.Mode == WiringMode.Place)
             {
                 consumed = WiringHelper.PreConsumeForOperation(
-                    tileSet.Tiles, settings.WireRed, settings.WireGreen,
+                    invertedTiles, settings.WireRed, settings.WireGreen,
                     settings.WireBlue, settings.WireYellow, settings.Actuator, player,
                     infiniteWires, infiniteActuators);
             }
@@ -160,16 +169,17 @@ public abstract class WandOfWiringBase : BaseCyclingWand
                 settings.Shape.Thickness, settings.Shape.EqualDimensions,
                 settings.PackWireFlags(), selection.VerticalFirst,
                 player.whoAmI,
-                settings.Shape.Slice, settings.Shape.ConnectDiameter);
+                settings.Shape.Slice, settings.Shape.ConnectDiameter,
+                settings.Shape.InvertSelection);
 
             // Report results on the sending client
-            ReportWiringResults(settings.Mode, consumed, 0, config);
+            ReportWiringResults(settings.Mode, consumed, 0, clientCfg);
             return;
         }
 
         // Single-player: execute directly with consumption
         var (placed, removed) = WiringHelper.ExecuteWiringOperation(
-            tileSet.Tiles,
+            invertedTiles,
             settings.Mode,
             settings.WireRed, settings.WireGreen, settings.WireBlue, settings.WireYellow,
             settings.Actuator,
@@ -178,21 +188,21 @@ public abstract class WandOfWiringBase : BaseCyclingWand
             infiniteActuators
         );
 
-        ReportWiringResults(settings.Mode, placed, removed, config);
+        ReportWiringResults(settings.Mode, placed, removed, clientCfg);
     }
 
-    private void ReportWiringResults(WiringMode mode, int placed, int removed, WandConfig config)
+    private void ReportWiringResults(WiringMode mode, int placed, int removed, WandClientConfig clientCfg)
     {
         if (mode == WiringMode.Place && placed > 0)
         {
-            if (config != null && config.EnableWandSounds)
+            if (clientCfg?.EnableWandSounds == true)
                 SoundEngine.PlaySound(SoundID.Item64, Main.LocalPlayer.Center);
 
             Main.NewText(Get("WiresPlaced", placed), Color.LimeGreen);
         }
         else if (mode == WiringMode.Remove && removed > 0)
         {
-            if (config != null && config.EnableWandSounds)
+            if (clientCfg?.EnableWandSounds == true)
                 SoundEngine.PlaySound(SoundID.Item64, Main.LocalPlayer.Center);
 
             Main.NewText(Get("WiresRemoved", removed), Color.Cyan);

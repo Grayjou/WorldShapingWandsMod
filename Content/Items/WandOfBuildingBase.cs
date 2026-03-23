@@ -1,4 +1,4 @@
-using Terraria;
+﻿using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -33,6 +33,13 @@ namespace WorldShapingWandsMod.Content.Items
 
         public override bool? UseItem(Player player)
         {
+            // Keep the use-cycle alive while the mouse is held (channeling mode).
+            // Without this, itemAnimation expires and UseItem won't fire again.
+            if (WandSelectionMode == SelectionMode.OneClick && Item.channel)
+            {
+                player.itemAnimation = player.itemAnimationMax;
+                return Main.mouseLeft ? false : true;
+            }
             // Don't do anything if the mouse is over UI
             if (Main.LocalPlayer.mouseInterface)
                 return false;
@@ -47,7 +54,7 @@ namespace WorldShapingWandsMod.Content.Items
             if (WandSelectionMode != SelectionMode.OneClick && !wandPlayer.TryConsumeFreshLeftClick())
                 return false;
 
-            Point mouseTile = GeometryHelper.WorldToTile(Main.MouseWorld);
+            Point mouseTile = GeometryHelper.GetMouseTile();
             return HandleUseItem(player, wandPlayer, mouseTile);
         }
 
@@ -84,12 +91,13 @@ namespace WorldShapingWandsMod.Content.Items
         {
             var settings = wandPlayer.BuildingSettings;
             var selection = wandPlayer.GetVisualSelection();
-            var config = ModContent.GetInstance<WandConfig>();
+            var config = ModContent.GetInstance<WandServerConfig>();
+            var clientCfg = ModContent.GetInstance<WandClientConfig>();
 
             // Wall mode uses a completely separate placement path
             if (settings.Object == PlaceType.Wall)
             {
-                ExecuteWallBuilding(player, wandPlayer, settings, selection, config);
+                ExecuteWallBuilding(player, wandPlayer, settings, selection, config, clientCfg);
                 return;
             }
 
@@ -115,7 +123,9 @@ namespace WorldShapingWandsMod.Content.Items
                     settings.Object, settings.Slope, settings.OverwriteSlope,
                     settings.ExhaustionMode, player.TileReplacementEnabled,
                     (short)mpItem.type, (short)mpItem.placeStyle,
-                    settings.Shape.Slice, settings.Shape.ConnectDiameter);
+                    settings.Shape.Slice, settings.Shape.ConnectDiameter,
+                    settings.Shape.InvertSelection,
+                    settings.PaintSprayer, settings.Actuation);
                 return;
             }
 
@@ -139,7 +149,7 @@ namespace WorldShapingWandsMod.Content.Items
                 selection.StartTile, selection.EndTile, selection.VerticalFirst);
 
             var tileSet = ShapeRegistry.GetShapeTiles(settings.Shape.Shape, context);
-            var tilesToProcess = tileSet.Tiles.ToArray();
+            var tilesToProcess = settings.Shape.ApplyInversion(tileSet.Tiles.ToArray(), context);
 
             // Sort gravity-affected blocks bottom-to-top so they settle correctly
             // instead of cascading downward as each tile is placed from the top.
@@ -222,7 +232,9 @@ namespace WorldShapingWandsMod.Content.Items
                                 Position = tile,
                                 IsReplacement = false, // Not a replacement — it's a conversion
                                 SuppressDrops = true,
-                                IsGrassSeed = true
+                                IsGrassSeed = true,
+                                PaintSprayer = settings.PaintSprayer,
+                                Actuation = settings.Actuation
                             });
                             continue;
                         }
@@ -245,7 +257,9 @@ namespace WorldShapingWandsMod.Content.Items
                                         Position = tile,
                                         IsReplacement = false,
                                         SuppressDrops = true,
-                                        IsSlopeOnly = true
+                                        IsSlopeOnly = true,
+                                        PaintSprayer = settings.PaintSprayer,
+                                        Actuation = settings.Actuation
                                     });
                                 }
                                 continue;
@@ -269,7 +283,9 @@ namespace WorldShapingWandsMod.Content.Items
                         {
                             Position = tile,
                             IsReplacement = true,
-                            SuppressDrops = config.SuppressDrops
+                            SuppressDrops = config.SuppressDrops,
+                            PaintSprayer = settings.PaintSprayer,
+                            Actuation = settings.Actuation
                         });
                     }
                     else
@@ -279,7 +295,9 @@ namespace WorldShapingWandsMod.Content.Items
                         {
                             Position = tile,
                             IsReplacement = false,
-                            SuppressDrops = true
+                            SuppressDrops = true,
+                            PaintSprayer = settings.PaintSprayer,
+                            Actuation = settings.Actuation
                         });
                     }
                 }
@@ -354,6 +372,9 @@ namespace WorldShapingWandsMod.Content.Items
                         if (WorldGen.PlaceTile(tile.X, tile.Y, tType, mute: true, forced: false,
                             plr: player.whoAmI, style: srcItem.placeStyle))
                         {
+                            ApplyActuation(tile.X, tile.Y, settings.Actuation);
+                            if (settings.PaintSprayer)
+                                ApplyPaintSprayerTile(player, tile.X, tile.Y, shouldConsume);
                             placed++;
                             if (shouldConsume) ConsumeOneItem(player, srcItem, condition);
                             affectedPositions.Add(tile);
@@ -421,6 +442,9 @@ namespace WorldShapingWandsMod.Content.Items
                     {
                         if (settings.OverwriteSlope)
                             ApplySlope(tile.X, tile.Y, settings.Slope);
+                        ApplyActuation(tile.X, tile.Y, settings.Actuation);
+                        if (settings.PaintSprayer)
+                            ApplyPaintSprayerTile(player, tile.X, tile.Y, shouldConsume);
                         replaced++;
                         if (shouldConsume) ConsumeOneItem(player, srcItem, condition);
                         affectedPositions.Add(tile);
@@ -447,6 +471,9 @@ namespace WorldShapingWandsMod.Content.Items
                     {
                         if (settings.OverwriteSlope)
                             ApplySlope(tile.X, tile.Y, settings.Slope);
+                        ApplyActuation(tile.X, tile.Y, settings.Actuation);
+                        if (settings.PaintSprayer)
+                            ApplyPaintSprayerTile(player, tile.X, tile.Y, shouldConsume);
                         placed++;
                         if (shouldConsume) ConsumeOneItem(player, srcItem, condition);
                         affectedPositions.Add(tile);
@@ -478,8 +505,10 @@ namespace WorldShapingWandsMod.Content.Items
             {
                 undoMgr.CommitAction(action);
 
-                // No custom sound — Terraria's PlaceTile API already handles
-                // per-tile placement sounds naturally.
+                // Play completion sound — provides audio feedback even when
+                // SuppressDrops is ON (which silences all per-tile sounds).
+                if (clientCfg?.EnableWandSounds == true)
+                    Terraria.Audio.SoundEngine.PlaySound(SoundID.Item168 with { Volume = 0.5f }, player.Center);
 
                 string detail;
                 if (placed > 0 && replaced > 0)
@@ -505,7 +534,7 @@ namespace WorldShapingWandsMod.Content.Items
         /// Supports replace mode (replacing existing walls) and standard placement.
         /// </summary>
         private void ExecuteWallBuilding(Player player, WandPlayer wandPlayer,
-            WandOfBuildingSettings settings, SelectionState selection, WandConfig config)
+            WandOfBuildingSettings settings, SelectionState selection, WandServerConfig config, WandClientConfig clientCfg)
         {
             var condition = ItemTypeHelper.GetConditions(PlaceType.Wall);
 
@@ -528,7 +557,9 @@ namespace WorldShapingWandsMod.Content.Items
                     PlaceType.Wall, settings.Slope, settings.OverwriteSlope,
                     settings.ExhaustionMode, player.TileReplacementEnabled,
                     (short)mpItem.type, (short)mpItem.placeStyle,
-                    settings.Shape.Slice, settings.Shape.ConnectDiameter);
+                    settings.Shape.Slice, settings.Shape.ConnectDiameter,
+                    settings.Shape.InvertSelection,
+                    settings.PaintSprayer, settings.Actuation);
                 return;
             }
 
@@ -536,8 +567,7 @@ namespace WorldShapingWandsMod.Content.Items
                 selection.StartTile, selection.EndTile, selection.VerticalFirst);
 
             var tileSet = ShapeRegistry.GetShapeTiles(settings.Shape.Shape, context);
-            var tilesToProcess = tileSet.Tiles.ToArray();
-
+            var tilesToProcess = settings.Shape.ApplyInversion(tileSet.Tiles.ToArray(), context);
             bool shouldConsume = true;
             if (config.IsInfiniteForPlaceType(PlaceType.Wall))
             {
@@ -601,7 +631,8 @@ namespace WorldShapingWandsMod.Content.Items
                         {
                             Position = tile,
                             IsReplacement = true,
-                            SuppressDrops = config.SuppressDrops
+                            SuppressDrops = config.SuppressDrops,
+                            PaintSprayer = settings.PaintSprayer
                         });
                     }
                     else
@@ -611,7 +642,8 @@ namespace WorldShapingWandsMod.Content.Items
                         {
                             Position = tile,
                             IsReplacement = false,
-                            SuppressDrops = true
+                            SuppressDrops = true,
+                            PaintSprayer = settings.PaintSprayer
                         });
                     }
                 }
@@ -683,6 +715,8 @@ namespace WorldShapingWandsMod.Content.Items
                         WorldGen.PlaceWall(tile.X, tile.Y, wallType, mute: true);
                         if (t.WallType == wallType)
                         {
+                            if (settings.PaintSprayer)
+                                ApplyPaintSprayerWall(player, tile.X, tile.Y, shouldConsume);
                             replaced++;
                             if (shouldConsume) ItemTypeHelper.ConsumeItems(player.inventory,
                                 i => !i.IsAir && i.type == srcItem.type, 1);
@@ -699,6 +733,8 @@ namespace WorldShapingWandsMod.Content.Items
                     WorldGen.PlaceWall(tile.X, tile.Y, wallType, mute: true);
                     if (t.WallType == wallType)
                     {
+                        if (settings.PaintSprayer)
+                            ApplyPaintSprayerWall(player, tile.X, tile.Y, shouldConsume);
                         placed++;
                         if (shouldConsume) ItemTypeHelper.ConsumeItems(player.inventory,
                             i => !i.IsAir && i.type == srcItem.type, 1);
@@ -731,8 +767,9 @@ namespace WorldShapingWandsMod.Content.Items
             {
                 undoMgr.CommitAction(action);
 
-                // No custom sound — Terraria's PlaceWall API already handles
-                // per-tile placement sounds naturally.
+                // Play completion sound for wall operations.
+                if (clientCfg?.EnableWandSounds == true)
+                    Terraria.Audio.SoundEngine.PlaySound(SoundID.Item168 with { Volume = 0.5f }, player.Center);
 
                 string detail = placed > 0 && replaced > 0 ? $"Placed {placed}, replaced {replaced} walls"
                     : replaced > 0 ? $"Replaced {replaced} walls" : $"Placed {placed} walls";
@@ -844,6 +881,91 @@ namespace WorldShapingWandsMod.Content.Items
         {
             // Only the Instant variant has a craftable recipe.
             // Other modes are obtained via right-click cycling in inventory.
+        }
+
+        // ── Paint Sprayer helper ──────────────────────────────────────
+
+        /// <summary>
+        /// Finds the first paint item in the player's inventory and returns its paint ID (1–30).
+        /// Returns 0 if no paint is found.
+        /// </summary>
+        internal static byte FindPaintInInventory(Player player)
+        {
+            for (int i = 0; i < 58; i++)
+            {
+                Item item = player.inventory[i];
+                if (!item.IsAir && item.paint > 0)
+                    return item.paint;
+            }
+            return 0;
+        }
+
+        /// <summary>
+        /// Applies paint from inventory to a freshly placed tile at (x, y).
+        /// Consumes one paint item unless infinite resources are active.
+        /// </summary>
+        internal static void ApplyPaintSprayerTile(Player player, int x, int y, bool shouldConsume, HashSet<int> changedSlots = null)
+        {
+            byte paintId = FindPaintInInventory(player);
+            if (paintId == 0) return;
+
+            WorldGen.paintTile(x, y, paintId, true);
+
+            if (shouldConsume)
+            {
+                for (int i = 0; i < 58; i++)
+                {
+                    Item item = player.inventory[i];
+                    if (!item.IsAir && item.paint == paintId)
+                    {
+                        item.stack--;
+                        if (item.stack <= 0) item.TurnToAir();
+                        changedSlots?.Add(i);
+                        break;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Applies paint from inventory to a freshly placed wall at (x, y).
+        /// Consumes one paint item unless infinite resources are active.
+        /// </summary>
+        internal static void ApplyPaintSprayerWall(Player player, int x, int y, bool shouldConsume, HashSet<int> changedSlots = null)
+        {
+            byte paintId = FindPaintInInventory(player);
+            if (paintId == 0) return;
+
+            WorldGen.paintWall(x, y, paintId, true);
+
+            if (shouldConsume)
+            {
+                for (int i = 0; i < 58; i++)
+                {
+                    Item item = player.inventory[i];
+                    if (!item.IsAir && item.paint == paintId)
+                    {
+                        item.stack--;
+                        if (item.stack <= 0) item.TurnToAir();
+                        changedSlots?.Add(i);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // ── Actuation helper ─────────────────────────────────────────
+
+        /// <summary>
+        /// Applies the actuation setting to a tile at (x, y).
+        /// <c>null</c> = ignore (leave as-is), <c>true</c> = actuate, <c>false</c> = de-actuate.
+        /// </summary>
+        internal static void ApplyActuation(int x, int y, bool? actuation)
+        {
+            if (actuation == null) return;
+            var tile = Main.tile[x, y];
+            if (!tile.HasTile) return;
+            tile.IsActuated = actuation.Value;
         }
     }
 }

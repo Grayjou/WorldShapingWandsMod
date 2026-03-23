@@ -31,6 +31,20 @@ public class WandOfBuildingSettings
     /// </summary>
     public BlockExhaustionMode ExhaustionMode { get; set; } = BlockExhaustionMode.NextBlock;
 
+    /// <summary>
+    /// When true, after placing each tile/wall, the wand automatically applies the
+    /// first paint colour found in the player's inventory to the placed surface.
+    /// </summary>
+    public bool PaintSprayer { get; set; } = false;
+
+    /// <summary>
+    /// Tri-state actuation toggle:
+    ///   <c>null</c> = Ignore (leave actuation state unchanged — default),
+    ///   <c>true</c>  = Actuate ON (placed tiles become actuated/pass-through),
+    ///   <c>false</c> = Actuate OFF (placed tiles become solid/de-actuated).
+    /// </summary>
+    public bool? Actuation { get; set; } = null;
+
     /// <summary>The starting point of the selection.</summary>
     public Point StartPoint { get; set; }
 
@@ -50,6 +64,8 @@ public class WandOfBuildingSettings
             OverwriteSlope = OverwriteSlope,
             Shape = Shape,
             ExhaustionMode = ExhaustionMode,
+            PaintSprayer = PaintSprayer,
+            Actuation = Actuation,
             StartPoint = StartPoint,
             EndPoint = EndPoint
         };
@@ -66,6 +82,8 @@ public class WandOfBuildingSettings
         OverwriteSlope = true;
         Shape = ShapeInfo.Default;
         ExhaustionMode = BlockExhaustionMode.NextBlock;
+        PaintSprayer = false;
+        Actuation = null;
         StartPoint = Point.Zero;
         EndPoint = Point.Zero;
     }

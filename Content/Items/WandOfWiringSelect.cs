@@ -28,6 +28,7 @@ public class WandOfWiringSelect : WandOfWiringBase
         }
         else
         {
+            if (IsOnLocalCooldown()) return false;
             wandPlayer.UpdateSelection(mouseTile);
             ExecuteWiring(player, wandPlayer);
             wandPlayer.ClearSelection();

@@ -30,6 +30,13 @@ UI: {
 		// ShapeStraightLine: Straight Line
 		// EqualDimensions: Equal Dimensions
 		// ConnectDiameter: Connect Diameter
+		// ConnectDiameterTooltip: Connect Diameter (half shapes only)
+		// InvertSelection: Invert Selection
+		// PaintSprayer: Paint Sprayer
+		// ActuationIgnore: Actuation: Ignore
+		// ActuationOn: Actuation: ON
+		// ActuationOff: Actuation: OFF
+		// Options: Options
 		// Slice: Shape Slice
 	}
 
@@ -72,8 +79,9 @@ UI: {
 		// Planter: Planter
 		// Rail: Rail
 		// Seeds: Seeds
-		// Air: Air
+		// Air: Air (Remove)
 		// Wall: Wall
+		// SameType: Same Type
 	}
 
 	Wiring: {
@@ -115,11 +123,13 @@ UI: {
 		// Ignore: Ignore
 		// On: On
 		// Off: Off
+		// Repaint: Repaint
 	}
 }
 
 Configs: {
-	WandConfig: {
+	WandServerConfig: {
+		// DisplayName: Server Settings
 		// InfiniteResources.Header: Infinite Resources
 
 		EnableInfiniteResource: {
@@ -245,7 +255,6 @@ Configs: {
 			// Tooltip: Maximum dimension (width or height) for hollow shapes.\nHollow shapes produce fewer tiles than filled shapes, so they can safely be larger.\nA cap of 400 means the largest hollow selection is 400×400.
 		}
 
-		// ProgressiveMode.Header: Progressive Dismantling
 		// Sandbox.Header: Sandbox Options
 
 		SuppressDrops: {
@@ -265,6 +274,22 @@ Configs: {
 				When enabled, the Wand of Dismantling can destroy Demon Altars and Crimson Altars.
 				By default, altars are protected from accidental mass-destruction.
 				Requires appropriate hammer power (Pwnhammer or better) unless Bypass Pickaxe Power is also on.
+				''' */
+		}
+
+		AllowDelicateTileDestruction: {
+			// Label: Allow Delicate Tile Destruction
+			/* Tooltip:
+				'''
+				When enabled, the Wand of Dismantling can destroy "delicate" tiles
+				that normally trigger world events or boss summons:
+				  • Shadow Orbs / Crimson Hearts
+				  • Plantera's Bulbs
+				  • Bee Larvae (Larva)
+				  • Life Crystals
+				  • Life Fruit
+				  • Lihzahrd Altars
+				By default these are protected from accidental mass-destruction.
 				''' */
 		}
 
@@ -298,6 +323,20 @@ Configs: {
 				''' */
 		}
 
+		EnableUndoCommand: {
+			// Label: Enable Undo Commands (Experimental)
+			/* Tooltip:
+				'''
+				[EXPERIMENTAL] Undo is not fully stable yet.
+				Enabling may cause visual artifacts such as unnamed tiles
+				and occasional resource duplication. Not tested in multiplayer.
+				It is safe to use and will not crash your game.
+				When enabled, players can use /undo and /undoinfo chat commands
+				to undo wand operations and inspect the undo stack.
+				Default: Off
+				''' */
+		}
+
 		MaxOutlineThickness: {
 			// Label: Max Outline Thickness
 			/* Tooltip:
@@ -307,6 +346,31 @@ Configs: {
 				The + button in wand panels will cap at this value.
 				''' */
 		}
+
+		OperationCooldownTicks: {
+			// Label: Operation Cooldown (ticks)
+			/* Tooltip:
+				'''
+				Minimum number of game ticks between wand operations for each player.
+				Prevents autoclicker or click-spam abuse. 12 ticks ≈ one swing animation.
+				Set to 0 to disable the cooldown entirely.
+				Default: 12
+				''' */
+		}
+
+		MaxConfirmDistance: {
+			// Label: Max Confirm Distance (tiles)
+			/* Tooltip:
+				'''
+				Maximum distance (in tiles) from the closest edge of the selection
+				bounding box at which a Confirm or Stamp click will be accepted.
+				Prevents accidental long-range execution of pending shapes.
+				Set to 0 to disable this safeguard.
+				Default: 50
+				''' */
+		}
+
+		// ProgressiveMode.Header: Progressive Mode
 
 		EnableProgressiveMode: {
 			// Label: Enable Progressive Mode
@@ -327,18 +391,31 @@ Configs: {
 			// Tooltip: Time between each batch in progressive mode.\n0.3 seconds gives a satisfying wave-like demolition feel.
 		}
 
-		// Tooltips.Header: Tooltip Options
-
-		ShowLoreTooltips: {
-			// Label: Show Lore Tooltips
-			// Tooltip: When enabled, holding Shift while hovering a wand shows its lore text.\nDisable to hide lore entirely.
-		}
-
 		// Safekeeping.Header: Safekeeping
 
 		SafekeepingClearThreshold: {
 			// Label: Clear All Confirmation Threshold
 			// Tooltip: When the total number of protected tiles and walls exceeds this value, the Clear All button requires a second click to confirm.\nSet to 0 to disable the confirmation safeguard.
+		}
+
+		IsInfiniteForActuators: {
+			// Tooltip: ""
+			// Label: Is Infinite For Actuators
+		}
+
+		IsInfiniteForWires: {
+			// Tooltip: ""
+			// Label: Is Infinite For Wires
+		}
+	}
+
+	WandClientConfig: {
+		// DisplayName: Client Settings
+		// Tooltips.Header: Tooltip Options
+
+		ShowLoreTooltips: {
+			// Label: Show Lore Tooltips
+			// Tooltip: When enabled, holding Shift while hovering a wand shows its lore text.\nDisable to hide lore entirely.
 		}
 
 		// Audio.Header: Audio
@@ -361,16 +438,61 @@ Configs: {
 				''' */
 		}
 
-		// DisplayName: Wand Config
-
-		IsInfiniteForActuators: {
-			// Tooltip: ""
-			// Label: Is Infinite For Actuators
+		ShapeOverlayAlpha: {
+			// Label: Shape Overlay Opacity
+			/* Tooltip:
+				'''
+				The opacity of the shape fill overlay drawn on selected tiles.
+				Higher values make the selection more visible.
+				Must be at least 0.1 higher than Negative Space Opacity.
+				Default: 0.18
+				''' */
 		}
 
-		IsInfiniteForWires: {
-			// Tooltip: ""
-			// Label: Is Infinite For Wires
+		NegativeSpaceAlpha: {
+			// Label: Negative Space Opacity
+			/* Tooltip:
+				'''
+				The opacity of the negative space overlay drawn outside the shape
+				when Invert Selection is active. Set to 0 to hide it entirely.
+				Automatically clamped to be at least 0.1 lower than Shape Overlay Opacity.
+				Default: 0.05
+				''' */
+		}
+
+		SelectionOverlayColor: {
+			// Label: Selection Overlay Color
+			/* Tooltip:
+				'''
+				The base color used for the selection overlay highlight.
+				Adjusts the R, G, B, and A channels individually.
+				Default: LimeGreen (50, 205, 50, 255)
+				''' */
+		}
+
+		// Undo.Header: Undo
+
+		MaxUndoStackSize: {
+			// Label: Max Undo Stack Size
+			/* Tooltip:
+				'''
+				The maximum number of wand operations stored in the undo history.
+				Older entries are dropped when the limit is exceeded.
+				Higher values use more memory but allow undoing further back.
+				Default: 20
+				''' */
+		}
+
+		// Feedback.Header: Feedback
+
+		WandVerbosity: {
+			// Label: Verbose Feedback
+			/* Tooltip:
+				'''
+				When enabled, wands show detailed operation feedback messages
+				such as tile counts and placement results in chat.
+				Disable for a quieter experience.
+				''' */
 		}
 	}
 
@@ -408,6 +530,185 @@ Configs: {
 
 		AlwaysBoundingBox: {
 			// Label: Always Bounding Box
+			// Tooltip: ""
+		}
+	}
+
+	WandConfig: {
+		// DisplayName: Wand Config
+		// InfiniteResources.Header: Enable Infinite Resource Header
+
+		EnableInfiniteResource: {
+			// Label: Enable Infinite Resource
+			// Tooltip: ""
+		}
+
+		InfiniteTileThreshold: {
+			// Label: Infinite Tile Threshold
+			// Tooltip: ""
+		}
+
+		InfiniteWallThreshold: {
+			// Label: Infinite Wall Threshold
+			// Tooltip: ""
+		}
+
+		InfiniteGrassSeedThreshold: {
+			// Label: Infinite Grass Seed Threshold
+			// Tooltip: ""
+		}
+
+		InfiniteWireThreshold: {
+			// Label: Infinite Wire Threshold
+			// Tooltip: ""
+		}
+
+		InfiniteActuatorThreshold: {
+			// Label: Infinite Actuator Threshold
+			// Tooltip: ""
+		}
+
+		InfiniteTiles: {
+			// Label: Infinite Tiles
+			// Tooltip: ""
+		}
+
+		InfiniteWalls: {
+			// Label: Infinite Walls
+			// Tooltip: ""
+		}
+
+		InfiniteGrassSeeds: {
+			// Label: Infinite Grass Seeds
+			// Tooltip: ""
+		}
+
+		InfiniteWires: {
+			// Label: Infinite Wires
+			// Tooltip: ""
+		}
+
+		InfiniteActuators: {
+			// Label: Infinite Actuators
+			// Tooltip: ""
+		}
+
+		// SelectionLimits.Header: Small Selection Cap Header
+
+		SmallSelectionCap: {
+			// Label: Small Selection Cap
+			// Tooltip: ""
+		}
+
+		BigSelectionCap: {
+			// Label: Big Selection Cap
+			// Tooltip: ""
+		}
+
+		HollowSelectionCap: {
+			// Label: Hollow Selection Cap
+			// Tooltip: ""
+		}
+
+		// Sandbox.Header: Suppress Drops Header
+
+		SuppressDrops: {
+			// Label: Suppress Drops
+			// Tooltip: ""
+		}
+
+		BypassPickaxePower: {
+			// Label: Bypass Pickaxe Power
+			// Tooltip: ""
+		}
+
+		AllowDemonAltarDestruction: {
+			// Label: Allow Demon Altar Destruction
+			// Tooltip: ""
+		}
+
+		AllowDelicateTileDestruction: {
+			// Label: Allow Delicate Tile Destruction
+			// Tooltip: ""
+		}
+
+		IgnoreLockedKeyRequirements: {
+			// Label: Ignore Locked Key Requirements
+			// Tooltip: ""
+		}
+
+		AutoOpenChestsOnDestruction: {
+			// Label: Auto Open Chests On Destruction
+			// Tooltip: ""
+		}
+
+		VacuumItems: {
+			// Label: Vacuum Items
+			// Tooltip: ""
+		}
+
+		EnableUndoCommand: {
+			// Label: Enable Undo Commands
+			// Tooltip: ""
+		}
+
+		MaxOutlineThickness: {
+			// Label: Max Outline Thickness
+			// Tooltip: ""
+		}
+
+		// ProgressiveMode.Header: Enable Progressive Mode Header
+
+		EnableProgressiveMode: {
+			// Label: Enable Progressive Mode
+			// Tooltip: ""
+		}
+
+		ProgressiveBatchSize: {
+			// Label: Progressive Batch Size
+			// Tooltip: ""
+		}
+
+		ProgressiveInterval: {
+			// Label: Progressive Interval
+			// Tooltip: ""
+		}
+
+		// Tooltips.Header: Show Lore Tooltips Header
+
+		ShowLoreTooltips: {
+			// Label: Show Lore Tooltips
+			// Tooltip: ""
+		}
+
+		// Safekeeping.Header: Safekeeping Clear Threshold Header
+
+		SafekeepingClearThreshold: {
+			// Label: Safekeeping Clear Threshold
+			// Tooltip: ""
+		}
+
+		// Audio.Header: Enable Wand Sounds Header
+
+		EnableWandSounds: {
+			// Label: Enable Wand Sounds
+			// Tooltip: ""
+		}
+
+		// Overlay.Header: Overlay Render Mode Header
+
+		OverlayRenderMode: {
+			// Label: Overlay Render Mode
+			// Tooltip: ""
+		}
+
+		IsInfiniteForWires: {
+			// Label: Is Infinite For Wires
+			// Tooltip: ""
+		}
+
+		IsInfiniteForActuators: {
+			// Label: Is Infinite For Actuators
 			// Tooltip: ""
 		}
 	}
@@ -589,7 +890,7 @@ Messages: {
 	// NoTilesReplaced: No tiles could be replaced.
 	// SourceMustBeWall: Source type must be Wall for wall replacement.
 	// NoWallSourceItems: No wall items in inventory to identify source wall.
-	// TargetMustBeWallOrAir: Target type must be Wall or Air for wall replacement.
+	// TargetMustBeWallOrAir: Target type must be Wall or Air (Remove) for wall replacement.
 	// SameWallSourceTarget: Source and target are the same wall [i:{0}].
 	// NoWallTargetItems: No wall items found for target.
 	// NoSourceWallsInSelection: No {0} walls found in selection.
@@ -626,4 +927,10 @@ Messages: {
 	// StampClickEnd: Stamp: click to set end point.
 	// StampClickLock: Stamp: click to lock anchor position.
 	// StampLocked: Stamp locked! Click to {0}. Right-click to reset.
+}
+
+GameTips: {
+	// VacuumItems: WSW: Don't like picking up items? Activate 'vacuum items' in the config.
+	// IceBiomeReplacement: WSW: The Ice Biome got corrupted? Use the Wand of Replacement to swap them for snow. It's immune!
+	// GitHubContributions: WSW: Got any bugs? Ideas? Feedback or Art? Check the github repo! Contributions are very welcome.
 }

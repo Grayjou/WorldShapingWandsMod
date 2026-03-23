@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
 using WorldShapingWandsMod.Common.Undo;
+using WorldShapingWandsMod.Common.Configs;
 
 namespace WorldShapingWandsMod.Common.Commands;
 
@@ -9,6 +10,7 @@ namespace WorldShapingWandsMod.Common.Commands;
 /// Chat command for triggering undo operations.
 /// Dev-testing convenience — undo will eventually get a keybind or UI button.
 /// Usage: /undo [count]
+/// Gated behind <see cref="WandServerConfig.EnableUndoCommand"/>.
 /// </summary>
 public class UndoCommand : ModCommand
 {
@@ -24,6 +26,14 @@ public class UndoCommand : ModCommand
 
     public override void Action(CommandCaller caller, string input, string[] args)
     {
+        var serverConfig = ModContent.GetInstance<WandServerConfig>();
+        if (serverConfig != null && !serverConfig.EnableUndoCommand)
+        {
+            caller.Reply("Undo is disabled by default \u2014 it's experimental and may cause visual artifacts or resource duplication.", Color.OrangeRed);
+            caller.Reply("Enable it in Server Settings > World Shaping Wands > Enable Undo Commands.", Color.Gray);
+            return;
+        }
+
         var undoManager = caller.Player.GetModPlayer<UndoManager>();
 
         if (args.Length == 0)

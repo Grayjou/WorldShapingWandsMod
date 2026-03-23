@@ -20,6 +20,19 @@ public class WandOfReplacementSettings
     /// <summary>The shape configuration.</summary>
     public ShapeInfo Shape { get; set; } = ShapeInfo.Default;
 
+    /// <summary>
+    /// When true, after replacing each tile/wall, the wand automatically applies the
+    /// first paint colour found in the player's inventory to the replaced surface.
+    /// </summary>
+    public bool PaintSprayer { get; set; } = false;
+
+    /// <summary>
+    /// When true, the target type tracks the source type ("Same Type" mode).
+    /// This is set explicitly by the user clicking the Same Type button,
+    /// NOT inferred from source == target equality.
+    /// </summary>
+    public bool SameTypeMode { get; set; } = false;
+
     /// <summary>The starting point of the selection.</summary>
     public Point StartPoint { get; set; }
 
@@ -37,6 +50,8 @@ public class WandOfReplacementSettings
             NewObject = NewObject,
             OldObject = OldObject,
             Shape = Shape,
+            PaintSprayer = PaintSprayer,
+            SameTypeMode = SameTypeMode,
             StartPoint = StartPoint,
             EndPoint = EndPoint
         };
@@ -51,6 +66,8 @@ public class WandOfReplacementSettings
         NewObject = ObjectType.Tile;
         OldObject = ObjectType.Tile;
         Shape = ShapeInfo.Default;
+        PaintSprayer = false;
+        SameTypeMode = false;
         StartPoint = Point.Zero;
         EndPoint = Point.Zero;
     }
@@ -60,7 +77,7 @@ public class WandOfReplacementSettings
     /// </summary>
     public string GetDescription()
     {
-        return $"{SelectionMode} - {OldObject} → {NewObject} - {Shape.GetDescription()}";
+        return $"{SelectionMode} - {OldObject} â†’ {NewObject} - {Shape.GetDescription()}";
     }
 
     /// <summary>

@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ModLoader;
+using WorldShapingWandsMod.Common.Configs;
 using WorldShapingWandsMod.Common.Undo;
 using static WorldShapingWandsMod.Common.Utilities.Msg;
 
@@ -9,10 +10,37 @@ namespace WorldShapingWandsMod.Common.Undo;
 
 public class UndoManager : ModPlayer
 {
-    private const int MaxUndoActions = 20;
+    private const int DefaultMaxUndoActions = 20;
     private readonly Stack<UndoAction> _undoStack = new();
 
+    /// <summary>
+    /// Returns the configured max undo stack size from <see cref="WandClientConfig"/>,
+    /// falling back to <see cref="DefaultMaxUndoActions"/> if the config is unavailable.
+    /// </summary>
+    private static int MaxUndoActions
+    {
+        get
+        {
+            var config = ModContent.GetInstance<WandClientConfig>();
+            return config?.MaxUndoStackSize ?? DefaultMaxUndoActions;
+        }
+    }
+
     public int UndoCount => _undoStack.Count;
+
+    /// <summary>
+    /// Returns the undo action at the given 1-based index (1 = most recent).
+    /// Returns null if the index is out of range.
+    /// </summary>
+    public UndoAction PeekAt(int oneBasedIndex)
+    {
+        if (oneBasedIndex < 1 || oneBasedIndex > _undoStack.Count)
+            return null;
+
+        // Stack.ToArray() returns items in pop order: index 0 = newest.
+        var entries = _undoStack.ToArray();
+        return entries[oneBasedIndex - 1];
+    }
 
     public UndoAction BeginAction(string description = "Shape Operation")
     {

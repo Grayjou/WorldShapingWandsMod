@@ -39,7 +39,7 @@ namespace WorldShapingWandsMod.Content.Items
                 return;
 
             var wandPlayer = player.GetModPlayer<WandPlayer>();
-            Point mouseTile = GeometryHelper.WorldToTile(Main.MouseWorld);
+            Point mouseTile = GeometryHelper.GetMouseTile();
 
             if (Main.mouseLeft)
             {
@@ -47,10 +47,7 @@ namespace WorldShapingWandsMod.Content.Items
                 // IsMouseOverUI() checks both mouseInterface AND panel hover,
                 // because HoldItem runs before UI.Update sets mouseInterface.
                 if (IsMouseOverUI())
-                {
-                    DebugIsMouseOverUI("WandOfBuildingInstant blocked");
                     return;
-                }
 
                 // Don't restart selection immediately after cancellation
                 if (!wandPlayer.CanStartNewSelection())
@@ -82,7 +79,7 @@ namespace WorldShapingWandsMod.Content.Items
                 }
 
                 // Mouse released - execute only if this wand started the selection
-                if (wandPlayer.IsInstantSelectionOwnedByCurrentItem())
+                if (wandPlayer.IsInstantSelectionOwnedByCurrentItem() && !IsOnLocalCooldown())
                 {
                     ExecuteBuilding(player, wandPlayer);
                 }
@@ -97,6 +94,8 @@ namespace WorldShapingWandsMod.Content.Items
                 .AddIngredient(ItemID.GrayBrick, 10)
                 .AddIngredient(ItemID.RedBrick, 10)
                 .AddIngredient(ItemID.Rope, 20)
+                .AddIngredient(ItemID.Gel, 10)
+                .AddIngredient(ItemID.Cobweb, 10)
                 .AddIngredient(ItemID.ManaCrystal, 1)
                 .AddTile(TileID.Anvils)
                 .Register();

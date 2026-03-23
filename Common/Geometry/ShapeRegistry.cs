@@ -79,6 +79,34 @@ public static class ShapeRegistry
         }
 
     /// <summary>
+    /// Returns the number of input points required to define the given shape.
+    /// All current shapes require 2 points (bounding box corners).
+    /// Future multi-point shapes (Arc, Polygon, etc.) will return higher values.
+    /// Returns -1 for variable-point shapes (e.g. Polygon).
+    /// </summary>
+    public static int GetRequiredPoints(ShapeType shape) => shape switch
+    {
+        ShapeType.Rectangle => 2,
+        ShapeType.Ellipse => 2,
+        ShapeType.Diamond => 2,
+        ShapeType.Triangle => 2,
+        ShapeType.Elbow => 2,
+        ShapeType.CardinalLine => 2,
+        ShapeType.StraightLine => 2,
+        // Future multi-point shapes will be added here:
+        // ShapeType.Arc => 3,
+        // ShapeType.ArcDonut => 4,
+        // ShapeType.Polygon => -1, // Variable
+        _ => 2,
+    };
+
+    /// <summary>
+    /// Returns true if the given shape requires more than 2 input points.
+    /// </summary>
+    public static bool IsMultiPointShape(ShapeType shape) =>
+        GetRequiredPoints(shape) is not 2;
+
+    /// <summary>
     /// Convenience overload for simple rectangle-based selections.
     /// </summary>
     public static ShapeTileSet GetShapeTiles(

@@ -26,5 +26,15 @@ namespace WorldShapingWandsMod.Common.Geometry
             Tiles = tiles ?? throw new ArgumentNullException(nameof(tiles));
             BoundaryTiles = boundaryTiles ?? throw new ArgumentNullException(nameof(boundaryTiles));
         }
+
+        /// <summary>
+        /// Creates a ShapeTileSet with tiles only (empty boundary).
+        /// Used when boundary info is not needed, e.g. server-side inverted tile sets.
+        /// </summary>
+        public ShapeTileSet(IEnumerable<Point> tiles)
+        {
+            Tiles = tiles ?? throw new ArgumentNullException(nameof(tiles));
+            BoundaryTiles = Array.Empty<Point>();
+        }
     }
 }

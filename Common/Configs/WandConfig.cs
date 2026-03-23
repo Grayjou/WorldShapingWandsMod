@@ -118,6 +118,11 @@ namespace WorldShapingWandsMod.Common.Configs
         public bool AllowDemonAltarDestruction { get; set; }
 
         [DefaultValue(false)]
+        [LabelKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.AllowDelicateTileDestruction.Label")]
+        [TooltipKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.AllowDelicateTileDestruction.Tooltip")]
+        public bool AllowDelicateTileDestruction { get; set; }
+
+        [DefaultValue(false)]
         [LabelKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.IgnoreLockedKeyRequirements.Label")]
         [TooltipKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.IgnoreLockedKeyRequirements.Tooltip")]
         public bool IgnoreLockedKeyRequirements { get; set; }

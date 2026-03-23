@@ -36,6 +36,8 @@ public class WandOfSafekeepingConfirm : WandOfSafekeepingBase
         }
         else
         {
+            if (IsTooFarToConfirm(wandPlayer.Selection, mouseTile)) return false;
+            if (IsOnLocalCooldown()) return false;
             ExecuteSafekeeping(player, wandPlayer);
             wandPlayer.ClearSelection();
             return false;

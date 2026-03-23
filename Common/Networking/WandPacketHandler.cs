@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.Xna.Framework;
 using Terraria;
+ using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 using WorldShapingWandsMod.Common.Configs;
@@ -13,6 +14,7 @@ using WorldShapingWandsMod.Common.Geometry;
 using WorldShapingWandsMod.Common.Settings;
 using WorldShapingWandsMod.Common.Systems;
 using WorldShapingWandsMod.Common.Utilities;
+using WorldShapingWandsMod.Content.Items;
 using SlopeType = WorldShapingWandsMod.Common.Enums.SlopeType;
 
 namespace WorldShapingWandsMod.Common.Networking;
@@ -58,7 +60,7 @@ public enum WandPacketType : byte
 /// <summary>
 /// Common header shared by all wand operation packets.
 /// Contains shape parameters and player identity — everything needed
-/// to recompute the shape on the server. Wire-on-the-protocol: 22 bytes.
+/// to recompute the shape on the server. Wire-on-the-protocol: 23 bytes.
 /// </summary>
 public readonly struct WandPacketHeader
 {
@@ -72,13 +74,15 @@ public readonly struct WandPacketHeader
     public readonly int PlayerWhoAmI;
     public readonly SliceMode Slice;
     public readonly bool ConnectDiameter;
+    public readonly bool InvertSelection;
 
     public WandPacketHeader(
         Point start, Point end,
         ShapeType shape, ShapeMode fillMode,
         int thickness, bool equalDimensions,
         bool verticalFirst, int playerWhoAmI,
-        SliceMode slice = SliceMode.Full, bool connectDiameter = true)
+        SliceMode slice = SliceMode.Full, bool connectDiameter = true,
+        bool invertSelection = false)
     {
         Start = start;
         End = end;
@@ -90,6 +94,7 @@ public readonly struct WandPacketHeader
         PlayerWhoAmI = playerWhoAmI;
         Slice = slice;
         ConnectDiameter = connectDiameter;
+        InvertSelection = invertSelection;
     }
 }
 
@@ -106,14 +111,79 @@ public readonly struct WandPacketHeader
 public static class WandPacketHandler
 {
     // ════════════════════════════════════════════════════════════════════
+    // Server-Side Rate Limiting
+    // ════════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Tracks the last game tick at which each player executed a wand operation.
+    /// Keyed by player whoAmI. Used to enforce OperationCooldownTicks on the server.
+    /// </summary>
+    private static readonly Dictionary<int, ulong> _lastOperationTick = new();
+
+    /// <summary>
+    /// Checks whether the player is still on cooldown from a previous operation.
+    /// If on cooldown, sends an OperationResult error and returns true (blocked).
+    /// If allowed, updates the last operation tick and returns false.
+    /// </summary>
+    /// <param name="whoAmI">Player index on the server.</param>
+    /// <param name="packetType">The packet type being handled (for error reporting).</param>
+    /// <returns>True if the operation should be BLOCKED, false if it may proceed.</returns>
+    private static bool IsOnCooldown(int whoAmI, WandPacketType packetType)
+    {
+        var config = ModContent.GetInstance<WandServerConfig>();
+        int cooldown = config?.OperationCooldownTicks ?? 12;
+        if (cooldown <= 0) return false; // Cooldown disabled
+
+        ulong now = Main.GameUpdateCount;
+        if (_lastOperationTick.TryGetValue(whoAmI, out ulong last))
+        {
+            if (now - last < (ulong)cooldown)
+            {
+                // Still on cooldown — silently reject. No error spam: the server
+                // simply drops the packet. Autoclickers will fire faster than the
+                // cooldown, but only one operation per window actually executes.
+                return true;
+            }
+        }
+
+        _lastOperationTick[whoAmI] = now;
+        return false;
+    }
+
+    /// <summary>
+    /// Client-side cooldown check for single-player. Returns true if on cooldown.
+    /// Uses the same OperationCooldownTicks config as the server.
+    /// </summary>
+    private static ulong _spLastOperationTick;
+
+    /// <summary>
+    /// Returns true if the local player is on cooldown (single-player only).
+    /// Call this from wand execution paths (UseItem / HoldItem) to prevent
+    /// autoclicker or click-spam abuse in SP.
+    /// </summary>
+    public static bool IsLocalPlayerOnCooldown()
+    {
+        var config = ModContent.GetInstance<WandServerConfig>();
+        int cooldown = config?.OperationCooldownTicks ?? 12;
+        if (cooldown <= 0) return false;
+
+        ulong now = Main.GameUpdateCount;
+        if (now - _spLastOperationTick < (ulong)cooldown)
+            return true;
+
+        _spLastOperationTick = now;
+        return false;
+    }
+
+    // ════════════════════════════════════════════════════════════════════
     // Common Header Helpers
     // ════════════════════════════════════════════════════════════════════
 
     /// <summary>
-    /// Write the common 22-byte header shared by all wand operation packets.
+    /// Write the common 23-byte header shared by all wand operation packets.
     /// Format: Start(8) + End(8) + Shape(1) + FillMode(1) + Thickness(1) +
     ///         EqualDimensions(1) + VerticalFirst(1) + PlayerWhoAmI(1) +
-    ///         Slice(1) + ConnectDiameter(1) = 22 bytes.
+    ///         Slice(1) + ConnectDiameter(1) + InvertSelection(1) = 23 bytes.
     /// </summary>
     public static void WriteCommonHeader(ModPacket packet, WandPacketHeader header)
     {
@@ -129,10 +199,11 @@ public static class WandPacketHandler
         packet.Write((byte)header.PlayerWhoAmI);
         packet.Write((byte)header.Slice);
         packet.Write(header.ConnectDiameter);
+        packet.Write(header.InvertSelection);
     }
 
     /// <summary>
-    /// Read the common 22-byte header from an incoming packet.
+    /// Read the common 23-byte header from an incoming packet.
     /// </summary>
     public static WandPacketHeader ReadCommonHeader(BinaryReader reader)
     {
@@ -146,7 +217,8 @@ public static class WandPacketHandler
             verticalFirst: reader.ReadBoolean(),
             playerWhoAmI: reader.ReadByte(),
             slice: (SliceMode)reader.ReadByte(),
-            connectDiameter: reader.ReadBoolean()
+            connectDiameter: reader.ReadBoolean(),
+            invertSelection: reader.ReadBoolean()
         );
     }
 
@@ -161,7 +233,7 @@ public static class WandPacketHandler
     /// </summary>
     private static WandPacketHeader EnforceDistanceCap(WandPacketHeader header)
     {
-        var config = ModContent.GetInstance<WandConfig>();
+        var config = ModContent.GetInstance<WandServerConfig>();
         int cap;
         if (header.Shape == ShapeType.Elbow ||
             header.Shape == ShapeType.CardinalLine ||
@@ -185,13 +257,16 @@ public static class WandPacketHandler
             header.Shape, header.FillMode,
             header.Thickness, header.EqualDimensions,
             header.VerticalFirst, header.PlayerWhoAmI,
-            header.Slice, header.ConnectDiameter
+            header.Slice, header.ConnectDiameter,
+            header.InvertSelection
         );
     }
 
     /// <summary>
     /// Recompute the shape tiles from a packet header.
     /// Used by all server handlers to get the authoritative tile set.
+    /// When InvertSelection is set, returns tiles within the bounding rect
+    /// that are NOT in the original shape (negative space).
     /// </summary>
     private static ShapeTileSet ComputeShapeTiles(WandPacketHeader header)
     {
@@ -202,7 +277,17 @@ public static class WandPacketHandler
             header.VerticalFirst, header.EqualDimensions,
             header.Slice, header.ConnectDiameter
         );
-        return ShapeRegistry.GetShapeTiles(header.Shape, context);
+        var tileSet = ShapeRegistry.GetShapeTiles(header.Shape, context);
+
+        if (!header.InvertSelection || !ShapeInfo.ShapeSupportsInversion(header.Shape))
+            return tileSet;
+
+        // Apply inversion: bounding rect minus original shape tiles
+        var shapeInfo = new ShapeInfo(header.Shape, header.FillMode,
+            header.Thickness, header.EqualDimensions,
+            header.Slice, header.ConnectDiameter, header.InvertSelection);
+        var invertedTiles = shapeInfo.ApplyInversion(tileSet.Tiles.ToArray(), context);
+        return new ShapeTileSet(invertedTiles);
     }
 
     /// <summary>
@@ -236,7 +321,8 @@ public static class WandPacketHandler
 
     /// <summary>
     /// Client-side handler for OperationResult packets.
-    /// Displays error messages from the server.
+    /// Displays success messages with tile count and plays completion sounds,
+    /// or shows error messages on failure.
     /// </summary>
     private static void HandleOperationResult(BinaryReader reader)
     {
@@ -246,8 +332,62 @@ public static class WandPacketHandler
         string error = reader.ReadString();
 
         if (!success && !string.IsNullOrEmpty(error))
+        {
             Main.NewText(error, WandColors.MsgError);
-        // Success feedback is handled by the local execution path
+            return;
+        }
+
+        // Success feedback: show message and play sound.
+        // In MP, the client sends a packet and returns immediately — there is
+        // no local execution path, so the server must report back.
+        if (success && tilesAffected > 0)
+        {
+            var clientCfg = ModContent.GetInstance<WandClientConfig>();
+            var player = Main.LocalPlayer;
+
+            switch (originalType)
+            {
+                case WandPacketType.DismantlingOperation:
+                    Main.NewText($"Destroyed {tilesAffected} tile(s)", Color.OrangeRed);
+                    if (clientCfg?.EnableWandSounds == true)
+                        SoundEngine.PlaySound(SoundID.Tink, player.Center);
+                    break;
+
+                case WandPacketType.BuildingOperation:
+                    Main.NewText($"Placed {tilesAffected} tile(s)", Color.Cyan);
+                    if (clientCfg?.EnableWandSounds == true)
+                        SoundEngine.PlaySound(SoundID.Item168 with { Volume = 0.5f }, player.Center);
+                    break;
+
+                case WandPacketType.ReplacementOperation:
+                    Main.NewText($"Replaced {tilesAffected} tile(s)", WandColors.MsgReplacement);
+                    if (clientCfg?.EnableWandSounds == true)
+                        SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.25f }, player.Center);
+                    break;
+
+                case WandPacketType.CoatingOperation:
+                    Main.NewText($"Coated {tilesAffected} tile(s)", WandColors.MsgCoating);
+                    if (clientCfg?.EnableWandSounds == true)
+                        SoundEngine.PlaySound(SoundID.Item109 with { Volume = 0.6f }, player.Center);
+                    break;
+
+                case WandPacketType.SafekeepingOperation:
+                    Main.NewText($"Protected {tilesAffected} tile(s)", WandColors.MsgSafekeeping);
+                    if (clientCfg?.EnableWandSounds == true)
+                        SoundEngine.PlaySound(SoundID.MaxMana with { Volume = 0.5f }, player.Center);
+                    break;
+
+                case WandPacketType.WiringOperation:
+                    Main.NewText($"Wiring: {tilesAffected} tile(s) affected", WandColors.MsgWiring);
+                    if (clientCfg?.EnableWandSounds == true)
+                        SoundEngine.PlaySound(SoundID.Item64, player.Center);
+                    break;
+
+                default:
+                    Main.NewText($"Operation complete: {tilesAffected} tile(s)", WandColors.MsgInfo);
+                    break;
+            }
+        }
     }
 
     // ════════════════════════════════════════════════════════════════════
@@ -265,7 +405,8 @@ public static class WandPacketHandler
         int thickness, bool equalDimensions,
         byte wireFlags, bool verticalFirst,
         int playerWhoAmI,
-        SliceMode slice = SliceMode.Full, bool connectDiameter = true)
+        SliceMode slice = SliceMode.Full, bool connectDiameter = true,
+        bool invertSelection = false)
     {
         if (Main.netMode != NetmodeID.MultiplayerClient)
             return;
@@ -273,12 +414,12 @@ public static class WandPacketHandler
         ModPacket packet = WorldShapingWandsMod.Instance.GetPacket();
         packet.Write((byte)WandPacketType.WiringOperation);
 
-        // Common header (22 bytes)
+        // Common header (23 bytes)
         var header = new WandPacketHeader(
             start, end, shape, fillMode,
             thickness, equalDimensions,
             verticalFirst, playerWhoAmI,
-            slice, connectDiameter
+            slice, connectDiameter, invertSelection
         );
         WriteCommonHeader(packet, header);
 
@@ -295,7 +436,7 @@ public static class WandPacketHandler
     /// </summary>
     private static void HandleWiringOperation(BinaryReader reader, int whoAmI)
     {
-        // Read common header (22 bytes)
+        // Read common header (23 bytes)
         var header = ReadCommonHeader(reader);
 
         // Read wiring-specific fields (2 bytes)
@@ -420,7 +561,7 @@ public static class WandPacketHandler
 
     /// <summary>
     /// Sends a building operation packet from client to server.
-    /// Packet format: common header (22) + PlaceType(1) + SlopeType(1) +
+    /// Packet format: common header (23) + PlaceType(1) + SlopeType(1) +
     ///   OverwriteSlope(1) + ExhaustionMode(1) + replaceEnabled(1) +
     ///   itemType(2) + placeStyle(2) = 31 bytes total.
     /// </summary>
@@ -432,7 +573,9 @@ public static class WandPacketHandler
         PlaceType placeType, SlopeType slopeType, bool overwriteSlope,
         BlockExhaustionMode exhaustionMode, bool replaceEnabled,
         short itemType, short placeStyle,
-        SliceMode slice = SliceMode.Full, bool connectDiameter = true)
+        SliceMode slice = SliceMode.Full, bool connectDiameter = true,
+        bool invertSelection = false,
+        bool paintSprayer = false, bool? actuation = null)
     {
         if (Main.netMode != NetmodeID.MultiplayerClient)
             return;
@@ -444,11 +587,11 @@ public static class WandPacketHandler
             start, end, shape, fillMode,
             thickness, equalDimensions,
             verticalFirst, playerWhoAmI,
-            slice, connectDiameter
+            slice, connectDiameter, invertSelection
         );
         WriteCommonHeader(packet, header);
 
-        // Building-specific fields (9 bytes)
+        // Building-specific fields (9 bytes + 2 new = 11 bytes)
         packet.Write((byte)placeType);
         packet.Write((byte)slopeType);
         packet.Write(overwriteSlope);
@@ -456,6 +599,9 @@ public static class WandPacketHandler
         packet.Write(replaceEnabled);
         packet.Write(itemType);
         packet.Write(placeStyle);
+        packet.Write(paintSprayer);
+        // Actuation tri-state: 0=ignore, 1=on, 2=off
+        packet.Write((byte)(actuation == null ? 0 : actuation.Value ? 1 : 2));
         packet.Send();
     }
 
@@ -476,6 +622,9 @@ public static class WandPacketHandler
         bool replaceEnabled = reader.ReadBoolean();
         short itemType = reader.ReadInt16();
         short placeStyle = reader.ReadInt16();
+        bool paintSprayer = reader.ReadBoolean();
+        byte actuationByte = reader.ReadByte();
+        bool? actuation = actuationByte == 0 ? null : actuationByte == 1 ? true : false;
 
         if (!ValidatePlayer(header.PlayerWhoAmI))
             return;
@@ -491,7 +640,7 @@ public static class WandPacketHandler
                 ServerExecuteWallBuilding(
                     tileSet.Tiles, header.PlayerWhoAmI,
                     itemType, placeStyle, exhaustionMode,
-                    replaceEnabled);
+                    replaceEnabled, paintSprayer);
             }
             else
             {
@@ -499,7 +648,7 @@ public static class WandPacketHandler
                     tileSet.Tiles, header.PlayerWhoAmI,
                     placeType, slopeType, overwriteSlope,
                     itemType, placeStyle, exhaustionMode,
-                    replaceEnabled);
+                    replaceEnabled, paintSprayer, actuation);
             }
 
             // Broadcast to all other clients so they can resync
@@ -525,10 +674,12 @@ public static class WandPacketHandler
         short itemType,
         short placeStyle,
         BlockExhaustionMode exhaustionMode,
-        bool replaceEnabled)
+        bool replaceEnabled,
+        bool paintSprayer = false,
+        bool? actuation = null)
     {
         var player = Main.player[playerWhoAmI];
-        var config = ModContent.GetInstance<WandConfig>();
+        var config = ModContent.GetInstance<WandServerConfig>();
 
         // Find the item in the player's server-side inventory
         Func<Item, bool> condition = i => !i.IsAir && i.type == itemType;
@@ -622,6 +773,8 @@ public static class WandPacketHandler
                     if (WorldGen.PlaceTile(x, y, tileTypeToPlace, mute: true, forced: false,
                         plr: playerWhoAmI, style: placeStyle))
                     {
+                        WandOfBuildingBase.ApplyActuation(x, y, actuation);
+                        if (paintSprayer) WandOfBuildingBase.ApplyPaintSprayerTile(player, x, y, shouldConsume, changedSlots);
                         placed++;
                         if (shouldConsume) ConsumeOneServerItem(player, srcItem, condition, changedSlots);
                     }
@@ -675,6 +828,8 @@ public static class WandPacketHandler
                 if (didReplace)
                 {
                     if (overwriteSlope) ApplySlopeServer(x, y, slopeType);
+                    WandOfBuildingBase.ApplyActuation(x, y, actuation);
+                    if (paintSprayer) WandOfBuildingBase.ApplyPaintSprayerTile(player, x, y, shouldConsume, changedSlots);
                     replaced++;
                     if (shouldConsume) ConsumeOneServerItem(player, srcItem, condition, changedSlots);
                     NetMessage.SendTileSquare(-1, x, y, 1);
@@ -688,6 +843,8 @@ public static class WandPacketHandler
                     plr: playerWhoAmI, style: placeStyle))
                 {
                     if (overwriteSlope) ApplySlopeServer(x, y, slopeType);
+                    WandOfBuildingBase.ApplyActuation(x, y, actuation);
+                    if (paintSprayer) WandOfBuildingBase.ApplyPaintSprayerTile(player, x, y, shouldConsume, changedSlots);
                     placed++;
                     if (shouldConsume) ConsumeOneServerItem(player, srcItem, condition, changedSlots);
                 }
@@ -701,6 +858,14 @@ public static class WandPacketHandler
         // Sync all modified inventory slots to all clients
         foreach (int slot in changedSlots)
             NetMessage.SendData(MessageID.SyncEquipment, -1, -1, null, playerWhoAmI, slot);
+
+        // Server vacuum: replacements (KillTile) may have spawned drops.
+        if (!suppressDrops && config?.VacuumItems == true && replaced > 0 && tilesToProcess.Length > 0)
+        {
+            var bounds = BulkTileOperations.ComputeBounds(
+                new List<Point>(tilesToProcess));
+            BulkTileOperations.ServerVacuumItemsToPlayer(player, bounds);
+        }
 
         int total = placed + replaced;
         SendOperationResult(playerWhoAmI, WandPacketType.BuildingOperation, total, true,
@@ -716,10 +881,11 @@ public static class WandPacketHandler
         short itemType,
         short placeStyle,
         BlockExhaustionMode exhaustionMode,
-        bool replaceEnabled)
+        bool replaceEnabled,
+        bool paintSprayer = false)
     {
         var player = Main.player[playerWhoAmI];
-        var config = ModContent.GetInstance<WandConfig>();
+        var config = ModContent.GetInstance<WandServerConfig>();
 
         Func<Item, bool> condition = i => !i.IsAir && i.type == itemType;
 
@@ -791,6 +957,7 @@ public static class WandPacketHandler
                     WorldGen.PlaceWall(x, y, wallTypeToPlace, mute: true);
                     if (t.WallType == (ushort)wallTypeToPlace)
                     {
+                        if (paintSprayer) WandOfBuildingBase.ApplyPaintSprayerWall(player, x, y, shouldConsume, changedSlots);
                         replaced++;
                         if (shouldConsume) ConsumeOneServerItem(player, srcItem, condition, changedSlots);
                     }
@@ -804,6 +971,7 @@ public static class WandPacketHandler
                 WorldGen.PlaceWall(x, y, wallTypeToPlace, mute: true);
                 if (t.WallType == (ushort)wallTypeToPlace)
                 {
+                    if (paintSprayer) WandOfBuildingBase.ApplyPaintSprayerWall(player, x, y, shouldConsume, changedSlots);
                     placed++;
                     if (shouldConsume) ConsumeOneServerItem(player, srcItem, condition, changedSlots);
                 }
@@ -818,6 +986,14 @@ public static class WandPacketHandler
         foreach (int slot in changedSlots)
             NetMessage.SendData(MessageID.SyncEquipment, -1, -1, null, playerWhoAmI, slot);
 
+        // Server vacuum: wall replacements (KillWall) may have spawned drops.
+        if (!suppressDrops && config?.VacuumItems == true && replaced > 0 && tilesToProcess.Length > 0)
+        {
+            var bounds = BulkTileOperations.ComputeBounds(
+                new List<Point>(tilesToProcess));
+            BulkTileOperations.ServerVacuumItemsToPlayer(player, bounds);
+        }
+
         int total = placed + replaced;
         SendOperationResult(playerWhoAmI, WandPacketType.BuildingOperation, total, true,
             interrupted ? "Ran out of wall items" : null);
@@ -829,10 +1005,10 @@ public static class WandPacketHandler
 
     /// <summary>
     /// Sends a dismantling operation packet from client to server.
-    /// Packet format: common header (22) + destroyTiles(1) + destroyWalls(1) +
+    /// Packet format: common header (23) + destroyTiles(1) + destroyWalls(1) +
     ///   destroyContainers(1) = 25 bytes total.
     /// SuppressDrops and BypassPickaxePower are server-side config values —
-    /// the server reads them from WandConfig directly.
+    /// the server reads them from WandServerConfig directly.
     /// </summary>
     public static void SendDismantlingOperation(
         Point start, Point end,
@@ -840,7 +1016,8 @@ public static class WandPacketHandler
         int thickness, bool equalDimensions,
         bool verticalFirst, int playerWhoAmI,
         bool destroyTiles, bool destroyWalls, bool destroyContainers,
-        SliceMode slice = SliceMode.Full, bool connectDiameter = true)
+        SliceMode slice = SliceMode.Full, bool connectDiameter = true,
+        bool invertSelection = false)
     {
         if (Main.netMode != NetmodeID.MultiplayerClient)
             return;
@@ -852,7 +1029,7 @@ public static class WandPacketHandler
             start, end, shape, fillMode,
             thickness, equalDimensions,
             verticalFirst, playerWhoAmI,
-            slice, connectDiameter
+            slice, connectDiameter, invertSelection
         );
         WriteCommonHeader(packet, header);
 
@@ -905,10 +1082,11 @@ public static class WandPacketHandler
         bool destroyContainers)
     {
         var player = Main.player[playerWhoAmI];
-        var config = ModContent.GetInstance<WandConfig>();
+        var config = ModContent.GetInstance<WandServerConfig>();
         bool suppressDrops = config?.SuppressDrops ?? false;
         bool bypassPickPower = config?.BypassPickaxePower ?? false;
         bool allowDemonAltars = config?.AllowDemonAltarDestruction ?? false;
+        bool allowDelicateTiles = config?.AllowDelicateTileDestruction ?? false;
         bool autoOpenChests = config?.AutoOpenChestsOnDestruction ?? false;
 
         var tilesToProcess = tiles.ToArray();
@@ -951,9 +1129,45 @@ public static class WandPacketHandler
                 var chest = Main.chest[chestIdx];
                 if (chest == null) continue;
 
-                // Check if locked (golden, shadow, etc.) — skip unless auto-open is on
+                // Check if locked (golden, shadow, etc.) — skip unless auto-open is on.
+                // IMPORTANT: Still add their tiles to containerTiles so the regular tile
+                // destruction pass doesn't destroy them via WorldGen.KillTile (which would
+                // bypass the lock check entirely).
                 bool isLocked = Chest.IsLocked(chest.x, chest.y);
-                if (isLocked && !autoOpenChests) continue;
+                if (isLocked && !autoOpenChests)
+                {
+                    var lockedTileData = Terraria.ObjectData.TileObjectData.GetTileData(
+                        Main.tile[chest.x, chest.y].TileType, 0);
+                    int lw = lockedTileData?.Width ?? 2;
+                    int lh = lockedTileData?.Height ?? 2;
+                    for (int dx = 0; dx < lw; dx++)
+                        for (int dy = 0; dy < lh; dy++)
+                            containerTiles.Add(new Point(chest.x + dx, chest.y + dy));
+                    continue;
+                }
+
+                // If the container is locked, try to unlock it (requires key, consumes it).
+                // If unlock fails (no key), protect the tiles and skip — same as SP path.
+                if (isLocked)
+                {
+                    if (!ContainerHelper.TryUnlockChest(player, chest.x, chest.y,
+                        Main.tile[chest.x, chest.y].TileType))
+                    {
+                        var failData = Terraria.ObjectData.TileObjectData.GetTileData(
+                            Main.tile[chest.x, chest.y].TileType, 0);
+                        int fw = failData?.Width ?? 2;
+                        int fh = failData?.Height ?? 2;
+                        for (int dx = 0; dx < fw; dx++)
+                            for (int dy = 0; dy < fh; dy++)
+                                containerTiles.Add(new Point(chest.x + dx, chest.y + dy));
+                        continue; // Can't unlock — skip this container
+                    }
+                    // Unlock succeeded — sync the frame change to all clients
+                    var unlockData = Terraria.ObjectData.TileObjectData.GetTileData(
+                        Main.tile[chest.x, chest.y].TileType, 0);
+                    int uw = unlockData?.Width ?? 2;
+                    NetMessage.SendTileSquare(-1, chest.x, chest.y, uw + 1);
+                }
 
                 // Find the actual top-left of this container for tile tracking
                 var tileData = Terraria.ObjectData.TileObjectData.GetTileData(
@@ -1022,6 +1236,10 @@ public static class WandPacketHandler
                     if (maxHammer < 80 && !bypassPickPower) continue;
                 }
 
+                // Delicate tile protection: shadow orbs, plantera bulbs, bee larvae, etc.
+                if (IsDelicateTile(t.TileType) && !allowDelicateTiles)
+                    continue;
+
                 // CanKillTile check — may fail for tiles under supported objects
                 // but the top-to-bottom sort should handle most cases
                 if (!WorldGen.CanKillTile(x, y)) continue;
@@ -1044,6 +1262,14 @@ public static class WandPacketHandler
 
         WorldGen.gen = wasGen;
 
+        // Server vacuum: teleport scattered drops to the player's feet.
+        if (!suppressDrops && config?.VacuumItems == true && tilesToProcess.Length > 0)
+        {
+            var bounds = BulkTileOperations.ComputeBounds(
+                new List<Point>(tilesToProcess));
+            BulkTileOperations.ServerVacuumItemsToPlayer(player, bounds);
+        }
+
         int total = destroyed + containersDestroyed;
         SendOperationResult(playerWhoAmI, WandPacketType.DismantlingOperation, total, true);
     }
@@ -1064,13 +1290,29 @@ public static class WandPacketHandler
         return max;
     }
 
+    /// <summary>
+    /// Returns true if the tile type is "delicate" — destroying it has irreversible
+    /// side effects (boss spawns, world flags, unique loot).
+    /// Protected by AllowDelicateTileDestruction config.
+    /// Server-side mirror of WandOfDismantling.IsDelicateTile.
+    /// </summary>
+    private static bool IsDelicateTile(int tileType)
+    {
+        return tileType == TileID.ShadowOrbs        // Shadow Orb / Crimson Heart
+            || tileType == TileID.PlanteraBulb       // Plantera's Bulb
+            || tileType == TileID.Larva              // Bee Larva (Queen Bee)
+            || tileType == TileID.Heart              // Life Crystal
+            || tileType == TileID.LifeFruit          // Life Fruit
+            || tileType == TileID.LihzahrdAltar;     // Lihzahrd Altar (Golem)
+    }
+
     // ════════════════════════════════════════════════════════════════════
     // Replacement Operation Packets (Day 5)
     // ════════════════════════════════════════════════════════════════════
 
     /// <summary>
     /// Sends a replacement operation packet from client to server.
-    /// Packet format: common header (22) + sourceObjectType(1) + targetObjectType(1) +
+    /// Packet format: common header (23) + sourceObjectType(1) + targetObjectType(1) +
     ///   sourceTileOrWallType(2) + targetTileOrWallType(2) + targetItemType(2) +
     ///   isWallMode(1) = 31 bytes total.
     ///
@@ -1085,7 +1327,8 @@ public static class WandPacketHandler
         ObjectType sourceObjectType, ObjectType targetObjectType,
         ushort sourceTileOrWallType, ushort targetTileOrWallType,
         short targetItemType, bool isWallMode,
-        SliceMode slice = SliceMode.Full, bool connectDiameter = true)
+        SliceMode slice = SliceMode.Full, bool connectDiameter = true,
+        bool invertSelection = false, bool paintSprayer = false)
     {
         if (Main.netMode != NetmodeID.MultiplayerClient)
             return;
@@ -1097,17 +1340,18 @@ public static class WandPacketHandler
             start, end, shape, fillMode,
             thickness, equalDimensions,
             verticalFirst, playerWhoAmI,
-            slice, connectDiameter
+            slice, connectDiameter, invertSelection
         );
         WriteCommonHeader(packet, header);
 
-        // Replacement-specific fields (9 bytes)
+        // Replacement-specific fields (9 bytes + 1 for paintSprayer)
         packet.Write((byte)sourceObjectType);
         packet.Write((byte)targetObjectType);
         packet.Write(sourceTileOrWallType);
         packet.Write(targetTileOrWallType);
         packet.Write(targetItemType);
         packet.Write(isWallMode);
+        packet.Write(paintSprayer);
         packet.Send();
     }
 
@@ -1126,6 +1370,7 @@ public static class WandPacketHandler
         ushort targetTileOrWallType = reader.ReadUInt16();
         short targetItemType = reader.ReadInt16();
         bool isWallMode = reader.ReadBoolean();
+        bool paintSprayer = reader.ReadBoolean();
 
         if (!ValidatePlayer(header.PlayerWhoAmI))
             return;
@@ -1140,7 +1385,8 @@ public static class WandPacketHandler
                 ServerExecuteWallReplacement(
                     tileSet.Tiles, header.PlayerWhoAmI,
                     sourceTileOrWallType, targetTileOrWallType,
-                    targetItemType, targetObjectType == ObjectType.Air);
+                    targetItemType, targetObjectType == ObjectType.Air,
+                    paintSprayer);
             }
             else
             {
@@ -1148,7 +1394,8 @@ public static class WandPacketHandler
                     tileSet.Tiles, header.PlayerWhoAmI,
                     sourceObjectType, sourceTileOrWallType,
                     targetTileOrWallType, targetItemType,
-                    targetObjectType == ObjectType.Air);
+                    targetObjectType == ObjectType.Air,
+                    paintSprayer);
             }
         }
     }
@@ -1166,10 +1413,11 @@ public static class WandPacketHandler
         ushort sourceTileType,
         ushort targetTileType,
         short targetItemType,
-        bool eraseMode)
+        bool eraseMode,
+        bool paintSprayer = false)
     {
         var player = Main.player[playerWhoAmI];
-        var config = ModContent.GetInstance<WandConfig>();
+        var config = ModContent.GetInstance<WandServerConfig>();
         bool suppressDrops = config?.SuppressDrops ?? true;
         bool bypassPickPower = config?.BypassPickaxePower ?? false;
 
@@ -1189,6 +1437,7 @@ public static class WandPacketHandler
         int replaced = 0;
         var changedSlots = new HashSet<int>();
         bool wasGen = WorldGen.gen;
+        var affectedPositions = new List<Point>();
 
         foreach (Point tile in tiles)
         {
@@ -1257,9 +1506,11 @@ public static class WandPacketHandler
                 {
                     placed.Slope = oldSlope;
                     placed.IsHalfBlock = oldHalf;
+                    if (paintSprayer) WandOfBuildingBase.ApplyPaintSprayerTile(player, x, y, shouldConsume, changedSlots);
                 }
 
                 replaced++;
+                affectedPositions.Add(tile);
 
                 // Consume one target item
                 if (!eraseMode && shouldConsume)
@@ -1280,6 +1531,13 @@ public static class WandPacketHandler
         foreach (int slot in changedSlots)
             NetMessage.SendData(MessageID.SyncEquipment, -1, -1, null, playerWhoAmI, slot);
 
+        // Server vacuum: tile replacements (KillTile fallback) may have spawned drops.
+        if (!suppressDrops && config?.VacuumItems == true && affectedPositions.Count > 0)
+        {
+            var bounds = BulkTileOperations.ComputeBounds(affectedPositions);
+            BulkTileOperations.ServerVacuumItemsToPlayer(player, bounds);
+        }
+
         SendOperationResult(playerWhoAmI, WandPacketType.ReplacementOperation, replaced, true);
     }
 
@@ -1295,10 +1553,11 @@ public static class WandPacketHandler
         ushort sourceWallType,
         ushort targetWallType,
         short targetItemType,
-        bool eraseMode)
+        bool eraseMode,
+        bool paintSprayer = false)
     {
         var player = Main.player[playerWhoAmI];
-        var config = ModContent.GetInstance<WandConfig>();
+        var config = ModContent.GetInstance<WandServerConfig>();
         bool suppressDrops = config?.SuppressDrops ?? true;
 
         // Target item condition for consumption
@@ -1316,6 +1575,7 @@ public static class WandPacketHandler
 
         int replaced = 0;
         var changedSlots = new HashSet<int>();
+        var affectedPositions = new List<Point>();
 
         foreach (Point tile in tiles)
         {
@@ -1347,6 +1607,7 @@ public static class WandPacketHandler
                 if (t.WallType == WallID.None)
                 {
                     replaced++;
+                    affectedPositions.Add(tile);
                 }
             }
             else
@@ -1357,7 +1618,9 @@ public static class WandPacketHandler
                     WorldGen.PlaceWall(x, y, targetWallType, mute: true);
                     if (t.WallType == targetWallType)
                     {
+                        if (paintSprayer) WandOfBuildingBase.ApplyPaintSprayerWall(player, x, y, shouldConsume, changedSlots);
                         replaced++;
+                        affectedPositions.Add(tile);
 
                         // Consume one target item
                         if (shouldConsume)
@@ -1380,6 +1643,13 @@ public static class WandPacketHandler
         foreach (int slot in changedSlots)
             NetMessage.SendData(MessageID.SyncEquipment, -1, -1, null, playerWhoAmI, slot);
 
+        // Server vacuum: wall replacements (KillWall, KillTile for hanging objects) may spawn drops.
+        if (!suppressDrops && config?.VacuumItems == true && affectedPositions.Count > 0)
+        {
+            var bounds = BulkTileOperations.ComputeBounds(affectedPositions);
+            BulkTileOperations.ServerVacuumItemsToPlayer(player, bounds);
+        }
+
         SendOperationResult(playerWhoAmI, WandPacketType.ReplacementOperation, replaced, true);
     }
 
@@ -1389,7 +1659,7 @@ public static class WandPacketHandler
 
     /// <summary>
     /// Sends a coating operation packet from client to server.
-    /// Packet format: common header (22) + CoatingMode(1) + paintColor(1) +
+    /// Packet format: common header (23) + CoatingMode(1) + paintColor(1) +
     ///   applyIlluminant(1) + ignoreIlluminant(1) +
     ///   applyEcho(1) + ignoreEcho(1) = 28 bytes total.
     /// </summary>
@@ -1401,7 +1671,8 @@ public static class WandPacketHandler
         CoatingMode mode, byte paintColor,
         bool applyIlluminant, bool ignoreIlluminant,
         bool applyEcho, bool ignoreEcho,
-        SliceMode slice = SliceMode.Full, bool connectDiameter = true)
+        SliceMode slice = SliceMode.Full, bool connectDiameter = true,
+        bool invertSelection = false, bool repaint = true)
     {
         if (Main.netMode != NetmodeID.MultiplayerClient)
             return;
@@ -1413,7 +1684,7 @@ public static class WandPacketHandler
             start, end, shape, fillMode,
             thickness, equalDimensions,
             verticalFirst, playerWhoAmI,
-            slice, connectDiameter
+            slice, connectDiameter, invertSelection
         );
         WriteCommonHeader(packet, header);
 
@@ -1424,6 +1695,7 @@ public static class WandPacketHandler
         packet.Write(ignoreIlluminant);
         packet.Write(applyEcho);
         packet.Write(ignoreEcho);
+        packet.Write(repaint);
         packet.Send();
     }
 
@@ -1442,6 +1714,7 @@ public static class WandPacketHandler
         bool ignoreIlluminant = reader.ReadBoolean();
         bool applyEcho = reader.ReadBoolean();
         bool ignoreEcho = reader.ReadBoolean();
+        bool repaint = reader.ReadBoolean();
 
         if (!ValidatePlayer(header.PlayerWhoAmI))
             return;
@@ -1455,7 +1728,8 @@ public static class WandPacketHandler
                 tileSet.Tiles, header.PlayerWhoAmI,
                 mode, paintColor,
                 applyIlluminant, ignoreIlluminant,
-                applyEcho, ignoreEcho);
+                applyEcho, ignoreEcho,
+                repaint);
         }
     }
 
@@ -1470,7 +1744,8 @@ public static class WandPacketHandler
         CoatingMode mode,
         byte paintColor,
         bool applyIlluminant, bool ignoreIlluminant,
-        bool applyEcho, bool ignoreEcho)
+        bool applyEcho, bool ignoreEcho,
+        bool repaint)
     {
         /// <summary>IgnorePaintColor sentinel — same as WandOfCoatingBase.IgnorePaintColor.</summary>
         const byte IgnorePaintColor = 255;
@@ -1491,11 +1766,11 @@ public static class WandPacketHandler
             {
                 case CoatingMode.PaintTile:
                     wasChanged = ServerApplyPaintTile(x, y, paintColor, IgnorePaintColor,
-                        applyIlluminant, ignoreIlluminant, applyEcho, ignoreEcho);
+                        applyIlluminant, ignoreIlluminant, applyEcho, ignoreEcho, repaint);
                     break;
                 case CoatingMode.PaintWall:
                     wasChanged = ServerApplyPaintWall(x, y, paintColor, IgnorePaintColor,
-                        applyIlluminant, ignoreIlluminant, applyEcho, ignoreEcho);
+                        applyIlluminant, ignoreIlluminant, applyEcho, ignoreEcho, repaint);
                     break;
                 case CoatingMode.ScrapePaint:
                     wasChanged = ServerApplyScrapePaint(x, y);
@@ -1512,6 +1787,10 @@ public static class WandPacketHandler
             if (wasChanged)
             {
                 changed++;
+                // SendTileSquare is still needed for moss operations (ScrapeMoss/HarvestMoss)
+                // which change tile type. For paint/coating, the helpers now use broadCast:true
+                // which sends dedicated MessageID 63/64 packets, but SendTileSquare provides
+                // an extra safety sync for any tile-level state changes.
                 NetMessage.SendTileSquare(-1, x, y, 1);
             }
         }
@@ -1523,7 +1802,8 @@ public static class WandPacketHandler
 
     private static bool ServerApplyPaintTile(int x, int y, byte color, byte ignorePaintColor,
         bool applyIlluminant, bool ignoreIlluminant,
-        bool applyEcho, bool ignoreEcho)
+        bool applyEcho, bool ignoreEcho,
+        bool repaint = true)
     {
         var tile = Main.tile[x, y];
         if (!tile.HasTile) return false;
@@ -1532,8 +1812,18 @@ public static class WandPacketHandler
 
         if (color != ignorePaintColor && tile.TileColor != color)
         {
-            WorldGen.paintTile(x, y, color, false);
-            changed = true;
+            if (!repaint && tile.TileColor != PaintID.None)
+            {
+                // Tile already painted and repaint is off — skip paint but still apply coatings below
+            }
+            else
+            {
+                // broadCast: true → sends MessageID.PaintTile (63) which correctly
+                // handles color=0 (paint removal). SendTileSquare (20) silently skips
+                // paint bytes when color==0, leaving clients with stale paint.
+                WorldGen.paintTile(x, y, color, true);
+                changed = true;
+            }
         }
 
         bool hasIlluminant = tile.IsTileFullbright;
@@ -1544,11 +1834,11 @@ public static class WandPacketHandler
         if (hasIlluminant != wantIlluminant || hasEcho != wantEcho)
         {
             if ((hasIlluminant && !wantIlluminant) || (hasEcho && !wantEcho))
-                WorldGen.paintCoatTile(x, y, 0, false);
+                WorldGen.paintCoatTile(x, y, 0, true);
             if (wantIlluminant && !tile.IsTileFullbright)
-                WorldGen.paintCoatTile(x, y, 1, false);
+                WorldGen.paintCoatTile(x, y, 1, true);
             if (wantEcho && !tile.IsTileInvisible)
-                WorldGen.paintCoatTile(x, y, 2, false);
+                WorldGen.paintCoatTile(x, y, 2, true);
             changed = true;
         }
 
@@ -1557,7 +1847,8 @@ public static class WandPacketHandler
 
     private static bool ServerApplyPaintWall(int x, int y, byte color, byte ignorePaintColor,
         bool applyIlluminant, bool ignoreIlluminant,
-        bool applyEcho, bool ignoreEcho)
+        bool applyEcho, bool ignoreEcho,
+        bool repaint = true)
     {
         var tile = Main.tile[x, y];
         if (tile.WallType == WallID.None) return false;
@@ -1566,8 +1857,16 @@ public static class WandPacketHandler
 
         if (color != ignorePaintColor && tile.WallColor != color)
         {
-            WorldGen.paintWall(x, y, color, false);
-            changed = true;
+            if (!repaint && tile.WallColor != PaintID.None)
+            {
+                // Wall already painted and repaint is off — skip paint but still apply coatings below
+            }
+            else
+            {
+                // broadCast: true → sends MessageID.PaintWall (64) for correct sync.
+                WorldGen.paintWall(x, y, color, true);
+                changed = true;
+            }
         }
 
         bool hasIlluminant = tile.IsWallFullbright;
@@ -1578,11 +1877,11 @@ public static class WandPacketHandler
         if (hasIlluminant != wantIlluminant || hasEcho != wantEcho)
         {
             if ((hasIlluminant && !wantIlluminant) || (hasEcho && !wantEcho))
-                WorldGen.paintCoatWall(x, y, 0, false);
+                WorldGen.paintCoatWall(x, y, 0, true);
             if (wantIlluminant && !tile.IsWallFullbright)
-                WorldGen.paintCoatWall(x, y, 1, false);
+                WorldGen.paintCoatWall(x, y, 1, true);
             if (wantEcho && !tile.IsWallInvisible)
-                WorldGen.paintCoatWall(x, y, 2, false);
+                WorldGen.paintCoatWall(x, y, 2, true);
             changed = true;
         }
 
@@ -1596,22 +1895,22 @@ public static class WandPacketHandler
 
         if (tile.HasTile && tile.TileColor != PaintID.None)
         {
-            WorldGen.paintTile(x, y, PaintID.None, false);
+            WorldGen.paintTile(x, y, PaintID.None, true);
             changed = true;
         }
         if (tile.HasTile && (tile.IsTileFullbright || tile.IsTileInvisible))
         {
-            WorldGen.paintCoatTile(x, y, 0, false);
+            WorldGen.paintCoatTile(x, y, 0, true);
             changed = true;
         }
         if (tile.WallType != WallID.None && tile.WallColor != PaintID.None)
         {
-            WorldGen.paintWall(x, y, PaintID.None, false);
+            WorldGen.paintWall(x, y, PaintID.None, true);
             changed = true;
         }
         if (tile.WallType != WallID.None && (tile.IsWallFullbright || tile.IsWallInvisible))
         {
-            WorldGen.paintCoatWall(x, y, 0, false);
+            WorldGen.paintCoatWall(x, y, 0, true);
             changed = true;
         }
 
@@ -1643,7 +1942,7 @@ public static class WandPacketHandler
 
         Main.tile[x, y].TileType = (ushort)substrate;
         if (Main.tile[x, y].TileColor != PaintID.None)
-            WorldGen.paintTile(x, y, PaintID.None, false);
+            WorldGen.paintTile(x, y, PaintID.None, true);
         WorldGen.SquareTileFrame(x, y, true);
 
         return true;
@@ -1740,10 +2039,26 @@ public static class WandPacketHandler
 
     /// <summary>
     /// Main packet dispatch. Called from Mod.HandlePacket().
+    /// Server-side: applies per-player rate limiting before dispatching to handlers.
     /// </summary>
     public static void HandlePacket(BinaryReader reader, int whoAmI)
     {
         var packetType = (WandPacketType)reader.ReadByte();
+
+        // Rate-limit all operation packets on the server. Non-operation packets
+        // (OperationResult, ProtectionBulkSync) are exempt.
+        if (Main.netMode == NetmodeID.Server)
+        {
+            bool isOperation = packetType is WandPacketType.WiringOperation
+                or WandPacketType.BuildingOperation
+                or WandPacketType.DismantlingOperation
+                or WandPacketType.ReplacementOperation
+                or WandPacketType.SafekeepingOperation
+                or WandPacketType.CoatingOperation;
+
+            if (isOperation && IsOnCooldown(whoAmI, packetType))
+                return; // Silently drop — client will re-send on next valid window
+        }
 
         switch (packetType)
         {

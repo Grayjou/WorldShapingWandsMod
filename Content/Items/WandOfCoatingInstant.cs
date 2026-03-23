@@ -38,13 +38,13 @@ public class WandOfCoatingInstant : WandOfCoatingBase
             return;
 
         var wandPlayer = player.GetModPlayer<WandPlayer>();
-        Point mouseTile = GeometryHelper.WorldToTile(Main.MouseWorld);
+        Point mouseTile = GeometryHelper.GetMouseTile();
 
         if (Main.mouseLeft)
         {
             if (IsMouseOverUI())
             {
-                DebugIsMouseOverUI("WandOfCoatingInstant blocked");
+
                 return;
             }
 
@@ -75,7 +75,7 @@ public class WandOfCoatingInstant : WandOfCoatingBase
                 return;
             }
 
-            if (wandPlayer.IsInstantSelectionOwnedByCurrentItem())
+            if (wandPlayer.IsInstantSelectionOwnedByCurrentItem() && !IsOnLocalCooldown())
             {
                 ExecuteCoating(player, wandPlayer);
             }
@@ -91,6 +91,11 @@ public class WandOfCoatingInstant : WandOfCoatingBase
             .AddIngredient(ItemID.Paintbrush, 1)
             .AddIngredient(ItemID.PaintScraper, 1)
             .AddIngredient(ItemID.PaintRoller, 1)
+            .AddIngredient(ItemID.CyanPaint, 1000)
+            .AddIngredient(ItemID.VioletPaint, 1000)
+            .AddIngredient(ItemID.YellowPaint, 1000)
+            .AddIngredient(ItemID.WhitePaint, 1000)
+            .AddIngredient(ItemID.BlackPaint, 1000)
             .AddIngredient(ItemID.ManaCrystal, 1)
             .AddTile(TileID.Anvils)
             .Register();

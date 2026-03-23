@@ -1,13 +1,16 @@
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
+using WorldShapingWandsMod.Common.Configs;
 using WorldShapingWandsMod.Common.Drawing;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Undo;
 using WorldShapingWandsMod.Common.Utilities;
+using WorldShapingWandsMod.Content.Items;
 using static WorldShapingWandsMod.Common.Utilities.Msg;
 
 namespace WorldShapingWandsMod.Common.Systems;
@@ -256,6 +259,8 @@ public class ProgressiveTileProcessor : ModSystem
                 }
                 else
                 {
+                    op.BatchesCompleted++;
+                    PlayBatchSound(op);
                     op.TicksUntilNextBatch = op.IntervalTicks;
                 }
             }
@@ -453,6 +458,9 @@ public class ProgressiveTileProcessor : ModSystem
                     placed.IsHalfBlock = oldHalf;
                 }
 
+                if (info.PaintSprayer && placed.HasTile)
+                    WandOfBuildingBase.ApplyPaintSprayerTile(op.Player, info.Position.X, info.Position.Y, op.ShouldConsume);
+
                 batchReplaced++;
                 batchPositions.Add(info.Position);
                 tilesSinceVacuum++;
@@ -545,6 +553,8 @@ public class ProgressiveTileProcessor : ModSystem
                     mute: true, forced: false, plr: op.Player.whoAmI,
                     style: srcItem.placeStyle))
                 {
+                    WandOfBuildingBase.ApplyActuation(info.Position.X, info.Position.Y, info.Actuation);
+                    if (info.PaintSprayer) WandOfBuildingBase.ApplyPaintSprayerTile(op.Player, info.Position.X, info.Position.Y, op.ShouldConsume);
                     batchPlaced++;
                     if (op.ShouldConsume)
                         ConsumeOneBuildItem(op.Player, srcItem, op.BuildCondition);
@@ -585,6 +595,8 @@ public class ProgressiveTileProcessor : ModSystem
                 {
                     if (op.OverwriteSlope)
                         ApplyBuildSlope(info.Position.X, info.Position.Y, op.SlopeType);
+                    WandOfBuildingBase.ApplyActuation(info.Position.X, info.Position.Y, info.Actuation);
+                    if (info.PaintSprayer) WandOfBuildingBase.ApplyPaintSprayerTile(op.Player, info.Position.X, info.Position.Y, op.ShouldConsume);
                     batchPlaced++;
                     tilesSinceVacuum++;
                     if (op.ShouldConsume)
@@ -603,6 +615,8 @@ public class ProgressiveTileProcessor : ModSystem
                 {
                     if (op.OverwriteSlope)
                         ApplyBuildSlope(info.Position.X, info.Position.Y, op.SlopeType);
+                    WandOfBuildingBase.ApplyActuation(info.Position.X, info.Position.Y, info.Actuation);
+                    if (info.PaintSprayer) WandOfBuildingBase.ApplyPaintSprayerTile(op.Player, info.Position.X, info.Position.Y, op.ShouldConsume);
                     batchPlaced++;
                     if (op.ShouldConsume)
                         ConsumeOneBuildItem(op.Player, srcItem, op.BuildCondition);
@@ -688,6 +702,7 @@ public class ProgressiveTileProcessor : ModSystem
                     WorldGen.PlaceWall(info.Position.X, info.Position.Y, wallType, mute: true);
                     if (t.WallType == wallType)
                     {
+                        if (info.PaintSprayer) WandOfBuildingBase.ApplyPaintSprayerWall(op.Player, info.Position.X, info.Position.Y, op.ShouldConsume);
                         batchPlaced++;
                         tilesSinceVacuum++;
                         if (op.ShouldConsume)
@@ -705,6 +720,7 @@ public class ProgressiveTileProcessor : ModSystem
                 WorldGen.PlaceWall(info.Position.X, info.Position.Y, wallType, mute: true);
                 if (t.WallType == wallType)
                 {
+                    if (info.PaintSprayer) WandOfBuildingBase.ApplyPaintSprayerWall(op.Player, info.Position.X, info.Position.Y, op.ShouldConsume);
                     batchPlaced++;
                     if (op.ShouldConsume)
                         ItemTypeHelper.ConsumeItems(op.Player.inventory,
@@ -806,6 +822,7 @@ public class ProgressiveTileProcessor : ModSystem
                     WorldGen.PlaceWall(info.Position.X, info.Position.Y, info.TargetWallType, mute: true);
                     if (t.WallType == info.TargetWallType)
                     {
+                        if (info.PaintSprayer) WandOfBuildingBase.ApplyPaintSprayerWall(op.Player, info.Position.X, info.Position.Y, op.ShouldConsume);
                         batchReplaced++;
                         batchPositions.Add(info.Position);
                         tilesSinceVacuum++;
@@ -894,17 +911,54 @@ public class ProgressiveTileProcessor : ModSystem
     }
 
     /// <summary>
+    /// Plays a per-batch progress sound for building operations.
+    /// Building: alternates Item168 (odd batches) and Tink (even batches) for a
+    /// workshop-like rhythm. Dismantling plays a quieter Tink. Other operation
+    /// types are silent per-batch (only play completion sound).
+    /// </summary>
+    private static void PlayBatchSound(ProgressiveOperation op)
+    {
+        var config = ModContent.GetInstance<WandClientConfig>();
+        if (config?.EnableWandSounds != true) return;
+
+        switch (op.Type)
+        {
+            case OperationType.Building:
+            case OperationType.WallBuilding:
+                // Alternate Item168 (hammer hit) on odd batches and Tink on even batches
+                // to create a rhythmic construction sound.
+                if (op.BatchesCompleted % 2 == 1)
+                    SoundEngine.PlaySound(SoundID.Item168 with { Volume = 0.5f }, op.Player.Center);
+                else
+                    SoundEngine.PlaySound(SoundID.Tink with { Volume = 0.4f }, op.Player.Center);
+                break;
+
+            case OperationType.Dismantling:
+                // Quieter per-batch feedback during progressive dismantling
+                SoundEngine.PlaySound(SoundID.Tink with { Volume = 0.3f }, op.Player.Center);
+                break;
+
+            // Replacement and WallReplacement: silent per-batch (completion sound only)
+        }
+    }
+
+    /// <summary>
     /// Called when all batches of an operation have been processed.
     /// Commits the undo action and shows the final message.
     /// </summary>
     private static void FinalizeOperation(ProgressiveOperation op)
     {
+        var config = ModContent.GetInstance<WandClientConfig>();
+        bool playSound = config?.EnableWandSounds ?? true;
+
         switch (op.Type)
         {
             case OperationType.Dismantling:
                 if (op.UndoAction.Snapshots.Count > 0)
                 {
                     op.UndoManager.CommitAction(op.UndoAction);
+                    if (playSound)
+                        SoundEngine.PlaySound(SoundID.Tink, op.Player.Center);
                     Main.NewText($"Destroyed {op.TotalProcessed} tile(s) (progressive)",
                         Color.OrangeRed);
                 }
@@ -914,6 +968,8 @@ public class ProgressiveTileProcessor : ModSystem
                 if (op.TotalProcessed > 0)
                 {
                     op.UndoManager.CommitAction(op.UndoAction);
+                    if (playSound)
+                        SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.25f }, op.Player.Center);
 
                     // Consume target items all at once at the end
                     if (op.NewObjectType != Enums.ObjectType.Air
@@ -943,6 +999,8 @@ public class ProgressiveTileProcessor : ModSystem
                 if (op.TotalProcessed > 0)
                 {
                     op.UndoManager.CommitAction(op.UndoAction);
+                    if (playSound)
+                        SoundEngine.PlaySound(SoundID.Item168 with { Volume = 0.5f }, op.Player.Center);
                     Main.NewText(
                         $"Placed {op.TotalProcessed} tile(s)" +
                         (op.ShouldConsume ? "" : " (no items consumed)") +
@@ -959,6 +1017,8 @@ public class ProgressiveTileProcessor : ModSystem
                 if (op.TotalProcessed > 0)
                 {
                     op.UndoManager.CommitAction(op.UndoAction);
+                    if (playSound)
+                        SoundEngine.PlaySound(SoundID.Item168 with { Volume = 0.5f }, op.Player.Center);
                     Main.NewText(
                         $"Placed {op.TotalProcessed} wall(s)" +
                         (op.ShouldConsume ? "" : " (no items consumed)") +
@@ -975,6 +1035,8 @@ public class ProgressiveTileProcessor : ModSystem
                 if (op.TotalProcessed > 0)
                 {
                     op.UndoManager.CommitAction(op.UndoAction);
+                    if (playSound)
+                        SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.25f }, op.Player.Center);
 
                     // Consume target wall items all at once at the end
                     if (op.NewObjectType != Enums.ObjectType.Air
@@ -1028,6 +1090,7 @@ public class ProgressiveTileProcessor : ModSystem
         public ushort TargetType;   // target tile type; 0 = TileID.Dirt when IsErase is false
         public bool IsErase;        // true = erase to Air (ignore TargetType)
         public bool SuppressDrops;
+        public bool PaintSprayer;
     }
 
     /// <summary>Pre-validated tile info for progressive building (placement + replacement).</summary>
@@ -1038,6 +1101,8 @@ public class ProgressiveTileProcessor : ModSystem
         public bool SuppressDrops;
         public bool IsGrassSeed;        // true = grass seed conversion (don't destroy substrate)
         public bool IsSlopeOnly;        // true = same-type tile, only apply slope change
+        public bool PaintSprayer;
+        public bool? Actuation;
     }
 
     /// <summary>Pre-validated wall info for progressive wall building (placement + replacement).</summary>
@@ -1046,6 +1111,7 @@ public class ProgressiveTileProcessor : ModSystem
         public Point Position;
         public bool IsReplacement;      // true = existing wall to replace; false = empty slot to place
         public bool SuppressDrops;
+        public bool PaintSprayer;
     }
 
     /// <summary>Pre-validated wall info for progressive wall replacement.</summary>
@@ -1057,6 +1123,7 @@ public class ProgressiveTileProcessor : ModSystem
         public bool IsErase;            // true = erase wall to nothing
         public bool SuppressDrops;
         public bool HasHangingObject;   // true = foreground tile depends on this wall for support
+        public bool PaintSprayer;
     }
 
     private class ProgressiveOperation
@@ -1096,5 +1163,6 @@ public class ProgressiveTileProcessor : ModSystem
         public List<Point> AffectedPositions;
         public int TotalProcessed;
         public bool VacuumItems; // Whether to vacuum scattered drops after each batch
+        public int BatchesCompleted; // Counts completed batches — used for alternating sound
     }
 }

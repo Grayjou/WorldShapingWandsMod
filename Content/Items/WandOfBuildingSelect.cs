@@ -28,6 +28,7 @@ namespace WorldShapingWandsMod.Content.Items
             }
             else
             {
+                if (IsOnLocalCooldown()) return false;
                 wandPlayer.UpdateSelection(mouseTile);
                 ExecuteBuilding(player, wandPlayer);
                 wandPlayer.ClearSelection();

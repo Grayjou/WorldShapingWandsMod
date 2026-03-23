@@ -84,6 +84,22 @@ namespace WorldShapingWandsMod.Common.Utilities
     }
 
     /// <summary>
+    /// Returns the tile the local player is currently targeting.
+    /// Uses Terraria's built-in <see cref="Terraria.Player.tileTargetX"/> /
+    /// <see cref="Terraria.Player.tileTargetY"/> which correctly handle zoom,
+    /// resolution, and UI scale — unlike <c>WorldToTile(Main.MouseWorld)</c>
+    /// which can have sub-tile rounding drift at non-native resolutions.
+    /// <para>
+    /// This should be used for all client-side mouse-to-tile conversions
+    /// (UseItem, HoldItem, PostUpdate) to ensure consistent tile targeting.
+    /// </para>
+    /// </summary>
+    public static Point GetMouseTile()
+    {
+        return new Point(Terraria.Player.tileTargetX, Terraria.Player.tileTargetY);
+    }
+
+    /// <summary>
     /// Converts tile coordinates to world position (top-left of tile).
     /// </summary>
     public static Vector2 TileToWorld(Point tilePosition)

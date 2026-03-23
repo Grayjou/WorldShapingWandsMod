@@ -16,10 +16,18 @@ namespace WorldShapingWandsMod.Common.UI.Elements;
 public class UIIconButton : UIElement
 {
     private readonly Asset<Texture2D> _texture;
-    private readonly string _hoverText;
+    private string _hoverText;
 
     public bool Toggled { get; set; }
     public bool IsRadio { get; set; } = true;
+
+    /// <summary>
+    /// When true, the button is visually dimmed and clicks are ignored.
+    /// </summary>
+    public bool Disabled { get; set; }
+
+    /// <summary>Gets or sets the tooltip text shown on hover.</summary>
+    public string HoverText { get => _hoverText; set => _hoverText = value; }
 
     /// <summary>
     /// When true and <see cref="IsRadio"/> is also true, clicking an already-toggled
@@ -52,8 +60,8 @@ public class UIIconButton : UIElement
         Rectangle rect = dims.ToRectangle();
 
         // Background
-        Color bgColor = Toggled ? ActiveColor : InactiveColor;
-        if (IsMouseHovering)
+        Color bgColor = Disabled ? new Color(40, 40, 40) : (Toggled ? ActiveColor : InactiveColor);
+        if (IsMouseHovering && !Disabled)
             bgColor = Color.Lerp(bgColor, Color.White, 0.2f);
 
         spriteBatch.Draw(TextureAssets.MagicPixel.Value, rect, bgColor);
@@ -78,7 +86,7 @@ public class UIIconButton : UIElement
                 rect.X + (rect.Width - tex.Width) / 2f,
                 rect.Y + (rect.Height - tex.Height) / 2f
             );
-            spriteBatch.Draw(tex, iconPos, Color.White);
+            spriteBatch.Draw(tex, iconPos, Disabled ? Color.White * 0.4f : Color.White);
         }
 
         // Hover tooltip
@@ -90,6 +98,8 @@ public class UIIconButton : UIElement
 
     public override void LeftClick(UIMouseEvent evt)
     {
+        if (Disabled) return;
+
         if (IsRadio && Toggled && !AllowDeselect)
             return;
 

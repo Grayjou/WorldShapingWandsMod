@@ -1,5 +1,6 @@
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Linq;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
@@ -35,6 +36,13 @@ public abstract class WandOfCoatingBase : BaseCyclingWand
 
     public override bool? UseItem(Player player)
     {
+        // Keep the use-cycle alive while the mouse is held (channeling mode).
+        // Without this, itemAnimation expires and UseItem won't fire again.
+        if (WandSelectionMode == SelectionMode.OneClick && Item.channel)
+        {
+            player.itemAnimation = player.itemAnimationMax;
+            return Main.mouseLeft ? false : true;
+        }
         if (Main.LocalPlayer.mouseInterface)
             return false;
 
@@ -46,7 +54,7 @@ public abstract class WandOfCoatingBase : BaseCyclingWand
         if (WandSelectionMode != SelectionMode.OneClick && !wandPlayer.TryConsumeFreshLeftClick())
             return false;
 
-        Point mouseTile = GeometryHelper.WorldToTile(Main.MouseWorld);
+        Point mouseTile = GeometryHelper.GetMouseTile();
         return HandleUseItem(player, wandPlayer, mouseTile);
     }
 
@@ -91,7 +99,8 @@ public abstract class WandOfCoatingBase : BaseCyclingWand
                 settings.Mode, settings.PaintColor,
                 settings.ApplyIlluminant, settings.IgnoreIlluminant,
                 settings.ApplyEcho, settings.IgnoreEcho,
-                settings.Shape.Slice, settings.Shape.ConnectDiameter);
+                settings.Shape.Slice, settings.Shape.ConnectDiameter,
+                settings.Shape.InvertSelection, settings.Repaint);
             return;
         }
 
@@ -99,11 +108,12 @@ public abstract class WandOfCoatingBase : BaseCyclingWand
             selection.StartTile, selection.EndTile, selection.VerticalFirst);
 
         var tileSet = ShapeRegistry.GetShapeTiles(settings.Shape.Shape, context);
+        var invertedTiles = settings.Shape.ApplyInversion(tileSet.Tiles.ToArray(), context);
 
         int changed = 0;
         int skipped = 0;
 
-        foreach (Point tile in tileSet.Tiles)
+        foreach (Point tile in invertedTiles)
         {
             if (!WorldGen.InWorld(tile.X, tile.Y, 1))
                 continue;
@@ -134,8 +144,8 @@ public abstract class WandOfCoatingBase : BaseCyclingWand
             return;
         }
 
-        var config = ModContent.GetInstance<WandConfig>();
-        if (config.EnableWandSounds)
+        var clientCfg = ModContent.GetInstance<WandClientConfig>();
+        if (clientCfg?.EnableWandSounds == true)
         {
             var soundId = (settings.Mode == CoatingMode.PaintTile || settings.Mode == CoatingMode.PaintWall)
                 ? SoundID.Item109 // Paintbrush sound
@@ -168,10 +178,10 @@ public abstract class WandOfCoatingBase : BaseCyclingWand
         {
             CoatingMode.PaintTile   => ApplyPaintTile(x, y, settings.PaintColor,
                 settings.ApplyIlluminant, settings.IgnoreIlluminant,
-                settings.ApplyEcho, settings.IgnoreEcho),
+                settings.ApplyEcho, settings.IgnoreEcho, settings.Repaint),
             CoatingMode.PaintWall   => ApplyPaintWall(x, y, settings.PaintColor,
                 settings.ApplyIlluminant, settings.IgnoreIlluminant,
-                settings.ApplyEcho, settings.IgnoreEcho),
+                settings.ApplyEcho, settings.IgnoreEcho, settings.Repaint),
             CoatingMode.ScrapePaint => ApplyScrapePaint(x, y),
             CoatingMode.ScrapeMoss  => ApplyScrapeMoss(x, y),
             CoatingMode.HarvestMoss => ApplyHarvestMoss(x, y),
@@ -189,7 +199,8 @@ public abstract class WandOfCoatingBase : BaseCyclingWand
 
     private static bool ApplyPaintTile(int x, int y, byte color,
         bool applyIlluminant, bool ignoreIlluminant,
-        bool applyEcho, bool ignoreEcho)
+        bool applyEcho, bool ignoreEcho,
+        bool repaint = true)
     {
         var tile = Main.tile[x, y];
         if (!tile.HasTile)
@@ -199,10 +210,18 @@ public abstract class WandOfCoatingBase : BaseCyclingWand
 
         // Apply paint color if different, or remove paint when color is 0 (None).
         // IgnorePaintColor (255) = don't touch the existing paint at all.
+        // When repaint is false, skip tiles that already have paint applied.
         if (color != IgnorePaintColor && tile.TileColor != color)
         {
-            WorldGen.paintTile(x, y, color, true);
-            changed = true;
+            if (!repaint && tile.TileColor != PaintID.None)
+            {
+                // Tile already painted and repaint is off — skip paint but still apply coatings below
+            }
+            else
+            {
+                WorldGen.paintTile(x, y, color, true);
+                changed = true;
+            }
         }
 
         // Apply or remove coatings based on toggle state.
@@ -234,7 +253,8 @@ public abstract class WandOfCoatingBase : BaseCyclingWand
 
     private static bool ApplyPaintWall(int x, int y, byte color,
         bool applyIlluminant, bool ignoreIlluminant,
-        bool applyEcho, bool ignoreEcho)
+        bool applyEcho, bool ignoreEcho,
+        bool repaint = true)
     {
         var tile = Main.tile[x, y];
         if (tile.WallType == WallID.None)
@@ -244,10 +264,18 @@ public abstract class WandOfCoatingBase : BaseCyclingWand
 
         // Apply paint color if different, or remove paint when color is 0 (None).
         // IgnorePaintColor (255) = don't touch the existing paint at all.
+        // When repaint is false, skip walls that already have paint applied.
         if (color != IgnorePaintColor && tile.WallColor != color)
         {
-            WorldGen.paintWall(x, y, color, true);
-            changed = true;
+            if (!repaint && tile.WallColor != PaintID.None)
+            {
+                // Wall already painted and repaint is off — skip paint but still apply coatings below
+            }
+            else
+            {
+                WorldGen.paintWall(x, y, color, true);
+                changed = true;
+            }
         }
 
         // Apply or remove coatings based on toggle state.

@@ -1,5 +1,0 @@
-displayName = MagicWiring
-author = Grayjou
-version = 1.0.0
-homepage = https://github.com/Grayjou/MagicWiring
-buildIgnore = .git/*, .vs/*, bin/*, obj/*, DevNotes/*, .gitignore, .gitattributes, *.md

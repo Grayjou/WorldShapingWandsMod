@@ -38,7 +38,7 @@ public class WandOfWiringInstant : WandOfWiringBase
             return;
 
         var wandPlayer = player.GetModPlayer<WandPlayer>();
-        Point mouseTile = GeometryHelper.WorldToTile(Main.MouseWorld);
+        Point mouseTile = GeometryHelper.GetMouseTile();
 
         if (Main.mouseLeft)
         {
@@ -47,7 +47,7 @@ public class WandOfWiringInstant : WandOfWiringBase
             // because HoldItem runs before UI.Update sets mouseInterface.
             if (IsMouseOverUI())
             {
-                DebugIsMouseOverUI("WandOfWiringInstant blocked");
+
                 return;
             }
 
@@ -81,7 +81,7 @@ public class WandOfWiringInstant : WandOfWiringBase
             }
 
             // Mouse released - execute only if this wand started the selection
-            if (wandPlayer.IsInstantSelectionOwnedByCurrentItem())
+            if (wandPlayer.IsInstantSelectionOwnedByCurrentItem() && !IsOnLocalCooldown())
             {
                 ExecuteWiring(player, wandPlayer);
             }
@@ -94,8 +94,11 @@ public class WandOfWiringInstant : WandOfWiringBase
         CreateRecipe()
             .AddIngredient(ItemID.WireKite, 1)
             .AddIngredient(ItemID.Wire, 50)
-            .AddIngredient(ItemID.Actuator, 10)
-            .AddTile(TileID.TinkerersWorkbench)
+            .AddRecipeGroup(nameof(ItemID.CopperBar), 5)
+            .AddRecipeGroup(nameof(ItemID.IronBar), 5)
+            .AddRecipeGroup(nameof(ItemID.SilverBar), 2)
+            .AddIngredient(ItemID.Glass, 10)
+            .AddTile(TileID.Anvils)
             .Register();
     }
 }
