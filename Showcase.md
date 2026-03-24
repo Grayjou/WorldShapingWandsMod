@@ -90,8 +90,7 @@ Mass tile and wall destruction with progressive batching, vacuum collection, and
 - Destroy Tiles / Destroy Walls / Destroy Chests / Void Everything toggles
 - Full shape selector with slice & thickness
 - Equal Dimensions, Connect Diameter, Invert Selection options
-Missing:
-- Void Everything (Carefree Mode only): clears all tile data without kill effects
+- Void Everything (Carefree Mode only): clears all tile data without kill effects (Not shown in Image)
 
 ---
 
