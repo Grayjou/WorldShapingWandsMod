@@ -132,7 +132,7 @@ Bulk wire and actuator placement or removal — supports all four wire colours s
 
 ## Safekeeping Wand
 
-Protect tiles from all wand operations — protected tiles glow with a distinct overlay.
+Protect tiles from all wand operations — protected tiles glow with a distinct overlay when holding the wand.
 
 ![Protecting a castle, then failing to dismantle it](ShowcaseAssets/showcase_safekeeping.gif)
 
