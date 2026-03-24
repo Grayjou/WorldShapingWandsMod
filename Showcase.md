@@ -173,8 +173,8 @@ The 4-click stamp workflow for repeatable pattern placement.
 | **2** | Set end corner — shape locks |
 | **3** | Lock anchor position |
 | **4+** | Stamp the shape at new locations |
-| **Right-click** | Reset / go back one step |
-
+| **Right-click** | Reset |
+| **Undo Selection Step (Keybind)** | Go back one click |
 ---
 
 ## Configuration
