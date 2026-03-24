@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using Terraria;
@@ -23,8 +23,11 @@ public class DismantlingSettingsPanel : UIState
 
     private UIDraggablePanel _mainPanel;
 
-    // Destroy toggles
-    private UIToggleButton _destroyTilesBtn, _destroyWallsBtn, _destroyContainersBtn;
+    // Destroy toggles (icon buttons)
+    private UIIconButton _destroyTilesBtn, _destroyWallsBtn, _destroyContainersBtn;
+
+    // Void Everything icon button (Carefree Mode only)
+    private UIIconButton _voidEverythingBtn;
 
     // Shape buttons
     private UIIconButton _rectFilledBtn, _rectHollowBtn;
@@ -67,15 +70,29 @@ public class DismantlingSettingsPanel : UIState
         _builder = new WandPanelBuilder(_mainPanel, PanelWidth, Padding);
         _builder.AddTitle("Dismantling.Title");
 
-        // === DESTROY OPTIONS ===
-        _builder.AddSectionHeader("Dismantling.Options");
+        // === DESTROY OPTIONS (icon buttons) ===
+        var texDestroyTiles = mod.Assets.Request<Texture2D>("Assets/Icons/DestroyTiles", AssetRequestMode.ImmediateLoad);
+        var texDestroyWalls = mod.Assets.Request<Texture2D>("Assets/Icons/DestroyWalls", AssetRequestMode.ImmediateLoad);
+        var texDestroyContainers = mod.Assets.Request<Texture2D>("Assets/Icons/DestroyContainers", AssetRequestMode.ImmediateLoad);
+        var texVoidEverything = mod.Assets.Request<Texture2D>("Assets/Icons/VoidEverything", AssetRequestMode.ImmediateLoad);
 
-        // Destroy toggles: Tiles, Walls on first row, Containers single
-        _builder.AddToggleRow(
-            "Dismantling.DestroyTiles", out _destroyTilesBtn, new Color(200, 100, 100),
-            "Dismantling.DestroyWalls", out _destroyWallsBtn, new Color(100, 100, 200));
-        _builder.AddToggleSingle(
-            "Dismantling.DestroyContainers", out _destroyContainersBtn, new Color(200, 200, 100));
+        _builder.AddIconToggleRow("Dismantling.Options", new WandPanelBuilder.IconDef[]
+        {
+            new(texDestroyTiles,      "Dismantling.DestroyTiles",      isToggle: true, initialState: true),
+            new(texDestroyWalls,      "Dismantling.DestroyWalls",      isToggle: true),
+            new(texDestroyContainers, "Dismantling.DestroyContainers", isToggle: true),
+            new(texVoidEverything,    "Dismantling.VoidEverythingTooltip", isToggle: true),
+        }, out var destroyBtns);
+        _destroyTilesBtn      = destroyBtns[0];
+        _destroyWallsBtn      = destroyBtns[1];
+        _destroyContainersBtn = destroyBtns[2];
+        _voidEverythingBtn    = destroyBtns[3];
+
+        // Tint the destroy buttons to match their semantic colors
+        _destroyTilesBtn.ActiveColor      = new Color(200, 100, 100);
+        _destroyWallsBtn.ActiveColor      = new Color(100, 100, 200);
+        _destroyContainersBtn.ActiveColor = new Color(200, 200, 100);
+        _voidEverythingBtn.ActiveColor    = new Color(220, 40, 40);
 
         // === SHAPE ===
         _builder.AddFullShapeSection(out var shapes);
@@ -121,6 +138,13 @@ public class DismantlingSettingsPanel : UIState
         _destroyWallsBtn.OnToggled += (_, _) => GetSettings().DestroyWalls = _destroyWallsBtn.Toggled;
         _destroyContainersBtn.OnToggled += (_, _) => GetSettings().DestroyContainers = _destroyContainersBtn.Toggled;
 
+        // Void Everything: true toggle — controls whether next dismantling voids
+        _voidEverythingBtn.OnToggled += (_, _) =>
+        {
+            var s = GetSettings();
+            if (s != null) s.VoidEverything = _voidEverythingBtn.Toggled;
+        };
+
         _rectFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.Rectangle, ShapeMode.Filled);
         _rectHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.Rectangle, ShapeMode.Hollow);
         _edgeBtn.OnToggled += (_, _) => SetShape(ShapeType.Elbow, ShapeMode.Filled);
@@ -136,6 +160,7 @@ public class DismantlingSettingsPanel : UIState
         _equalDimensionsBtn.OnToggled += (_, _) => ToggleEqualDimensions();
         _connectDiameterBtn.OnToggled += (_, _) => ToggleConnectDiameter();
         _invertSelectionBtn.OnToggled += (_, _) => ToggleInvertSelection();
+
     }
 
     private WandOfDismantlingSettings GetSettings() =>
@@ -204,6 +229,7 @@ public class DismantlingSettingsPanel : UIState
         _destroyTilesBtn.Toggled = settings.DestroyTiles;
         _destroyWallsBtn.Toggled = settings.DestroyWalls;
         _destroyContainersBtn.Toggled = settings.DestroyContainers;
+        _voidEverythingBtn.Toggled = settings.VoidEverything;
     }
 
     private void UpdateShapeButtons()
@@ -275,6 +301,25 @@ public class DismantlingSettingsPanel : UIState
     {
         base.Update(gameTime);
         SyncFromSettings();
+
+        // Void Everything: always visible, but Disabled when Carefree Mode is off
+        var serverConfig = ModContent.GetInstance<WandServerConfig>();
+        bool carefreeEnabled = serverConfig?.EnableCarefreeMode == true;
+        if (_voidEverythingBtn != null)
+        {
+            _voidEverythingBtn.Disabled = !carefreeEnabled;
+            _voidEverythingBtn.HoverText = carefreeEnabled
+                ? L("Dismantling.VoidEverythingTooltip")
+                : L("Dismantling.VoidEverythingDisabled");
+
+            // Auto-untoggle if Carefree Mode gets disabled while VoidEverything is on
+            if (!carefreeEnabled && _voidEverythingBtn.Toggled)
+            {
+                _voidEverythingBtn.Toggled = false;
+                var s = GetSettings();
+                if (s != null) s.VoidEverything = false;
+            }
+        }
 
         if (_mainPanel.ContainsPoint(Main.MouseScreen))
             Main.LocalPlayer.mouseInterface = true;

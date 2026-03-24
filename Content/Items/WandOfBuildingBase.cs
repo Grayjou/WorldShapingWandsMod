@@ -1,4 +1,4 @@
-﻿using Terraria;
+using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -33,13 +33,6 @@ namespace WorldShapingWandsMod.Content.Items
 
         public override bool? UseItem(Player player)
         {
-            // Keep the use-cycle alive while the mouse is held (channeling mode).
-            // Without this, itemAnimation expires and UseItem won't fire again.
-            if (WandSelectionMode == SelectionMode.OneClick && Item.channel)
-            {
-                player.itemAnimation = player.itemAnimationMax;
-                return Main.mouseLeft ? false : true;
-            }
             // Don't do anything if the mouse is over UI
             if (Main.LocalPlayer.mouseInterface)
                 return false;
@@ -275,7 +268,7 @@ namespace WorldShapingWandsMod.Content.Items
 
                         if (!replaceMode) continue;
 
-                        if (!config.BypassPickaxePower && !player.HasEnoughPickPowerToHurtTile(tile.X, tile.Y)) continue;
+                        if (!config.EffectiveBypassPickaxePower && !player.HasEnoughPickPowerToHurtTile(tile.X, tile.Y)) continue;
                         if (!WorldGen.CanKillTile(tile.X, tile.Y)) continue;
 
                         action.AddSnapshot(tile);
@@ -283,7 +276,7 @@ namespace WorldShapingWandsMod.Content.Items
                         {
                             Position = tile,
                             IsReplacement = true,
-                            SuppressDrops = config.SuppressDrops,
+                            SuppressDrops = config.EffectiveSuppressDrops,
                             PaintSprayer = settings.PaintSprayer,
                             Actuation = settings.Actuation
                         });
@@ -302,27 +295,96 @@ namespace WorldShapingWandsMod.Content.Items
                     }
                 }
 
-                if (buildTiles.Count > 0)
+                if (buildTiles.Count == 0)
+                {
+                    Main.NewText(Get("NoTilesPlaced"), Color.Gray);
+                    return;
+                }
+
+                // -- Unbatching Phase 1: Instant placement for non-replacement tiles --
+                // Tiles that place into empty space, apply slope-only changes, or convert
+                // grass seeds are safe to process synchronously — they never call KillTile.
+                // Only true replacements (IsReplacement=true) need progressive batching.
+                var immediateTiles = buildTiles.Where(t => !t.IsReplacement).ToList();
+                var batchTiles = buildTiles.Where(t => t.IsReplacement).ToList();
+
+                int instantPlaced = 0;
+                var instantPositions = new List<Point>();
+
+                if (immediateTiles.Count > 0)
+                {
+                    bool savedGen = WorldGen.gen;
+
+                    foreach (var info in immediateTiles)
+                    {
+                        int x = info.Position.X, y = info.Position.Y;
+
+                        if (info.IsSlopeOnly)
+                        {
+                            if (settings.OverwriteSlope)
+                                ApplySlope(x, y, settings.Slope);
+                            instantPlaced++;
+                            instantPositions.Add(info.Position);
+                            continue;
+                        }
+
+                        int idx = ItemTypeHelper.FindFirstItemIndex(player, condition);
+                        if (idx < 0)
+                        {
+                            if (settings.ExhaustionMode == BlockExhaustionMode.Interrupt) break;
+                            continue;
+                        }
+                        Item srcItem = player.inventory[idx];
+                        ushort tType = (ushort)srcItem.createTile;
+
+                        WorldGen.gen = true;
+                        if (WorldGen.PlaceTile(x, y, tType, mute: true, forced: false,
+                            plr: player.whoAmI, style: srcItem.placeStyle))
+                        {
+                            if (settings.OverwriteSlope)
+                                ApplySlope(x, y, settings.Slope);
+                            ApplyActuation(x, y, info.Actuation);
+                            if (info.PaintSprayer)
+                                ApplyPaintSprayerTile(player, x, y, shouldConsume);
+                            instantPlaced++;
+                            if (shouldConsume) ConsumeOneItem(player, srcItem, condition);
+                            instantPositions.Add(info.Position);
+                        }
+                        WorldGen.gen = savedGen;
+                    }
+
+                    if (instantPositions.Count > 0)
+                        BulkTileOperations.BatchNetworkSync(BulkTileOperations.ComputeBounds(instantPositions));
+                }
+
+                if (batchTiles.Count > 0)
                 {
                     int batchSize = config.ProgressiveBatchSize;
                     float interval = config.ProgressiveInterval;
 
                     ProgressiveTileProcessor.EnqueueBuilding(
-                        player, buildTiles, action, undoMgr,
+                        player, batchTiles, action, undoMgr,
                         batchSize, interval, shouldConsume, condition,
                         settings.OverwriteSlope, settings.Slope,
                         vacuumItems: config.VacuumItems);
 
-                    int batches = (int)Math.Ceiling((double)buildTiles.Count / batchSize);
+                    int batches = (int)Math.Ceiling((double)batchTiles.Count / batchSize);
                     float totalTime = (batches - 1) * interval;
-                    Main.NewText(
-                        $"Building {buildTiles.Count} tile(s) in {batches} wave(s) (~{totalTime:F1}s)" +
-                        (shouldConsume ? "" : " (no items consumed)"),
-                        Color.Cyan);
+
+                    string msg = instantPlaced > 0
+                        ? $"Placed {instantPlaced} tile(s) instantly, replacing {batchTiles.Count} in {batches} wave(s) (~{totalTime:F1}s)"
+                        : $"Replacing {batchTiles.Count} tile(s) in {batches} wave(s) (~{totalTime:F1}s)";
+                    if (!shouldConsume) msg += " (no items consumed)";
+                    Main.NewText(msg, Color.Cyan);
                 }
                 else
                 {
-                    Main.NewText(Get("NoTilesPlaced"), Color.Gray);
+                    // All tiles were non-replacement — commit undo action immediately
+                    undoMgr.CommitAction(action);
+
+                    string detail = $"Placed {instantPlaced} tile(s)";
+                    if (!shouldConsume) detail += " (no items consumed)";
+                    Main.NewText(detail, Color.Green);
                 }
                 return;
             }
@@ -338,7 +400,7 @@ namespace WorldShapingWandsMod.Content.Items
             // For replacements (tile → tile), we only suppress when config says so,
             // otherwise the old tile should drop its items naturally.
             bool wasGen = WorldGen.gen;
-            bool suppressDrops = config.SuppressDrops;
+            bool suppressDrops = config.EffectiveSuppressDrops;
 
             foreach (Point tile in tilesToProcess)
             {
@@ -410,7 +472,7 @@ namespace WorldShapingWandsMod.Content.Items
 
                     if (!replaceMode) continue;
 
-                    if (!config.BypassPickaxePower && !player.HasEnoughPickPowerToHurtTile(tile.X, tile.Y)) continue;
+                    if (!config.EffectiveBypassPickaxePower && !player.HasEnoughPickPowerToHurtTile(tile.X, tile.Y)) continue;
                     if (!WorldGen.CanKillTile(tile.X, tile.Y)) continue;
 
                     action.AddSnapshot(tile);
@@ -493,7 +555,7 @@ namespace WorldShapingWandsMod.Content.Items
 
                 // Vacuum: collect scattered tile drops into the player's inventory.
                 // Tile replacement (KillTile) creates item drops when SuppressDrops is false.
-                if (config.VacuumItems && !config.SuppressDrops && replaced > 0)
+                if (config.VacuumItems && !config.EffectiveSuppressDrops && replaced > 0)
                 {
                     var bounds = BulkTileOperations.ComputeBounds(affectedPositions);
                     BulkTileOperations.VacuumItemsInArea(player, bounds);
@@ -631,7 +693,7 @@ namespace WorldShapingWandsMod.Content.Items
                         {
                             Position = tile,
                             IsReplacement = true,
-                            SuppressDrops = config.SuppressDrops,
+                            SuppressDrops = config.EffectiveSuppressDrops,
                             PaintSprayer = settings.PaintSprayer
                         });
                     }
@@ -648,26 +710,86 @@ namespace WorldShapingWandsMod.Content.Items
                     }
                 }
 
-                if (buildWalls.Count > 0)
+                if (buildWalls.Count == 0)
+                {
+                    Main.NewText(Get("NoWallsPlaced"), Color.Gray);
+                    return;
+                }
+
+                // -- Unbatching Phase 1: Instant placement for non-replacement walls --
+                // Walls placed into empty slots never call KillWall and can skip
+                // progressive batching. Only replacements need batched processing.
+                var immediateWalls = buildWalls.Where(w => !w.IsReplacement).ToList();
+                var batchWalls = buildWalls.Where(w => w.IsReplacement).ToList();
+
+                int instantWallPlaced = 0;
+                var instantWallPositions = new List<Point>();
+
+                if (immediateWalls.Count > 0)
+                {
+                    bool savedGenW = WorldGen.gen;
+
+                    foreach (var info in immediateWalls)
+                    {
+                        int x = info.Position.X, y = info.Position.Y;
+
+                        int idx = ItemTypeHelper.FindFirstItemIndex(player, condition);
+                        if (idx < 0)
+                        {
+                            if (settings.ExhaustionMode == BlockExhaustionMode.Interrupt) break;
+                            continue;
+                        }
+                        Item srcItem = player.inventory[idx];
+                        ushort wallType = (ushort)srcItem.createWall;
+
+                        WorldGen.gen = true;
+                        WorldGen.PlaceWall(x, y, wallType, mute: true);
+                        if (Main.tile[x, y].WallType == wallType)
+                        {
+                            if (info.PaintSprayer)
+                                ApplyPaintSprayerWall(player, x, y, shouldConsume);
+                            instantWallPlaced++;
+                            if (shouldConsume) ItemTypeHelper.ConsumeItems(player.inventory,
+                                i => !i.IsAir && i.type == srcItem.type, 1);
+                            instantWallPositions.Add(info.Position);
+                        }
+                        WorldGen.gen = savedGenW;
+                    }
+
+                    if (instantWallPositions.Count > 0)
+                    {
+                        foreach (var pos in instantWallPositions)
+                            Framing.WallFrame(pos.X, pos.Y);
+                        BulkTileOperations.BatchNetworkSync(BulkTileOperations.ComputeBounds(instantWallPositions));
+                    }
+                }
+
+                if (batchWalls.Count > 0)
                 {
                     int batchSize = config.ProgressiveBatchSize;
                     float interval = config.ProgressiveInterval;
 
                     ProgressiveTileProcessor.EnqueueWallBuilding(
-                        player, buildWalls, action, undoMgr,
+                        player, batchWalls, action, undoMgr,
                         batchSize, interval, shouldConsume, condition,
                         vacuumItems: config.VacuumItems);
 
-                    int batches = (int)Math.Ceiling((double)buildWalls.Count / batchSize);
+                    int batches = (int)Math.Ceiling((double)batchWalls.Count / batchSize);
                     float totalTime = (batches - 1) * interval;
-                    Main.NewText(
-                        $"Building {buildWalls.Count} wall(s) in {batches} wave(s) (~{totalTime:F1}s)" +
-                        (shouldConsume ? "" : " (no items consumed)"),
-                        Color.Cyan);
+
+                    string msg = instantWallPlaced > 0
+                        ? $"Placed {instantWallPlaced} wall(s) instantly, replacing {batchWalls.Count} in {batches} wave(s) (~{totalTime:F1}s)"
+                        : $"Replacing {batchWalls.Count} wall(s) in {batches} wave(s) (~{totalTime:F1}s)";
+                    if (!shouldConsume) msg += " (no items consumed)";
+                    Main.NewText(msg, Color.Cyan);
                 }
                 else
                 {
-                    Main.NewText(Get("NoWallsPlaced"), Color.Gray);
+                    undoMgr.CommitAction(action);
+
+                    string detail = $"Placed {instantWallPlaced} wall(s)";
+                    if (!shouldConsume) detail += " (no items consumed)";
+                    Main.NewText(detail, Color.Green);
                 }
                 return;
             }
@@ -708,7 +830,7 @@ namespace WorldShapingWandsMod.Content.Items
                     if (TileHelper.WouldTileLoseSupport(tile.X, tile.Y)) continue;
 
                     action.AddSnapshot(tile);
-                    WorldGen.gen = config.SuppressDrops;
+                    WorldGen.gen = config.EffectiveSuppressDrops;
                     WorldGen.KillWall(tile.X, tile.Y, fail: false);
                     if (t.WallType == WallID.None)
                     {
@@ -755,7 +877,7 @@ namespace WorldShapingWandsMod.Content.Items
 
                 // Vacuum: collect scattered wall drops into the player's inventory.
                 // Wall replacement (KillWall) creates item drops when SuppressDrops is false.
-                if (config.VacuumItems && !config.SuppressDrops && replaced > 0)
+                if (config.VacuumItems && !config.EffectiveSuppressDrops && replaced > 0)
                 {
                     var bounds = BulkTileOperations.ComputeBounds(affectedPositions);
                     BulkTileOperations.VacuumItemsInArea(player, bounds);

@@ -226,6 +226,64 @@ namespace WorldShapingWandsMod.Common.Configs
         [LabelKey("$Mods.WorldShapingWandsMod.Configs.WandServerConfig.SafekeepingClearThreshold.Label")]
         [TooltipKey("$Mods.WorldShapingWandsMod.Configs.WandServerConfig.SafekeepingClearThreshold.Tooltip")]
         public int SafekeepingClearThreshold { get; set; } = 50;
+        // =============================================
+        //  Carefree Mode
+        // =============================================
+
+        [Header("$Mods.WorldShapingWandsMod.Configs.WandServerConfig.CarefreeMode.Header")]
+        [DefaultValue(false)]
+        [LabelKey("$Mods.WorldShapingWandsMod.Configs.WandServerConfig.EnableCarefreeMode.Label")]
+        [TooltipKey("$Mods.WorldShapingWandsMod.Configs.WandServerConfig.EnableCarefreeMode.Tooltip")]
+        public bool EnableCarefreeMode { get; set; }
+
+        [DefaultValue(true)]
+        [LabelKey("$Mods.WorldShapingWandsMod.Configs.WandServerConfig.CarefreeSuppressDrops.Label")]
+        [TooltipKey("$Mods.WorldShapingWandsMod.Configs.WandServerConfig.CarefreeSuppressDrops.Tooltip")]
+        public bool CarefreeSuppressDrops { get; set; } = true;
+
+        [DefaultValue(true)]
+        [LabelKey("$Mods.WorldShapingWandsMod.Configs.WandServerConfig.CarefreeAllowDemonAltarDestruction.Label")]
+        [TooltipKey("$Mods.WorldShapingWandsMod.Configs.WandServerConfig.CarefreeAllowDemonAltarDestruction.Tooltip")]
+        public bool CarefreeAllowDemonAltarDestruction { get; set; } = true;
+
+        [DefaultValue(true)]
+        [LabelKey("$Mods.WorldShapingWandsMod.Configs.WandServerConfig.CarefreeAllowDelicateTileDestruction.Label")]
+        [TooltipKey("$Mods.WorldShapingWandsMod.Configs.WandServerConfig.CarefreeAllowDelicateTileDestruction.Tooltip")]
+        public bool CarefreeAllowDelicateTileDestruction { get; set; } = true;
+
+        // =============================================
+        //  Effective* helpers (Carefree-aware)
+        // =============================================
+
+        [System.Text.Json.Serialization.JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
+        public bool EffectiveSuppressDrops =>
+            EnableCarefreeMode ? CarefreeSuppressDrops : SuppressDrops;
+
+        [System.Text.Json.Serialization.JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
+        public bool EffectiveBypassPickaxePower =>
+            EnableCarefreeMode || BypassPickaxePower;
+
+        [System.Text.Json.Serialization.JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
+        public bool EffectiveAllowDemonAltarDestruction =>
+            EnableCarefreeMode ? CarefreeAllowDemonAltarDestruction : AllowDemonAltarDestruction;
+
+        [System.Text.Json.Serialization.JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
+        public bool EffectiveAllowDelicateTileDestruction =>
+            EnableCarefreeMode ? CarefreeAllowDelicateTileDestruction : AllowDelicateTileDestruction;
+
+        [System.Text.Json.Serialization.JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
+        public bool EffectiveIgnoreLockedKeyRequirements =>
+            EnableCarefreeMode || IgnoreLockedKeyRequirements;
+
+        [System.Text.Json.Serialization.JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
+        public bool EffectiveAutoOpenChestsOnDestruction =>
+            EnableCarefreeMode || AutoOpenChestsOnDestruction;
 
         // ═════════════════════════════════════════════
         //  Helper methods (migrated from WandConfig)
@@ -238,6 +296,7 @@ namespace WorldShapingWandsMod.Common.Configs
         /// </summary>
         public int GetThresholdForPlaceType(PlaceType placeType)
         {
+            if (EnableCarefreeMode) return 0;
             return placeType switch
             {
                 PlaceType.Solid => InfiniteTileThreshold,
@@ -256,6 +315,7 @@ namespace WorldShapingWandsMod.Common.Configs
         /// </summary>
         public int GetThresholdForObjectType(ObjectType objectType)
         {
+            if (EnableCarefreeMode) return 0;
             return objectType switch
             {
                 ObjectType.Tile => InfiniteTileThreshold,
@@ -290,6 +350,7 @@ namespace WorldShapingWandsMod.Common.Configs
         /// </summary>
         public bool IsInfiniteForPlaceType(PlaceType placeType)
         {
+            if (EnableCarefreeMode) return true;
             return placeType switch
             {
                 PlaceType.Solid => ResolveOverride(InfiniteTiles),
@@ -309,6 +370,7 @@ namespace WorldShapingWandsMod.Common.Configs
         /// </summary>
         public bool IsInfiniteForObjectType(ObjectType objectType)
         {
+            if (EnableCarefreeMode && objectType != ObjectType.Air) return true;
             return objectType switch
             {
                 ObjectType.Tile => ResolveOverride(InfiniteTiles),
@@ -326,11 +388,11 @@ namespace WorldShapingWandsMod.Common.Configs
         /// <summary>
         /// Checks if infinite resource mode is active for wires.
         /// </summary>
-        public bool IsInfiniteForWires => ResolveOverride(InfiniteWires);
+        public bool IsInfiniteForWires => EnableCarefreeMode || ResolveOverride(InfiniteWires);
 
         /// <summary>
         /// Checks if infinite resource mode is active for actuators.
         /// </summary>
-        public bool IsInfiniteForActuators => ResolveOverride(InfiniteActuators);
+        public bool IsInfiniteForActuators => EnableCarefreeMode || ResolveOverride(InfiniteActuators);
     }
 }

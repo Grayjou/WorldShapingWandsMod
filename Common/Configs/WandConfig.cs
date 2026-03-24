@@ -177,6 +177,30 @@ namespace WorldShapingWandsMod.Common.Configs
         [LabelKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.SafekeepingClearThreshold.Label")]
         [TooltipKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.SafekeepingClearThreshold.Tooltip")]
         public int SafekeepingClearThreshold { get; set; } = 50;
+        // =============================================
+        //  Carefree Mode
+        // =============================================
+
+        [Header("$Mods.WorldShapingWandsMod.Configs.WandConfig.CarefreeMode.Header")]
+        [DefaultValue(false)]
+        [LabelKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.EnableCarefreeMode.Label")]
+        [TooltipKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.EnableCarefreeMode.Tooltip")]
+        public bool EnableCarefreeMode { get; set; }
+
+        [DefaultValue(true)]
+        [LabelKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.CarefreeSuppressDrops.Label")]
+        [TooltipKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.CarefreeSuppressDrops.Tooltip")]
+        public bool CarefreeSuppressDrops { get; set; } = true;
+
+        [DefaultValue(true)]
+        [LabelKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.CarefreeAllowDemonAltarDestruction.Label")]
+        [TooltipKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.CarefreeAllowDemonAltarDestruction.Tooltip")]
+        public bool CarefreeAllowDemonAltarDestruction { get; set; } = true;
+
+        [DefaultValue(true)]
+        [LabelKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.CarefreeAllowDelicateTileDestruction.Label")]
+        [TooltipKey("$Mods.WorldShapingWandsMod.Configs.WandConfig.CarefreeAllowDelicateTileDestruction.Tooltip")]
+        public bool CarefreeAllowDelicateTileDestruction { get; set; } = true;
 
         [Header("$Mods.WorldShapingWandsMod.Configs.WandConfig.Audio.Header")]
         [DefaultValue(true)]

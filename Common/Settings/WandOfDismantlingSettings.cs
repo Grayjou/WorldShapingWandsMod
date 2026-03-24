@@ -27,6 +27,12 @@ public class WandOfDismantlingSettings
     /// </summary>
     public bool DestroyContainers { get; set; } = false;
 
+    /// <summary>
+    /// When true, the next dismantling operation will execute VoidEverything instead of
+    /// normal dismantling. This is a toggle — it persists until the player turns it off.
+    /// Only functional when Carefree Mode is enabled.
+    /// </summary>
+    public bool VoidEverything { get; set; } = false;
     /// <summary>The starting point of the selection.</summary>
     public Point StartPoint { get; set; }
 
@@ -45,6 +51,7 @@ public class WandOfDismantlingSettings
             DestroyTiles = DestroyTiles,
             DestroyWalls = DestroyWalls,
             DestroyContainers = DestroyContainers,
+            VoidEverything = VoidEverything,
             StartPoint = StartPoint,
             EndPoint = EndPoint
         };
@@ -60,6 +67,7 @@ public class WandOfDismantlingSettings
         DestroyTiles = true;
         DestroyWalls = false;
         DestroyContainers = false;
+        VoidEverything = false;
         StartPoint = Point.Zero;
         EndPoint = Point.Zero;
     }

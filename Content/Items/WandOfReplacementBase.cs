@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -277,7 +277,7 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
 
             var t = Main.tile[tile.X, tile.Y];
             if (!t.HasTile || !ItemTypeHelper.IsTileVariantOf(t.TileType, sourceType)) continue;
-            if (!config.BypassPickaxePower && !player.HasEnoughPickPowerToHurtTile(tile.X, tile.Y)) continue;
+            if (!config.EffectiveBypassPickaxePower && !player.HasEnoughPickPowerToHurtTile(tile.X, tile.Y)) continue;
 
             // Use WorldGen.ReplaceTile first — it handles tiles under multi-tile objects
             // (chests, dressers, furniture) without destroying the object above.
@@ -294,7 +294,7 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
                 SourceType = sourceType,
                 TargetType = targetType,
                 IsErase = settings.NewObject == ObjectType.Air,
-                SuppressDrops = config.SuppressDrops,
+                SuppressDrops = config.EffectiveSuppressDrops,
                 PaintSprayer = settings.PaintSprayer
             });
         }
@@ -338,9 +338,9 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
             // In multiplayer: always leave gen=false so each KillTile/PlaceTile/ReplaceTile
             // sends its own TileManipulation message to the server.
             bool isMultiplayer = Main.netMode == NetmodeID.MultiplayerClient;
-            bool wantVacuum = config.VacuumItems && !config.SuppressDrops;
+            bool wantVacuum = config.VacuumItems && !config.EffectiveSuppressDrops;
             bool wasGen = WorldGen.gen;
-            if (!isMultiplayer && config.SuppressDrops)
+            if (!isMultiplayer && config.EffectiveSuppressDrops)
                 WorldGen.gen = true;
 
             // Pre-compute full operation bounds for periodic vacuum sweeps
@@ -380,7 +380,7 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
                     {
                         // Fallback: KillTile + PlaceTile for cases ReplaceTile can't handle
                         WorldGen.KillTile(info.Position.X, info.Position.Y,
-                            fail: false, effectOnly: false, noItem: config.SuppressDrops);
+                            fail: false, effectOnly: false, noItem: config.EffectiveSuppressDrops);
 
                         if (!Main.tile[info.Position.X, info.Position.Y].HasTile)
                         {
@@ -396,7 +396,7 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
                     if (WorldGen.CanKillTile(info.Position.X, info.Position.Y))
                     {
                         WorldGen.KillTile(info.Position.X, info.Position.Y,
-                            fail: false, effectOnly: false, noItem: config.SuppressDrops);
+                            fail: false, effectOnly: false, noItem: config.EffectiveSuppressDrops);
                         didReplace = !Main.tile[info.Position.X, info.Position.Y].HasTile;
                     }
                 }
@@ -589,7 +589,7 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
         var action = undoMgr.BeginAction($"Replace Wall {srcName} → {tgtName}");
 
         bool isMultiplayer = Main.netMode == NetmodeID.MultiplayerClient;
-        bool suppressDrops = config.SuppressDrops;
+        bool suppressDrops = config.EffectiveSuppressDrops;
 
         // Pre-validate all walls and snapshot them
         var validWalls = new List<ProgressiveTileProcessor.WallReplacementInfo>();

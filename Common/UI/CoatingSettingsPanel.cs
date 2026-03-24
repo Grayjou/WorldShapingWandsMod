@@ -32,8 +32,8 @@ public class CoatingSettingsPanel : UIState
     // Mode toggles
     private UIIconButton _paintTileBtn, _paintWallBtn, _scrapeMossBtn, _harvestMossBtn;
 
-    // Coating toggles (Illuminant / Echo)
-    private UIToggleButton _illuminantBtn, _echoBtn;
+    // Coating toggles (Illuminant / Echo tri-state)
+    private UITriStateButton _illuminantBtn, _echoBtn;
 
     // Paint color picker
     private UIPaintColorButton[] _colorButtons;
@@ -148,9 +148,9 @@ public class CoatingSettingsPanel : UIState
 
         // === COATING TYPE (Illuminant / Echo tri-state) ===
         _builder.AddSectionHeader("Coating.CoatingType");
-        _builder.AddToggleRow(
-            "Coating.Illuminant", out _illuminantBtn, new Color(255, 255, 180),
-            "Coating.Echo", out _echoBtn, new Color(180, 180, 255),
+        _builder.AddTriStateRow(
+            L("Coating.Illuminant"), out _illuminantBtn,
+            L("Coating.Echo"), out _echoBtn,
             spacing: WandPanelBuilder.AfterToggleGroupSpacing);
 
         // === PAINT COLOR PICKER (manual section using builder's Y tracker) ===
@@ -234,8 +234,8 @@ public class CoatingSettingsPanel : UIState
         _scrapeMossBtn.OnToggled  += (_, _) => { GetSettings().Mode = CoatingMode.ScrapeMoss;  UpdateModeButtons(); UpdateColorPickerVisibility(); };
         _harvestMossBtn.OnToggled += (_, _) => { GetSettings().Mode = CoatingMode.HarvestMoss; UpdateModeButtons(); UpdateColorPickerVisibility(); };
 
-        _illuminantBtn.OnToggled += (_, _) => ToggleIlluminant();
-        _echoBtn.OnToggled       += (_, _) => ToggleEcho();
+        _illuminantBtn.OnStateChanged += state => { var s = GetSettings(); if (s != null) s.Illuminant = state; };
+        _echoBtn.OnStateChanged       += state => { var s = GetSettings(); if (s != null) s.Echo = state; };
 
         _rectFilledBtn.OnToggled    += (_, _) => SetShape(ShapeType.Rectangle, ShapeMode.Filled);
         _rectHollowBtn.OnToggled    += (_, _) => SetShape(ShapeType.Rectangle, ShapeMode.Hollow);
@@ -266,91 +266,21 @@ public class CoatingSettingsPanel : UIState
         UpdateColorButtons();
     }
 
-    private void ToggleIlluminant()
-    {
-        var settings = GetSettings();
-        if (settings == null) return;
-
-        if (settings.IgnoreIlluminant)
-        {
-            settings.ApplyIlluminant = true;
-            settings.IgnoreIlluminant = false;
-        }
-        else if (settings.ApplyIlluminant)
-        {
-            settings.ApplyIlluminant = false;
-        }
-        else
-        {
-            settings.IgnoreIlluminant = true;
-        }
-
-        UpdateCoatingButtons();
-    }
-
-    private void ToggleEcho()
-    {
-        var settings = GetSettings();
-        if (settings == null) return;
-
-        if (settings.IgnoreEcho)
-        {
-            settings.ApplyEcho = true;
-            settings.IgnoreEcho = false;
-        }
-        else if (settings.ApplyEcho)
-        {
-            settings.ApplyEcho = false;
-        }
-        else
-        {
-            settings.IgnoreEcho = true;
-        }
-
-        UpdateCoatingButtons();
-    }
 
     private void UpdateCoatingButtons()
     {
         var settings = GetSettings();
         if (settings == null) return;
 
-        if (settings.IgnoreIlluminant)
+        if (_illuminantBtn.State != settings.Illuminant)
         {
-            _illuminantBtn.Toggled = false;
-            _illuminantBtn.TintColor = new Color(120, 120, 140);
-            _illuminantBtn.SetText(L("Coating.Illuminant") + ": " + L("Coating.Ignore"));
+            _illuminantBtn.State = settings.Illuminant;
+            _illuminantBtn.RefreshDisplay();
         }
-        else if (settings.ApplyIlluminant)
+        if (_echoBtn.State != settings.Echo)
         {
-            _illuminantBtn.Toggled = true;
-            _illuminantBtn.TintColor = new Color(255, 255, 180);
-            _illuminantBtn.SetText(L("Coating.Illuminant") + ": " + L("Coating.On"));
-        }
-        else
-        {
-            _illuminantBtn.Toggled = true;
-            _illuminantBtn.TintColor = new Color(180, 70, 70);
-            _illuminantBtn.SetText(L("Coating.Illuminant") + ": " + L("Coating.Off"));
-        }
-
-        if (settings.IgnoreEcho)
-        {
-            _echoBtn.Toggled = false;
-            _echoBtn.TintColor = new Color(120, 120, 140);
-            _echoBtn.SetText(L("Coating.Echo") + ": " + L("Coating.Ignore"));
-        }
-        else if (settings.ApplyEcho)
-        {
-            _echoBtn.Toggled = true;
-            _echoBtn.TintColor = new Color(180, 180, 255);
-            _echoBtn.SetText(L("Coating.Echo") + ": " + L("Coating.On"));
-        }
-        else
-        {
-            _echoBtn.Toggled = true;
-            _echoBtn.TintColor = new Color(180, 70, 70);
-            _echoBtn.SetText(L("Coating.Echo") + ": " + L("Coating.Off"));
+            _echoBtn.State = settings.Echo;
+            _echoBtn.RefreshDisplay();
         }
     }
 

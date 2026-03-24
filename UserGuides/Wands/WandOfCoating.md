@@ -32,17 +32,18 @@ to cancel the operation and clear the preview.
 
 ## Coating Modes
 
-The wand has five operating modes:
+The wand has four operating modes:
 
 ### PaintTile (Default)
 
 Applies the selected paint colour to **foreground tiles** (blocks).
 
-- **Paint Colour** (1–30): Any of Terraria's 30 paint colours, or 0 for "None" (strips paint)
-- **Illuminant Coating**: Makes tiles emit 100% light (like Illuminant Paint)
-- **Echo Coating**: Makes tiles invisible (like Echo Coating)
-- Both coatings can be applied simultaneously with paint
-- Use **Ignore Illuminant** / **Ignore Echo** to leave existing coatings unchanged
+- **Paint Colour** (1–30): Any of Terraria’s 30 paint colours, or 0 for “None” (strips paint)
+- **Illuminant** tri-state toggle: Ignore / Apply / Remove
+- **Echo** tri-state toggle: Ignore / Apply / Remove
+- Use **Ignore** to leave existing coatings unchanged
+- Use **Apply** to add the coating
+- Use **Remove** to strip the coating
 
 ### PaintWall
 
@@ -73,10 +74,8 @@ items with a 25% chance per tile, matching vanilla scraper behaviour.
 |---|---|---|
 | **Mode** | All | PaintTile · PaintWall · ScrapeMoss · HarvestMoss |
 | **Paint Colour** | PaintTile, PaintWall | Colour index 0–30 (0 = strip paint) |
-| **Apply Illuminant** | PaintTile, PaintWall | Apply Illuminant coating |
-| **Ignore Illuminant** | PaintTile, PaintWall | Leave Illuminant state unchanged |
-| **Apply Echo** | PaintTile, PaintWall | Apply Echo coating |
-| **Ignore Echo** | PaintTile, PaintWall | Leave Echo state unchanged |
+| **Illuminant** | PaintTile, PaintWall | Tri-state: Ignore / Apply / Remove |
+| **Echo** | PaintTile, PaintWall | Tri-state: Ignore / Apply / Remove |
 | **Shape** | All | Rectangle · Ellipse · Diamond · Triangle · Elbow · Lines |
 | **Fill Mode** | All | Filled · Hollow |
 | **Thickness** | All | Outline/line thickness |
@@ -85,18 +84,18 @@ items with a 25% chance per tile, matching vanilla scraper behaviour.
 
 ## Coating Interaction Table
 
-The Illuminant and Echo toggles interact as follows:
+The Illuminant and Echo tri-state toggles work as follows:
 
-| Apply | Ignore | Result |
-|---|---|---|
-| ✅ ON | ❌ OFF | Coating is **applied** to all tiles in the selection |
-| ❌ OFF | ❌ OFF | Coating is **removed** from all tiles in the selection |
-| — | ✅ ON | Coating is **left unchanged** (ignore overrides apply) |
+| State | Result |
+|---|---|
+| **Apply** | Coating is **applied** to all tiles in the selection |
+| **Remove** | Coating is **removed** from all tiles in the selection |
+| **Ignore** | Coating is **left unchanged** (neither added nor removed) |
 
 This means you can:
-- **Add paint + Illuminant without touching Echo**: Set Paint=colour, Apply Illuminant=ON, Ignore Echo=ON
-- **Strip all coatings**: Set Paint=0, Apply Illuminant=OFF, Apply Echo=OFF, Ignore=OFF for both
-- **Only add Echo**: Set Ignore Illuminant=ON, Apply Echo=ON
+- **Add paint + Illuminant without touching Echo**: Set Paint=colour, Illuminant=Apply, Echo=Ignore
+- **Strip all coatings**: Set Paint=0, Illuminant=Remove, Echo=Remove
+- **Only add Echo**: Set Illuminant=Ignore, Echo=Apply
 
 ---
 

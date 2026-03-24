@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Terraria;
 using Terraria.ModLoader;
+using WorldShapingWandsMod.Common.Configs;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.UI;
 using static WorldShapingWandsMod.Common.Utilities.Msg;
@@ -15,6 +16,7 @@ public class WandControls : ModSystem
     public static ModKeybind DecreaseThickness { get; private set; }
     public static ModKeybind OpenWandUI { get; private set; }
     public static ModKeybind UndoStep { get; private set; }
+    public static ModKeybind ToggleSuppressDrops { get; private set; }
 
     public override void Load()
     {
@@ -22,6 +24,7 @@ public class WandControls : ModSystem
         DecreaseThickness = KeybindLoader.RegisterKeybind(Mod, "Decrease Thickness", Keys.OemOpenBrackets);
         OpenWandUI = KeybindLoader.RegisterKeybind(Mod, "Open Wand Settings", Keys.OemPeriod);
         UndoStep = KeybindLoader.RegisterKeybind(Mod, "Undo Selection Step", Keys.Back);
+        ToggleSuppressDrops = KeybindLoader.RegisterKeybind(Mod, "Toggle Suppress Drops", Keys.OemSemicolon);
     }
 
     public override void Unload()
@@ -30,6 +33,7 @@ public class WandControls : ModSystem
         DecreaseThickness = null;
         OpenWandUI = null;
         UndoStep = null;
+        ToggleSuppressDrops = null;
     }
 
     public override void PostUpdateInput()
@@ -82,6 +86,22 @@ public class WandControls : ModSystem
             {
                 wandPlayer.ClearSelection();
                 Main.NewText(Get("SelectionCleared"), Color.Yellow);
+            }
+        }
+
+        // Toggle Suppress Drops: flips the SuppressDrops setting in WandServerConfig.
+        // In single-player this takes effect immediately. In multiplayer, only the host
+        // can change server-side config, so this keybind is a no-op for clients.
+        if (ToggleSuppressDrops?.JustPressed == true)
+        {
+            var serverConfig = ModContent.GetInstance<WandServerConfig>();
+            if (serverConfig != null)
+            {
+                serverConfig.SuppressDrops = !serverConfig.SuppressDrops;
+                string state = serverConfig.SuppressDrops
+                    ? Get("SuppressDropsOn")
+                    : Get("SuppressDropsOff");
+                Main.NewText(state, serverConfig.SuppressDrops ? Color.Orange : Color.Green);
             }
         }
     }

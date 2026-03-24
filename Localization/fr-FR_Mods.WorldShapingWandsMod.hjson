@@ -3,6 +3,7 @@ Keybinds: {
 	"Decrease Thickness.DisplayName": Diminuer l'épaisseur
 	"Open Wand Settings.DisplayName": Ouvrir les paramètres de la baguette
 	"Undo Selection Step.DisplayName": Annuler l'étape de sélection
+	"Toggle Suppress Drops.DisplayName": Activer/Désactiver la suppression des drops
 }
 
 RecipeGroups: {
@@ -67,6 +68,9 @@ UI: {
 		DestroyWalls: Détruire les murs
 		DestroyContainers: Détruire les coffres
 		DestroyContainersTooltip: Actif uniquement lorsque Détruire les blocs est également activé
+		// VoidEverything: Void Everything
+		// VoidEverythingTooltip: Toggle Void Everything mode. When active, dismantling operations will obliterate all tiles, walls, liquids, wires, and actuators instead of normal dismantling.
+		// VoidEverythingDisabled: Void Everything requires Carefree Mode to be enabled in server config.
 	}
 
 	Replacement: {
@@ -259,12 +263,20 @@ Configs: {
 
 		SuppressDrops: {
 			// Label: Suppress Tile Drops
-			// Tooltip: When enabled, tiles destroyed by any wand (dismantling, replacement, or building swap) will not drop items.\nUseful for creative/sandbox building where you don't need the materials back.
+			/* Tooltip:
+				'''
+				When enabled, tiles destroyed by any wand (dismantling, replacement, or building swap) will not drop items.
+				Useful for creative/sandbox building where you don't need the materials back.
+				''' */
 		}
 
 		BypassPickaxePower: {
 			// Label: Bypass Pickaxe Power
-			// Tooltip: When enabled, wands ignore pickaxe power requirements and can destroy or replace any tile regardless of pickaxe strength.\nUseful for creative/sandbox building.
+			/* Tooltip:
+				'''
+				When enabled, wands ignore pickaxe power requirements and can destroy or replace any tile regardless of pickaxe strength.
+				Useful for creative/sandbox building.
+				''' */
 		}
 
 		AllowDemonAltarDestruction: {
@@ -286,9 +298,7 @@ Configs: {
 				  • Shadow Orbs / Crimson Hearts
 				  • Plantera's Bulbs
 				  • Bee Larvae (Larva)
-				  • Life Crystals
 				  • Life Fruit
-				  • Lihzahrd Altars
 				By default these are protected from accidental mass-destruction.
 				''' */
 		}
@@ -374,7 +384,11 @@ Configs: {
 
 		EnableProgressiveMode: {
 			// Label: Enable Progressive Mode
-			// Tooltip: When enabled, Dismantling and replacement operations process tiles in timed batches with proper drops, sounds, and effects.\nWhen disabled, operations are instant and silent (no tile drops).
+			/* Tooltip:
+				'''
+				When enabled, Dismantling and replacement operations process tiles in timed batches with proper drops, sounds, and effects.
+				When disabled, operations are instant and silent (no tile drops).
+				''' */
 		}
 
 		ProgressiveBatchSize: {
@@ -388,14 +402,22 @@ Configs: {
 
 		ProgressiveInterval: {
 			// Label: Batch Interval (seconds)
-			// Tooltip: Time between each batch in progressive mode.\n0.3 seconds gives a satisfying wave-like demolition feel.
+			/* Tooltip:
+				'''
+				Time between each batch in progressive mode.
+				0.3 seconds gives a satisfying wave-like demolition feel.
+				''' */
 		}
 
 		// Safekeeping.Header: Safekeeping
 
 		SafekeepingClearThreshold: {
 			// Label: Clear All Confirmation Threshold
-			// Tooltip: When the total number of protected tiles and walls exceeds this value, the Clear All button requires a second click to confirm.\nSet to 0 to disable the confirmation safeguard.
+			/* Tooltip:
+				'''
+				When the total number of protected tiles and walls exceeds this value, the Clear All button requires a second click to confirm.
+				Set to 0 to disable the confirmation safeguard.
+				''' */
 		}
 
 		IsInfiniteForActuators: {
@@ -406,6 +428,35 @@ Configs: {
 		IsInfiniteForWires: {
 			// Tooltip: ""
 			// Label: Is Infinite For Wires
+		}
+
+		// CarefreeMode.Header: Carefree Mode
+
+		EnableCarefreeMode: {
+			// Label: Enable Carefree Mode
+			/* Tooltip:
+				'''
+				A creative preset that enables all sandbox options at once.
+				When enabled: infinite resources, bypass pickaxe power, ignore locked keys,
+				auto-open chests, and configurable overrides for suppress drops,
+				demon altar destruction, and delicate tile destruction.
+				Individual sandbox settings are still respected when this is off.
+				''' */
+		}
+
+		CarefreeSuppressDrops: {
+			// Label: Carefree: Suppress Drops
+			// Tooltip: When Carefree Mode is on, controls whether item drops are suppressed during wand operations.
+		}
+
+		CarefreeAllowDemonAltarDestruction: {
+			// Label: Carefree: Allow Demon Altar Destruction
+			// Tooltip: When Carefree Mode is on, controls whether Demon/Crimson Altars can be destroyed.
+		}
+
+		CarefreeAllowDelicateTileDestruction: {
+			// Label: Carefree: Allow Delicate Tile Destruction
+			// Tooltip: When Carefree Mode is on, controls whether delicate tiles (e.g. Shadow Orbs, Demon Hearts) can be destroyed.
 		}
 	}
 
@@ -711,6 +762,28 @@ Configs: {
 			// Label: Is Infinite For Actuators
 			// Tooltip: ""
 		}
+
+		// CarefreeMode.Header: Carefree Mode
+
+		EnableCarefreeMode: {
+			// Label: Enable Carefree Mode
+			// Tooltip: ""
+		}
+
+		CarefreeSuppressDrops: {
+			// Label: Carefree: Suppress Drops
+			// Tooltip: ""
+		}
+
+		CarefreeAllowDemonAltarDestruction: {
+			// Label: Carefree: Allow Demon Altar Destruction
+			// Tooltip: ""
+		}
+
+		CarefreeAllowDelicateTileDestruction: {
+			// Label: Carefree: Allow Delicate Tile Destruction
+			// Tooltip: ""
+		}
 	}
 }
 
@@ -865,6 +938,11 @@ Messages: {
 	NoWallsPlaced: Aucun mur n'a pu être placé.
 	// ── Dismantling ─────────────────────────────────────────
 	NoTilesDestroyed: Aucun bloc n'a été détruit.
+	// ── Void Everything ─────────────────────────────────────
+	// VoidRequiresCarefree: Void Everything requires Carefree Mode to be enabled.
+	// VoidSinglePlayerOnly: Void Everything is currently only available in single-player.
+	// NoSelectionActive: No selection is active. Use a wand to select an area first.
+	// NothingToVoid: Nothing to void in the selected area.
 	// ── Replacement ─────────────────────────────────────────
 	NoSourceItems: Aucun objet de {0} dans l'inventaire pour identifier le bloc source.
 	SameSourceTarget: La source et la cible sont le même bloc [i:{0}].
@@ -911,6 +989,9 @@ Messages: {
 	StampClickEnd: Tampon : cliquez pour définir le point final.
 	StampClickLock: Tampon : cliquez pour fixer la position de l'ancrage.
 	StampLocked: Tampon défini ! Cliquez pour {0}. Clic droit pour réinitialiser.
+	// ── Suppress Drops toggle ────────────────────────────────
+	// SuppressDropsOn: Suppress Drops: ON — tile drops are suppressed.
+	// SuppressDropsOff: Suppress Drops: OFF — tile drops are enabled.
 }
 
 GameTips: {

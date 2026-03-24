@@ -397,13 +397,23 @@ public class WandPanelBuilder
     // ═══════════════════════════════════════════════════════════════════
 
     /// <summary>
-    /// Adds an Options section with header and a centered row of toggle icon buttons.
+    /// Adds an Options section with "Options" header and a centered row of toggle icon buttons.
+    /// Convenience wrapper around <see cref="AddIconToggleRow"/>.
     /// </summary>
     public WandPanelBuilder AddOptionsSection(IconDef[] optionIcons, out UIIconButton[] buttons)
     {
-        AddSectionHeader("Common.Options");
+        return AddIconToggleRow("Common.Options", optionIcons, out buttons);
+    }
 
-        int count = optionIcons.Length;
+    /// <summary>
+    /// Adds a section with a custom header and a centered row of toggle icon buttons.
+    /// Generic version of <see cref="AddOptionsSection"/> for any section.
+    /// </summary>
+    public WandPanelBuilder AddIconToggleRow(string headerLocKey, IconDef[] icons, out UIIconButton[] buttons)
+    {
+        AddSectionHeader(headerLocKey);
+
+        int count = icons.Length;
         buttons = new UIIconButton[count];
 
         float totalWidth = IconBtnSize * count + IconGap * (count - 1);
@@ -411,13 +421,38 @@ public class WandPanelBuilder
 
         for (int i = 0; i < count; i++)
         {
-            var def = optionIcons[i];
+            var def = icons[i];
             var btn = MakeToggleIconBtn(def.Texture, def.HoverText, startX + (IconBtnSize + IconGap) * i, CurrentY, def.InitialState);
             _panel.Append(btn);
             buttons[i] = btn;
         }
 
         CurrentY += IconBtnSize + AfterOptionsSpacing;
+        return this;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Section: Tri-State Row (UITriStateButton pair)
+    // ═══════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Adds a row of two UITriStateButton controls side by side.
+    /// </summary>
+    public WandPanelBuilder AddTriStateRow(
+        string leftBaseName, out UITriStateButton leftBtn,
+        string rightBaseName, out UITriStateButton rightBtn,
+        float spacing = -1f)
+    {
+        MarkSection();
+        float col1 = _padding;
+        float col2 = _panelWidth - _padding - ButtonWidth - 12f;
+
+        leftBtn = MakeTriState(leftBaseName, col1, CurrentY);
+        rightBtn = MakeTriState(rightBaseName, col2, CurrentY);
+        _panel.Append(leftBtn);
+        _panel.Append(rightBtn);
+
+        CurrentY += spacing > 0 ? spacing : AfterToggleGroupSpacing;
         return this;
     }
 
@@ -605,6 +640,16 @@ public class WandPanelBuilder
         btn.Top.Set(top, 0f);
         btn.IsRadio = false;
         if (tint.HasValue) btn.TintColor = tint.Value;
+        return btn;
+    }
+
+    private static UITriStateButton MakeTriState(string baseName, float left, float top)
+    {
+        var btn = new UITriStateButton(baseName);
+        btn.Width.Set(ButtonWidth, 0f);
+        btn.Height.Set(ButtonHeight, 0f);
+        btn.Left.Set(left, 0f);
+        btn.Top.Set(top, 0f);
         return btn;
     }
 }

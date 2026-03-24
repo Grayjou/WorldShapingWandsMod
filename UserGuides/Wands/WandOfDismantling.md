@@ -41,6 +41,7 @@ All settings are cycled using the assigned hotkeys (default keys shown below).
 | **Destroy Tiles** | ✅ ON | Destroys foreground tiles (blocks, platforms, etc.) |
 | **Destroy Walls** | ❌ OFF | Destroys background walls |
 | **Destroy Containers** | ❌ OFF | Destroys chests, dressers, and other containers |
+| **Void Everything** | ❌ OFF | (Carefree Mode only) Clears all tile data at each position without kill effects — fastest bulk erasure |
 
 When **Destroy Containers** is enabled:
 - Container contents are dropped as items before the tile is destroyed

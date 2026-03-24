@@ -1,0 +1,50 @@
+# Build output
+obj/
+bin/
+
+# Visual Studio
+.vs/
+*.user
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local Python/virtual env
+.venv/
+PythonVenvReqs/
+
+# Project generated or local files
+ImportedSummaries/
+recipe_draft.txt
+
+# Python scripts (development tools, not mod code)
+*.py
+
+# Development notes and clone directories
+dev_notes/
+Cloned*/
+ModReferences/
+# Session logs
+Sessions/
+Session*.txt
+2026-*.txt
+
+# Spreadsheets
+*.xlsx
+data/
+# Showcase/archive assets (not mod code)
+
+Archive/
+
+# Local state files
+.session_state.json
+
+
+
+# Root-level docs that are personal/project-management (not shipped)
+CurrentStateAndStatus.md
+IssuesAndFixes.md
+/Roadmap.md
+/TODO_FEATURES.md
+WorldShapingWandsMod_MagicStorage*.md

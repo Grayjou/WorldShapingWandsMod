@@ -1,4 +1,4 @@
- using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using WorldShapingWandsMod.Common.Enums;
 
 namespace WorldShapingWandsMod.Common.Settings;
@@ -22,30 +22,46 @@ public class WandOfCoatingSettings
     public byte PaintColor { get; set; } = 26; // Default: White paint (PaintID.White = 26)
 
     /// <summary>
-    /// Whether to apply Illuminant coating (makes tiles emit 100% light).
-    /// Applied independently of paint and Echo — a tile can have both coatings.
-    /// Only used in PaintTile/PaintWall modes.
+    /// Tri-state control for Illuminant coating.
+    /// Ignore = leave existing coating unchanged, Apply = force on, Remove = force off.
     /// </summary>
-    public bool ApplyIlluminant { get; set; } = false;
+    public TriStateValue Illuminant { get; set; } = TriStateValue.Ignore;
 
     /// <summary>
-    /// When true, Illuminant coating state is left unchanged on existing tiles.
-    /// Overrides ApplyIlluminant — the coating is neither applied nor removed.
+    /// Tri-state control for Echo coating.
+    /// Ignore = leave existing coating unchanged, Apply = force on, Remove = force off.
     /// </summary>
-    public bool IgnoreIlluminant { get; set; } = false;
+    public TriStateValue Echo { get; set; } = TriStateValue.Ignore;
 
-    /// <summary>
-    /// Whether to apply Echo coating (makes tiles invisible).
-    /// Applied independently of paint and Illuminant — a tile can have both coatings.
-    /// Only used in PaintTile/PaintWall modes.
-    /// </summary>
-    public bool ApplyEcho { get; set; } = false;
+    // ── Legacy bool accessors (consumed by WandOfCoatingBase & networking) ──
 
-    /// <summary>
-    /// When true, Echo coating state is left unchanged on existing tiles.
-    /// Overrides ApplyEcho — the coating is neither applied nor removed.
-    /// </summary>
-    public bool IgnoreEcho { get; set; } = false;
+    /// <summary>Legacy: whether to apply Illuminant. Delegates to <see cref="Illuminant"/>.</summary>
+    public bool ApplyIlluminant
+    {
+        get => Illuminant == TriStateValue.Apply;
+        set { if (value) Illuminant = TriStateValue.Apply; }
+    }
+
+    /// <summary>Legacy: whether to ignore Illuminant. Delegates to <see cref="Illuminant"/>.</summary>
+    public bool IgnoreIlluminant
+    {
+        get => Illuminant == TriStateValue.Ignore;
+        set { if (value) Illuminant = TriStateValue.Ignore; }
+    }
+
+    /// <summary>Legacy: whether to apply Echo. Delegates to <see cref="Echo"/>.</summary>
+    public bool ApplyEcho
+    {
+        get => Echo == TriStateValue.Apply;
+        set { if (value) Echo = TriStateValue.Apply; }
+    }
+
+    /// <summary>Legacy: whether to ignore Echo. Delegates to <see cref="Echo"/>.</summary>
+    public bool IgnoreEcho
+    {
+        get => Echo == TriStateValue.Ignore;
+        set { if (value) Echo = TriStateValue.Ignore; }
+    }
 
     /// <summary>
     /// When true (default), the wand will repaint tiles/walls that already have a different paint color.
@@ -71,10 +87,8 @@ public class WandOfCoatingSettings
         {
             Mode = Mode,
             PaintColor = PaintColor,
-            ApplyIlluminant = ApplyIlluminant,
-            IgnoreIlluminant = IgnoreIlluminant,
-            ApplyEcho = ApplyEcho,
-            IgnoreEcho = IgnoreEcho,
+            Illuminant = Illuminant,
+            Echo = Echo,
             Repaint = Repaint,
             Shape = Shape,
             StartPoint = StartPoint,
@@ -89,10 +103,8 @@ public class WandOfCoatingSettings
     {
         Mode = CoatingMode.PaintTile;
         PaintColor = 26; // White (PaintID.White = 26)
-        ApplyIlluminant = false;
-        IgnoreIlluminant = false;
-        ApplyEcho = false;
-        IgnoreEcho = false;
+        Illuminant = TriStateValue.Ignore;
+        Echo = TriStateValue.Ignore;
         Repaint = true;
         Shape = ShapeInfo.Default;
         StartPoint = Point.Zero;
@@ -105,8 +117,8 @@ public class WandOfCoatingSettings
     public string GetDescription()
     {
         string coatingStr = "";
-        if (ApplyIlluminant) coatingStr += " +Illuminant";
-        if (ApplyEcho) coatingStr += " +Echo";
+        if (Illuminant == TriStateValue.Apply) coatingStr += " +Illuminant";
+        if (Echo == TriStateValue.Apply) coatingStr += " +Echo";
 #pragma warning disable CS0618
         string modeStr = Mode switch
         {
@@ -129,7 +141,6 @@ public class WandOfCoatingSettings
         Shape.Validate();
         // PaintColor 0 is valid (transparent/none), clamp to 0–30
         if (PaintColor > 30) PaintColor = 30;
-        // ApplyIlluminant and ApplyEcho are bools — no validation needed
         // ScrapePaint (2) has been removed from the UI. Migrate any saved value to ScrapeMoss.
 #pragma warning disable CS0618
         if (Mode == CoatingMode.ScrapePaint) Mode = CoatingMode.ScrapeMoss;

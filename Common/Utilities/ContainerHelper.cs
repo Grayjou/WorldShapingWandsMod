@@ -132,7 +132,7 @@ public static class ContainerHelper
 
         // Sandbox: bypass key requirements — unlock without consuming keys
         var config = ModContent.GetInstance<WandServerConfig>();
-        if (config?.IgnoreLockedKeyRequirements == true)
+        if (config?.EffectiveIgnoreLockedKeyRequirements == true)
         {
             // Chest.Unlock handles frame shifts for all vanilla locked styles
             // (styles 2, 4, 23–27, 36, 38, 40, and Containers2 style 13).

@@ -81,6 +81,14 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
     protected void ExecuteDismantling(Player player, WandPlayer wandPlayer)
     {
         var settings = wandPlayer.DismantlingSettings;
+
+        // If VoidEverything toggle is active, redirect to VoidEverythingOperation
+        if (settings.VoidEverything)
+        {
+            VoidEverythingOperation.Execute(player);
+            return;
+        }
+
         var selection = wandPlayer.GetVisualSelection();
         var config = ModContent.GetInstance<WandServerConfig>();
         var clientCfg = ModContent.GetInstance<WandClientConfig>();
@@ -130,7 +138,7 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
                 // IMPORTANT: Still add their tiles to containerTiles so the regular tile
                 // destruction pass doesn't destroy them via WorldGen.KillTile (which would
                 // bypass the lock check entirely).
-                if (container.IsLocked && !config.AutoOpenChestsOnDestruction)
+                if (container.IsLocked && !config.EffectiveAutoOpenChestsOnDestruction)
                 {
                     var lockedData = Terraria.ObjectData.TileObjectData.GetTileData(container.TileType, 0);
                     int lw = lockedData?.Width ?? 2;
@@ -158,7 +166,7 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
                     }
 
                 var (dropped, destroyed) = ContainerHelper.DestroyContainer(
-                    player, container, config.SuppressDrops);
+                    player, container, config.EffectiveSuppressDrops);
 
                 if (destroyed)
                 {
@@ -196,7 +204,7 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
             // deferred to execution time in both instant and progressive paths.
             bool willDestroyTile = settings.DestroyTiles
                 && tileData.HasTile
-                && (config.BypassPickaxePower || player.HasEnoughPickPowerToHurtTile(tile.X, tile.Y));
+                && (config.EffectiveBypassPickaxePower || player.HasEnoughPickPowerToHurtTile(tile.X, tile.Y));
 
             // Demon Altars: skip unless explicitly allowed in config.
             // When AllowDemonAltarDestruction is OFF, altars are always protected.
@@ -204,16 +212,16 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
             // or the BypassPickaxePower config to also be enabled.
             if (willDestroyTile && tileData.TileType == TileID.DemonAltar)
             {
-                if (!config.AllowDemonAltarDestruction)
+                if (!config.EffectiveAllowDemonAltarDestruction)
                     willDestroyTile = false;
-                else if (GetPlayerMaxHammerPower(player) < 80 && !config.BypassPickaxePower)
+                else if (GetPlayerMaxHammerPower(player) < 80 && !config.EffectiveBypassPickaxePower)
                     willDestroyTile = false;
             }
 
             // Delicate tiles: Shadow Orbs / Crimson Hearts, Plantera's Bulbs,
             // Bee Larvae, Life Crystals, Life Fruit — skip unless explicitly allowed.
             // These tiles have irreversible side effects (boss spawns, world flags, etc.).
-            if (willDestroyTile && IsDelicateTile(tileData.TileType) && !config.AllowDelicateTileDestruction)
+            if (willDestroyTile && IsDelicateTile(tileData.TileType) && !config.EffectiveAllowDelicateTileDestruction)
             {
                 willDestroyTile = false;
             }
@@ -235,7 +243,7 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
                 Position = tile,
                 DestroyTile = willDestroyTile,
                 DestroyWall = willDestroyWall,
-                SuppressDrops = config.SuppressDrops
+                SuppressDrops = config.EffectiveSuppressDrops
             });
         }
 
@@ -297,7 +305,7 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
             int destroyedTiles = 0;
             var affectedPositions = new List<Point>();
             bool isMultiplayer = Main.netMode == NetmodeID.MultiplayerClient;
-            bool wantVacuum = config.VacuumItems && !config.SuppressDrops;
+            bool wantVacuum = config.VacuumItems && !config.EffectiveSuppressDrops;
 
             // Pre-compute the full operation bounds from ALL tiles (not just destroyed ones)
             // so that periodic vacuum sweeps cover cascaded drops from multi-tile objects
@@ -308,7 +316,7 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
                     validTiles.ConvertAll(t => t.Position));
 
             bool wasGen = WorldGen.gen;
-            if (!isMultiplayer && config.SuppressDrops)
+            if (!isMultiplayer && config.EffectiveSuppressDrops)
                 WorldGen.gen = true;
 
             // Periodic vacuum interval: sweep ground items every N tile destructions
@@ -452,9 +460,7 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
         return tileType == TileID.ShadowOrbs        // Shadow Orb / Crimson Heart
             || tileType == TileID.PlanteraBulb       // Plantera's Bulb
             || tileType == TileID.Larva              // Bee Larva (Queen Bee)
-            || tileType == TileID.Heart              // Life Crystal
-            || tileType == TileID.LifeFruit          // Life Fruit
-            || tileType == TileID.LihzahrdAltar;     // Lihzahrd Altar (Golem)
+            || tileType == TileID.LifeFruit;         // Life Fruit
     }
 
     public override void AddRecipes()

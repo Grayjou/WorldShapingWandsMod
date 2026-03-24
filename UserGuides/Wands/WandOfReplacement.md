@@ -43,10 +43,11 @@ determines what is replaced and what it becomes.
 | **Platform** | Platform tiles (wood platform, stone platform, etc.) |
 | **Rope** | Rope variants (rope, vine rope, silk rope, etc.) |
 | **PlanterBox** | Planter boxes for growing herbs |
-| **Rail** | Minecart track tiles |
-| **Seeds** | Grass seeds, corrupt seeds, etc. (applied to compatible blocks) |
 | **Air** | Empty space — erases matching tiles without replacement |
 | **Wall** | Background walls (stone wall, wood wall, etc.) |
+
+> **Note**: Seeds and Rails were removed from the replacement wand UI due to
+> complex substrate/variant interactions. They remain available in the building wand.
 
 ### How Object Type Works
 
