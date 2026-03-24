@@ -34,7 +34,6 @@ Session*.txt
 *.xlsx
 data/
 # Showcase/archive assets (not mod code)
-ShowcaseAssets/
 Archive/
 
 # Local state files
