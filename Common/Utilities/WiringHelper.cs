@@ -11,7 +11,18 @@ namespace WorldShapingWandsMod.Common.Utilities;
 
 public static class WiringHelper
 {
+    /// <summary>
+    /// Full inventory range (0–57): hotbar + main + coin + ammo slots.
+    /// Used for reading, counting, and consuming items — ammo slots are valid wire storage.
+    /// </summary>
     private const int MaxInventorySlots = 58;
+
+    /// <summary>
+    /// Main inventory range (0–49): hotbar + main inventory only.
+    /// Used for inserting/giving items — prevents placing items in coin (50–53) or ammo (54–57) slots.
+    /// Bug fix: wire removal was placing wires into coin slots when main inventory was full.
+    /// </summary>
+    private const int MainInventoryEnd = 50;
 
     /// <summary>
     /// Checks whether infinite resource mode is active for wires.
@@ -280,8 +291,10 @@ public static class WiringHelper
     /// </summary>
     private static void GiveItemToPlayer(Player player, int itemType, int amount)
     {
-        // First, try to fill existing partial stacks in inventory
-        for (int i = 0; i < MaxInventorySlots && amount > 0; i++)
+        // First, try to fill existing partial stacks in main inventory (0–49 only).
+        // We intentionally skip coin slots (50–53) and ammo slots (54–57) to prevent
+        // wire/actuator items from being inserted into those special slots.
+        for (int i = 0; i < MainInventoryEnd && amount > 0; i++)
         {
             var slot = player.inventory[i];
             if (slot.type == itemType && slot.stack < slot.maxStack)
@@ -292,8 +305,8 @@ public static class WiringHelper
             }
         }
 
-        // Next, try empty slots
-        for (int i = 0; i < MaxInventorySlots && amount > 0; i++)
+        // Next, try empty slots in main inventory only
+        for (int i = 0; i < MainInventoryEnd && amount > 0; i++)
         {
             var slot = player.inventory[i];
             if (slot.IsAir)

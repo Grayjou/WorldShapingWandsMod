@@ -135,7 +135,7 @@ public abstract class BaseCyclingWand : ModItem
     {
         if (Main.netMode == NetmodeID.MultiplayerClient)
             return false; // Server handles it
-        return WandPacketHandler.IsLocalPlayerOnCooldown();
+        return PacketUtilities.IsLocalPlayerOnCooldown();
     }
 
     /// <summary>

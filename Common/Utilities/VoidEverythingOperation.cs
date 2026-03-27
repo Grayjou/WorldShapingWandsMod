@@ -14,6 +14,7 @@ using WorldShapingWandsMod.Common.Settings;
 using WorldShapingWandsMod.Common.Systems;
 using WorldShapingWandsMod.Common.Undo;
 using WorldShapingWandsMod.Common.Networking;
+using WorldShapingWandsMod.Common.Networking.Handlers;
 using WorldShapingWandsMod.Common.Utilities;
 using static WorldShapingWandsMod.Common.Utilities.Msg;
 
@@ -57,7 +58,7 @@ public static class VoidEverythingOperation
         if (Main.netMode == NetmodeID.MultiplayerClient)
         {
             var mpShape = settings.Shape;
-            WandPacketHandler.SendVoidEverythingOperation(
+            VoidEverythingPacketHandler.SendVoidEverythingOperation(
                 selection.StartTile, selection.EndTile,
                 mpShape.Shape, mpShape.FillMode,
                 mpShape.Thickness, mpShape.EqualDimensions,

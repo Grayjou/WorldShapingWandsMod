@@ -14,6 +14,7 @@ using WorldShapingWandsMod.Common.Configs;
 using WorldShapingWandsMod.Common.Drawing;
 using WorldShapingWandsMod.Common.Items;
 using WorldShapingWandsMod.Common.Networking;
+using WorldShapingWandsMod.Common.Networking.Handlers;
 using WorldShapingWandsMod.Common.Selection;
 using WorldShapingWandsMod.Common.Systems;
 using System;
@@ -108,7 +109,7 @@ namespace WorldShapingWandsMod.Content.Items
                 }
 
                 Item mpItem = player.inventory[mpIdx];
-                WandPacketHandler.SendBuildingOperation(
+                BuildingPacketHandler.SendBuildingOperation(
                     selection.StartTile, selection.EndTile,
                     settings.Shape.Shape, settings.Shape.FillMode,
                     settings.Shape.Thickness, settings.Shape.EqualDimensions,
@@ -611,7 +612,7 @@ namespace WorldShapingWandsMod.Content.Items
             if (Main.netMode == NetmodeID.MultiplayerClient)
             {
                 Item mpItem = player.inventory[sourceIndex];
-                WandPacketHandler.SendBuildingOperation(
+                BuildingPacketHandler.SendBuildingOperation(
                     selection.StartTile, selection.EndTile,
                     settings.Shape.Shape, settings.Shape.FillMode,
                     settings.Shape.Thickness, settings.Shape.EqualDimensions,

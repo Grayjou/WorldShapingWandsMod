@@ -12,6 +12,7 @@ using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Geometry;
 using WorldShapingWandsMod.Common.Items;
 using WorldShapingWandsMod.Common.Networking;
+using WorldShapingWandsMod.Common.Networking.Handlers;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Settings;
 using WorldShapingWandsMod.Common.UI;
@@ -91,7 +92,7 @@ public abstract class WandOfCoatingBase : BaseCyclingWand
         // --- MP: send packet to server and return early ---
         if (Main.netMode == NetmodeID.MultiplayerClient)
         {
-            WandPacketHandler.SendCoatingOperation(
+            CoatingPacketHandler.SendCoatingOperation(
                 selection.StartTile, selection.EndTile,
                 settings.Shape.Shape, settings.Shape.FillMode,
                 settings.Shape.Thickness, settings.Shape.EqualDimensions,

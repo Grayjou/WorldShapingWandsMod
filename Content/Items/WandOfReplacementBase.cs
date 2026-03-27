@@ -11,6 +11,7 @@ using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Geometry;
 using WorldShapingWandsMod.Common.Items;
 using WorldShapingWandsMod.Common.Networking;
+using WorldShapingWandsMod.Common.Networking.Handlers;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Selection;
 using WorldShapingWandsMod.Common.Settings;
@@ -198,7 +199,7 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
         // --- MP: send packet to server and return early ---
         if (Main.netMode == NetmodeID.MultiplayerClient)
         {
-            WandPacketHandler.SendReplacementOperation(
+            ReplacementPacketHandler.SendReplacementOperation(
                 selection.StartTile, selection.EndTile,
                 settings.Shape.Shape, settings.Shape.FillMode,
                 settings.Shape.Thickness, settings.Shape.EqualDimensions,
@@ -525,7 +526,7 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
         // --- MP: send packet to server and return early ---
         if (Main.netMode == NetmodeID.MultiplayerClient)
         {
-            WandPacketHandler.SendReplacementOperation(
+            ReplacementPacketHandler.SendReplacementOperation(
                 selection.StartTile, selection.EndTile,
                 settings.Shape.Shape, settings.Shape.FillMode,
                 settings.Shape.Thickness, settings.Shape.EqualDimensions,

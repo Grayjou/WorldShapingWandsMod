@@ -11,6 +11,7 @@ using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Geometry;
 using WorldShapingWandsMod.Common.Items;
 using WorldShapingWandsMod.Common.Networking;
+using WorldShapingWandsMod.Common.Networking.Handlers;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Settings;
 using WorldShapingWandsMod.Common.UI;
@@ -163,7 +164,7 @@ public abstract class WandOfWiringBase : BaseCyclingWand
                     infiniteWires, infiniteActuators);
             }
 
-            WandPacketHandler.SendWiringOperation(
+            WiringPacketHandler.SendWiringOperation(
                 selection.StartTile, selection.EndTile,
                 settings.Mode, settings.Shape.Shape, settings.Shape.FillMode,
                 settings.Shape.Thickness, settings.Shape.EqualDimensions,
