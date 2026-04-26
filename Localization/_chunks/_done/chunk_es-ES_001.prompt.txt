@@ -1,0 +1,64 @@
+You are translating UI strings for a Terraria mod called "World Shaping
+Wands" into es-ES (Spain Spanish, neutral register; UI label conventions follow existing translated rows).
+
+OUTPUT FORMAT:
+Return ONLY a valid TSV block. The block MUST start with the marker
+###CHUNK-START### on its own line, contain exactly the same Key column
+as provided (NO additions, NO deletions, NO reordering), and end with
+the marker ###CHUNK-END### on its own line. Reference columns (en-US)
+are read-only context — DO NOT modify them. The rightmost column is
+your es-ES translation.
+
+Do not include any explanatory text outside the markers. Do not wrap
+the output in code fences. Just the marker, the rows, the closing marker.
+
+CHUNK 1 of 9 — es-ES — rows 1-40
+
+###CHUNK-START###
+Key	en-US	es-ES (TRANSLATE)
+Configs.ResourcesConfig.IsInfiniteForWires.Tooltip		
+Configs.LimitsConfig.SmallSelectionCap.Label	Small Shape Cap (Elbow / Cardinal / Straight)	
+Configs.LimitsConfig.BigSelectionCap.Label	Big Shape Cap (Rect / Ellipse / etc.)	
+Configs.LimitsConfig.HollowSelectionCap.Label	Hollow Shape Cap	
+Configs.LimitsConfig.CoatingSelectionCap.Label	Coating Wand Cap	
+Configs.LimitsConfig.MoldingSelectionCap.Label	Molding Wand Cap	
+Configs.LimitsConfig.DelimitationSelectionCap.Label	Delimitation Wand Cap	
+Configs.LimitsConfig.MaxOutlineThickness.Label	Max Outline Thickness	
+Configs.LimitsConfig.OperationCooldownTicks.Label	Operation Cooldown (ticks)	
+Configs.LimitsConfig.MaxConfirmDistance.Label	Max Confirm Distance (tiles)	
+Configs.LimitsConfig.SafekeepingClearThreshold.Label	Clear All Confirmation Threshold	
+Configs.PerformanceConfig.EnableProgressiveMode.Label	Enable Progressive Mode	
+Configs.PerformanceConfig.ProgressiveBatchSize.Label	Batch Size	
+Configs.PerformanceConfig.ProgressiveInterval.Label	Batch Interval (seconds)	
+Configs.StampConfig.StampChannelFrames.Label	Channel Charge Time (frames)	
+Configs.StampConfig.StampRepeatFrames.Label	Repeat Interval (frames)	
+Configs.StampConfig.CoatingStampChannelFrames.Label	Coating Channel Charge Time (frames)	
+Configs.StampConfig.StampExecuteOnClick.Label	Execute on First Click	
+Configs.TorchWheelConfig.TorchWheelSpacingS.Label	Outline Spacing (S)	
+Configs.TorchWheelConfig.TorchWheelSpacingD.Label	Absolute Spacing (D)	
+Configs.TorchWheelConfig.TorchWheelMaxTorches.Label	Max Torches Per Shot	
+Configs.TorchWheelConfig.TorchWheelMaxTiles.Label	Max Tiles (step budget)	
+Configs.TorchWheelConfig.TorchWheelMaxBacktrackSteps.Label	Max Backtrack Steps	
+Configs.TorchWheelConfig.TorchWheelFriendly.Label	Torch Wheel Damages Entities	
+Configs.TorchWheelConfig.UnderwaterTorchLookup.Label	Underwater Torch Lookup	
+Configs.TorchWheelConfig.AutoWaterproofTorches.Label	Auto-Waterproof Torches	
+Configs.TorchWheelConfig.OceanWaterproofTorch.Label	Ocean Waterproof Torch	
+Configs.TorchWheelConfig.NonOceanWaterproofTorch.Label	Non-Ocean Waterproof Torch	
+Configs.TorchWheelConfig.SmartBiomeTorchLookup.Label	Smart Biome Torch Lookup	
+Configs.TorchWheelConfig.EvilTorchRequiresHardmode.Label	Evil Torch Requires Hardmode	
+Configs.TorchWheelConfig.SubstituteCoralTorchPreHardmode.Label	Substitute Coral Torch Pre-Hardmode	
+Configs.TorchWheelConfig.SmoothVisualPath.Label	Smooth Visual Path	
+Configs.TorchWheelConfig.AnimateTorchWheel.Label	Animate Torch Wheel	
+Configs.TorchWheelConfig.PhotosensitivityWarning.Label	Photosensitivity Warning	
+Configs.CarefreeConfig.EnableCarefreeMode.Label	Enable Carefree Mode	
+Configs.CarefreeConfig.CarefreeSuppressDrops.Label	Carefree: Suppress Drops	
+Configs.CarefreeConfig.CarefreeSuppressDrops.Tooltip	When Carefree Mode is on, controls whether item drops are suppressed during wand operations.	
+Configs.CarefreeConfig.CarefreeAllowDemonAltarDestruction.Label	Carefree: Allow Demon Altar Destruction	
+Configs.CarefreeConfig.CarefreeAllowDemonAltarDestruction.Tooltip	When Carefree Mode is on, controls whether Demon/Crimson Altars can be destroyed.	
+Configs.CarefreeConfig.CarefreeAllowDelicateTileDestruction.Label	Carefree: Allow Delicate Tile Destruction	
+###CHUNK-END###
+
+REFERENCE — 3 already-translated rows from es-ES (DO NOT include these in your output, just match their style):
+  UI.Wiring.BlueWire  |  Blue Wire  |  Cable Azul
+  Configs.ResourcesConfig.InfiniteGrassSeedThreshold.Label  |  Grass Seed Threshold  |  Umbral de Semillas
+  UI.Selection.Status  |  Status  |  Estado

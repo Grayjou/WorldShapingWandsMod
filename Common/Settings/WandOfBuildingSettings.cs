@@ -27,15 +27,12 @@ public class WandOfBuildingSettings
     public ShapeInfo Shape { get; set; } = ShapeInfo.Default;
 
     /// <summary>
-    /// What happens when the player runs out of blocks mid-placement.
+    /// Tri-state paint-source selector for auto-painting placed surfaces.
+    /// <c>Off</c> = no auto-paint (default), <c>Inventory</c> = consume paint from inventory
+    /// (vanilla Paint Sprayer parity), <c>CoatingSettings</c> = use the colour stored in the
+    /// player's Coating wand settings (no inventory consumption).
     /// </summary>
-    public BlockExhaustionMode ExhaustionMode { get; set; } = BlockExhaustionMode.NextBlock;
-
-    /// <summary>
-    /// When true, after placing each tile/wall, the wand automatically applies the
-    /// first paint colour found in the player's inventory to the placed surface.
-    /// </summary>
-    public bool PaintSprayer { get; set; } = false;
+    public PaintSprayerSource PaintSprayer { get; set; } = PaintSprayerSource.Off;
 
     /// <summary>
     /// Tri-state actuation toggle:
@@ -44,6 +41,23 @@ public class WandOfBuildingSettings
     ///   <c>false</c> = Actuate OFF (placed tiles become solid/de-actuated).
     /// </summary>
     public bool? Actuation { get; set; } = null;
+
+    /// <summary>
+    /// chosen source-item type for tile placement (InventoryView v1 framework).
+    /// When non-null, the wand prefers the user's explicit choice over
+    /// FindFirstItemIndex's hotbar-scan fallback. Cleared (null) by default;
+    /// the panel's [✕ Clear pin] footer button or a wand-family swap may reset it.
+    /// Read by <c>BuildingTileSource.GetSelectedItemType</c>; written by
+    /// <c>InventoryViewPanel</c> (UI lands in a later session).
+    /// </summary>
+    public int? ChosenTileItemType { get; set; }
+
+    /// <summary>
+    /// chosen source-item type for wall placement. Same semantics as
+    /// <see cref="ChosenTileItemType"/> but only consulted when the wand's
+    /// active <see cref="Object"/> is <c>PlaceType.Wall</c>.
+    /// </summary>
+    public int? ChosenWallItemType { get; set; }
 
     /// <summary>The starting point of the selection.</summary>
     public Point StartPoint { get; set; }
@@ -63,9 +77,10 @@ public class WandOfBuildingSettings
             Slope = Slope,
             OverwriteSlope = OverwriteSlope,
             Shape = Shape,
-            ExhaustionMode = ExhaustionMode,
             PaintSprayer = PaintSprayer,
             Actuation = Actuation,
+            ChosenTileItemType = ChosenTileItemType,
+            ChosenWallItemType = ChosenWallItemType,
             StartPoint = StartPoint,
             EndPoint = EndPoint
         };
@@ -81,9 +96,10 @@ public class WandOfBuildingSettings
         Slope = SlopeType.Default;
         OverwriteSlope = true;
         Shape = ShapeInfo.Default;
-        ExhaustionMode = BlockExhaustionMode.NextBlock;
-        PaintSprayer = false;
+        PaintSprayer = PaintSprayerSource.Off;
         Actuation = null;
+        ChosenTileItemType = null;
+        ChosenWallItemType = null;
         StartPoint = Point.Zero;
         EndPoint = Point.Zero;
     }

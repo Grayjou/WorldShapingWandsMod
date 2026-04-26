@@ -10,7 +10,7 @@ namespace WorldShapingWandsMod.Common.Commands;
 /// Chat command for triggering undo operations.
 /// Dev-testing convenience — undo will eventually get a keybind or UI button.
 /// Usage: /undo [count]
-/// Gated behind <see cref="WandServerConfig.EnableUndoCommand"/>.
+/// Gated behind <see cref="SandboxConfig.EnableUndoCommand"/>.
 /// </summary>
 public class UndoCommand : ModCommand
 {
@@ -26,7 +26,7 @@ public class UndoCommand : ModCommand
 
     public override void Action(CommandCaller caller, string input, string[] args)
     {
-        var serverConfig = ModContent.GetInstance<WandServerConfig>();
+        var serverConfig = WandConfigs.Sandbox;
         if (serverConfig != null && !serverConfig.EnableUndoCommand)
         {
             caller.Reply("Undo is disabled by default \u2014 it's experimental and may cause visual artifacts or resource duplication.", Color.OrangeRed);

@@ -1,0 +1,50 @@
+You are translating UI strings for a Terraria mod called "World Shaping
+Wands" into es-ES (Spain Spanish, neutral register; UI label conventions follow existing translated rows).
+
+OUTPUT FORMAT:
+Return ONLY a valid TSV block. The block MUST start with the marker
+###CHUNK-START### on its own line, contain exactly the same Key column
+as provided (NO additions, NO deletions, NO reordering), and end with
+the marker ###CHUNK-END### on its own line. Reference columns (en-US)
+are read-only context — DO NOT modify them. The rightmost column is
+your es-ES translation.
+
+Do not include any explanatory text outside the markers. Do not wrap
+the output in code fences. Just the marker, the rows, the closing marker.
+
+CHUNK 9 of 9 — es-ES — rows 321-340
+
+###CHUNK-START###
+Key	en-US	es-ES (TRANSLATE)
+Messages.MoldingHintExpandCanvas	No cells added — shape is outside the canvas. Switch to Canvas Edit mode to expand the canvas first.	
+Messages.MoldingNoChange	Mold: no change (tiles already match the current selection).	
+Messages.LoreCommon	The Gods of Space let you enact your thoughts into reality.	
+Messages.LoreBuilding	The Deity of Creation lets you manifest order and existence at will.	
+Messages.LoreDismantling	The Deity of Erasure lets you restore nothingness as you wish.	
+Messages.LoreReplacement	The Deity of Transmutation lets you reweave the threads of what already is.	
+Messages.LoreWiring	An advanced mechanism wrench, refined beyond the Grand Design. Where gods shape matter, engineers shape purpose.	
+Messages.LoreSafekeeping	The Deity of Timelessness lets you separate space from the powers of creation.	
+Messages.LoreCoating	The Deity of Chromas lets you dress the world in colours of your choosing.	
+Messages.LoreFluids	The Deity of Tides lets you command the flowing matter.	
+Messages.LoreTorches	The Torch God lets you spread light across the world with ease. Or awaken their wrath if you dare.	
+Messages.LoreDelimitation	The Architect of Boundaries lets you define the canvas of creation.	
+Messages.LoreMolding	The Sculptor of Forms lets you mold the blueprints of creation.	
+Messages.LoreShiftHint	[c/888888:Hold [Shift] for lore]	
+Messages.TorchWheelModeTiles	[c/FFFF00:Mode: Tiles]	
+Messages.TorchWheelModePlatforms	[c/ADD8E6:Mode: Platforms]	
+Messages.TorchWheelCycleHint	Right-click in inventory to cycle modes	
+Messages.TorchWheelKillHint	Shift + Right-click (held) to kill all projectiles	
+Messages.TorchWheelSwitchToTiles	Torch Wheel Mode: Tiles	
+Messages.TorchWheelSwitchToPlatforms	Torch Wheel Mode: Platforms	
+###CHUNK-END###
+
+REFERENCE — already-translated rows from es-ES (DO NOT include these in your output, just match their style):
+  UI.Wiring.BlueWire  |  Blue Wire  |  Cable Azul
+  Configs.ResourcesConfig.InfiniteGrassSeedThreshold.Label  |  Grass Seed Threshold  |  Umbral de Semillas
+  UI.Selection.Status  |  Status  |  Estado
+  UI.Selection.ClearCanvas	| Clear Canvas |	Vaciar Canvas
+  UI.Dismantling.VoidEverythingDisabled	| Void Everything requires Carefree Mode to be enabled in server config. |	Desparecer Todo requiere Modo Despreocupado permitido en las configuraciones
+  Configs.OverlayConfig.OverlayRenderMode.Label	| Overlay Render Mode	| Modo de Renderizado de Capa de Vista Previa
+  CardinalLine| Cardinal Line | Línea Cardinal
+  Actuator | Actuator | Activador
+  Drops | Drops | Objetos Recogibles

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -31,7 +31,7 @@ namespace WorldShapingWandsMod.Common.UI;
 ///        .AddShapeGrid(shapeIcons, includeHollow: true)
 ///        .AddSliceSection(out _sliceGrid, onSliceChanged)
 ///        .AddThicknessSection(out _thicknessValue, onAdjust)
-///        .AddOptionsSection(optionIcons)
+///        .AddShapeOptionsSection(optionIcons)
 ///        .AddCloseButton()
 ///        .FinalizeHeight();
 /// </code>
@@ -43,7 +43,7 @@ public class WandPanelBuilder
     private readonly float _panelWidth;
     private readonly float _padding;
 
-    /// <summary>Current Y offset — automatically advanced by each Add method.</summary>
+    /// <summary>Current Y offset � automatically advanced by each Add method.</summary>
     public float CurrentY { get; private set; }
 
     /// <summary>Enable to draw horizontal debug lines at each section boundary.</summary>
@@ -51,9 +51,9 @@ public class WandPanelBuilder
 
     private readonly List<float> _sectionBoundaries = new();
 
-    // ═══════════════════════════════════════════════════════════════════
-    // Layout constants — single source of truth for all panels
-    // ═══════════════════════════════════════════════════════════════════
+    // -------------------------------------------------------------------
+    // Layout constants � single source of truth for all panels
+    // -------------------------------------------------------------------
 
     /// <summary>Icon button outer size (includes visual padding).</summary>
     public const float IconBtnSize = 36f;
@@ -103,9 +103,9 @@ public class WandPanelBuilder
     private const string UIPrefix = "Mods.WorldShapingWandsMod.UI";
     private static string L(string key) => Language.GetTextValue($"{UIPrefix}.{key}");
 
-    // ═══════════════════════════════════════════════════════════════════
+    // -------------------------------------------------------------------
     // Constructor
-    // ═══════════════════════════════════════════════════════════════════
+    // -------------------------------------------------------------------
 
     public WandPanelBuilder(UIDraggablePanel panel, float panelWidth, float padding)
     {
@@ -113,11 +113,16 @@ public class WandPanelBuilder
         _panelWidth = panelWidth;
         _padding = padding;
         CurrentY = InitialY;
+
+        // (S6 §1) All wand panels get HandleOrAnywhere policy.
+        // Handle itself is appended in FinalizeHeight so it draws
+        // on top of all content and receives mouse events.
+        _panel.DragPolicy = DragPolicy.HandleOrAnywhere;
     }
 
-    // ═══════════════════════════════════════════════════════════════════
+    // -------------------------------------------------------------------
     // Section: Title
-    // ═══════════════════════════════════════════════════════════════════
+    // -------------------------------------------------------------------
 
     /// <summary>Adds the panel title (larger UISectionTitle).</summary>
     public WandPanelBuilder AddTitle(string locKey)
@@ -132,9 +137,9 @@ public class WandPanelBuilder
         return this;
     }
 
-    // ═══════════════════════════════════════════════════════════════════
+    // -------------------------------------------------------------------
     // Section: Sub-header
-    // ═══════════════════════════════════════════════════════════════════
+    // -------------------------------------------------------------------
 
     /// <summary>Adds a section header (smaller UISectionTitle with underline).</summary>
     public WandPanelBuilder AddSectionHeader(string locKey)
@@ -149,9 +154,9 @@ public class WandPanelBuilder
         return this;
     }
 
-    // ═══════════════════════════════════════════════════════════════════
-    // Section: Icon Grid (radio buttons — for shapes, object types, etc.)
-    // ═══════════════════════════════════════════════════════════════════
+    // -------------------------------------------------------------------
+    // Section: Icon Grid (radio buttons � for shapes, object types, etc.)
+    // -------------------------------------------------------------------
 
     /// <summary>
     /// Descriptor for an icon button to be placed in a grid.
@@ -220,9 +225,9 @@ public class WandPanelBuilder
         return this;
     }
 
-    // ═══════════════════════════════════════════════════════════════════
+    // -------------------------------------------------------------------
     // Section: Full Shape Grid (the 11-shape standard grid)
-    // ═══════════════════════════════════════════════════════════════════
+    // -------------------------------------------------------------------
 
     /// <summary>
     /// Shape definition for the standard 11-shape grid.
@@ -234,6 +239,7 @@ public class WandPanelBuilder
         public UIIconButton DiamondFilled, DiamondHollow;
         public UIIconButton TriangleFilled, TriangleHollow;
         public UIIconButton Elbow, Cardinal, StraightLine;
+        public UIIconButton Mold;
     }
 
     /// <summary>
@@ -248,19 +254,20 @@ public class WandPanelBuilder
         var icons = new IconDef[]
         {
             // Row 1
-            new(mod.Assets.Request<Texture2D>("Assets/Icons/ShapeRectFilled",     AssetRequestMode.ImmediateLoad), "Common.ShapeRectFilled"),
-            new(mod.Assets.Request<Texture2D>("Assets/Icons/ShapeRectHollow",     AssetRequestMode.ImmediateLoad), "Common.ShapeRectHollow"),
-            new(mod.Assets.Request<Texture2D>("Assets/Icons/ShapeEllipseFilled",  AssetRequestMode.ImmediateLoad), "Common.ShapeEllipseFilled"),
-            new(mod.Assets.Request<Texture2D>("Assets/Icons/ShapeEllipseHollow",  AssetRequestMode.ImmediateLoad), "Common.ShapeEllipseHollow"),
-            new(mod.Assets.Request<Texture2D>("Assets/Icons/ShapeElbow",          AssetRequestMode.ImmediateLoad), "Common.ShapeElbow"),
+            new(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/ShapeRectFilled",     AssetRequestMode.ImmediateLoad), "Common.ShapeRectFilled"),
+            new(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/ShapeRectHollow",     AssetRequestMode.ImmediateLoad), "Common.ShapeRectHollow"),
+            new(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/ShapeEllipseFilled",  AssetRequestMode.ImmediateLoad), "Common.ShapeEllipseFilled"),
+            new(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/ShapeEllipseHollow",  AssetRequestMode.ImmediateLoad), "Common.ShapeEllipseHollow"),
+            new(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/ShapeElbow",          AssetRequestMode.ImmediateLoad), "Common.ShapeElbow"),
             // Row 2
-            new(mod.Assets.Request<Texture2D>("Assets/Icons/ShapeDiamondFilled",  AssetRequestMode.ImmediateLoad), "Common.ShapeDiamondFilled"),
-            new(mod.Assets.Request<Texture2D>("Assets/Icons/ShapeDiamondHollow",  AssetRequestMode.ImmediateLoad), "Common.ShapeDiamondHollow"),
-            new(mod.Assets.Request<Texture2D>("Assets/Icons/ShapeTriangleFilled", AssetRequestMode.ImmediateLoad), "Common.ShapeTriangleFilled"),
-            new(mod.Assets.Request<Texture2D>("Assets/Icons/ShapeTriangleHollow", AssetRequestMode.ImmediateLoad), "Common.ShapeTriangleHollow"),
-            new(mod.Assets.Request<Texture2D>("Assets/Icons/ShapeCardinal",       AssetRequestMode.ImmediateLoad), "Common.ShapeCardinal"),
+            new(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/ShapeDiamondFilled",  AssetRequestMode.ImmediateLoad), "Common.ShapeDiamondFilled"),
+            new(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/ShapeDiamondHollow",  AssetRequestMode.ImmediateLoad), "Common.ShapeDiamondHollow"),
+            new(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/ShapeTriangleFilled", AssetRequestMode.ImmediateLoad), "Common.ShapeTriangleFilled"),
+            new(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/ShapeTriangleHollow", AssetRequestMode.ImmediateLoad), "Common.ShapeTriangleHollow"),
+            new(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/ShapeCardinal",       AssetRequestMode.ImmediateLoad), "Common.ShapeCardinal"),
             // Row 3
-            new(mod.Assets.Request<Texture2D>("Assets/Icons/ShapeStraightLine",   AssetRequestMode.ImmediateLoad), "Common.ShapeStraightLine"),
+            new(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/ShapeStraightLine",   AssetRequestMode.ImmediateLoad), "Common.ShapeStraightLine"),
+            new(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/ShapeMold",           AssetRequestMode.ImmediateLoad), "Common.ShapeMold"),
         };
 
         AddIconGrid(icons, 5, out var btns);
@@ -274,6 +281,7 @@ public class WandPanelBuilder
             TriangleFilled = btns[7], TriangleHollow = btns[8],
             Cardinal      = btns[9],
             StraightLine  = btns[10],
+            Mold          = btns[11],
         };
 
         return this;
@@ -291,7 +299,7 @@ public class WandPanelBuilder
 
     /// <summary>
     /// Adds the reduced 6-shape icon grid for Wiring (5+1 layout) with section header.
-    /// Wiring only supports filled shapes — no hollow, no ellipse.
+    /// Wiring only supports filled shapes � no hollow, no ellipse.
     /// </summary>
     public WandPanelBuilder AddWiringShapeSection(out WiringShapeGridResult shapes)
     {
@@ -301,13 +309,13 @@ public class WandPanelBuilder
         var icons = new IconDef[]
         {
             // Row 1: 5 icons
-            new(mod.Assets.Request<Texture2D>("Assets/Icons/ShapeRectFilled",     AssetRequestMode.ImmediateLoad), "Common.ShapeRectFilled"),
-            new(mod.Assets.Request<Texture2D>("Assets/Icons/ShapeElbow",          AssetRequestMode.ImmediateLoad), "Common.ShapeElbow"),
-            new(mod.Assets.Request<Texture2D>("Assets/Icons/ShapeCardinal",       AssetRequestMode.ImmediateLoad), "Common.ShapeCardinal"),
-            new(mod.Assets.Request<Texture2D>("Assets/Icons/ShapeDiamondFilled",  AssetRequestMode.ImmediateLoad), "Common.ShapeDiamondFilled"),
-            new(mod.Assets.Request<Texture2D>("Assets/Icons/ShapeTriangleFilled", AssetRequestMode.ImmediateLoad), "Common.ShapeTriangleFilled"),
+            new(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/ShapeRectFilled",     AssetRequestMode.ImmediateLoad), "Common.ShapeRectFilled"),
+            new(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/ShapeElbow",          AssetRequestMode.ImmediateLoad), "Common.ShapeElbow"),
+            new(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/ShapeCardinal",       AssetRequestMode.ImmediateLoad), "Common.ShapeCardinal"),
+            new(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/ShapeDiamondFilled",  AssetRequestMode.ImmediateLoad), "Common.ShapeDiamondFilled"),
+            new(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/ShapeTriangleFilled", AssetRequestMode.ImmediateLoad), "Common.ShapeTriangleFilled"),
             // Row 2: 1 icon
-            new(mod.Assets.Request<Texture2D>("Assets/Icons/ShapeStraightLine",   AssetRequestMode.ImmediateLoad), "Common.ShapeStraightLine"),
+            new(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/ShapeStraightLine",   AssetRequestMode.ImmediateLoad), "Common.ShapeStraightLine"),
         };
 
         AddIconGrid(icons, 5, out var btns);
@@ -325,9 +333,9 @@ public class WandPanelBuilder
         return this;
     }
 
-    // ═══════════════════════════════════════════════════════════════════
+    // -------------------------------------------------------------------
     // Section: Slice Grid
-    // ═══════════════════════════════════════════════════════════════════
+    // -------------------------------------------------------------------
 
     /// <summary>
     /// Adds a Slice section with header and UISliceGrid.
@@ -346,9 +354,9 @@ public class WandPanelBuilder
         return this;
     }
 
-    // ═══════════════════════════════════════════════════════════════════
+    // -------------------------------------------------------------------
     // Section: Thickness (+/- stepper)
-    // ═══════════════════════════════════════════════════════════════════
+    // -------------------------------------------------------------------
 
     /// <summary>
     /// Adds an Outline Thickness section with label, minus button, value display, and plus button.
@@ -392,22 +400,22 @@ public class WandPanelBuilder
         return this;
     }
 
-    // ═══════════════════════════════════════════════════════════════════
+    // -------------------------------------------------------------------
     // Section: Options Icon Row (toggle icon buttons)
-    // ═══════════════════════════════════════════════════════════════════
+    // -------------------------------------------------------------------
 
     /// <summary>
     /// Adds an Options section with "Options" header and a centered row of toggle icon buttons.
     /// Convenience wrapper around <see cref="AddIconToggleRow"/>.
     /// </summary>
-    public WandPanelBuilder AddOptionsSection(IconDef[] optionIcons, out UIIconButton[] buttons)
+    public WandPanelBuilder AddShapeOptionsSection(IconDef[] optionIcons, out UIIconButton[] buttons)
     {
-        return AddIconToggleRow("Common.Options", optionIcons, out buttons);
+        return AddIconToggleRow("Common.ShapeOptions", optionIcons, out buttons);
     }
 
     /// <summary>
     /// Adds a section with a custom header and a centered row of toggle icon buttons.
-    /// Generic version of <see cref="AddOptionsSection"/> for any section.
+    /// Generic version of <see cref="AddShapeOptionsSection"/> for any section.
     /// </summary>
     public WandPanelBuilder AddIconToggleRow(string headerLocKey, IconDef[] icons, out UIIconButton[] buttons)
     {
@@ -431,9 +439,9 @@ public class WandPanelBuilder
         return this;
     }
 
-    // ═══════════════════════════════════════════════════════════════════
+    // -------------------------------------------------------------------
     // Section: Tri-State Row (UITriStateButton pair)
-    // ═══════════════════════════════════════════════════════════════════
+    // -------------------------------------------------------------------
 
     /// <summary>
     /// Adds a row of two UITriStateButton controls side by side.
@@ -456,9 +464,9 @@ public class WandPanelBuilder
         return this;
     }
 
-    // ═══════════════════════════════════════════════════════════════════
+    // -------------------------------------------------------------------
     // Section: Toggle Row (text-based 2-column toggles)
-    // ═══════════════════════════════════════════════════════════════════
+    // -------------------------------------------------------------------
 
     /// <summary>
     /// Adds a row of two text-based toggle buttons side by side.
@@ -494,9 +502,9 @@ public class WandPanelBuilder
         return this;
     }
 
-    // ═══════════════════════════════════════════════════════════════════
+    // -------------------------------------------------------------------
     // Section: Wide Toggle (centered, like OverwriteSlope)
-    // ═══════════════════════════════════════════════════════════════════
+    // -------------------------------------------------------------------
 
     /// <summary>
     /// Adds a centered UIToggleButton (used for OverwriteSlope, etc.).
@@ -514,9 +522,9 @@ public class WandPanelBuilder
         return this;
     }
 
-    // ═══════════════════════════════════════════════════════════════════
+    // -------------------------------------------------------------------
     // Section: Close Button
-    // ═══════════════════════════════════════════════════════════════════
+    // -------------------------------------------------------------------
 
     /// <summary>Adds a centered Close button.</summary>
     public WandPanelBuilder AddCloseButton()
@@ -527,9 +535,68 @@ public class WandPanelBuilder
         closeBtn.Height.Set(30f, 0f);
         closeBtn.HAlign = 0.5f;
         closeBtn.Top.Set(CurrentY, 0f);
-        closeBtn.OnLeftClick += (_, _) => ModContent.GetInstance<WandUISystem>().CloseAllUI();
+        // (S5 2026-04-25 — GrayJou Letter #4 §2: IV survives X-button.) Switched
+        // from CloseAllUI() to CloseAllPanels() so the X-button matches right-click
+        // toggle semantics: settings panel closes, InventoryView intent is
+        // preserved. The IV is an orthogonal companion — only its own toggle
+        // (button on Building/Replacement panel, or the keybind) flips its intent.
+        closeBtn.OnLeftClick += (_, _) => ModContent.GetInstance<WandUISystem>().CloseAllPanels();
         _panel.Append(closeBtn);
         CurrentY += AfterCloseButtonSpacing;
+        return this;
+    }
+
+    // -------------------------------------------------------------------
+    // Section: Action Icon Row (non-toggle clickable icon buttons)
+    // -------------------------------------------------------------------
+
+    /// <summary>
+    /// Adds a section with a header and a centered row of clickable (non-toggle, non-radio)
+    /// icon buttons for action commands like Clear Selection, Invert, Clear Canvas, etc.
+    /// Unlike <see cref="AddIconToggleRow"/>, these buttons have no toggled state �
+    /// they fire a one-shot action on click.
+    /// </summary>
+    public WandPanelBuilder AddActionIconRow(string headerLocKey, IconDef[] icons, out UIIconButton[] buttons)
+    {
+        AddSectionHeader(headerLocKey);
+
+        int count = icons.Length;
+        buttons = new UIIconButton[count];
+
+        float totalWidth = IconBtnSize * count + IconGap * (count - 1);
+        float startX = (_panelWidth - totalWidth) / 2f - _padding;
+
+        for (int i = 0; i < count; i++)
+        {
+            var def = icons[i];
+            var btn = MakeActionIconBtn(def.Texture, def.HoverText, startX + (IconBtnSize + IconGap) * i, CurrentY);
+            _panel.Append(btn);
+            buttons[i] = btn;
+        }
+
+        CurrentY += IconBtnSize + AfterOptionsSpacing;
+        return this;
+    }
+
+    /// <summary>Adds a centered row of action icon buttons (no header).</summary>
+    public WandPanelBuilder AddActionIconRowNoHeader(IconDef[] icons, out UIIconButton[] buttons)
+    {
+        MarkSection();
+        int count = icons.Length;
+        buttons = new UIIconButton[count];
+
+        float totalWidth = IconBtnSize * count + IconGap * (count - 1);
+        float startX = (_panelWidth - totalWidth) / 2f - _padding;
+
+        for (int i = 0; i < count; i++)
+        {
+            var def = icons[i];
+            var btn = MakeActionIconBtn(def.Texture, def.HoverText, startX + (IconBtnSize + IconGap) * i, CurrentY);
+            _panel.Append(btn);
+            buttons[i] = btn;
+        }
+
+        CurrentY += IconBtnSize + AfterOptionsSpacing;
         return this;
     }
 
@@ -547,9 +614,9 @@ public class WandPanelBuilder
         return this;
     }
 
-    // ═══════════════════════════════════════════════════════════════════
+    // -------------------------------------------------------------------
     // Section: Raw Y advance (escape hatch for custom layouts)
-    // ═══════════════════════════════════════════════════════════════════
+    // -------------------------------------------------------------------
 
     /// <summary>Advances the Y cursor by a custom amount.</summary>
     public WandPanelBuilder AdvanceY(float amount)
@@ -566,20 +633,29 @@ public class WandPanelBuilder
         return this;
     }
 
-    // ═══════════════════════════════════════════════════════════════════
+    // -------------------------------------------------------------------
     // Finalize: set panel height to fit contents
-    // ═══════════════════════════════════════════════════════════════════
+    // -------------------------------------------------------------------
 
     /// <summary>Sets the panel height to fit all added sections (CurrentY + bottom padding).</summary>
     public WandPanelBuilder FinalizeHeight(float bottomPadding = 8f)
     {
         _panel.Height.Set(CurrentY + bottomPadding, 0f);
+
+        // (S6 §1) Append handle LAST so it draws on top of all content
+        // (title, sections, buttons) and isn't occluded for mouse interaction.
+        // Top-right corner, mirrored from IV's top-left per spec §1.5.
+        var handle = new UIDragHandle(16);
+        handle.HAlign = 1f;
+        handle.Top.Set(_padding, 0f);
+        handle.Left.Set(-_padding, 0f);
+        _panel.Append(handle);
+
         return this;
     }
-
-    // ═══════════════════════════════════════════════════════════════════
+    // -------------------------------------------------------------------
     // Debug drawing
-    // ═══════════════════════════════════════════════════════════════════
+    // -------------------------------------------------------------------
 
     /// <summary>
     /// Call from the panel's Draw override to render debug section boundary lines.
@@ -600,9 +676,9 @@ public class WandPanelBuilder
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════════
+    // -------------------------------------------------------------------
     // Internal helpers
-    // ═══════════════════════════════════════════════════════════════════
+    // -------------------------------------------------------------------
 
     private void MarkSection()
     {
@@ -628,6 +704,22 @@ public class WandPanelBuilder
         btn.Left.Set(left, 0f);
         btn.Top.Set(top, 0f);
         btn.IsRadio = false;
+        return btn;
+    }
+
+    /// <summary>
+    /// Creates a non-toggle, non-radio icon button for one-shot actions.
+    /// Visually identical to a radio button but with no persistent state.
+    /// </summary>
+    private static UIIconButton MakeActionIconBtn(Asset<Texture2D> texture, string hoverText, float left, float top)
+    {
+        var btn = new UIIconButton(texture, hoverText);
+        btn.Width.Set(IconBtnSize, 0f);
+        btn.Height.Set(IconBtnSize, 0f);
+        btn.Left.Set(left, 0f);
+        btn.Top.Set(top, 0f);
+        btn.IsRadio = false;
+        btn.IsAction = true;
         return btn;
     }
 

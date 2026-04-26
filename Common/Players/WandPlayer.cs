@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
+using Terraria.ModLoader.IO;
 using WorldShapingWandsMod.Common.Configs;
 using WorldShapingWandsMod.Common.Drawing;
 using WorldShapingWandsMod.Common.Enums;
@@ -10,6 +12,9 @@ using WorldShapingWandsMod.Common.Selection;
 using WorldShapingWandsMod.Common.Settings;
 using WorldShapingWandsMod.Common.Utilities;
 using WorldShapingWandsMod.Content.Items;
+#if DEBUG
+using WorldShapingWandsMod.Common.Debug;
+#endif
 
 namespace WorldShapingWandsMod.Common.Players;
 
@@ -97,6 +102,37 @@ public class WandPlayer : ModPlayer
     /// <summary>The anchor offset within the stamp rectangle that the mouse was on at lock time.</summary>
     public Point StampAnchorOffset { get; private set; }
 
+    // ── W-S4-1 (S4 2026-04-24, Cavendish DesignDoc_StampSmoothingV3.md §3.1) ──
+    // Stamp Smoothing v3 state. World-space exponential ease toward the
+    // precise stamp anchor. Replaces the v1/v2 sub-pixel-offset model entirely
+    // (those eased in screen space against MouseScreen and produced Δ up to
+    // 700 px per the W-S3-1 dual-draw verdict).
+    //
+    // Updated once per logic tick from BaseCyclingWand.TemplateStampHoldItem
+    // (which itself runs at HoldItem/Update rate). Read every Draw frame from
+    // SelectionOverlay.DrawSelection; no draw-rate accumulation here means
+    // FPS-rate independence by construction.
+    /// <summary>Smoothed (eased) anchor position in world pixels. v3 model:
+    /// updated once per logic tick toward the precise anchor; consumed at draw
+    /// time as <c>screenPos = SmoothAnchorWorld - Main.screenPosition</c>.</summary>
+    public Vector2 SmoothAnchorWorld { get; private set; }
+    /// <summary>False after lock/unlock/clear/cancel. The first
+    /// <see cref="UpdateSmoothAnchor"/> call after that snaps the anchor to
+    /// the target (no easing on first appearance — §3.5 of the v3 design doc).</summary>
+    public bool SmoothAnchorInitialised { get; private set; }
+
+    // === Stamp Channeling state (client-local, not synced in MP) ===
+    /// <summary>Whether the player is currently holding left-click in stamp-locked state to channel.</summary>
+    public bool IsStampChanneling { get; private set; }
+    /// <summary>Frames the player has been holding left-click since channeling began. Resets on release.</summary>
+    public int StampChannelTimer { get; private set; }
+    /// <summary>Frames since last channeling execution. Used for repeat interval timing.</summary>
+    public int StampRepeatTimer { get; private set; }
+    /// <summary>Whether the channel threshold has been reached (first execution done).</summary>
+    public bool StampChannelCharged { get; private set; }
+    /// <summary>Counter for throttling channeling sounds. Increments each repeat execution.</summary>
+    public int StampChannelSoundCounter { get; private set; }
+
     /// <summary>
     /// Tracks how many selection clicks have been completed in the current selection.
     /// 0 = no selection, 1 = start set, 2 = end locked, 3 = stamp locked.
@@ -123,6 +159,8 @@ public class WandPlayer : ModPlayer
     public WandOfWiringSettings WiringSettings { get; private set; } = new();
     public WandOfSafekeepingSettings SafekeepingSettings { get; private set; } = new();
     public WandOfCoatingSettings CoatingSettings { get; private set; } = new();
+    public WandOfFluidsSettings FluidsSettings { get; private set; } = new();
+    public WandTorchSettings TorchSettings { get; private set; } = new();
 
     // Keep global settings for backward compatibility with test commands
     public WandSettings Settings { get; private set; } = new WandSettings();
@@ -170,12 +208,29 @@ public class WandPlayer : ModPlayer
     /// </summary>
     private Point ClampEndToCaps(Point start, Point end)
     {
-        var config = ModContent.GetInstance<WandServerConfig>();
+        var config = WandConfigs.Limits;
         if (config == null) return end;
 
         ShapeType currentShape = GetCurrentShapeType();
         int cap;
-        if (currentShape == ShapeType.Elbow || currentShape == ShapeType.CardinalLine || currentShape == ShapeType.StraightLine)
+
+        // Coating wand uses its own generous cap — no batching, no lag, instant application
+        if (Player.HeldItem?.ModItem is WandOfCoatingBase)
+        {
+            cap = config.CoatingSelectionCap;
+        }
+        // Molding and Delimitation are cheap, instant canvas/filter operations
+        // — no per-tile mutation. They use generous caps too (separate from Coating
+        // so users can tune each independently).
+        else if (Player.HeldItem?.ModItem is WandOfMoldingBase)
+        {
+            cap = config.MoldingSelectionCap;
+        }
+        else if (Player.HeldItem?.ModItem is WandOfDelimitationBase)
+        {
+            cap = config.DelimitationSelectionCap;
+        }
+        else if (currentShape == ShapeType.Elbow || currentShape == ShapeType.CardinalLine || currentShape == ShapeType.StraightLine)
             cap = config.SmallSelectionCap;
         else if (GetCurrentFillMode() == ShapeMode.Hollow)
             cap = config.HollowSelectionCap;
@@ -212,6 +267,11 @@ public class WandPlayer : ModPlayer
             return SafekeepingSettings.Shape.Shape;
         if (Player.HeldItem?.ModItem is WandOfCoatingBase)
             return CoatingSettings.Shape.Shape;
+        if (Player.HeldItem?.ModItem is WandOfMoldingBase)
+        {
+            var mwp = Player.GetModPlayer<MoldingWandPlayer>();
+            return mwp.Settings.Shape.Shape;
+        }
         return Settings.ShapeType;
     }
 
@@ -232,6 +292,11 @@ public class WandPlayer : ModPlayer
             return SafekeepingSettings.Shape.FillMode;
         if (Player.HeldItem?.ModItem is WandOfCoatingBase)
             return CoatingSettings.Shape.FillMode;
+        if (Player.HeldItem?.ModItem is WandOfMoldingBase)
+        {
+            var mwp = Player.GetModPlayer<MoldingWandPlayer>();
+            return mwp.Settings.Shape.FillMode;
+        }
         return Settings.ShapeMode;
     }
 
@@ -270,7 +335,9 @@ public class WandPlayer : ModPlayer
         IsStampLocked = false;
         StampDelta = Point.Zero;
         StampAnchorOffset = Point.Zero;
+        SmoothAnchorInitialised = false; // W-S4-1: v3 smoothing reset on clear
         SelectionClickStep = 0;
+        ResetStampChanneling();
     }
 
     /// <summary>
@@ -404,6 +471,8 @@ public class WandPlayer : ModPlayer
         IsStampLocked = false;
         StampDelta = Point.Zero;
         StampAnchorOffset = Point.Zero;
+        SmoothAnchorInitialised = false; // W-S4-1: v3 smoothing reset on cancel
+        ResetStampChanneling();
         _justCancelled = true; // Set flag to prevent immediate restart
     }
 
@@ -441,9 +510,106 @@ public class WandPlayer : ModPlayer
         IsStampLocked = false;
         StampDelta = Point.Zero;
         StampAnchorOffset = Point.Zero;
+        SmoothAnchorInitialised = false; // W-S4-1: v3 smoothing reset on unlock
         // Keep selection locked — user still has their endpoint set.
         // They just need to re-click to set the anchor position.
     }
+
+    // ── W-S4-1 (S4 2026-04-24, Cavendish DesignDoc_StampSmoothingV3.md §3.2) ──
+    /// <summary>
+    /// Stamp Smoothing v3: world-space exponential ease toward the precise stamp
+    /// anchor. Called once per logic tick from
+    /// <c>BaseCyclingWand.TemplateStampHoldItem</c> with the current
+    /// <c>(bboxMinTile + StampAnchorOffset) * 16</c> world-pixel position.
+    /// <para>Self-gates against pause (§3.4) and snaps on first appearance after
+    /// any reset (§3.5). A teleport guard (§3.6) snaps when the gap exceeds
+    /// <c>SmoothTeleportThreshold</c> world pixels so cross-screen jumps don't
+    /// drag a long lerp tail behind the cursor.</para>
+    /// <para>Read at draw time via <see cref="SmoothAnchorWorld"/> /
+    /// <see cref="SmoothAnchorInitialised"/>; the consumer never accumulates
+    /// state of its own, so FPS-rate independence holds by construction.</para>
+    /// </summary>
+    /// <param name="targetAnchorWorld">Precise anchor position in world pixels
+    /// (= <c>(bboxMinTile + StampAnchorOffset) * 16</c>).</param>
+    public void UpdateSmoothAnchor(Vector2 targetAnchorWorld)
+    {
+        // §3.4 Pause gate. A frozen world should not have a moving overlay;
+        // the smoothed anchor must sit still while paused (closes S3 R-1).
+        if (Main.gamePaused) return;
+
+        // §3.5 First-frame init: snap to target so the stamp appears exactly
+        // where the cursor is, without a visible easing-in animation.
+        if (!SmoothAnchorInitialised)
+        {
+            SmoothAnchorWorld = targetAnchorWorld;
+            SmoothAnchorInitialised = true;
+            return;
+        }
+
+        // §3.6 Teleport guard. 512 world-px = 32 tiles ≈ half a screen-width.
+        // If the precise anchor jumps more than this in a single tick (camera
+        // teleport, magic-mirror, recall, etc.) snap rather than ease.
+        const float teleportThresholdSq = 512f * 512f;
+        if (Vector2.DistanceSquared(SmoothAnchorWorld, targetAnchorWorld) > teleportThresholdSq)
+        {
+            SmoothAnchorWorld = targetAnchorWorld;
+            return;
+        }
+
+        // §3.2 Exponential ease. easeT chosen for ~4-frame visible settle at
+        // 60 Hz: aggressive enough that the smoothing isn't perceived as lag,
+        // gentle enough to absorb single-frame coordinate spikes.
+        const float easeT = 0.25f;
+        SmoothAnchorWorld = Vector2.Lerp(SmoothAnchorWorld, targetAnchorWorld, easeT);
+    }
+
+    // ── Stamp Channeling methods ────────────────────────────────────
+
+    /// <summary>
+    /// Begins stamp channeling. Called from HandleUseItem on the 4th+ click
+    /// when channelFrames &gt; 0 (hold-to-channel mode).
+    /// </summary>
+    public void BeginStampChanneling()
+    {
+        IsStampChanneling = true;
+        StampChannelTimer = 0;
+        StampRepeatTimer = 0;
+        StampChannelCharged = false;
+        StampChannelSoundCounter = 0;
+    }
+
+    /// <summary>
+    /// Resets all channeling state. Called when the player releases left-click,
+    /// cancels the selection, or switches items.
+    /// </summary>
+    public void ResetStampChanneling()
+    {
+        IsStampChanneling = false;
+        StampChannelTimer = 0;
+        StampRepeatTimer = 0;
+        StampChannelCharged = false;
+        StampChannelSoundCounter = 0;
+    }
+
+    /// <summary>Increments the channel charge timer by one frame.</summary>
+    public void IncrementChannelTimer() => StampChannelTimer++;
+
+    /// <summary>Marks the channel as fully charged (first execution threshold reached).</summary>
+    public void SetStampChannelCharged()
+    {
+        StampChannelCharged = true;
+        StampRepeatTimer = 0;
+        StampChannelSoundCounter = 0;
+    }
+
+    /// <summary>Increments the repeat interval timer by one frame.</summary>
+    public void IncrementRepeatTimer() => StampRepeatTimer++;
+
+    /// <summary>Resets the repeat timer to zero (after a repeat execution fires).</summary>
+    public void ResetRepeatTimer() => StampRepeatTimer = 0;
+
+    /// <summary>Increments the sound throttle counter (called on each repeat execution).</summary>
+    public void IncrementChannelSoundCounter() => StampChannelSoundCounter++;
 
     /// <summary>
     /// Repositions the stamp selection so the anchor follows the mouse.
@@ -578,6 +744,7 @@ public class WandPlayer : ModPlayer
             IsStampLocked = false;
             StampDelta = Point.Zero;
             StampAnchorOffset = Point.Zero;
+            ResetStampChanneling();
         }
     }
 
@@ -654,14 +821,186 @@ public class WandPlayer : ModPlayer
             || Player.HeldItem?.ModItem is WandOfWiringBase
             || Player.HeldItem?.ModItem is WandOfSafekeepingBase
             || Player.HeldItem?.ModItem is WandOfCoatingBase
+            || Player.HeldItem?.ModItem is WandOfFluidsBase
+            || Player.HeldItem?.ModItem is WandOfTorchesBase
+            || Player.HeldItem?.ModItem is WandOfDelimitationBase
+            || Player.HeldItem?.ModItem is WandOfMoldingBase
             ;
     }
 
     public override void OnRespawn() => ClearSelection();
-    
+
+    // ──────────────────────────────────────────────────────────────────────
+    //  Persistence — InventoryView choice fields (per-character, per Cavendish
+    //  Response_2026-04-22 Letter #5 §8). Choices serialize as (ModName, ItemName)
+    //  tuples via ChoiceSerialization so cross-mod-version item-ID renumbering
+    //  doesn't silently re-choice players to the wrong items. Unresolvable pins
+    //  on Load silently fall back to null (legacy behaviour).
+    //
+    //  We deliberately persist ONLY the pins right now, NOT the full settings
+    //  surface (Object/Shape/SelectionMode/etc. already round-trip via the
+    //  per-instance UI state and per-session ResetToDefaults() in OnEnterWorld).
+    //  Expanding the persistence scope is a separate decision; pins are the
+    //  one setting whose semantic value is "I committed to this choice"
+    //  (Response #5 §8 ¶3).
+    // ──────────────────────────────────────────────────────────────────────
+
+    private const string TagChoiceBuildingTile = "ChoiceBuildingTile";
+    private const string TagChoiceBuildingWall = "ChoiceBuildingWall";
+    private const string TagChoiceTorch = "ChoiceTorch";
+    private const string TagChoiceReplacementSource = "ChoiceReplacementSource";
+    private const string TagChoiceReplacementTarget = "ChoiceReplacementTarget";
+
+    // ── Collapsible-section persistence (2026-04-23 S4 framework) ───
+    // Cavendish DesignDoc_CollapsablePanelSystem.md §2.4 named a SettingsPlayer
+    // class for these dicts; no such class exists in WSW. Adapted onto WandPlayer
+    // — the existing SaveData/LoadData round-trip is the natural home. Keys are
+    // stable strings in the form "PanelName.SectionName" (e.g. "CoatingPanel.PaintColor").
+    // Empty dicts are treated as "all sections expanded / no popout positions saved".
+    private const string TagCollapsedSections = "CollapsedSections";
+    private const string TagPopoutPositions   = "PopoutPositions";
+
+    /// <summary>Per-section collapsed bit, keyed by <c>CollapsibleSection.PreferenceKey</c>.</summary>
+    public Dictionary<string, bool> CollapsedSections { get; set; } = new();
+
+    /// <summary>Per-section popout-host position (screen-pixel top-left), keyed identically.</summary>
+    public Dictionary<string, Vector2> PopoutPositions { get; set; } = new();
+
+    public override void SaveData(TagCompound tag)
+    {
+        TrySetTag(tag, TagChoiceBuildingTile, BuildingSettings.ChosenTileItemType);
+        TrySetTag(tag, TagChoiceBuildingWall, BuildingSettings.ChosenWallItemType);
+        TrySetTag(tag, TagChoiceTorch, TorchSettings.ChosenTorchItemType);
+        TrySetTag(tag, TagChoiceReplacementSource, ReplacementSettings.ChosenSourceItemType);
+        TrySetTag(tag, TagChoiceReplacementTarget, ReplacementSettings.ChosenTargetItemType);
+
+        // Collapsible-section state: serialized as parallel string-list payloads
+        // (TagCompound's Dictionary support is lossy across versions; parallel
+        // lists round-trip cleanly). Empty dict → no tag written.
+        if (CollapsedSections != null && CollapsedSections.Count > 0)
+        {
+            var keys = new List<string>(CollapsedSections.Count);
+            var vals = new List<bool>(CollapsedSections.Count);
+            foreach (var kv in CollapsedSections) { keys.Add(kv.Key); vals.Add(kv.Value); }
+            tag[TagCollapsedSections + "_K"] = keys;
+            tag[TagCollapsedSections + "_V"] = vals;
+        }
+        if (PopoutPositions != null && PopoutPositions.Count > 0)
+        {
+            var keys = new List<string>(PopoutPositions.Count);
+            var xs = new List<float>(PopoutPositions.Count);
+            var ys = new List<float>(PopoutPositions.Count);
+            foreach (var kv in PopoutPositions) { keys.Add(kv.Key); xs.Add(kv.Value.X); ys.Add(kv.Value.Y); }
+            tag[TagPopoutPositions + "_K"] = keys;
+            tag[TagPopoutPositions + "_X"] = xs;
+            tag[TagPopoutPositions + "_Y"] = ys;
+        }
+    }
+
+    public override void LoadData(TagCompound tag)
+    {
+        BuildingSettings.ChosenTileItemType = LoadChoiceTag(tag, TagChoiceBuildingTile);
+        BuildingSettings.ChosenWallItemType = LoadChoiceTag(tag, TagChoiceBuildingWall);
+        TorchSettings.ChosenTorchItemType = LoadChoiceTag(tag, TagChoiceTorch);
+        ReplacementSettings.ChosenSourceItemType = LoadChoiceTag(tag, TagChoiceReplacementSource);
+        ReplacementSettings.ChosenTargetItemType = LoadChoiceTag(tag, TagChoiceReplacementTarget);
+
+        CollapsedSections = new Dictionary<string, bool>();
+        if (tag.ContainsKey(TagCollapsedSections + "_K") && tag.ContainsKey(TagCollapsedSections + "_V"))
+        {
+            var keys = tag.GetList<string>(TagCollapsedSections + "_K");
+            var vals = tag.GetList<bool>(TagCollapsedSections + "_V");
+            int n = System.Math.Min(keys.Count, vals.Count);
+            for (int i = 0; i < n; i++) CollapsedSections[keys[i]] = vals[i];
+        }
+
+        PopoutPositions = new Dictionary<string, Vector2>();
+        if (tag.ContainsKey(TagPopoutPositions + "_K") && tag.ContainsKey(TagPopoutPositions + "_X") && tag.ContainsKey(TagPopoutPositions + "_Y"))
+        {
+            var keys = tag.GetList<string>(TagPopoutPositions + "_K");
+            var xs = tag.GetList<float>(TagPopoutPositions + "_X");
+            var ys = tag.GetList<float>(TagPopoutPositions + "_Y");
+            int n = System.Math.Min(keys.Count, System.Math.Min(xs.Count, ys.Count));
+            for (int i = 0; i < n; i++) PopoutPositions[keys[i]] = new Vector2(xs[i], ys[i]);
+        }
+    }
+
+    private static void TrySetTag(TagCompound tag, string key, int? itemType)
+    {
+        TagCompound payload = ChoiceSerialization.SaveChoice(itemType);
+        if (payload != null)
+            tag[key] = payload;
+    }
+
+    private static int? LoadChoiceTag(TagCompound tag, string key)
+    {
+        if (tag == null || !tag.ContainsKey(key))
+            return null;
+        return ChoiceSerialization.LoadChoice(tag.GetCompound(key));
+    }
+
+    /// <summary>
+    /// Reconciles the Wand of Replacement's per-side <see cref="ObjectType"/> field
+    /// (<see cref="WandOfReplacementSettings.OldObject"/> when <paramref name="isSource"/>
+    /// is true, <see cref="WandOfReplacementSettings.NewObject"/> otherwise) to match
+    /// the actual nature of the restored choice item type. Used by <see cref="OnEnterWorld"/>
+    /// to fix the post-relog visual mismatch where a wall choice would persist under a
+    /// freshly-defaulted "Tile" object section. See block-comment in OnEnterWorld for
+    /// full rationale (Letter #11 fix, 2026-04-23 S2).
+    /// </summary>
+    private void ReconcileReplacementObjectTypeToChoice(int? pinItemType, bool isSource)
+    {
+        if (!pinItemType.HasValue)
+            return;
+        Item probe = new();
+        probe.SetDefaults(pinItemType.Value);
+        if (probe.IsAir)
+            return;
+        ObjectType inferred;
+        if (probe.createWall > 0)
+            inferred = ObjectType.Wall;
+        #pragma warning disable ChangeMagicNumberToID
+        else if (probe.createTile >= 0)
+            // Tile category covers Platforms / Ropes / Rails / Seeds / PlanterBox /
+            // regular Tiles. Rather than try to deduce the precise sub-category here
+            // (the IV source predicate already filters by the broader OldObject
+            // bucket), we only differentiate Wall vs non-Wall — the only mismatch
+            // the user can reach via the IV today is "Tile-bucket section vs Wall
+            // choice" because Source/Target sections are wired off the Tile/Wall
+            // dimension. Sub-categories within Tile (Platform / Rope / etc.) are
+            // a future concern if a choice is ever attachable across them.
+            inferred = ObjectType.Tile;
+        #pragma warning restore ChangeMagicNumberToID
+        else
+            return;
+
+        if (isSource)
+        {
+            if (ReplacementSettings.OldObject != inferred)
+                ReplacementSettings.OldObject = inferred;
+        }
+        else
+        {
+            if (ReplacementSettings.NewObject != inferred)
+                ReplacementSettings.NewObject = inferred;
+        }
+    }
+
     public override void OnEnterWorld()
     {
         ClearSelection();
+
+        // Snapshot pins BEFORE the per-world reset wipes them. ResetToDefaults
+        // intentionally clears every setting (Object/Shape/SelectionMode/etc.)
+        // because we want every other setting to start fresh per world entry,
+        // but pins are explicitly per-character-persistent (S8 2026-04-22 per
+        // Cavendish Response #5 §8) so we restore them after the reset.
+        int? pinTile = BuildingSettings.ChosenTileItemType;
+        int? pinWall = BuildingSettings.ChosenWallItemType;
+        int? pinTorch = TorchSettings.ChosenTorchItemType;
+        int? pinReplaceSrc = ReplacementSettings.ChosenSourceItemType;
+        int? pinReplaceTgt = ReplacementSettings.ChosenTargetItemType;
+
         Settings.ResetToDefaults();
         BuildingSettings.ResetToDefaults();
         DismantlingSettings.ResetToDefaults();
@@ -669,5 +1008,77 @@ public class WandPlayer : ModPlayer
         WiringSettings.ResetToDefaults();
         SafekeepingSettings.ResetToDefaults();
         CoatingSettings.ResetToDefaults();
+
+        // Restore pins after the reset.
+        BuildingSettings.ChosenTileItemType = pinTile;
+        BuildingSettings.ChosenWallItemType = pinWall;
+        TorchSettings.ChosenTorchItemType = pinTorch;
+        ReplacementSettings.ChosenSourceItemType = pinReplaceSrc;
+        ReplacementSettings.ChosenTargetItemType = pinReplaceTgt;
+
+        // 2026-04-23 Session 2 (Letter #11 — WoR pin/object-type save-load mismatch).
+        // Bug GrayJou reported: "I was using the Inventory View to replace walls
+        // and I had pins, when I logged back in, it still had the wall pins
+        // although the object type reset back to solid blocks." Root cause: pins
+        // are persistent (per Cavendish Response #5 §8) but ObjectType (OldObject /
+        // NewObject) is wiped by ResetToDefaults() above. After restore the pin
+        // resolves to a wall item but the panel still says Tile, so the IV shows
+        // a wall slot under a "Tile" section header — visual mismatch. Behaviour
+        // was correct because the choice overrides the broad ObjectType category at
+        // execute time, but the UX read as broken.
+        //
+        // Fix: choice = authoritative intent; reconcile the per-side ObjectType to
+        // match the pin's actual createWall/createTile/torch nature on world
+        // entry. This costs nothing when pins are null (default branch), and is
+        // a single-shot reconciliation that doesn't fight further user changes.
+        ReconcileReplacementObjectTypeToChoice(pinReplaceSrc, isSource: true);
+        ReconcileReplacementObjectTypeToChoice(pinReplaceTgt, isSource: false);
+
+        // Same reconciliation for WoB (tile vs wall choice vs OperationType — though
+        // WoB's tile/wall switch is not in scope of the bug report, the same
+        // principle applies trivially: building's two pins live on independent
+        // settings fields tied to the WoB:Tile vs WoB:Wall mode that the user
+        // explicitly toggled with the wand-mode button, so no panel/choice mismatch
+        // arises there. Left as a comment so future audits remember.)
+
+        // Reset Molding wand state (managed by separate ModPlayer, but coordinated here)
+        var moldingPlayer = Player.GetModPlayer<MoldingWandPlayer>();
+        moldingPlayer.ClearAll();
+        moldingPlayer.Settings.ResetToDefaults();
+
+        // Photosensitivity warning for low Torch Wheel spacing values
+        ShowPhotosensitivityWarningIfNeeded();
+    }
+
+    /// <summary>
+    /// If the Outline Spacing (S) is below 6 and Animate Torch Wheel is on,
+    /// show a one-time chat warning about potential photosensitivity issues.
+    /// The warning is suppressed when animation is disabled or when the config
+    /// option PhotosensitivityWarning is off.
+    /// </summary>
+    /// <remarks>
+    /// At 30 tiles/second, low S values produce flicker frequencies in the
+    /// photosensitive range (16–25 Hz) while the wheel remains on screen
+    /// for multiple cycles. Values ≥ 6 keep the effective frequency below
+    /// safe thresholds. See TorchWheelUnderwaterPlan_Verification.md.
+    /// </remarks>
+    private void ShowPhotosensitivityWarningIfNeeded()
+    {
+        var config = WandConfigs.TorchWheel;
+        if (config == null) return;
+
+        // All three conditions must be true to show the warning
+        if (!config.PhotosensitivityWarning) return;
+        if (!config.AnimateTorchWheel) return;
+        if (config.TorchWheelSpacingS >= 6) return;
+
+        Main.NewText(
+            "[World Shaping Wands] ⚠ Photosensitivity Notice: " +
+            $"Torch Wheel Outline Spacing is set to {config.TorchWheelSpacingS}. " +
+            "Low spacing values (below 6) can produce rapid flicker. " +
+            "If you are sensitive to flashing lights, increase spacing or " +
+            "disable 'Animate Torch Wheel' in the Torch Wheel config. " +
+            "This warning can be disabled in config.",
+            new Color(255, 200, 100));
     }
 }

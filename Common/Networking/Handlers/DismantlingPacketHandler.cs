@@ -24,7 +24,7 @@ public static class DismantlingPacketHandler
     /// Packet format: common header (23) + destroyTiles(1) + destroyWalls(1) +
     ///   destroyContainers(1) = 25 bytes total.
     /// SuppressDrops and BypassPickaxePower are server-side config values —
-    /// the server reads them from WandServerConfig directly.
+    /// the server reads them from SandboxConfig/ResourcesConfig directly.
     /// </summary>
     public static void SendDismantlingOperation(
         Point start, Point end,
@@ -98,7 +98,7 @@ public static class DismantlingPacketHandler
         bool destroyContainers)
     {
         var player = Main.player[playerWhoAmI];
-        var config = ModContent.GetInstance<WandServerConfig>();
+        var config = WandConfigs.Sandbox;
         bool suppressDrops = config?.EffectiveSuppressDrops ?? false;
         bool bypassPickPower = config?.EffectiveBypassPickaxePower ?? false;
         bool allowDemonAltars = config?.EffectiveAllowDemonAltarDestruction ?? false;

@@ -1,4 +1,6 @@
 using Microsoft.Xna.Framework;
+using Terraria.ModLoader;
+using WorldShapingWandsMod.Common.Configs;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Geometry;
 
@@ -61,9 +63,19 @@ public struct ShapeInfo
     }
 
     /// <summary>
-    /// Creates a default ShapeInfo (Rectangle, Filled, thickness 1, no equal dimensions).
+    /// Creates a default ShapeInfo using the player's preferred shape type and mode
+    /// from PreferencesConfig, falling back to Rectangle/Filled if config is unavailable.
     /// </summary>
-    public static ShapeInfo Default => new(ShapeType.Rectangle, ShapeMode.Filled, 1, false, SliceMode.Full, true, false);
+    public static ShapeInfo Default
+    {
+        get
+        {
+            var config = ModContent.GetInstance<PreferencesConfig>();
+            if (config != null)
+                return new(config.DefaultShapeType, config.DefaultShapeMode, 1, false, SliceMode.Full, true, false);
+            return new(ShapeType.Rectangle, ShapeMode.Filled, 1, false, SliceMode.Full, true, false);
+        }
+    }
 
     /// <summary>
     /// Returns true if inversion is supported for the current shape type.
@@ -112,7 +124,7 @@ public struct ShapeInfo
     /// </summary>
     public void Validate()
     {
-        int max = Terraria.ModLoader.ModContent.GetInstance<Configs.WandServerConfig>()?.MaxOutlineThickness ?? 10;
+        int max = Configs.WandConfigs.Limits?.MaxOutlineThickness ?? 10;
         Thickness = (int)MathHelper.Clamp(Thickness, 0, max);
     }
 

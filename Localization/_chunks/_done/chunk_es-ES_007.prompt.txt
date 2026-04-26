@@ -1,0 +1,70 @@
+You are translating UI strings for a Terraria mod called "World Shaping
+Wands" into es-ES (Spain Spanish, neutral register; UI label conventions follow existing translated rows).
+
+OUTPUT FORMAT:
+Return ONLY a valid TSV block. The block MUST start with the marker
+###CHUNK-START### on its own line, contain exactly the same Key column
+as provided (NO additions, NO deletions, NO reordering), and end with
+the marker ###CHUNK-END### on its own line. Reference columns (en-US)
+are read-only context — DO NOT modify them. The rightmost column is
+your es-ES translation.
+
+Do not include any explanatory text outside the markers. Do not wrap
+the output in code fences. Just the marker, the rows, the closing marker.
+
+CHUNK 7 of 9 — es-ES — rows 241-280
+
+###CHUNK-START###
+Key	en-US	es-ES (TRANSLATE)
+Items.WandOfFluidsStamp.DisplayName	Wand Of Fluids Stamp	
+Items.WandOfFluidsStamp.Tooltip		
+Items.WandOfTorchesInstant.DisplayName	Wand of Torches (Instant)	
+Items.WandOfTorchesInstant.Tooltip	Places torches in a tiling pattern across a selected area	
+Items.WandOfTorchesSelect.DisplayName	Wand of Torches (Select)	
+Items.WandOfTorchesSelect.Tooltip	Places torches in a tiling pattern across a selected area	
+Items.WandOfTorchesConfirm.DisplayName	Wand of Torches (Confirm)	
+Items.WandOfTorchesConfirm.Tooltip	Places torches in a tiling pattern across a selected area	
+Items.WandOfTorchesStamp.DisplayName	Wand of Torches (Stamp)	
+Items.WandOfTorchesStamp.Tooltip	Define a torch pattern once, then stamp it repeatedly	
+Items.TorchWheelWandSolid.DisplayName	Torch Wheel Wand (Tiles)	
+Items.TorchWheelWandSolidPlatforms.DisplayName	Torch Wheel Wand (Platforms)	
+Items.WandOfDelimitationInstant.DisplayName	Wand of Delimitation (Instant)	
+Items.WandOfDelimitationInstant.Tooltip	Defines canvas and selection regions using geometric shapes	
+Items.WandOfDelimitationSelect.DisplayName	Wand of Delimitation (Select)	
+Items.WandOfDelimitationSelect.Tooltip	Defines canvas and selection regions using geometric shapes	
+Items.WandOfDelimitationConfirm.DisplayName	Wand of Delimitation (Confirm)	
+Items.WandOfDelimitationConfirm.Tooltip	Defines canvas and selection regions using geometric shapes	
+Items.WandOfDelimitationStamp.DisplayName	Wand of Delimitation (Stamp)	
+Items.WandOfDelimitationStamp.Tooltip	Define a selection shape once, then stamp it repeatedly	
+Items.TorchWheelWandPlatform.DisplayName	Torch Wheel Wand (Platform)	
+Items.TorchWheelWandPlatform.Tooltip		
+Items.WandOfMoldingInstant.DisplayName	Wand of Molding (Instant)	
+Items.WandOfMoldingInstant.Tooltip	Sculpts custom shapes from geometric primitives for use with Stamp wands	
+Items.WandOfMoldingSelect.DisplayName	Wand of Molding (Select)	
+Items.WandOfMoldingSelect.Tooltip	Sculpts custom shapes from geometric primitives for use with Stamp wands	
+Items.WandOfMoldingConfirm.DisplayName	Wand of Molding (Confirm)	
+Items.WandOfMoldingConfirm.Tooltip	Sculpts custom shapes from geometric primitives for use with Stamp wands	
+Items.WandOfMoldingStamp.DisplayName	Wand of Molding (Stamp)	
+Items.WandOfMoldingStamp.Tooltip	Define a mold shape once, then stamp it repeatedly	
+Messages.InventoryViewNoParticipant	The block picker is only available for the Wand of Building, Wand of Replacement, and Wand of Torches.	
+Messages.ChosenMissingUnderInterrupt	chosen item is not in inventory — Interrupt mode will not substitute. Operation cancelled.	
+Messages.VoidRequiresCarefree	Void Everything requires Carefree Mode to be enabled.	
+Messages.VoidSinglePlayerOnly	Void Everything is currently only available in single-player.	
+Messages.NoSelectionActive	No selection is active. Use a wand to select an area first.	
+Messages.NothingToVoid	Nothing to void in the selected area.	
+Messages.CoatingNoChanges	No changes made.	
+Messages.CoatingPaintedTiles	Painted {0} tiles.	
+Messages.CoatingPaintedWalls	Painted {0} walls.	
+Messages.CoatingScrapedPaint	Scraped paint from {0} positions.	
+###CHUNK-END###
+
+REFERENCE — already-translated rows from es-ES (DO NOT include these in your output, just match their style):
+  UI.Wiring.BlueWire  |  Blue Wire  |  Cable Azul
+  Configs.ResourcesConfig.InfiniteGrassSeedThreshold.Label  |  Grass Seed Threshold  |  Umbral de Semillas
+  UI.Selection.Status  |  Status  |  Estado
+  UI.Selection.ClearCanvas	| Clear Canvas |	Vaciar Canvas
+  UI.Dismantling.VoidEverythingDisabled	| Void Everything requires Carefree Mode to be enabled in server config. |	Desparecer Todo requiere Modo Despreocupado permitido en las configuraciones
+  Configs.OverlayConfig.OverlayRenderMode.Label	| Overlay Render Mode	| Modo de Renderizado de Capa de Vista Previa
+  CardinalLine| Cardinal Line | Línea Cardinal
+  Actuator | Actuator | Activador
+  Drops | Drops | Objetos Recogibles

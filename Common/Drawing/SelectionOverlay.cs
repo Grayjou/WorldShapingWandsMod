@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
@@ -10,6 +10,7 @@ using WorldShapingWandsMod.Common.Configs;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Geometry;
 using WorldShapingWandsMod.Common.Geometry.Shapes;
+using WorldShapingWandsMod.Common.Items;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Selection;
 using WorldShapingWandsMod.Common.Settings;
@@ -38,6 +39,30 @@ public class SelectionOverlay : ModSystem
     private (int W, int H) _lastAreaDimensions;
     private int _cachedAreaCount = -1;
     private const int AreaDebounceFrames = 10; // ~0.17 seconds at 60fps
+
+    // ── Narrow-Stock Cache ────────────────────────────────────────
+    // Tracks how many of the FIRST eligible source item the held wand
+    // would consume. Used by the dimension label tint matrix so the
+    // colour reflects (stock vs cost) × ExhaustMode. Refreshed on a
+    // short tick to follow live inventory changes without scanning
+    // every frame.
+    private int _cachedNarrowStock = -1;
+    private bool _cachedNarrowInfinite;
+    private int _narrowStockTick;
+    private const int NarrowStockRefreshFrames = 15; // ~0.25s at 60fps
+
+    // ── Stamp Smoothing v3 (W-S4-1, S4 2026-04-24) ─────────────────────────
+    // No per-frame state lives here anymore. The previous _prevScreenMouse /
+    // _prevScreenPosition fields and the SelectionOverlayMath.SmoothPosition
+    // helper they fed have been deleted: v3 maintains the smoothed anchor as
+    // world-space state on WandPlayer.SmoothAnchorWorld, updated once per
+    // logic tick by WandPlayer.UpdateSmoothAnchor (called from
+    // BaseCyclingWand.TemplateStampHoldItem). DrawSelection just reads it.
+    //
+    // Net deletion vs v1/v2: -2 fields, -1 helper method, -PositiveMod, -all
+    // dual-draw scaffolding. Drift-by-camera-offset is impossible by
+    // construction because no camera-offset variable is in scope of the ease.
+    // ────────────────────────────────────────────────────────────────────────
 
     // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
     //  Large Shape Debounce Ã¢â‚¬â€ for shapes whose dimensions exceed
@@ -108,8 +133,23 @@ public class SelectionOverlay : ModSystem
 
     public override void PostDrawTiles()
     {
+        if (_managedByOverlaySystem) return;
+
         if (Main.gameMenu) return;
 
+        var player = Main.LocalPlayer;
+        if (player?.active != true) return;
+
+        DrawAll();
+    }
+
+    /// <summary>
+    /// Core drawing logic extracted from PostDrawTiles.
+    /// Called directly by <see cref="SelectionOverlayAdapter"/> when the overlay
+    /// system is active, or by PostDrawTiles when it is not.
+    /// </summary>
+    public void DrawAll()
+    {
         var player = Main.LocalPlayer;
         if (player?.active != true) return;
 
@@ -122,7 +162,7 @@ public class SelectionOverlay : ModSystem
             DrawCancelledSelection(wandPlayer.CancelledSelection);
         }
 
-        // Draw the active selection overlay Ã¢â‚¬â€ only when visually compatible with held wand.
+        // Draw the active selection overlay -- only when visually compatible with held wand.
         // Incompatible selections are preserved in memory but not drawn; the cursor
         // highlight below provides feedback instead (as if no selection exists).
         if (wandPlayer.IsSelectionVisuallyActive() && wandPlayer.Settings.ShouldShowPreview(isHoldingWand))
@@ -137,6 +177,12 @@ public class SelectionOverlay : ModSystem
             DrawCursorHighlight(shapeSettings);
         }
     }
+
+    /// <summary>
+    /// When true, PostDrawTiles is skipped because the overlay system drives rendering.
+    /// Set by <see cref="SelectionOverlayAdapter"/> during initialization.
+    /// </summary>
+    internal bool _managedByOverlaySystem;
 
     private ShapeInfo GetCurrentShapeSettings(Player player, WandPlayer wandPlayer)
     {
@@ -164,6 +210,24 @@ public class SelectionOverlay : ModSystem
         {
             return wandPlayer.CoatingSettings.Shape;
         }
+        else if (player.HeldItem?.ModItem is WandOfFluidsBase)
+        {
+            return wandPlayer.FluidsSettings.Shape;
+        }
+        else if (player.HeldItem?.ModItem is WandOfTorchesBase)
+        {
+            return wandPlayer.TorchSettings.Shape;
+        }
+        else if (player.HeldItem?.ModItem is WandOfDelimitationBase)
+        {
+            var swp = player.GetModPlayer<DelimitationWandPlayer>();
+            return swp.Settings.Shape;
+        }
+        else if (player.HeldItem?.ModItem is WandOfMoldingBase)
+        {
+            var mwp = player.GetModPlayer<MoldingWandPlayer>();
+            return mwp.Settings.Shape;
+        }
         else
         {
             return new ShapeInfo(wandPlayer.Settings.ShapeType, wandPlayer.Settings.ShapeMode, wandPlayer.Settings.Thickness, slice: wandPlayer.Settings.Slice); // fallback
@@ -177,13 +241,85 @@ public class SelectionOverlay : ModSystem
             || player.HeldItem?.ModItem is WandOfReplacementBase
             || player.HeldItem?.ModItem is WandOfWiringBase
             || player.HeldItem?.ModItem is WandOfSafekeepingBase
-            || player.HeldItem?.ModItem is WandOfCoatingBase;
+            || player.HeldItem?.ModItem is WandOfCoatingBase
+            || player.HeldItem?.ModItem is WandOfFluidsBase
+            || player.HeldItem?.ModItem is WandOfTorchesBase
+            || player.HeldItem?.ModItem is WandOfDelimitationBase
+            || player.HeldItem?.ModItem is WandOfMoldingBase;
+    }
+
+    /// <summary>
+    /// Resolves the overlay base color for the current player's held wand.
+    /// For Fluids wands, returns a per-liquid color from WandColors.GetOverlayBaseForFluids.
+    /// For all other families, delegates to WandColors.GetOverlayBaseForFamily.
+    /// </summary>
+    private static Color ResolveOverlayBaseColor(Player player)
+    {
+        WandFamily family = BaseCyclingWand.GetCurrentFamily(player);
+
+        if (family == WandFamily.Fluids)
+        {
+            var fluidsSettings = player.GetModPlayer<WandPlayer>().FluidsSettings;
+            return WandColors.GetOverlayBaseForFluids(fluidsSettings);
+        }
+
+        return WandColors.GetOverlayBaseForFamily(family);
     }
 
     private void DrawSelection(WandPlayer wandPlayer, ShapeInfo shapeSettings)
     {
         var settings = wandPlayer.Settings;
         var selection = wandPlayer.GetVisualSelection();
+
+        // ── Stamp anchor sub-pixel offset (W-S4-1, S4 2026-04-24) ────────────
+        // Per Cavendish DesignDoc_StampSmoothingV3.md §3.3. Replaces the v1/v2
+        // SelectionOverlayMath.SmoothPosition path entirely (those eased in
+        // screen space against MouseScreen and produced the GrayJou-reported
+        // Δ up to 700 px during the W-S3-1 dual-draw playtest verdict).
+        //
+        // v3 model: WandPlayer.UpdateSmoothAnchor maintains a world-space
+        // exponential ease toward the precise anchor on every logic tick (called
+        // from BaseCyclingWand.TemplateStampHoldItem). At draw time we just pick
+        // between the smoothed and precise anchor and do a single named
+        // world-to-screen subtraction. No camera-offset variable is in scope of
+        // the ease, so coordinate-system drift is impossible by construction.
+        //
+        // Net deletion of v1/v2 scaffold: SelectionOverlayMath.SmoothPosition,
+        // PositiveMod, _prevScreenMouse/_prevScreenPosition tracking,
+        // GetOverlayPositionOffset call site, and all W-S3-1 dual-draw
+        // diagnostic blocks.
+        var stampRenderMode = WandConfigs.Overlay?.StampRenderMode ?? StampRenderMode.Precise;
+
+        Vector2 anchorTileWorld;
+        if (wandPlayer.IsStampLocked)
+        {
+            int bboxMinX = Math.Min(selection.StartTile.X, selection.EndTile.X);
+            int bboxMinY = Math.Min(selection.StartTile.Y, selection.EndTile.Y);
+            anchorTileWorld = new Vector2(
+                (bboxMinX + wandPlayer.StampAnchorOffset.X) * 16f,
+                (bboxMinY + wandPlayer.StampAnchorOffset.Y) * 16f);
+        }
+        else
+        {
+            anchorTileWorld = Vector2.Zero;
+        }
+
+        // §3.3 draw-step. When Smooth + locked + initialised, draw at the
+        // smoothed world anchor; otherwise draw at the precise tile-snapped
+        // anchor (= grid-snap behaviour). The translation from "anchor world"
+        // to "subPixelOffset added to tile*16 - cameraPos" is just the gap
+        // between the smoothed anchor and the tile-snapped anchor.
+        Vector2 subPixelOffset;
+        if (stampRenderMode == StampRenderMode.Smooth
+            && wandPlayer.IsStampLocked
+            && wandPlayer.SmoothAnchorInitialised)
+        {
+            subPixelOffset = wandPlayer.SmoothAnchorWorld - anchorTileWorld;
+        }
+        else
+        {
+            subPixelOffset = Vector2.Zero;
+        }
 
         // Ã¢â€â‚¬Ã¢â€â‚¬ Large shape debounce Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
         // For shapes whose dimensions exceed LargeShapeThreshold,
@@ -194,7 +330,7 @@ public class SelectionOverlay : ModSystem
         int maxDim = Math.Max(bounds.Width, bounds.Height);
 
         // Apply overlay render mode from config
-        var renderMode = ModContent.GetInstance<WandClientConfig>()?.OverlayRenderMode ?? OverlayRenderMode.Auto;
+        var renderMode = WandConfigs.Overlay?.OverlayRenderMode ?? OverlayRenderMode.Auto;
 
         // Track endpoint stability
         if (selection.EndTile != _debounceLastEnd)
@@ -244,7 +380,7 @@ public class SelectionOverlay : ModSystem
         var tiles = GetOrComputeTiles(shapeSettings, selection.StartTile, selection.EndTile, selection.VerticalFirst);
 
         // Read alpha values from client config Ã¢â‚¬â€ allows per-player customisation.
-        var clientConfig = ModContent.GetInstance<WandClientConfig>();
+        var clientConfig = WandConfigs.Overlay;
         float shapeAlpha = clientConfig?.ShapeOverlayAlpha ?? WandColors.OverlayFillOpacity;
         float negAlpha = clientConfig?.GetEffectiveNegativeSpaceAlpha() ?? 0f;
 
@@ -267,7 +403,20 @@ public class SelectionOverlay : ModSystem
 
         Color baseColor = selection.WasClamped && (Main.GameUpdateCount % 30 < 15)
             ? WandColors.OverlayClamped
-            : WandColors.GetOverlayBase();
+            : ResolveOverlayBaseColor(Main.LocalPlayer);
+
+        // Apply step-based brightness (dimmer at first step, brighter near execution)
+        float stepBrightness = WandColors.GetStepBrightness(
+            wandPlayer.SelectionClickStep,
+            wandPlayer.Player.HeldItem?.ModItem switch
+            {
+                BaseCyclingWand bcw => (int)bcw.WandSelectionMode,
+                _ => 1
+            });
+        baseColor = new Color(
+            (int)(baseColor.R * stepBrightness),
+            (int)(baseColor.G * stepBrightness),
+            (int)(baseColor.B * stepBrightness));
 
         Color fillColor = baseColor * (shapeAlpha * alphaMultiplier);
         Color outlineColor = baseColor * (WandColors.OverlayOutlineOpacity * alphaMultiplier);
@@ -314,7 +463,7 @@ public class SelectionOverlay : ModSystem
                     if (tiles.Contains(new Point(x, y)))
                         continue; // Skip tiles that are part of the shape Ã¢â‚¬â€ they get drawn at full alpha
 
-                    Vector2 screenPos = new Vector2(x * 16, y * 16) - Main.screenPosition;
+                    Vector2 screenPos = new Vector2(x * 16, y * 16) - Main.screenPosition + subPixelOffset;
                     Main.spriteBatch.Draw(pixel,
                         new Rectangle((int)screenPos.X, (int)screenPos.Y, 16, 16),
                         negColor);
@@ -325,7 +474,7 @@ public class SelectionOverlay : ModSystem
         // Pass 1: Fill all tiles
         foreach (var tile in tiles)
         {
-            Vector2 screenPos = new Vector2(tile.X * 16, tile.Y * 16) - Main.screenPosition;
+            Vector2 screenPos = new Vector2(tile.X * 16, tile.Y * 16) - Main.screenPosition + subPixelOffset;
 
             if (screenPos.X < -16 || screenPos.X > Main.screenWidth + 16 ||
                 screenPos.Y < -16 || screenPos.Y > Main.screenHeight + 16)
@@ -339,7 +488,7 @@ public class SelectionOverlay : ModSystem
         // Pass 2: Draw outline edges
         foreach (var tile in tiles)
         {
-            Vector2 screenPos = new Vector2(tile.X * 16, tile.Y * 16) - Main.screenPosition;
+            Vector2 screenPos = new Vector2(tile.X * 16, tile.Y * 16) - Main.screenPosition + subPixelOffset;
 
             if (screenPos.X < -32 || screenPos.X > Main.screenWidth + 32 ||
                 screenPos.Y < -32 || screenPos.Y > Main.screenHeight + 32)
@@ -441,10 +590,19 @@ public class SelectionOverlay : ModSystem
             );
         }
 
-        DrawPositionMarker(pixel, selection.StartTile, WandColors.StartMarker);
-        DrawPositionMarker(pixel, effectiveEnd, WandColors.EndMarker);
+        DrawPositionMarker(pixel, selection.StartTile, WandColors.StartMarker, subPixelOffset);
+        DrawPositionMarker(pixel, effectiveEnd, WandColors.EndMarker, subPixelOffset);
 
         Main.spriteBatch.End();
+
+#if DEBUG
+        // ── W-S4-1 (S4 2026-04-24) v3 smoothing debug HUD ─────────────
+        // Always-on in DEBUG builds. Prints the v3 smoothing state directly
+        // from WandPlayer (no helper-class snapshot anymore — that piece of
+        // v1/v2 scaffolding was deleted with SelectionOverlayMath). Cheap
+        // (single string per frame); never compiled into Release.
+        DrawSmoothOverlayDebugHud(wandPlayer, stampRenderMode, anchorTileWorld, subPixelOffset);
+#endif
 
         if (settings.ShowDimensions)
         {
@@ -452,6 +610,23 @@ public class SelectionOverlay : ModSystem
             DrawDimensionLabel(shapeSettings.Shape, dimContext, tiles);
         }
     }
+
+#if DEBUG
+    private void DrawSmoothOverlayDebugHud(
+        WandPlayer wp, StampRenderMode mode, Vector2 anchorTileWorld, Vector2 subPixelOffset)
+    {
+        Vector2 mouseTileF = Main.MouseWorld / 16f;
+        string text =
+            $"WSW Overlay v3  mode={mode}  locked={wp.IsStampLocked}  init={wp.SmoothAnchorInitialised}\n" +
+            $"  mouseTile  = ({(int)Math.Floor(mouseTileF.X)}, {(int)Math.Floor(mouseTileF.Y)})\n" +
+            $"  anchorTW   = ({anchorTileWorld.X:F1}, {anchorTileWorld.Y:F1})\n" +
+            $"  smoothAW   = ({wp.SmoothAnchorWorld.X:F1}, {wp.SmoothAnchorWorld.Y:F1})\n" +
+            $"  subPixel   = ({subPixelOffset.X:F2}, {subPixelOffset.Y:F2})  |Δ|={subPixelOffset.Length():F2}";
+        Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
+        Terraria.Utils.DrawBorderString(Main.spriteBatch, text, new Vector2(8, 96), Color.Lime);
+        Main.spriteBatch.End();
+    }
+#endif
 
     /// <summary>
     /// Draws a lightweight bounding-rectangle outline while a large shape is being
@@ -465,7 +640,8 @@ public class SelectionOverlay : ModSystem
     {
         Color outlineColor = (selection.WasClamped && (Main.GameUpdateCount % 30 < 15)
             ? WandColors.OverlayClamped
-            : WandColors.GetOverlayBase()) * WandColors.DebounceBoundingRectOpacity;
+            : ResolveOverlayBaseColor(Main.LocalPlayer))
+            * WandColors.DebounceBoundingRectOpacity;
 
         Main.spriteBatch.Begin(
             SpriteSortMode.Deferred,
@@ -513,9 +689,9 @@ public class SelectionOverlay : ModSystem
     /// Used to highlight the Start and End points during an active selection,
     /// providing clear visual feedback of the selection anchors for precise placement.
     /// </summary>
-    private void DrawPositionMarker(Texture2D pixel, Point tile, Color color)
+    private void DrawPositionMarker(Texture2D pixel, Point tile, Color color, Vector2 offset = default)
     {
-        Vector2 screenPos = new Vector2(tile.X * 16, tile.Y * 16) - Main.screenPosition;
+        Vector2 screenPos = new Vector2(tile.X * 16, tile.Y * 16) - Main.screenPosition + offset;
 
         // Cull off-screen markers
         if (screenPos.X < -16 || screenPos.X > Main.screenWidth + 16 ||
@@ -573,8 +749,9 @@ public class SelectionOverlay : ModSystem
 
         // Draw with a subtle pulse effect
         float pulse = 0.5f + 0.2f * (float)Math.Sin(Main.GameUpdateCount * 0.08);
-        Color highlightFill = WandColors.GetOverlayBase() * (0.15f * pulse);
-        Color highlightOutline = WandColors.GetOverlayBase() * (0.5f * pulse);
+        Color cursorBaseColor = ResolveOverlayBaseColor(Main.LocalPlayer);
+        Color highlightFill = cursorBaseColor * (0.15f * pulse);
+        Color highlightOutline = cursorBaseColor * (0.5f * pulse);
 
         Main.spriteBatch.Begin(
             SpriteSortMode.Deferred,
@@ -619,6 +796,78 @@ public class SelectionOverlay : ModSystem
         Main.spriteBatch.End();
     }
 
+    /// <summary>
+    /// Resolves the held wand's "intended source item" stock vs cost for the dimension label tint.
+    /// Currently scoped to <see cref="WandOfBuildingBase"/> (the only family with BlockExhaustion semantics).
+    /// Cached and refreshed every <see cref="NarrowStockRefreshFrames"/> frames; the cache is also
+    /// invalidated whenever the area dimensions change. Returns false if no intent is applicable
+    /// (e.g. wand isn't a Building wand, or no eligible source item is in inventory).
+    /// </summary>
+    private bool TryGetNarrowStockForHeldWand(Player player, out int stock, out bool infinite)
+    {
+        stock = 0;
+        infinite = false;
+        if (player == null) return false;
+
+        // Only Building wands currently honor BlockExhaustion. Other families have no intended-block concept.
+        if (player.HeldItem?.ModItem is not WandOfBuildingBase) return false;
+
+        var wandPlayer = player.GetModPlayer<WandPlayer>();
+        var settings = wandPlayer.BuildingSettings;
+        var resourcesCfg = WandConfigs.Resources;
+
+        // Refresh the narrow-stock cache periodically OR after dimensions have changed
+        // (the latter is signalled by _cachedAreaCount being -1 / area unstable).
+        _narrowStockTick++;
+        bool needRefresh = _cachedNarrowStock < 0
+            || _narrowStockTick >= NarrowStockRefreshFrames;
+
+        if (needRefresh)
+        {
+            _narrowStockTick = 0;
+
+            var baseCondition = ItemTypeHelper.GetConditions(settings.Object);
+            Func<Item, bool> condition = item => baseCondition(item) && !ItemTypeHelper.IsMultiTileItem(item);
+            // 2026-04-23 Session 1 (Letter #10 §8 bug): pass the chosen so the tint reflects
+            // the chosen item's stock, not the scan-order-first item's stock. Without the
+            // chosen, a user who chosen "Adamantite Ore" but also had "Dirt" earlier in the
+            // inventory saw the tint track Dirt's 999-stack and go white even when the
+            // actual placement item (Adamantite) was short. The chosen feed here mirrors the
+            // execute path in TileExecution.cs so preview tint ≡ actual operation behaviour.
+            int? chosen = settings.ChosenTileItemType;
+            int sourceIdx = ItemTypeHelper.FindFirstItemIndex(player, condition, chosen);
+            if (sourceIdx < 0)
+            {
+                _cachedNarrowStock = 0;
+                _cachedNarrowInfinite = false;
+                stock = 0;
+                infinite = false;
+                return true; // intent applies, but no items in stock → "insufficient" path
+            }
+
+            Item firstItem = player.inventory[sourceIdx];
+            int chosenType = firstItem.tileWand >= 0 ? firstItem.tileWand : firstItem.type;
+            Func<Item, bool> narrow = i => !i.IsAir && i.type == chosenType;
+
+            _cachedNarrowInfinite = ItemTypeHelper.CountItems(player.inventory, narrow, out int total);
+
+            // Resource config "infinite threshold" also counts as effectively infinite.
+            if (!_cachedNarrowInfinite && resourcesCfg != null
+                && resourcesCfg.IsInfiniteForPlaceType(settings.Object))
+            {
+                int threshold = resourcesCfg.GetThresholdForPlaceType(settings.Object);
+                if (threshold == 0 || total >= threshold)
+                    _cachedNarrowInfinite = true;
+            }
+
+            _cachedNarrowStock = total;
+        }
+
+        stock = _cachedNarrowStock;
+        infinite = _cachedNarrowInfinite;
+        return true;
+    }
+
     private void DrawDimensionLabel(ShapeType shapeType, ShapeContext context, HashSet<Point> tiles)
     {
         var (displayWidth, displayHeight) = ShapeRegistry.GetDisplayDimensions(shapeType, context);
@@ -630,6 +879,7 @@ public class SelectionOverlay : ModSystem
             _lastAreaDimensions = currentDims;
             _areaStableFrames = 0;
             _cachedAreaCount = -1; // invalidate while dimensions are changing
+            _cachedNarrowStock = -1; // re-query stock when cost changes too
         }
         else
         {
@@ -652,15 +902,22 @@ public class SelectionOverlay : ModSystem
         // avoiding overlap with cursor icon and item icons.
         const float offsetX = 24f;
         const float offsetY = -32f;
-        Vector2 cursorScreen = Main.MouseScreen;
+        // Main.MouseScreen is in physical screen pixels but we draw with Main.UIScaleMatrix
+        // (which scales every coordinate by Main.UIScale). Feeding raw pixels in causes
+        // the label to drift away from the cursor by (1 - 1/UIScale) * mouse — invisible
+        // at the top-left, growing toward the bottom-right. Convert to UI-space first.
+        float uiScale = Main.UIScale <= 0f ? 1f : Main.UIScale;
+        Vector2 cursorScreen = Main.MouseScreen / uiScale;
         Vector2 screenPos = new Vector2(cursorScreen.X + offsetX, cursorScreen.Y + offsetY);
 
-        // Ã¢â€â‚¬Ã¢â€â‚¬ Screen-bounds clamping with margin Ã¢â€â‚¬Ã¢â€â‚¬
+        // Screen-bounds clamping with margin (also in UI-space).
         const float margin = 4f;
         Vector2 textSize = FontAssets.MouseText.Value.MeasureString(dimensionText) * textScale;
+        float uiWidth  = Main.screenWidth  / uiScale;
+        float uiHeight = Main.screenHeight / uiScale;
 
-        screenPos.X = Math.Clamp(screenPos.X, margin, Main.screenWidth - margin - textSize.X);
-        screenPos.Y = Math.Clamp(screenPos.Y, margin, Main.screenHeight - margin - textSize.Y);
+        screenPos.X = Math.Clamp(screenPos.X, margin, uiWidth  - margin - textSize.X);
+        screenPos.Y = Math.Clamp(screenPos.Y, margin, uiHeight - margin - textSize.Y);
 
         Main.spriteBatch.Begin(
             SpriteSortMode.Deferred,
@@ -672,8 +929,30 @@ public class SelectionOverlay : ModSystem
             Main.UIScaleMatrix  // Use UI scale so it stays crisp at any zoom
         );
 
+        // Tint by (stock-vs-cost) × BlockExhaustion mode — a 2D matrix:
+        //   stock ≥ cost (or infinite)             → White
+        //   stock <  cost & mode == NextBlock      → Yellow  ("will substitute next block")
+        //   stock <  cost & mode == Cancel         → Red     ("won't even start — short on intended block")
+        //   stock <  cost & mode == Interrupt      → Orange  ("will stop partway when intended block runs out")
+        // Stock is measured against the FIRST eligible source item (the user's intended block),
+        // matching the narrowing applied in TileExecution/WallExecution for Cancel/Interrupt.
+        var exhaust = WandConfigs.Preferences?.BlockExhaustion ?? Common.Enums.BlockExhaustionMode.NextBlock;
+        bool insufficient = TryGetNarrowStockForHeldWand(Main.LocalPlayer, out int stock, out bool infinite)
+            && !infinite
+            && _cachedAreaCount > 0
+            && stock < _cachedAreaCount;
+
+        Color labelTint = !insufficient
+            ? Color.White
+            : exhaust switch
+            {
+                Common.Enums.BlockExhaustionMode.Cancel    => new Color(255,  90,  90), // Red
+                Common.Enums.BlockExhaustionMode.Interrupt => new Color(255, 160,  60), // Orange
+                _                                          => new Color(255, 220,  80), // Yellow (NextBlock)
+            };
+
         Utils.DrawBorderString(Main.spriteBatch, dimensionText, screenPos,
-            Color.White * WandColors.DimensionLabelOpacity, textScale);
+            labelTint * WandColors.DimensionLabelOpacity, textScale);
 
         Main.spriteBatch.End();
     }

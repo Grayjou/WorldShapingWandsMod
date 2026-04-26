@@ -108,7 +108,7 @@ public static class WandPacketHandler
         // no local execution path, so the server must report back.
         if (success && tilesAffected > 0)
         {
-            var clientCfg = ModContent.GetInstance<WandClientConfig>();
+            var clientCfg = WandConfigs.Preferences;
             var player = Main.LocalPlayer;
 
             switch (originalType)

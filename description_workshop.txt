@@ -1,62 +1,71 @@
 [h1]World Shaping Wands[/h1]
 
-A suite of [b]six wand families[/b] for large-scale terrain editing. Build, dismantle, replace, wire, coat, and protect regions of your world using geometric shapes with intuitive selection modes.
+[b]42 wands across 10 families[/b] for large-scale world editing, plus 2 specialized Torch Wheel wands. Build, shape, paint, wire, flood, torch, constrain, and mold any region of your Terraria world using geometric shapes.
 
-[h2]Wand Families[/h2]
+[h2]🔨 10 Wand Families[/h2]
 [list]
-[*][b]Wand of Building[/b] — Place tiles, platforms, walls, rope, planter boxes, and grass seeds in bulk. Supports slope application, block exhaustion modes, and wall placement.
-[*][b]Wand of Dismantling[/b] — Mass-destroy tiles and walls within a shape. Validates pickaxe power. Can destroy containers (chests, dressers) with auto-unlock and item dropping.
-[*][b]Wand of Replacement[/b] — Swap one tile or wall type for another across an area. Substrate-variant aware (e.g., dirt ↔ grass, mud ↔ jungle grass).
-[*][b]Wand of Wiring[/b] — Place or remove red, green, blue, and yellow wire plus actuators in bulk. Full multiplayer support with server-side validation.
-[*][b]Wand of Safekeeping[/b] — Protect tiles from accidental modification. Supports persistent (saved with world) and session-only protection.
-[*][b]Wand of Coating[/b] — Paint tiles and walls, scrape paint, scrape or harvest moss. Supports illuminant and echo coatings.
+[*][b]Building[/b] — Place tiles, walls, platforms, rope, planter boxes, tracks, and grass seeds in bulk. Slope application, block exhaustion modes, wall placement behind tiles.
+[*][b]Dismantling[/b] — Mass-destroy tiles and walls within a shape. Validates pickaxe power. Container destruction with auto-unlock and item dropping. Void Everything mode.
+[*][b]Replacement[/b] — Swap one tile or wall type for another across an area. Substrate-variant aware (dirt ↔ grass, mud ↔ jungle grass). Tri-state filtering.
+[*][b]Wiring[/b] — Place or remove red, green, blue, and yellow wire plus actuators in bulk. Full multiplayer support with server-side validation.
+[*][b]Safekeeping[/b] — Protect tiles from accidental modification. Persistent (saved with world) and session-only protection modes.
+[*][b]Coating[/b] — Paint tiles and walls, apply or remove illuminant and echo coatings, scrape moss, harvest hanging moss. Tri-state toggles.
+[*][b]Fluids[/b] — Pour water, lava, honey, or shimmer in shaped areas. Drain fluids with sponge mode. Three fill modes: Full, Rain, and Pocket.
+[*][b]Torches[/b] — Place, replace, remove, or convert torches in geometric patterns. Biome-aware torch resolution, configurable grid spacing, Manhattan distance layouts.
+[*][b]Delimitation[/b] — Define a constraint area that filters all other wands. Canvas + selection system with boolean operations (Add, Remove, Intersect, XOR). The stencil for precision editing.
+[*][b]Molding[/b] — Sculpt custom shapes by painting a mold. The mold auto-promotes to a reusable template for any other wand family. Canvas-based with the same boolean operations.
 [/list]
 
-[h2]Selection Modes[/h2]
-Each wand comes in four modes — cycle between them by right-clicking the wand in your inventory:
+[h2]🔥 Torch Wheel System[/h2]
+Two standalone wands that automate torch placement along surfaces:
 [list]
-[*][b]Instant[/b] — Click and drag, release to execute
-[*][b]Select[/b] — Click start point, click end point
-[*][b]Confirm[/b] — Click start, click end, click to confirm (3-step safety)
-[*][b]Stamp[/b] — Define a template, then repeat it with each click
+[*][b]Torch Wheel (Solid)[/b] — Follows solid walls, placing torches at configurable spacing with biome-aware resolution.
+[*][b]Torch Wheel (Platform)[/b] — Traces platform paths, placing torches along platforms and handling falls and re-landing.
 [/list]
 
-[h2]Shapes[/h2]
-Rectangle • Ellipse • Diamond • Triangle • Half-Ellipse (H/V) • Elbow (L-shape) • Cardinal Line
-
-Each shape supports [b]Filled[/b] and [b]Hollow[/b] modes with configurable outline thickness. Shape slicing lets you halve shapes horizontally or vertically.
-
-[h2]Key Features[/h2]
+[h2]🎮 4 Selection Modes[/h2]
+Every wand comes in 4 variants — cycle by right-clicking in inventory:
 [list]
-[*]Per-wand settings panels with draggable icon-based UI
-[*]Configurable infinite-resource mode with 3-state per-type overrides
-[*]Block exhaustion handling (NextBlock / Interrupt / Cancel)
-[*]Full undo support (20-deep stack)
-[*]Selection overlay with dimension labels and area count
-[*]Progressive placement mode (batched waves with visual effects)
-[*]Drop suppression toggle
-[*]Demon altar destruction protection
-[*]Crafting recipes with recipe groups (Any Gem, Any Gold Bar, etc.)
-[*]Shimmer decraft support (all wands decraft to Amethyst)
-[*]Thorium Mod cross-compatibility (Opal/Aquamarine gem support)
+[*][b]Instant[/b] — Click once, shape centered on cursor, executes immediately.
+[*][b]Select[/b] — Click start corner, click end corner, executes.
+[*][b]Confirm[/b] — Click start, click end, preview overlay, click to confirm or right-click to cancel.
+[*][b]Stamp[/b] — Define a template, confirm, then click to repeat it anywhere.
 [/list]
 
-[h2]Configuration[/h2]
-Extensive config options including:
+[h2]📐 8 Shape Templates + Custom Mold[/h2]
+Rectangle · Ellipse · Diamond · Triangle · Half-Ellipse (H/V) · Elbow (L-shape) · Cardinal Line · Straight Line · [b]Mold[/b] (custom shape)
+
+Each supports [b]Filled[/b] and [b]Hollow[/b] modes with configurable outline thickness. [b]Slice Mode[/b] halves shapes in any direction. [b]Equal Dimensions[/b] forces square or circle proportions.
+
+[h2]🎨 Visual Overlay System[/h2]
 [list]
-[*]Infinite resource toggles per type (tiles, walls, seeds, wires, actuators)
-[*]Selection distance caps (configurable)
-[*]Progressive mode batch size and interval
-[*]Overlay render modes (Auto / AlwaysFullShape / AlwaysBoundingBox)
-[*]Sound effects toggle
-[*]Pickaxe power bypass
-[*]Max outline thickness
+[*]Selection preview with dimension labels and tile count
+[*]Cancel overlay (red) on right-click cancellation
+[*]Delimitation canvas + selection overlays with configurable colors and opacity
+[*]Molding canvas overlay with teal/cyan theme
+[*]Fluid-aware overlay colors (water blue, lava orange, honey yellow, shimmer pink)
 [/list]
 
-[h2]Status[/h2]
-[b]Beta[/b] — All wand families are fully functional in single-player. Multiplayer support is in progress (Wiring wand has full server-side packet sync; other wands use basic tile sync).
+[h2]⚙️ Highly Configurable[/h2]
+[list]
+[*]10 per-wand settings panels with draggable icon-based UI
+[*]10 mod config files (Resources, Sandbox, Limits, Performance, Stamp, TorchWheel, Carefree, Overlay, Canvas Overlay, Preferences)
+[*]Configurable infinite resources per type (tiles, walls, seeds, wires, actuators, paint, fluid)
+[*]Selection distance caps, progressive batch sizes, overlay render modes
+[*]Full color customization for all overlays
+[/list]
+
+[h2]↩️ Full Undo/Redo[/h2]
+20-deep undo stack. Every tile modification is recorded. Use [b]/undo[/b] and [b]/redo[/b] chat commands, or [b]/undoinfo[/b] to inspect the stack.
+
+[h2]🌍 Localization[/h2]
+Full English localization. Locale files for German, Spanish, French, Italian, Polish, Portuguese (BR), Russian, and Chinese (Simplified) are included and will be completed for future updates.
+
+[h2]Getting Started[/h2]
+Craft any wand at a Work Bench. Each family has its own recipe using gems and bars. Right-click in inventory to cycle selection modes. Open the settings panel to configure shape, mode, and toggles.
 
 [h2]Credits[/h2]
 Developed by Grayjou.
+[url=https://github.com/Grayjou/WorldShapingWandsMod]GitHub Repository[/url]
 Inspired by [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2797518634]ImproveGame[/url] and [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2563784437]CheatSheet[/url].
-Wiring architecture informed by MagicWiring. 
+Wiring architecture informed by MagicWiring.

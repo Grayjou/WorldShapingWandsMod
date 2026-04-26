@@ -1,0 +1,28 @@
+{
+  "_comment": "Manifest consumed by Scripts/SessionManagement/archive_paths.py. Successful entries are removed automatically on --apply runs. Add new candidates by appending strings to 'paths'. Use repo-relative POSIX paths.",
+  "_review_notes": {
+    "added_session": "S18 S3-extension (2026-04-18)",
+    "verification": "Each entry was confirmed completed/superseded by reading the source file's status header or by cross-checking Sessions/Implemented_*.md.",
+    "convention_kept_as_is": [
+      "dev_notes/planning/ImplementedSession*.md (legacy logs — kept per project convention)",
+      "dev_notes/planning/Roadmap.md (now a HISTORICAL redirect — kept accessible at top of planning/)",
+      "dev_notes/planning/TorchIconAudit.md (still useful as the live torch-icon checklist)",
+      "icon_audit.md at repo root (live inventory referenced by current sessions)"
+    ]
+  },
+  "paths": [
+    "dev_notes/planning/PortfolioPlan.md",
+    "dev_notes/planning/MultiPointShapePhase1Plan.md",
+    "dev_notes/planning/DelimitationWandPhase2Plan.md",
+    "dev_notes/planning/DebugPipelinePlan.md",
+    "dev_notes/planning/SummaryDocumentsDesign.md",
+    "dev_notes/planning/TorchWheelProjectileSplitPlan.md",
+    "dev_notes/planning/TorchWheelPlatformFixPlan.md",
+    "dev_notes/planning/TorchWheelUnderwaterPlan.md",
+    "dev_notes/planning/v2.0.0_ReleasePlan.md",
+    "dev_notes/reference/TorchWheelPlatformFixPlan_Verification.md",
+    "dev_notes/reference/TorchWheelUnderwaterPlan_Verification.md",
+    "dev_notes/reference/PortfolioPlan_NewEntries.md",
+    "dev_notes/status/FluidsBubbleBarrierFix.md"
+  ]
+}

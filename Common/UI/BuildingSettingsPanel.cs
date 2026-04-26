@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using Terraria;
@@ -30,6 +30,7 @@ public class BuildingSettingsPanel : UIState
     private UIIconButton _diamondFilledBtn, _diamondHollowBtn;
     private UIIconButton _triangleFilledBtn, _triangleHollowBtn;
     private UIIconButton _edgeBtn, _cardinalBtn, _straightLineBtn;
+    private UIIconButton _moldBtn;
 
     private UIText _thicknessValue;
 
@@ -42,7 +43,17 @@ public class BuildingSettingsPanel : UIState
 
     // Options
     private UIIconButton _equalDimensionsBtn, _connectDiameterBtn, _invertSelectionBtn, _paintSprayerBtn, _actuationBtn;
+    // S9: third button in the Building.Options row that toggles the InventoryView panel.
+    // Makes the InventoryView keybind optional per user S9 directive #3 (panel discoverability).
+    // Stateful toggle: button.Toggled mirrors WandUISystem.InventoryViewUI.IsVisible (synced in Update).
+    private UIIconButton _openInventoryViewBtn;
     private UISliceGrid _sliceGrid;
+
+    // Paint Sprayer source toggle textures (Off / Inventory / CoatingSettings).
+    // See Common/Settings/PaintSprayerSource.cs and DesignDoc_PaintSprayerSourceToggle.md.
+    private Asset<Texture2D> _texPaintSprayerOff;
+    private Asset<Texture2D> _texPaintSprayerInventory;
+    private Asset<Texture2D> _texPaintSprayerCoating;
 
     private WandPanelBuilder _builder;
 
@@ -58,8 +69,8 @@ public class BuildingSettingsPanel : UIState
         _mainPanel.Width.Set(PanelWidth, 0f);
         _mainPanel.HAlign = 0.5f;
         _mainPanel.VAlign = 0.5f;
-        _mainPanel.BackgroundColor = new Color(44, 57, 105, 220);
-        _mainPanel.BorderColor = new Color(20, 20, 60);
+        _mainPanel.BackgroundColor = WandPanelTheme.PanelChrome.BuildingBg;
+        _mainPanel.BorderColor = WandPanelTheme.PanelChrome.BuildingBorder;
         Append(_mainPanel);
 
         var mod = ModContent.GetInstance<WorldShapingWandsMod>();
@@ -68,13 +79,13 @@ public class BuildingSettingsPanel : UIState
         _builder.AddTitle("Building.Title");
 
         // === OBJECT TYPE ===
-        var texSolid     = mod.Assets.Request<Texture2D>("Assets/Icons/ObjSolid", AssetRequestMode.ImmediateLoad);
-        var texPlatform  = mod.Assets.Request<Texture2D>("Assets/Icons/ObjPlatform", AssetRequestMode.ImmediateLoad);
-        var texRope      = mod.Assets.Request<Texture2D>("Assets/Icons/ObjRope", AssetRequestMode.ImmediateLoad);
-        var texRail      = mod.Assets.Request<Texture2D>("Assets/Icons/ObjRail", AssetRequestMode.ImmediateLoad);
-        var texGrassSeed = mod.Assets.Request<Texture2D>("Assets/Icons/ObjGrassSeed", AssetRequestMode.ImmediateLoad);
-        var texPlanter   = mod.Assets.Request<Texture2D>("Assets/Icons/ObjPlanter", AssetRequestMode.ImmediateLoad);
-        var texWall      = mod.Assets.Request<Texture2D>("Assets/Icons/ObjWall", AssetRequestMode.ImmediateLoad);
+        var texSolid     = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Objects/ObjSolid", AssetRequestMode.ImmediateLoad);
+        var texPlatform  = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Objects/ObjPlatform", AssetRequestMode.ImmediateLoad);
+        var texRope      = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Objects/ObjRope", AssetRequestMode.ImmediateLoad);
+        var texRail      = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Objects/ObjRail", AssetRequestMode.ImmediateLoad);
+        var texGrassSeed = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Objects/ObjGrassSeed", AssetRequestMode.ImmediateLoad);
+        var texPlanter   = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Objects/ObjPlanter", AssetRequestMode.ImmediateLoad);
+        var texWall      = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Objects/ObjWall", AssetRequestMode.ImmediateLoad);
 
         _builder.AddSectionHeader("Building.ObjectType");
         _builder.AddIconGrid(new WandPanelBuilder.IconDef[]
@@ -102,6 +113,7 @@ public class BuildingSettingsPanel : UIState
         _diamondFilledBtn = shapes.DiamondFilled;  _diamondHollowBtn = shapes.DiamondHollow;
         _triangleFilledBtn = shapes.TriangleFilled; _triangleHollowBtn = shapes.TriangleHollow;
         _edgeBtn = shapes.Elbow; _cardinalBtn = shapes.Cardinal; _straightLineBtn = shapes.StraightLine;
+        _moldBtn = shapes.Mold;
 
         // === SLICE ===
         _builder.AddSliceSection(out _sliceGrid, OnSliceChanged);
@@ -110,12 +122,12 @@ public class BuildingSettingsPanel : UIState
         _builder.AddThicknessSection(out _thicknessValue, AdjustThickness);
 
         // === SLOPE ===
-        var texDefault     = mod.Assets.Request<Texture2D>("Assets/Icons/SlopeDefault", AssetRequestMode.ImmediateLoad);
-        var texHalf        = mod.Assets.Request<Texture2D>("Assets/Icons/SlopeHalf", AssetRequestMode.ImmediateLoad);
-        var texBottomRight = mod.Assets.Request<Texture2D>("Assets/Icons/SlopeBottomRight", AssetRequestMode.ImmediateLoad);
-        var texBottomLeft  = mod.Assets.Request<Texture2D>("Assets/Icons/SlopeBottomLeft", AssetRequestMode.ImmediateLoad);
-        var texTopRight    = mod.Assets.Request<Texture2D>("Assets/Icons/SlopeTopRight", AssetRequestMode.ImmediateLoad);
-        var texTopLeft     = mod.Assets.Request<Texture2D>("Assets/Icons/SlopeTopLeft", AssetRequestMode.ImmediateLoad);
+        var texDefault     = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Slopes/SlopeDefault", AssetRequestMode.ImmediateLoad);
+        var texHalf        = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Slopes/SlopeHalf", AssetRequestMode.ImmediateLoad);
+        var texBottomRight = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Slopes/SlopeBottomRight", AssetRequestMode.ImmediateLoad);
+        var texBottomLeft  = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Slopes/SlopeBottomLeft", AssetRequestMode.ImmediateLoad);
+        var texTopRight    = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Slopes/SlopeTopRight", AssetRequestMode.ImmediateLoad);
+        var texTopLeft     = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Slopes/SlopeTopLeft", AssetRequestMode.ImmediateLoad);
 
         _builder.AddSectionHeader("Building.Slope");
         _builder.AddIconGrid(new WandPanelBuilder.IconDef[]
@@ -138,26 +150,48 @@ public class BuildingSettingsPanel : UIState
         _builder.AddCenteredToggle("Building.OverwriteSlope", true, out _overwriteSlopeBtn);
 
         // === OPTIONS ===
-        var texEqualDim     = mod.Assets.Request<Texture2D>("Assets/Icons/ToggleEqualDim", AssetRequestMode.ImmediateLoad);
-        var texConnectDiam  = mod.Assets.Request<Texture2D>("Assets/Icons/ToggleConnectDiam", AssetRequestMode.ImmediateLoad);
-        var texInvertSel    = mod.Assets.Request<Texture2D>("Assets/Icons/ToggleInvertSel", AssetRequestMode.ImmediateLoad);
-        var texPaintSprayer = mod.Assets.Request<Texture2D>("Assets/Icons/TogglePaintSprayer", AssetRequestMode.ImmediateLoad);
-        var texActuation    = mod.Assets.Request<Texture2D>("Assets/Icons/ToggleActuation", AssetRequestMode.ImmediateLoad);
+        var texEqualDim     = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleEqualDim", AssetRequestMode.ImmediateLoad);
+        var texConnectDiam  = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleConnectDiam", AssetRequestMode.ImmediateLoad);
+        var texInvertSel    = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleInvertSel", AssetRequestMode.ImmediateLoad);
+        var texPaintSprayer = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/TogglePaintSprayer", AssetRequestMode.ImmediateLoad);
+        var texActuation    = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleActuation", AssetRequestMode.ImmediateLoad);
+        // S9 placeholder icon for InventoryView toggle — reuses the generic tile-cube glyph.
+        // TODO: replace with a dedicated "open block-picker" icon once art is drafted.
+        var texInventoryView = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleInventoryView", AssetRequestMode.ImmediateLoad);
+        _texPaintSprayerOff       = texPaintSprayer;
+        _texPaintSprayerInventory = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/TogglePaintSprayerInventory", AssetRequestMode.ImmediateLoad);
+        _texPaintSprayerCoating   = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/TogglePaintSprayerCoating", AssetRequestMode.ImmediateLoad);
 
-        _builder.AddOptionsSection(new WandPanelBuilder.IconDef[]
+        _builder.AddShapeOptionsSection(new WandPanelBuilder.IconDef[]
         {
             new(texEqualDim,     "Common.EqualDimensions",      isToggle: true),
             new(texConnectDiam,  "Common.ConnectDiameterTooltip", isToggle: true, initialState: true),
             new(texInvertSel,    "Common.InvertSelection",      isToggle: true),
-            new(texPaintSprayer, "Common.PaintSprayer",          isToggle: true),
-            new(texActuation,    "Common.ActuationIgnore",      isToggle: true),
         }, out var optBtns);
         _equalDimensionsBtn = optBtns[0];
         _connectDiameterBtn = optBtns[1];
         _invertSelectionBtn = optBtns[2];
-        _paintSprayerBtn    = optBtns[3];
-        _actuationBtn       = optBtns[4];
-        _actuationBtn.InactiveColor = new Color(50, 50, 70);
+
+        // === BUILDING OPTIONS (Paint Sprayer + Actuation + InventoryView toggle) ===
+        // S9: third button opens/closes the InventoryView panel for the held wand.
+        // Makes the InventoryView keybind optional — discoverable from the panel itself.
+        _builder.AddIconToggleRow("Building.Options", new WandPanelBuilder.IconDef[]
+        {
+            new(texPaintSprayer,  "Common.PaintSprayer",      isToggle: true),
+            new(texActuation,     "Common.ActuationIgnore",   isToggle: true),
+            new(texInventoryView, "Common.OpenInventoryView", isToggle: true),
+        }, out var buildOptBtns);
+        _paintSprayerBtn    = buildOptBtns[0];
+        _paintSprayerBtn.IsRadio = false;
+        _paintSprayerBtn.AllowDeselect = true;
+        _paintSprayerBtn.InactiveColor = WandPanelTheme.Colors.ButtonInactive;
+        _actuationBtn       = buildOptBtns[1];
+        _actuationBtn.InactiveColor = WandPanelTheme.Colors.ButtonInactive;
+        _openInventoryViewBtn = buildOptBtns[2];
+        _openInventoryViewBtn.IsRadio = false;
+        _openInventoryViewBtn.AllowDeselect = true;
+        _openInventoryViewBtn.ActiveColor = WandPanelTheme.Colors.ActiveBlue;
+        _openInventoryViewBtn.InactiveColor = WandPanelTheme.Colors.ButtonInactive;
 
         // === CLOSE ===
         _builder.AddCloseButton();
@@ -183,6 +217,7 @@ public class BuildingSettingsPanel : UIState
         _diamondHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.Diamond, ShapeMode.Hollow);
         _triangleFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.Triangle, ShapeMode.Filled);
         _triangleHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.Triangle, ShapeMode.Hollow);
+        _moldBtn.OnToggled += (_, _) => SetShape(ShapeType.Mold, ShapeMode.Filled);
 
         _slopeDefaultBtn.OnToggled += (_, _) => SetSlope(SlopeType.Default);
         _slopeHalfBtn.OnToggled += (_, _) => SetSlope(SlopeType.VerticalHalf);
@@ -195,8 +230,21 @@ public class BuildingSettingsPanel : UIState
         _equalDimensionsBtn.OnToggled += (_, _) => ToggleEqualDimensions();
         _connectDiameterBtn.OnToggled += (_, _) => ToggleConnectDiameter();
         _invertSelectionBtn.OnToggled += (_, _) => ToggleInvertSelection();
-        _paintSprayerBtn.OnToggled += (_, _) => TogglePaintSprayer();
+        _paintSprayerBtn.OnToggled += (_, _) => CyclePaintSprayer();
         _actuationBtn.OnToggled += (_, _) => CycleActuation();
+        _openInventoryViewBtn.OnToggled += (_, _) => ToggleInventoryViewPanel();
+    }
+
+    /// <summary>
+    /// S9: toggles the InventoryView panel via <see cref="WandUISystem.ToggleInventoryView"/>.
+    /// The button's visual <c>Toggled</c> state is re-synced from the panel's actual
+    /// <c>IsVisible</c> in <see cref="UpdateInventoryViewButton"/> (single source of truth on
+    /// the WandUISystem side, so other open paths — keybind, Escape close, CloseAllUI — stay
+    /// reflected in the button without desync).
+    /// </summary>
+    private void ToggleInventoryViewPanel()
+    {
+        ModContent.GetInstance<WandUISystem>()?.ToggleInventoryView();
     }
 
     private WandOfBuildingSettings GetSettings() =>
@@ -217,7 +265,19 @@ public class BuildingSettingsPanel : UIState
     private void ToggleEqualDimensions() { var s = GetSettings(); if (s == null) return; var sh = s.Shape; sh.EqualDimensions = _equalDimensionsBtn.Toggled; s.Shape = sh; }
     private void ToggleConnectDiameter() { var s = GetSettings(); if (s == null) return; var sh = s.Shape; sh.ConnectDiameter = _connectDiameterBtn.Toggled; s.Shape = sh; }
     private void ToggleInvertSelection() { var s = GetSettings(); if (s == null) return; var sh = s.Shape; sh.InvertSelection = _invertSelectionBtn.Toggled; s.Shape = sh; }
-    private void TogglePaintSprayer() { var s = GetSettings(); if (s == null) return; s.PaintSprayer = _paintSprayerBtn.Toggled; }
+    private void TogglePaintSprayer()
+    {
+        // Legacy entry point retained for any external caller; delegates to the cycler.
+        CyclePaintSprayer();
+    }
+
+    private void CyclePaintSprayer()
+    {
+        var s = GetSettings();
+        if (s == null) return;
+        s.PaintSprayer = s.PaintSprayer.Next();
+        UpdatePaintSprayerButton();
+    }
     private void OnSliceChanged(SliceMode slice) { var s = GetSettings(); if (s == null) return; var sh = s.Shape; sh.Slice = slice; s.Shape = sh; }
 
     private void CycleActuation()
@@ -240,7 +300,7 @@ public class BuildingSettingsPanel : UIState
         var settings = GetSettings();
         if (settings == null) return;
         var shape = settings.Shape;
-        int max = ModContent.GetInstance<WandServerConfig>()?.MaxOutlineThickness ?? 10;
+        int max = WandConfigs.Limits?.MaxOutlineThickness ?? 10;
         shape.Thickness = System.Math.Clamp(shape.Thickness + delta, 0, max);
         settings.Shape = shape;
         UpdateThicknessDisplay();
@@ -275,6 +335,7 @@ public class BuildingSettingsPanel : UIState
         _diamondHollowBtn.Toggled = shape.Shape == ShapeType.Diamond && shape.FillMode == ShapeMode.Hollow;
         _triangleFilledBtn.Toggled = shape.Shape == ShapeType.Triangle && shape.FillMode == ShapeMode.Filled;
         _triangleHollowBtn.Toggled = shape.Shape == ShapeType.Triangle && shape.FillMode == ShapeMode.Hollow;
+        _moldBtn.Toggled = shape.Shape == ShapeType.Mold;
     }
 
     private void UpdateThicknessDisplay() { _thicknessValue?.SetText(GetSettings()?.Shape.Thickness.ToString() ?? "1"); }
@@ -296,7 +357,34 @@ public class BuildingSettingsPanel : UIState
     private void UpdateSliceGrid() { var s = GetSettings(); if (s == null || _sliceGrid == null) return; _sliceGrid.SetValue(s.Shape.Slice); }
     private void UpdateConnectDiameterButton() { var s = GetSettings(); if (s == null || _connectDiameterBtn == null) return; _connectDiameterBtn.Toggled = s.Shape.ConnectDiameter; }
     private void UpdateInvertSelectionButton() { var s = GetSettings(); if (s == null || _invertSelectionBtn == null) return; _invertSelectionBtn.Toggled = s.Shape.InvertSelection; _invertSelectionBtn.Disabled = !s.Shape.SupportsInversion; }
-    private void UpdatePaintSprayerButton() { var s = GetSettings(); if (s == null || _paintSprayerBtn == null) return; _paintSprayerBtn.Toggled = s.PaintSprayer; }
+    private void UpdatePaintSprayerButton()
+    {
+        var s = GetSettings();
+        if (s == null || _paintSprayerBtn == null) return;
+
+        // Tri-state visual: Off (grey, base icon), Inventory (saddle-brown tint, backpack icon),
+        // Coating (teal tint, coating-wand-tip icon). See PaintSprayerSource.cs.
+        switch (s.PaintSprayer)
+        {
+            case PaintSprayerSource.Off:
+                _paintSprayerBtn.Toggled = false;
+                _paintSprayerBtn.SetTexture(_texPaintSprayerOff);
+                _paintSprayerBtn.HoverText = L("Common.PaintSprayer.Off");
+                break;
+            case PaintSprayerSource.Inventory:
+                _paintSprayerBtn.Toggled = true;
+                _paintSprayerBtn.ActiveColor = WandPanelTheme.Colors.PaintSourceBrown;
+                _paintSprayerBtn.SetTexture(_texPaintSprayerInventory);
+                _paintSprayerBtn.HoverText = L("Common.PaintSprayer.Inventory");
+                break;
+            case PaintSprayerSource.CoatingSettings:
+                _paintSprayerBtn.Toggled = true;
+                _paintSprayerBtn.ActiveColor = WandPanelTheme.Colors.PaintCoatingTeal;
+                _paintSprayerBtn.SetTexture(_texPaintSprayerCoating);
+                _paintSprayerBtn.HoverText = L("Common.PaintSprayer.Coating");
+                break;
+        }
+    }
 
     private void UpdateActuationButton()
     {
@@ -306,18 +394,18 @@ public class BuildingSettingsPanel : UIState
         if (settings.Actuation == null)
         {
             _actuationBtn.Toggled = false;
-            _actuationBtn.ActiveColor = new Color(80, 200, 80);
-            _actuationBtn.InactiveColor = new Color(50, 50, 70);
+            _actuationBtn.ActiveColor = WandPanelTheme.Colors.ActiveGreen;
+            _actuationBtn.InactiveColor = WandPanelTheme.Colors.ButtonInactive;
         }
         else if (settings.Actuation == true)
         {
             _actuationBtn.Toggled = true;
-            _actuationBtn.ActiveColor = new Color(80, 200, 80);
+            _actuationBtn.ActiveColor = WandPanelTheme.Colors.ActiveGreen;
         }
         else
         {
             _actuationBtn.Toggled = true;
-            _actuationBtn.ActiveColor = new Color(200, 80, 80);
+            _actuationBtn.ActiveColor = WandPanelTheme.Colors.ActiveRed;
         }
 
         string stateKey = settings.Actuation switch
@@ -327,6 +415,16 @@ public class BuildingSettingsPanel : UIState
             false => "Common.ActuationOff",
         };
         _actuationBtn.HoverText = L(stateKey);
+    }
+
+    private void UpdateInventoryViewButton()
+    {
+        if (_openInventoryViewBtn == null) return;
+        // Mirror the actual panel visibility — the WandUISystem may close the panel via
+        // Escape, CloseAllUI, or off-family hold; the button must reflect that.
+        var sys = ModContent.GetInstance<WandUISystem>();
+        bool open = sys?.InventoryViewUI?.IsVisible ?? false;
+        _openInventoryViewBtn.Toggled = open;
     }
 
     private void SyncFromSettings()
@@ -342,6 +440,7 @@ public class BuildingSettingsPanel : UIState
         UpdateInvertSelectionButton();
         UpdatePaintSprayerButton();
         UpdateActuationButton();
+        UpdateInventoryViewButton();
     }
 
     public override void Update(GameTime gameTime)
@@ -353,7 +452,8 @@ public class BuildingSettingsPanel : UIState
             Main.LocalPlayer.mouseInterface = true;
 
         if (Main.keyState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.Escape))
-            ModContent.GetInstance<WandUISystem>().CloseAllUI();
+            // (S5 2026-04-25 — Letter #4 §2) Esc preserves IV intent; CloseAllPanels.
+            ModContent.GetInstance<WandUISystem>().CloseAllPanels();
     }
 
     public override void Draw(SpriteBatch spriteBatch)

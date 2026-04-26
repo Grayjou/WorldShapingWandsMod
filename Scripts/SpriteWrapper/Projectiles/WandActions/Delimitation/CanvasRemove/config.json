@@ -1,0 +1,10 @@
+{
+    "layers": [
+        {
+            "name": "Base",
+            "index": 0
+        }
+    ],
+    "export_to": "Content_Source/Projectiles/WandActions/Delimitation/WandAction_DelimitationCanvasRemove.png",
+    "convolution_matrices": []
+}

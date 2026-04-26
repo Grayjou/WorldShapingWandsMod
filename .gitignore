@@ -1,11 +1,18 @@
 # Build output
 obj/
 bin/
-
+2026-*
+April*
+Archive/
+.gitignore.bak
+LettersSent
+LetterDrafts/
+*.cache
+NoiseRnD/
 # Visual Studio
 .vs/
 *.user
-
+Assets/
 # OS
 .DS_Store
 Thumbs.db
@@ -34,13 +41,13 @@ Session*.txt
 *.xlsx
 data/
 # Showcase/archive assets (not mod code)
+Scripts\DevOps
 Archive/
-
+Scripts\all_sessions_header.txt
 # Local state files
 .session_state.json
 
-# Python scripts folder
-Scripts/
+*__pycache__/
 
 # Root-level docs that are personal/project-management (not shipped)
 CurrentStateAndStatus.md
@@ -48,4 +55,12 @@ IssuesAndFixes.md
 /Roadmap.md
 /TODO_FEATURES.md
 WorldShapingWandsMod_MagicStorage*.md
+.premultiply_manifest.json
+Assets/
+Content_Source/
+/Scripts/GeometricIcons/__pycache__
 gitignore_status.json
+icon_audit.md
+content_sprite_audit.md
+.letter_state.json
+/Scripts/DevOps

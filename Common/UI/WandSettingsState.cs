@@ -37,8 +37,8 @@ public class WandSettingsState : UIState
         _mainPanel.Height.Set(280f, 0f);
         _mainPanel.HAlign = 0.5f;
         _mainPanel.VAlign = 0.5f;
-        _mainPanel.BackgroundColor = new Color(33, 43, 79) * 0.9f;
-        _mainPanel.BorderColor = new Color(89, 116, 213);
+        _mainPanel.BackgroundColor = WandPanelTheme.Colors.UniversalPanelBg * 0.9f;
+        _mainPanel.BorderColor = WandPanelTheme.Colors.HeaderStripBorder;
         Append(_mainPanel);
 
         float yOffset = 10f;
@@ -90,8 +90,8 @@ public class WandSettingsState : UIState
         closeButton.HAlign = 0.5f;
         closeButton.Top.Set(yOffset, 0f);
         closeButton.OnLeftClick += (evt, elem) => IsVisible = false;
-        closeButton.OnMouseOver += (evt, elem) => ((UIPanel)elem).BackgroundColor = new Color(73, 94, 171);
-        closeButton.OnMouseOut += (evt, elem) => ((UIPanel)elem).BackgroundColor = new Color(63, 82, 151);
+        closeButton.OnMouseOver += (evt, elem) => ((UIPanel)elem).BackgroundColor = WandPanelTheme.Colors.CloseButtonHover;
+        closeButton.OnMouseOut += (evt, elem) => ((UIPanel)elem).BackgroundColor = WandPanelTheme.Colors.CloseButton;
         _mainPanel.Append(closeButton);
     }
 
@@ -196,7 +196,7 @@ public class WandSettingsState : UIState
         plusBtn.OnLeftClick += (evt, elem) =>
         {
             var settings = Main.LocalPlayer.GetModPlayer<WandPlayer>().Settings;
-            int max = ModContent.GetInstance<Configs.WandServerConfig>()?.MaxOutlineThickness ?? 10;
+            int max = Configs.WandConfigs.Limits?.MaxOutlineThickness ?? 10;
             settings.Thickness = System.Math.Min(max, settings.Thickness + 1);
             UpdateButtonStates();
         };
@@ -223,8 +223,8 @@ public class WandSettingsState : UIState
         {
             bool isSelected = settings.ShapeType == shapeTypes[i];
             _shapeButtons[i].BackgroundColor = isSelected 
-                ? new Color(73, 94, 171) 
-                : new Color(63, 82, 151) * 0.7f;
+                ? WandPanelTheme.Colors.CloseButtonHover 
+                : WandPanelTheme.Colors.CloseButton * 0.7f;
         }
 
         // Update mode buttons
@@ -234,8 +234,8 @@ public class WandSettingsState : UIState
         {
             bool isSelected = settings.ShapeMode == shapeModes[i];
             _modeButtons[i].BackgroundColor = isSelected 
-                ? new Color(73, 94, 171) 
-                : new Color(63, 82, 151) * 0.7f;
+                ? WandPanelTheme.Colors.CloseButtonHover 
+                : WandPanelTheme.Colors.CloseButton * 0.7f;
         }
 
         // Update thickness display

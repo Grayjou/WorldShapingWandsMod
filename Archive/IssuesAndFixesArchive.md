@@ -235,7 +235,7 @@ Added `UnlockStamp()` method to `WandPlayer` — clears stamp state but preserve
 - `WandOfWiringSettings.cs` — default shape updated
 - `ShapeTestCommand.cs` — case updated
 - Localization — `ShapeElbow: Elbow`
-- `Assets/Icons/ShapeElbow.png` — asset file renamed
+- `Assets/Icons/Shapes/ShapeElbow.png` — asset file renamed
 - **Stale `EdgeShape.cs` deleted** (duplicate of `ElbowShape.cs`, would cause compile conflict)
 
 ### #39 — Wiring Overlay Axis-Flip Bug (Critical Fix)

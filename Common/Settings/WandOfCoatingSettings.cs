@@ -19,7 +19,7 @@ public class WandOfCoatingSettings
     /// Ignored for ScrapeMoss and HarvestMoss modes.
     /// See <see cref="Terraria.ID.PaintID"/> for numeric values.
     /// </summary>
-    public byte PaintColor { get; set; } = 26; // Default: White paint (PaintID.White = 26)
+    public byte PaintColor { get; set; } = 255; // Default: Ignore (don't change existing paint)
 
     /// <summary>
     /// Tri-state control for Illuminant coating.
@@ -102,7 +102,7 @@ public class WandOfCoatingSettings
     public void ResetToDefaults()
     {
         Mode = CoatingMode.PaintTile;
-        PaintColor = 26; // White (PaintID.White = 26)
+        PaintColor = 255; // Ignore (don't change existing paint)
         Illuminant = TriStateValue.Ignore;
         Echo = TriStateValue.Ignore;
         Repaint = true;
@@ -139,8 +139,10 @@ public class WandOfCoatingSettings
     public void Validate()
     {
         Shape.Validate();
-        // PaintColor 0 is valid (transparent/none), clamp to 0–30
-        if (PaintColor > 30) PaintColor = 30;
+        // PaintColor 0 is valid (transparent/none), 1-30 are vanilla paints,
+        // 255 is IgnorePaintColor (don't change existing paint)
+        if (PaintColor > 30 && PaintColor != 255)
+            PaintColor = 30;
         // ScrapePaint (2) has been removed from the UI. Migrate any saved value to ScrapeMoss.
 #pragma warning disable CS0618
         if (Mode == CoatingMode.ScrapePaint) Mode = CoatingMode.ScrapeMoss;

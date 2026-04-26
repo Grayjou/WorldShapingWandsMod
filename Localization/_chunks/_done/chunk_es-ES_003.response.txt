@@ -1,0 +1,47 @@
+# Paste agent response for chunk 003 below this line.
+###CHUNK-START###		
+Key	en-US	es-ES (TRANSLATE)
+Configs.InfiniteOverride.ForceOn.Tooltip		
+Configs.InfiniteOverride.ForceOn.Label	Force On	Forzar Activado
+Configs.InfiniteOverride.Default.Tooltip		
+Configs.InfiniteOverride.Default.Label	Default	Predeterminado
+Configs.InfiniteOverride.Tooltip		
+Configs.OverlayRenderMode.Tooltip		
+Configs.OverlayRenderMode.Auto.Label	Auto	Auto
+Configs.OverlayRenderMode.Auto.Tooltip		
+Configs.OverlayRenderMode.AlwaysFullShape.Label	Always Full Shape	Siempre Forma Completa
+Configs.OverlayRenderMode.AlwaysFullShape.Tooltip		
+Configs.OverlayRenderMode.AlwaysBoundingBox.Label	Always Bounding Box	Siempre Cuadro Delimitador
+Configs.OverlayRenderMode.AlwaysBoundingBox.Tooltip		
+Configs.StampRenderMode.Tooltip		
+Configs.StampRenderMode.Precise.Label	Precise	Preciso
+Configs.StampRenderMode.Precise.Tooltip		
+Configs.StampRenderMode.Smooth.Label	Smooth	Suave
+Configs.StampRenderMode.Smooth.Tooltip		
+Configs.WandConfig.DisplayName	Wand Config	Configuración de Varita
+Configs.WandConfig.EnableInfiniteResource.Label	Enable Infinite Resource	Activar Recursos Infinitos
+Configs.WandConfig.EnableInfiniteResource.Tooltip		
+Configs.WandConfig.InfiniteTileThreshold.Label	Infinite Tile Threshold	Umbral de Bloques Infinitos
+Configs.WandConfig.InfiniteTileThreshold.Tooltip		
+Configs.WandConfig.InfiniteWallThreshold.Label	Infinite Wall Threshold	Umbral de Paredes Infinitas
+Configs.WandConfig.InfiniteWallThreshold.Tooltip		
+Configs.WandConfig.InfiniteGrassSeedThreshold.Label	Infinite Grass Seed Threshold	Umbral de Semillas de Hierba Infinitas
+Configs.WandConfig.InfiniteGrassSeedThreshold.Tooltip		
+Configs.WandConfig.InfiniteWireThreshold.Label	Infinite Wire Threshold	Umbral de Cables Infinitos
+Configs.WandConfig.InfiniteWireThreshold.Tooltip		
+Configs.WandConfig.InfiniteActuatorThreshold.Label	Infinite Actuator Threshold	Umbral de Actuadores Infinitos
+Configs.WandConfig.InfiniteActuatorThreshold.Tooltip		
+Configs.WandConfig.InfiniteTiles.Label	Infinite Tiles	Bloques Infinitos
+Configs.WandConfig.InfiniteTiles.Tooltip		
+Configs.WandConfig.InfiniteWalls.Label	Infinite Walls	Paredes Infinitas
+Configs.WandConfig.InfiniteWalls.Tooltip		
+Configs.WandConfig.InfiniteGrassSeeds.Label	Infinite Grass Seeds	Semillas de Hierba Infinitas
+Configs.WandConfig.InfiniteGrassSeeds.Tooltip		
+Configs.WandConfig.InfiniteWires.Label	Infinite Wires	Cables Infinitos
+Configs.WandConfig.InfiniteWires.Tooltip		
+Configs.WandConfig.InfiniteActuators.Label	Infinite Actuators	Actuadores Infinitos
+Configs.WandConfig.InfiniteActuators.Tooltip		
+###CHUNK-END###		
+# Sentinels (###CHUNK-START### / ###CHUNK-END###) MUST be present.
+# Edit any rows in-place before running chunk_import.py.
+

@@ -109,8 +109,8 @@ public class UISliceGrid : UIElement
         private readonly string _label;
         private readonly string _tooltip;
 
-        private static readonly Color ActiveBg = new Color(80, 200, 80);
-        private static readonly Color InactiveBg = new Color(50, 55, 70);
+        private static readonly Color ActiveBg = WandPanelTheme.Colors.ActiveGreen;
+        private static readonly Color InactiveBg = WandPanelTheme.Colors.SliceGridInactive;
 
         public UISliceCell(string label, string tooltip)
         {

@@ -1,0 +1,6179 @@
+{
+  "schema_version": 1,
+  "cs_files": {
+    "WorldShapingWandsMod.cs": {
+      "sha1": "9eace364eaecae0572314a93a581ef2a410d1656",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "NoiseRnD/csharp/DomainWarpNoise.cs": {
+      "sha1": "7d7cf80df927061087960e00e74bd5128170739f",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "NoiseRnD/csharp/HeightmapNoise.cs": {
+      "sha1": "2b795ed9d1f600ef867da08e2e35c1463fdf23eb",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "NoiseRnD/csharp/NoiseDistortion.cs": {
+      "sha1": "f26d40c4e129bc97a40afc08d581863f28f43d90",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "NoiseRnD/csharp/NoiseSettings.cs": {
+      "sha1": "be3c7e4f31cd79d5b2f3bb8886c5f9daf1e9e5ae",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "NoiseRnD/csharp/PerlinNoise2D.cs": {
+      "sha1": "de1ae05d71e815678fa65651bb2ae299cc06250c",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Projectiles/FlyingTorchWheelPlatform.cs": {
+      "sha1": "b1770d90731ad34f00e29319ae97e54cbcf39165",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "Projectiles.FlyingTorchWheelPlatform.DisplayName",
+          34
+        ],
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Projectiles/FlyingTorchWheelSolid.cs": {
+      "sha1": "fe5f95e2e3c712bdaf3bde909c2a9d98b334c9aa",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "Projectiles.FlyingTorchWheelSolid.DisplayName",
+          36
+        ],
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Projectiles/RainCloudProjectile.cs": {
+      "sha1": "f198dc76d965f537fb5c694d693140b431bc27f9",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "Projectiles.RainCloudProjectile.DisplayName",
+          21
+        ],
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Projectiles/RainDustTunables.cs": {
+      "sha1": "68876fbcab2ed77174302a72bf2115f637b5c700",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Projectiles/WandOfFluidsProjectile.cs": {
+      "sha1": "bb077e679d99ee7b5a4ddf633ff935c3a7825c73",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "Projectiles.WandOfFluidsProjectile.DisplayName",
+          34
+        ],
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Projectiles/WandProjectileDrawLayer.cs": {
+      "sha1": "a1ed50f7eff8096f25c676a1410cee5592c620d8",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Projectiles/TorchWheelPlatform/TorchWheelPlatformProjectile.cs": {
+      "sha1": "0d6efb126603a713ae184af2521611b66f9fdb9a",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "Projectiles.TorchWheelPlatformProjectile.DisplayName",
+          42
+        ],
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Projectiles/TorchWheelPlatform/TorchWheelPlatformProjectile.Movement.cs": {
+      "sha1": "4757be5134b7aadcf2754e0a6f4ef958a1224ebf",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Projectiles/TorchWheelPlatform/TorchWheelPlatformProjectile.Placement.cs": {
+      "sha1": "62e842cec75cc2e05a7596406745dcc31479db0f",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Projectiles/TorchWheelPlatform/TorchWheelPlatformProjectile.Visual.cs": {
+      "sha1": "6c2303fc2982b68a5ec3905b099bfb490a6f7d25",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Projectiles/TorchWheelSolid/TorchWheelSolidProjectile.cs": {
+      "sha1": "e1c097f11bdfc6cf68443109d17061cee9b2d252",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "Projectiles.TorchWheelSolidProjectile.DisplayName",
+          71
+        ],
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Projectiles/TorchWheelSolid/TorchWheelSolidProjectile.Placement.cs": {
+      "sha1": "7c82940561c0b63abaee13b7e8b2f272bfacfb57",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Projectiles/TorchWheelSolid/TorchWheelSolidProjectile.PreScan.cs": {
+      "sha1": "420fb21bb6b02fc6a329e4e24fd08ce7e0074ec3",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Projectiles/TorchWheelSolid/TorchWheelSolidProjectile.Tracing.cs": {
+      "sha1": "eb8dbdd78751c06340d6742fc171f7e347064f4b",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Projectiles/TorchWheelSolid/TorchWheelSolidProjectile.Visual.cs": {
+      "sha1": "4756fa0324ed41238f534c5f07409c359028d039",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Projectiles/WandActions/WandActionProjectile.cs": {
+      "sha1": "33f9bcaa1e8f7961106491b8a6791c9a190b496f",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "Projectiles.WandActionProjectile.DisplayName",
+          36
+        ],
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Projectiles/WandModes/BaseModeProjectile.cs": {
+      "sha1": "755071ff22ad10317200bc294f9616e6c75e4040",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "Projectiles.BaseModeProjectile.DisplayName",
+          35
+        ],
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Projectiles/WandModes/ConfirmModeProjectile.cs": {
+      "sha1": "8887fb76b6023365ed90a9c44ae0ba6ffb3bc9a7",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Projectiles/WandModes/InstantModeProjectile.cs": {
+      "sha1": "8f157ba595d79653506ded16b2708eace8750bb3",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Projectiles/WandModes/SelectModeProjectile.cs": {
+      "sha1": "605c65916d596e3113235863461db9f34015c7e0",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Projectiles/WandModes/StampModeProjectile.cs": {
+      "sha1": "9925b9e78c93ee7816d195b8c49fc50e85dd04fa",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Projectiles/WandActions/Resolvers/ActionSpriteResolverRegistry.cs": {
+      "sha1": "fc1abf4efb6d73cf4837706ef9a3f32f04f38bd3",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Projectiles/WandActions/Resolvers/FluidsSpriteResolver.cs": {
+      "sha1": "b3864cd3bc8e88ea3da62d77e868e80fad15cdcc",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Projectiles/WandActions/Resolvers/IActionSpriteResolver.cs": {
+      "sha1": "4aca9a811da8b5e55074c95f1abc588c76c2a11f",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Projectiles/WandActions/Resolvers/StaticSpriteResolver.cs": {
+      "sha1": "78859d45e05ffe365a2f3f9ac9e268e4dbdb160b",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/TorchWheel/TorchWheelWandPlatform.cs": {
+      "sha1": "3200b563b42c9d88ec2db685b6ec5d2b7e1b619b",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "Items.TorchWheelWandPlatform.DisplayName",
+          28
+        ],
+        [
+          "Items.TorchWheelWandPlatform.Tooltip",
+          28
+        ],
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/TorchWheel/TorchWheelWandSolid.cs": {
+      "sha1": "bca0edb0d844dc8ba33f690f64093676f435688f",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "Items.TorchWheelWandSolid.DisplayName",
+          41
+        ],
+        [
+          "Items.TorchWheelWandSolid.Tooltip",
+          41
+        ],
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Building/WandOfBuildingBase.cs": {
+      "sha1": "1326f6b258991fc91c156749f0ba34104cc5677a",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "Items.WandOfBuildingBase.DisplayName",
+          29
+        ],
+        [
+          "Items.WandOfBuildingBase.Tooltip",
+          29
+        ],
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Building/WandOfBuildingBase.Helpers.cs": {
+      "sha1": "a2ca4e9371fe2964c318e40d939a32b20da94f09",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Building/WandOfBuildingBase.TileExecution.cs": {
+      "sha1": "2fb898159e07e2956eef189efe07ced43431140a",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Building/WandOfBuildingBase.WallExecution.cs": {
+      "sha1": "e3ae9fc91425ae0cd3deb2bf630fd45c57b1beda",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Building/WandOfBuildingConfirm.cs": {
+      "sha1": "6211d9d4775043460d0c01145a91e172b20ff0c6",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Building/WandOfBuildingInstant.cs": {
+      "sha1": "b3e19b1dc1252df9b4b785e5fb41d1cd5b08e0e4",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Building/WandOfBuildingSelect.cs": {
+      "sha1": "8ab8125e879b16c55b2b8fa35051b51c9bb652dd",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Building/WandOfBuildingStamp.cs": {
+      "sha1": "c662b42e435d346a3fa2409e6c0730d42305a093",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Coating/WandOfCoatingBase.cs": {
+      "sha1": "aeddc22895f4649c778e65ac2e9caa5217cc7ee7",
+      "literal_refs": [
+        [
+          "Mods.WorldShapingWandsMod.UI.Coating.EyedropperHint",
+          195
+        ]
+      ],
+      "implicit_refs": [
+        [
+          "Items.WandOfCoatingBase.DisplayName",
+          24
+        ],
+        [
+          "Items.WandOfCoatingBase.Tooltip",
+          24
+        ],
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Coating/WandOfCoatingConfirm.cs": {
+      "sha1": "b3a16bed05997ccb453c3c3cfbc8b1c786504204",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Coating/WandOfCoatingInstant.cs": {
+      "sha1": "e25cb08e738eb913ab11b3cc12a0bb93d904ffc8",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Coating/WandOfCoatingSelect.cs": {
+      "sha1": "ec8d24add7ed1d36956d7129d54f0f6feaa0e4d2",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Coating/WandOfCoatingStamp.cs": {
+      "sha1": "f5f28d7d2bcbc920f8850823850ef37fddbccb49",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Delimitation/WandOfDelimitation.cs": {
+      "sha1": "1cb655da873632013182a38e0d3b6daa63e55a37",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "Items.WandOfDelimitationBase.DisplayName",
+          47
+        ],
+        [
+          "Items.WandOfDelimitationBase.Tooltip",
+          47
+        ],
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Dismantling/WandOfDismantling.cs": {
+      "sha1": "e6f2f3b63bee91c44ff51e368a6d0c2531fac730",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "Items.WandOfDismantlingBase.DisplayName",
+          27
+        ],
+        [
+          "Items.WandOfDismantlingBase.Tooltip",
+          27
+        ],
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Dismantling/WandOfDismantlingStamp.cs": {
+      "sha1": "21022ed25667fbffe088b28e4355cc054fc06524",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Fluids/WandOfFluidsBase.Bubble.cs": {
+      "sha1": "e1f92d5abf2a96e690fc7b3b94ee14af53d57c68",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Fluids/WandOfFluidsBase.cs": {
+      "sha1": "04c338e978defd4489becf99522bd86f12df1ad3",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "Items.WandOfFluidsBase.DisplayName",
+          33
+        ],
+        [
+          "Items.WandOfFluidsBase.Tooltip",
+          33
+        ],
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Fluids/WandOfFluidsBase.Drain.cs": {
+      "sha1": "9de94e57d4f5d9f733629dd94f0131017b02a6b4",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Fluids/WandOfFluidsBase.FullLiquid.cs": {
+      "sha1": "794dfc14437a331e60d4df576906f2ab2c2ba6cf",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Fluids/WandOfFluidsBase.PocketFill.cs": {
+      "sha1": "73791e7c39f3841dee9f9fb304ff192dfba048a2",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Fluids/WandOfFluidsBase.RainFill.cs": {
+      "sha1": "2a6c018876950f4be0718d19dabb5d4b314c0548",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Fluids/WandOfFluidsConfirm.cs": {
+      "sha1": "f79094155104624f2fa1690cfe24875725e1ebdb",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Fluids/WandOfFluidsInstant.cs": {
+      "sha1": "31715ab692caaded7d90308d58005b99e6e2201c",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Fluids/WandOfFluidsSelect.cs": {
+      "sha1": "6cd58f82f66d24dc5e60761bdb1c964cb21300dd",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Fluids/WandOfFluidsStamp.cs": {
+      "sha1": "16cc1422fd1a3f273a396ba39e996981ade33e42",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Molding/WandOfMolding.cs": {
+      "sha1": "0030fa6825612dce9de4defb82df05101b9ec191",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "Items.WandOfMoldingBase.DisplayName",
+          50
+        ],
+        [
+          "Items.WandOfMoldingBase.Tooltip",
+          50
+        ],
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Replacement/WandOfReplacementBase.cs": {
+      "sha1": "f420242b9274130990d3fa0697e822d92016a749",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "Items.WandOfReplacementBase.DisplayName",
+          26
+        ],
+        [
+          "Items.WandOfReplacementBase.Tooltip",
+          26
+        ],
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Replacement/WandOfReplacementConfirm.cs": {
+      "sha1": "851b8946c8f21b16eca7295c3221a42880713345",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Replacement/WandOfReplacementInstant.cs": {
+      "sha1": "0f234ce76041953e15aba193c1891704634400f1",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Replacement/WandOfReplacementSelect.cs": {
+      "sha1": "b44e65defeab3e4c401d27545fcec4f87a4dd768",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Replacement/WandOfReplacementStamp.cs": {
+      "sha1": "41e43d7676b1077914368173489f416f3cb95124",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Safekeeping/WandOfSafekeepingBase.cs": {
+      "sha1": "0aa87636f7a622167aabda23dd8ffea1fc7a328e",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "Items.WandOfSafekeepingBase.DisplayName",
+          22
+        ],
+        [
+          "Items.WandOfSafekeepingBase.Tooltip",
+          22
+        ],
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Safekeeping/WandOfSafekeepingConfirm.cs": {
+      "sha1": "b3bada9b1f7febe421fb4c24f2cdcbe4073e1f18",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Safekeeping/WandOfSafekeepingInstant.cs": {
+      "sha1": "62e5adbf644b9654dacf370fbdc3acb18a63f13f",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Safekeeping/WandOfSafekeepingSelect.cs": {
+      "sha1": "827be72a2c792996965333405f2f9283a367fd58",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Safekeeping/WandOfSafekeepingStamp.cs": {
+      "sha1": "1510f95824a6102c32c75ab3f3df83b1cd017d1e",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Torches/WandOfTorchesBase.cs": {
+      "sha1": "4f6a98ae88a6dfee73ae4c9b683c4f1e3e057146",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "Items.WandOfTorchesBase.DisplayName",
+          25
+        ],
+        [
+          "Items.WandOfTorchesBase.Tooltip",
+          25
+        ],
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Torches/WandOfTorchesConfirm.cs": {
+      "sha1": "09daf646e4f145ee74992bb22ed572170ec0cf8a",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Torches/WandOfTorchesInstant.cs": {
+      "sha1": "cd4476acac2f0d029af5385434f38e767631e692",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Torches/WandOfTorchesSelect.cs": {
+      "sha1": "49459a41a0c9763c1a78523868c3050420d779bd",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Torches/WandOfTorchesStamp.cs": {
+      "sha1": "18d023c36ce8e208b3d8ef8404f6c6699a744f54",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Wiring/WandOfWiringBase.cs": {
+      "sha1": "54ba0edfc8e8c21c89f01e28d17eeb6b358940f8",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "Items.WandOfWiringBase.DisplayName",
+          23
+        ],
+        [
+          "Items.WandOfWiringBase.Tooltip",
+          23
+        ],
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Wiring/WandOfWiringConfirm.cs": {
+      "sha1": "373e9a330780cee780fb9d48cf871a7df11344a6",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Wiring/WandOfWiringInstant.cs": {
+      "sha1": "e3a36690af66f7df4ebbe3ccc8cb3795ff05a080",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Wiring/WandOfWiringSelect.cs": {
+      "sha1": "d9a350231150c96ffec9a710d842cd16c52ece2f",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Content/Items/WorldShaping/Wiring/WandOfWiringStamp.cs": {
+      "sha1": "45ad6642b2e762f4b7828464d989b92bcfb43643",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Algorithms/BasinFillSolver.cs": {
+      "sha1": "a524e799e21d43b4716cbcf7da4e530c7a8700c1",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Algorithms/BasinRuns.cs": {
+      "sha1": "d235a6be387d9d355192d16e3e8af401aebb1711",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Commands/ModeProjectileCommand.cs": {
+      "sha1": "6a53157961329bcc9984b5a8c2aa1d48299843cf",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Commands/PaintDebugCommand.cs": {
+      "sha1": "0c8cb2d1ec9c994770b94bcee8ca8e437d5c3acf",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Commands/ShapeTestCommand.cs": {
+      "sha1": "71ebdb087e8ca68608326832d0116842545694d6",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Commands/UndoCommand.cs": {
+      "sha1": "1cd72ecbff01decbba0dc61699a9f7960b1118ba",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Commands/UndoInfoCommand.cs": {
+      "sha1": "d2edc9d4e1a9d8f3bf5698fe3747f61239e78077",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Commands/UnlockChestsCommand.cs": {
+      "sha1": "055ebbe5d0d8fa2d383a2064a5a17a3df6895058",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Commands/WswCommand.cs": {
+      "sha1": "a30e41be9204274d54b7f70d92c5edfa47874341",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Configs/CanvasOverlayConfig.cs": {
+      "sha1": "5814f918a83e02af8af61b8ee1d5ba9341b4e9e0",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "Configs.CanvasOverlayConfig.DisplayName",
+          12
+        ],
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Configs/CarefreeConfig.cs": {
+      "sha1": "7d1ac043f1e43cde6b4a026712a7297c87955b08",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "Configs.CarefreeConfig.DisplayName",
+          11
+        ],
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Configs/LimitsConfig.cs": {
+      "sha1": "6e10da9e25efed37850bffeb66d53386495cefdc",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "Configs.LimitsConfig.DisplayName",
+          12
+        ],
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Configs/OverlayConfig.cs": {
+      "sha1": "f1154e4ec748ecad0f81963cd6d6278ee5d0fc27",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "Configs.OverlayConfig.DisplayName",
+          14
+        ],
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Configs/PerformanceConfig.cs": {
+      "sha1": "d72f74d159c6fa4247e3e2872fc8a6cf3d39ad9b",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "Configs.PerformanceConfig.DisplayName",
+          12
+        ],
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Configs/PreferencesConfig.cs": {
+      "sha1": "52446963799d31b3e0cf48db35f90885543d2d84",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "Configs.PreferencesConfig.DisplayName",
+          13
+        ],
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Configs/ResourcesConfig.cs": {
+      "sha1": "ab55d20ac4715274260ee73554c6883832a76ac4",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "Configs.ResourcesConfig.DisplayName",
+          13
+        ],
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Configs/SandboxConfig.cs": {
+      "sha1": "a960026dba6f7a5e0b78ca90a3d3dd8210a517ab",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "Configs.SandboxConfig.DisplayName",
+          11
+        ],
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Configs/StampConfig.cs": {
+      "sha1": "accf107505ad3a83f956922e34dca7f07d4bb19d",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "Configs.StampConfig.DisplayName",
+          11
+        ],
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Configs/TorchWheelConfig.cs": {
+      "sha1": "58d6920fbf42a8a9d1ed79c941b48d8c2a02b00f",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "Configs.TorchWheelConfig.DisplayName",
+          13
+        ],
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Configs/WandConfigs.cs": {
+      "sha1": "3d19e2d7fc4790ce28c69ad0d27cc6d4ee116126",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Debug/DevCommand.cs": {
+      "sha1": "a0f33a0a24c2247101f00fdc1ad08bcb90cedae9",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Debug/DevTunable.cs": {
+      "sha1": "9019a1bc7944d66f5dc2efd961250f114309e472",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Debug/DevTunableDefaults.cs": {
+      "sha1": "3bb2e1115f5d1bf4a29d79a4aa52ce371273d7a2",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Drawing/CanvasBorderRenderer.cs": {
+      "sha1": "a78a267758533eb295acc67d2265d6b39c9fec2c",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Drawing/IComposableOverlay.cs": {
+      "sha1": "0cdae3ea193f4820f0c1b970bd3986a757e3db4a",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Drawing/MoldingCanvasOverlay.cs": {
+      "sha1": "aeac7d74e088a77a4bca1769051e18d05b79d99e",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Drawing/OverlayContext.cs": {
+      "sha1": "a27acaff490d644481b07e92cf3c800d69b3130e",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Drawing/OverlayManager.cs": {
+      "sha1": "b2c27366e897b46eb21533680cd64323a23f65a1",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Drawing/OverlayManagerSystem.cs": {
+      "sha1": "2918297e00c046a972da161c9171c17b520991fb",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Drawing/PaintPalette.cs": {
+      "sha1": "59f29871cdfe3b9ec619daa52bd493b7a6ec0d7b",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Drawing/SafekeepingOverlay.cs": {
+      "sha1": "ccfdb65adf7024d7e615d694b09143c6fb187efa",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Drawing/SafekeepingOverlayAdapter.cs": {
+      "sha1": "bfb4d1fee06be5b957e228ee693d5b25ff34f9ce",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Drawing/SelectionCanvasOverlay.cs": {
+      "sha1": "a111df934986849ba95ebb62aee5d3351052d652",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Drawing/SelectionChangedEventArgs.cs": {
+      "sha1": "de1d8f493af1f6db9ccded8e757173b00f3ade58",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Drawing/SelectionOverlay.cs": {
+      "sha1": "ea9dcacac60c885a5f69baf89f659666e35e4d00",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Drawing/SelectionOverlayAdapter.cs": {
+      "sha1": "89bf271d49f886ed96f830918837400a98a2b76e",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Drawing/TilingOverlay.cs": {
+      "sha1": "a1064f1eba7e2032a096ab6f9372760c8be8cb6b",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Drawing/WandColors.cs": {
+      "sha1": "9b9918004e5682d07b0b38a3fde1ea1ae75dd198",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Enums/BiasType.cs": {
+      "sha1": "63d6fc1ab8c49b86b44dbbf117ce19ecacf3b0d9",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Enums/BlockExhaustionMode.cs": {
+      "sha1": "fec725d46548362283403c956c30b0d022f00320",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Enums/CanvasOperation.cs": {
+      "sha1": "ff77fbcc7fa33846c40accf25e4b3ccbae1aaf45",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Enums/CoatingMode.cs": {
+      "sha1": "16e274f4f97345ba5f6567f2c5ac9bc369a580d9",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Enums/ConfirmationMode.cs": {
+      "sha1": "7cafcbdffd7c3f2d8e8ac5e886d56fd64826ba49",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Enums/DelimitationWandMode.cs": {
+      "sha1": "53945f5d934601a5615bc29c9914cc99e9ea5a67",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Enums/FluidFillMode.cs": {
+      "sha1": "85e42fd1720c3c1cb298d0c9728786e4f98b4f4e",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Enums/FluidOperation.cs": {
+      "sha1": "15c82cdef7e670ca7804933bda0eb1c114cd01c3",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Enums/InfiniteOverride.cs": {
+      "sha1": "2af64f1de810a43afe44521ee4a63f969a057306",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Enums/LavaRainStyle.cs": {
+      "sha1": "c2d8a1bdb6e34c656dd803e79afc2feaa4fd08cc",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Enums/LiquidTypeSelection.cs": {
+      "sha1": "e41865288bead15d26a1d7b42a7f4656fdf7e76a",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Enums/MoldingWandMode.cs": {
+      "sha1": "040a82bdcf01454902b398afd3934ea28357ba66",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Enums/NonOceanWaterproofTorch.cs": {
+      "sha1": "01bc3cc2614b7d74c29a3d8932621fedda48c229",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Enums/ObjectType.cs": {
+      "sha1": "9a4e86f6979d37f1ad154376da1746183cce6faa",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Enums/OceanWaterproofTorch.cs": {
+      "sha1": "a6e67d945d8537cca5692c09164da78326008b1b",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Enums/OperationType.cs": {
+      "sha1": "a58c0940e04a150403b8faca607ac57e06dfcfe6",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Enums/OverlayRenderMode.cs": {
+      "sha1": "aaab611dbc3d497696be19dfb44a17010e222089",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Enums/PlaceType.cs": {
+      "sha1": "7ee8a7dca8efe6d7b964fc5d83b72a6543b62708",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Enums/PreviewMode.cs": {
+      "sha1": "8f3b803330b788661a9d08f68d52001d92e9531f",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Enums/SelectionMode.cs": {
+      "sha1": "ce87240d0c27b914857197e517884930d1eb460f",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Enums/SelectionOperation.cs": {
+      "sha1": "54fb0414aeaaa498020b093f8637239f63d127f2",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Enums/ShapeMode.cs": {
+      "sha1": "dfa971f6e3797e0c554a3854fa63f5f0a16cca5d",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Enums/ShapeType.cs": {
+      "sha1": "e88e332d606e8352f280158eebd785bc2bfbc8d5",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Enums/SliceMode.cs": {
+      "sha1": "b10e1b43aba460dd98893c78820fe9e1b0c8ab96",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Enums/SlopeType.cs": {
+      "sha1": "0a4c19450005f78900aabe54370561a7b3806867",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Enums/StampRenderMode.cs": {
+      "sha1": "2de37c78cd38874424fbf243aecaf7e447af2816",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Enums/TilingStyle.cs": {
+      "sha1": "fcc1d7f60a73539562e0f41964229b869b32ecee",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Enums/TorchMode.cs": {
+      "sha1": "abfdb1a47b54ac9173006061e998d91bb0f58c51",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Enums/TorchReferenceMode.cs": {
+      "sha1": "c9fefac9d329ce1c798ebb3dc550c1205d2d8405",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Enums/TriStateValue.cs": {
+      "sha1": "5b178001c25b3046514f5851c86a939b57529ba0",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Enums/WandAction.cs": {
+      "sha1": "80331cb95589822168446862b8e87fb298b49843",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Enums/WandFamily.cs": {
+      "sha1": "71faae2d67419a6b8eed700c3499265680e7ea7a",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Enums/WandMode.cs": {
+      "sha1": "0767646b5fbc875adb0c31d1271f2e755bd4491c",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Geometry/HandednessCalculator.cs": {
+      "sha1": "9c9dd773fe6b782f3fdf89787dfaa5f9ae6bfcd7",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Geometry/IShapeProvider.cs": {
+      "sha1": "672b582268ec9d8729909eea6a4cc163b5173aba",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Geometry/OutlineHelper.cs": {
+      "sha1": "dc04c993a9a13f9768e7dc700466ca9b7c3dd7a4",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Geometry/ShapeContext.cs": {
+      "sha1": "543276e7e60682b5431086b81ce177a114de8949",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Geometry/ShapePages.cs": {
+      "sha1": "482a3a8e2356f11b9561db51bcf714a5a440b988",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Geometry/ShapeRegistry.cs": {
+      "sha1": "918fc2e28f4aa57923651b781497ce3777ddf174",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Geometry/ShapeTileSet.cs": {
+      "sha1": "43c2021d44a68e7441d2ccf2289dc33adfb325b0",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Geometry/SliceHelper.cs": {
+      "sha1": "8a93551bf17721286f1ec27618fd60ad2bf7238c",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Geometry/TorchTilingAlgorithm.cs": {
+      "sha1": "3f5ea8d0dc36eccb2551a20fcbc1a900fda98124",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Geometry/WallFollower.cs": {
+      "sha1": "c06bd5942f5985068ef96e6719b45a049c03a663",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Input/WandControls.cs": {
+      "sha1": "2b29c7e88cb52fb18c863e8831d87c3addb55c0f",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Items/BaseCyclingWand.cs": {
+      "sha1": "4592a73134957f0df5d987e0580f57ab9318ea7d",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "Items.BaseCyclingWand.DisplayName",
+          30
+        ],
+        [
+          "Items.BaseCyclingWand.Tooltip",
+          30
+        ],
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Items/TorchPlacementHelper.cs": {
+      "sha1": "b180b10a3c19031220847e9677b29b2629aa32be",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Networking/PacketUtilities.cs": {
+      "sha1": "700c4a1e244665257edf969c1a14e15b660ba4f2",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Networking/WandPacketHandler.cs": {
+      "sha1": "8364f703cf723349c840b2bfe783140303480291",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Networking/WandPacketHeader.cs": {
+      "sha1": "8191009cc2ba42d6d6a104056a5272671f759740",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Players/DelimitationWandPlayer.cs": {
+      "sha1": "ef5723c77bcd77d2fbc389d44eb4ab47af4932ce",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Players/MoldingWandPlayer.cs": {
+      "sha1": "09a5a56afc8aa1b6970507e26bb6d3cb53ca3a4d",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Players/WandPlayer.cs": {
+      "sha1": "9a77639b3cd72989dba120825f68425c5a67befb",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Selection/CancelledSelectionState.cs": {
+      "sha1": "2855772e673b2cdaa549baf32bf0c9659a98f072",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Selection/CustomShape.cs": {
+      "sha1": "34d12bb5f49b98e83c97a41cf77defe9e09a5090",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Selection/SelectionCanvas.cs": {
+      "sha1": "746009a7b4ac2964411d6a6338420e126282be33",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Selection/SelectionState.cs": {
+      "sha1": "767bf48be7e3c6bbcb631700c2c1e430978fdf7d",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Selection/TileSelection.cs": {
+      "sha1": "5a85c600bae66a0e21fdc5bd090bb530316c1c87",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Settings/DelimitationWandSettings.cs": {
+      "sha1": "3ee8bfec8b64967b34d9d8db8c6508c777993e03",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Settings/MoldingWandSettings.cs": {
+      "sha1": "cbf8c5a886fb332c1d089a522f6d2549e13ec0f7",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Settings/PaintSprayerSource.cs": {
+      "sha1": "2abbd8dc01105eebb09f4bfc68ea71f43bf88b38",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Settings/ShapeInfo.cs": {
+      "sha1": "659b2cdc083e6938f21e9dd6170c7eb67e10cc6a",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Settings/WandOfBuildingSettings.cs": {
+      "sha1": "65d1674ee0559726a82cb23ffeb4e6b4af6e2749",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Settings/WandOfCoatingSettings.cs": {
+      "sha1": "6b4a1ba1d5eab275ea5455e47b95124bf6bb1761",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Settings/WandOfDismantlingSettings.cs": {
+      "sha1": "508285f9e1262891e047a0fa3f4346d0a5fde604",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Settings/WandOfFluidsSettings.cs": {
+      "sha1": "28a0ba0aea9bcf211fa479aa26c9b476a5211124",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Settings/WandOfReplacementSettings.cs": {
+      "sha1": "272fffefad163505a63874463af13b3a789883b2",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Settings/WandOfSafekeepingSettings.cs": {
+      "sha1": "0dd726132c8ca350c0c045ddd024a29f42846aa6",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Settings/WandOfWiringSettings.cs": {
+      "sha1": "33b2e5ece30f6e0573825e1fb35999fea6fe8c5b",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Settings/WandSettings.cs": {
+      "sha1": "6f15222e2e7bb3ebc24e02f992ea26f0a79f2ca4",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Settings/WandTorchSettings.cs": {
+      "sha1": "d4fde696d9bb167fdd9f9749589fe49bbe726db0",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Systems/ProgressiveTileProcessor.Building.cs": {
+      "sha1": "59c0cb189c69538ebff80c03f470ffd48e5b5118",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Systems/ProgressiveTileProcessor.cs": {
+      "sha1": "ab8a90cb24052ec0382fa360aeb35b79ca5e9f9f",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Systems/ProgressiveTileProcessor.Dismantling.cs": {
+      "sha1": "02d0650000480d59bc4a6521b8fdb4fcd2d04f14",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Systems/ProgressiveTileProcessor.Replacement.cs": {
+      "sha1": "57328edd86fc25b6ee155f3297a805716449861c",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Systems/ProgressiveTileProcessor.WallBuilding.cs": {
+      "sha1": "be04d7583df77227ff93152943610211833bdf5c",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Systems/ProgressiveTileProcessor.WallReplacement.cs": {
+      "sha1": "82ba0150113b6b1aeca6672699274cc267878a64",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Systems/SafekeepingSystem.cs": {
+      "sha1": "001392c99ce6503151b829a630465da6c4dce7ec",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Systems/TorchLookupSystem.cs": {
+      "sha1": "8f9fcca5e260856ee5809151128d5b26781642b7",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Systems/WandRecipeSystem.cs": {
+      "sha1": "f7ee8453503fd47641d0d224e047c917f1b234fb",
+      "literal_refs": [
+        [
+          "Mods.WorldShapingWandsMod.RecipeGroups.AnyGemstone",
+          76
+        ],
+        [
+          "LegacyMisc.37",
+          86
+        ],
+        [
+          "LegacyMisc.37",
+          94
+        ],
+        [
+          "LegacyMisc.37",
+          100
+        ],
+        [
+          "LegacyMisc.37",
+          106
+        ],
+        [
+          "LegacyMisc.37",
+          112
+        ],
+        [
+          "Mods.WorldShapingWandsMod.RecipeGroups.AnyWandOfBuilding",
+          119
+        ],
+        [
+          "Mods.WorldShapingWandsMod.RecipeGroups.AnyWandOfDismantling",
+          127
+        ]
+      ],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/UI/BuildingSettingsPanel.cs": {
+      "sha1": "86e2b6eb1c638b0f94c0ff94fecc3372f83e1b34",
+      "literal_refs": [
+        [
+          "Common.PaintSprayer.Off",
+          372
+        ],
+        [
+          "Common.PaintSprayer.Inventory",
+          378
+        ],
+        [
+          "Common.PaintSprayer.Coating",
+          384
+        ]
+      ],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": [
+        61,
+        417
+      ]
+    },
+    "Common/UI/CoatingSettingsPanel.cs": {
+      "sha1": "b2ca01737bd7f245d197e1dce54730e97cc69ff4",
+      "literal_refs": [
+        [
+          "Coating.Illuminant",
+          113
+        ],
+        [
+          "Coating.Echo",
+          114
+        ]
+      ],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": [
+        59
+      ]
+    },
+    "Common/UI/DismantlingSettingsPanel.cs": {
+      "sha1": "7b0d1d06c258e2344bccd363e4cc214710d581a9",
+      "literal_refs": [
+        [
+          "Dismantling.VoidEverythingTooltip",
+          316
+        ],
+        [
+          "Dismantling.VoidEverythingDisabled",
+          317
+        ]
+      ],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": [
+        54
+      ]
+    },
+    "Common/UI/FluidsSettingsPanel.cs": {
+      "sha1": "4f0cfc18736e8e06b559c961cd20ab815a20d0bb",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": [
+        58
+      ]
+    },
+    "Common/UI/MoldingSettingsPanel.cs": {
+      "sha1": "68bb90f4cbb94444e327d2465f2919976c87e41f",
+      "literal_refs": [
+        [
+          "Molding.ClearSelection",
+          200
+        ],
+        [
+          "Molding.InvertSelection",
+          201
+        ],
+        [
+          "Molding.ClearAll",
+          202
+        ],
+        [
+          "Molding.TeleportToPlayer",
+          203
+        ]
+      ],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": [
+        68
+      ]
+    },
+    "Common/UI/ReplacementSettingsPanel.cs": {
+      "sha1": "f77e3f50988b7adb111a8e618c706462f8e8c029",
+      "literal_refs": [
+        [
+          "Common.PaintSprayer.Off",
+          392
+        ],
+        [
+          "Common.PaintSprayer.Inventory",
+          398
+        ],
+        [
+          "Common.PaintSprayer.Coating",
+          404
+        ]
+      ],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": [
+        54
+      ]
+    },
+    "Common/UI/SafekeepingSettingsPanel.cs": {
+      "sha1": "0c6a77c2115a7214a0910c279437ceeadaffed47",
+      "literal_refs": [
+        [
+          "Safekeeping.ClearConfirm",
+          129
+        ],
+        [
+          "Safekeeping.ClearAll",
+          136
+        ],
+        [
+          "Safekeeping.ClearAll",
+          259
+        ]
+      ],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": [
+        52
+      ]
+    },
+    "Common/UI/SelectionSettingsPanel.cs": {
+      "sha1": "2f4c12017a6f6455007b78dd1d9252f662c5580f",
+      "literal_refs": [
+        [
+          "Selection.ClearSelection",
+          202
+        ],
+        [
+          "Selection.InvertSelection",
+          203
+        ],
+        [
+          "Selection.ClearAll",
+          204
+        ],
+        [
+          "Selection.TeleportToPlayer",
+          205
+        ]
+      ],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": [
+        69
+      ]
+    },
+    "Common/UI/TorchesSettingsPanel.cs": {
+      "sha1": "b210158478b634e89ee38332a569f043ea934b81",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": [
+        67,
+        276,
+        505
+      ]
+    },
+    "Common/UI/WandPanelBuilder.cs": {
+      "sha1": "5f1d9222fa89cf99f5fb20c840d8c53274db6d39",
+      "literal_refs": [
+        [
+          "Common.OutlineThickness",
+          365
+        ],
+        [
+          "Common.Close",
+          528
+        ]
+      ],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": [
+        104,
+        126,
+        143,
+        171,
+        478,
+        479,
+        494,
+        510,
+        597
+      ]
+    },
+    "Common/UI/WandPanelTheme.cs": {
+      "sha1": "40dcb57afd6443025e3d95a0e400803006e60783",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/UI/WandSettingsState.cs": {
+      "sha1": "5fc5377ac51f7562dc78b249fa95e56a9f6bfc1e",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/UI/WandUISystem.cs": {
+      "sha1": "ab3d97dd0e4e4381163bd5fe24776a0ed54938f2",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": [
+        114
+      ]
+    },
+    "Common/UI/WiringSettingsPanel.cs": {
+      "sha1": "e9222ec126850d5fc9329cf3fb0c6ad9a698199d",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": [
+        50
+      ]
+    },
+    "Common/Undo/UndoAction.cs": {
+      "sha1": "47638595a958231f2278baaf0e6b9c59f85ca9ba",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Undo/UndoCostSummary.cs": {
+      "sha1": "9e9f332f7785425fc3e150e5a26b5fda79b31894",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Undo/UndoManager.cs": {
+      "sha1": "9e1fc71ea4570f8348456b1e53e0cd414e890395",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Utilities/BulkTileOperations.cs": {
+      "sha1": "038be78e5a8b06b45d7dac69daae5039cb231caf",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Utilities/ContainerHelper.cs": {
+      "sha1": "ea0677c005a3771d156fd92e8f43d73d484b9391",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Utilities/GeometryHelper.cs": {
+      "sha1": "9b41b468613a07fbb018d864271d3c3bb35d94c8",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Utilities/ItemTypeHelper.cs": {
+      "sha1": "7e25f13c5c8ef79ebc3e2eff4b3a18a374d23577",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Utilities/Msg.cs": {
+      "sha1": "294bbd6f60c3e1d36a97b7d4ff471d19a318e853",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": [
+        26,
+        30,
+        34,
+        38
+      ]
+    },
+    "Common/Utilities/PinSerialization.cs": {
+      "sha1": "c9445542248015925983c1ff1e453e09c7db8bbd",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Utilities/SpritesheetHelper.cs": {
+      "sha1": "fb07f2e7959045ea60021ef91e5ac58875b284cb",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Utilities/StampChannelingHelper.cs": {
+      "sha1": "5a6dc5998ddf9388d4c99d789b6587e013aea57d",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Utilities/TileHelper.cs": {
+      "sha1": "7bcb5cbf7da5d18ccf27c9fa48c6006cc1ebf8ee",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Utilities/VoidEverythingOperation.cs": {
+      "sha1": "a673ecde84b6198b81622e18e3597566fda275a9",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Utilities/WandRecipeConditions.cs": {
+      "sha1": "77d1addbe9c3eb43980aa4f76ce43694a6b3caaa",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Utilities/WiringHelper.cs": {
+      "sha1": "03d8f0b4c20c3f1467b5b42c09949cdb13a494d0",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/UI/Elements/CollapsedPopoutHost.cs": {
+      "sha1": "0ad4ec9669f5de113329e22c990ad7f912780619",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": [
+        100
+      ]
+    },
+    "Common/UI/Elements/CollapsibleSection.cs": {
+      "sha1": "ad9bdd0ba038309e8295006ae40e4a3885954775",
+      "literal_refs": [
+        [
+          "Mods.WorldShapingWandsMod.UI.CollapsibleSection.PopoutTooltip",
+          333
+        ],
+        [
+          "Mods.WorldShapingWandsMod.UI.CollapsibleSection.ExpandTooltip",
+          340
+        ],
+        [
+          "Mods.WorldShapingWandsMod.UI.CollapsibleSection.CollapseTooltip",
+          341
+        ]
+      ],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": [
+        70,
+        132
+      ]
+    },
+    "Common/UI/Elements/UIDraggablePanel.cs": {
+      "sha1": "36a046554ae254c9b1d1849a8073f649fb76640c",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/UI/Elements/UIIconButton.cs": {
+      "sha1": "3669fe74d769d9d3d8c78b87ff67b851be26831f",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/UI/Elements/UISectionTitle.cs": {
+      "sha1": "2ab067f200e9e4c65ef50aca172ceb8299115b3a",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/UI/Elements/UISliceGrid.cs": {
+      "sha1": "8d2dc17651c9c88dca2aea6d605c3c651f9b2047",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/UI/Elements/UIToggleButton.cs": {
+      "sha1": "b8c90cad476941355253f98909056c5e5f0f7633",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/UI/Elements/UITriStateButton.cs": {
+      "sha1": "96892a047734e2c8405c18a5eb30455aeede95f0",
+      "literal_refs": [
+        [
+          "Coating.Ignore",
+          75
+        ],
+        [
+          "Coating.On",
+          76
+        ],
+        [
+          "Coating.Off",
+          77
+        ],
+        [
+          "Coating.Ignore",
+          78
+        ]
+      ],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": [
+        56
+      ]
+    },
+    "Common/UI/InventoryView/GhostPinToast.cs": {
+      "sha1": "ae0ac9c459c461daf798d58dba945f14bb9e9ab9",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": [
+        63
+      ]
+    },
+    "Common/UI/InventoryView/IInventoryViewProvider.cs": {
+      "sha1": "b11895d046e01cb9635b507f11465524573d71df",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/UI/InventoryView/IInventoryViewSource.cs": {
+      "sha1": "5f12238ef1050b106ef9be055e41b14831ebf922",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/UI/InventoryView/InventoryViewPanel.cs": {
+      "sha1": "6a30b02bece61b328567f3a10765ad17fcc7798b",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": [
+        92,
+        146,
+        174,
+        239
+      ]
+    },
+    "Common/UI/InventoryView/InventoryViewRegistry.cs": {
+      "sha1": "193818459bf1b8e074f154fb63d91b2c6748bf9b",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/UI/InventoryView/UIInventoryViewSlot.cs": {
+      "sha1": "c1900df9bc51ed5f8b723bd101e3a9a77e4b1de2",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": [
+        161,
+        167
+      ]
+    },
+    "Common/UI/InventoryView/Sources/BuildingTileSource.cs": {
+      "sha1": "b3cf85b20fbc0e6ff6079775674c65411106d9f0",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/UI/InventoryView/Sources/BuildingWallSource.cs": {
+      "sha1": "6cc34af47a2f756c780cc31ddb3a2568abefed9b",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/UI/InventoryView/Sources/ReplacementSourceSource.cs": {
+      "sha1": "2d8a48ed9762ac7e74fac23956bce6b48c9c8451",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/UI/InventoryView/Sources/ReplacementTargetSource.cs": {
+      "sha1": "053d6538084f1372e8f507d751f6caadc63ec8fd",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/UI/InventoryView/Sources/TorchSource.cs": {
+      "sha1": "ae7da455fd787427a90df64f973a4d089ec13164",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Networking/Handlers/BuildingPacketHandler.cs": {
+      "sha1": "c265d9364106ec6f0426c3b99dac661b96173000",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Networking/Handlers/CoatingPacketHandler.cs": {
+      "sha1": "1f82e0863d69eef8b4d8bc554b1aa899b1b8207b",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Networking/Handlers/DismantlingPacketHandler.cs": {
+      "sha1": "9adf1abf76456683ca023c4f599f137b6025e7e5",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Networking/Handlers/ReplacementPacketHandler.cs": {
+      "sha1": "d7bb90874ea469b16f912c0826ca6efbc09b8a4b",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Networking/Handlers/VoidEverythingPacketHandler.cs": {
+      "sha1": "b0f2216a673cd00450045ac2c5310b0ec0c1d4f4",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Networking/Handlers/WiringPacketHandler.cs": {
+      "sha1": "30e75ef90fae29111e04186c76b76368a985b4a7",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Geometry/Shapes/CardinalLineShape.cs": {
+      "sha1": "238a6eccd2dcb89fe950d3f429a07d07322ed66c",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Geometry/Shapes/DiamondShape.cs": {
+      "sha1": "9fc59fefb4cfc92f393841f82d5f468b785173ba",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Geometry/Shapes/ElbowShape.cs": {
+      "sha1": "47d072ebc74ba1c89baf9d38ae84c026888c6272",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Geometry/Shapes/EllipseShape.cs": {
+      "sha1": "61e4e301ed4b257c1d227db19c38a2daff594304",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Geometry/Shapes/MoldShape.cs": {
+      "sha1": "0cac5a5986968b88604eb5bd8ab8751da693648e",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Geometry/Shapes/RectangleShape.cs": {
+      "sha1": "c25cd7fe8f7a3e45d8edee000f8bce6f40425de9",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Geometry/Shapes/StraightLineShape.cs": {
+      "sha1": "6d16e55231df7f0161919512b2b784aac40640e3",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/Geometry/Shapes/TriangleShape.cs": {
+      "sha1": "b2bcf683cc565c19aae54b5d531010016d577f46",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    },
+    "Common/UI/Elements/CoatingPaintColorGrid.cs": {
+      "sha1": "cbf16a021908757ac3a296785405294d1dd4ae76",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": [
+        30,
+        32,
+        134
+      ]
+    },
+    "Common/UI/Elements/UIPaintColorButton.cs": {
+      "sha1": "1f55b530c9ef227647a2cf6f1040b3ea5d899a1b",
+      "literal_refs": [],
+      "implicit_refs": [
+        [
+          "ModName",
+          0
+        ],
+        [
+          "DisplayName",
+          0
+        ],
+        [
+          "Description",
+          0
+        ]
+      ],
+      "dynamic_sites": []
+    }
+  },
+  "hjson_files": {
+    "en-US_Mods.WorldShapingWandsMod.hjson": {
+      "sha1": "88d2c210a56903b982729be2b265a7c58922252b",
+      "flat_keys": [
+        "Conditions.NonCraftable",
+        "Configs.BlockExhaustionMode.Cancel.Label",
+        "Configs.BlockExhaustionMode.Cancel.Tooltip",
+        "Configs.BlockExhaustionMode.Interrupt.Label",
+        "Configs.BlockExhaustionMode.Interrupt.Tooltip",
+        "Configs.BlockExhaustionMode.NextBlock.Label",
+        "Configs.BlockExhaustionMode.NextBlock.Tooltip",
+        "Configs.BlockExhaustionMode.Tooltip",
+        "Configs.CanvasOverlayConfig.CanvasFillAlpha.Label",
+        "Configs.CanvasOverlayConfig.CanvasFillAlpha.Tooltip",
+        "Configs.CanvasOverlayConfig.CanvasFillColor.Label",
+        "Configs.CanvasOverlayConfig.CanvasFillColor.Tooltip",
+        "Configs.CanvasOverlayConfig.CanvasOutsideAlpha.Label",
+        "Configs.CanvasOverlayConfig.CanvasOutsideAlpha.Tooltip",
+        "Configs.CanvasOverlayConfig.CanvasOutsideColor.Label",
+        "Configs.CanvasOverlayConfig.CanvasOutsideColor.Tooltip",
+        "Configs.CanvasOverlayConfig.CanvasOverlay.Header",
+        "Configs.CanvasOverlayConfig.CanvasTileSelectionAlpha.Label",
+        "Configs.CanvasOverlayConfig.CanvasTileSelectionAlpha.Tooltip",
+        "Configs.CanvasOverlayConfig.CanvasTileSelectionColor.Label",
+        "Configs.CanvasOverlayConfig.CanvasTileSelectionColor.Tooltip",
+        "Configs.CanvasOverlayConfig.DisplayName",
+        "Configs.CanvasOverlayConfig.MoldingCanvasColor.Label",
+        "Configs.CanvasOverlayConfig.MoldingCanvasColor.Tooltip",
+        "Configs.CanvasOverlayConfig.MoldingCanvasFillAlpha.Label",
+        "Configs.CanvasOverlayConfig.MoldingCanvasFillAlpha.Tooltip",
+        "Configs.CanvasOverlayConfig.MoldingCanvasOverlay.Header",
+        "Configs.CanvasOverlayConfig.MoldingOutsideAlpha.Label",
+        "Configs.CanvasOverlayConfig.MoldingOutsideAlpha.Tooltip",
+        "Configs.CanvasOverlayConfig.MoldingOutsideColor.Label",
+        "Configs.CanvasOverlayConfig.MoldingOutsideColor.Tooltip",
+        "Configs.CanvasOverlayConfig.MoldingTileSelectionAlpha.Label",
+        "Configs.CanvasOverlayConfig.MoldingTileSelectionAlpha.Tooltip",
+        "Configs.CanvasOverlayConfig.MoldingTileSelectionColor.Label",
+        "Configs.CanvasOverlayConfig.MoldingTileSelectionColor.Tooltip",
+        "Configs.CarefreeConfig.CarefreeAllowDelicateTileDestruction.Label",
+        "Configs.CarefreeConfig.CarefreeAllowDelicateTileDestruction.Tooltip",
+        "Configs.CarefreeConfig.CarefreeAllowDemonAltarDestruction.Label",
+        "Configs.CarefreeConfig.CarefreeAllowDemonAltarDestruction.Tooltip",
+        "Configs.CarefreeConfig.CarefreeMode.Header",
+        "Configs.CarefreeConfig.CarefreeSuppressDrops.Label",
+        "Configs.CarefreeConfig.CarefreeSuppressDrops.Tooltip",
+        "Configs.CarefreeConfig.DisplayName",
+        "Configs.CarefreeConfig.EnableCarefreeMode.Label",
+        "Configs.CarefreeConfig.EnableCarefreeMode.Tooltip",
+        "Configs.InfiniteOverride.Default.Label",
+        "Configs.InfiniteOverride.Default.Tooltip",
+        "Configs.InfiniteOverride.ForceOff.Label",
+        "Configs.InfiniteOverride.ForceOff.Tooltip",
+        "Configs.InfiniteOverride.ForceOn.Label",
+        "Configs.InfiniteOverride.ForceOn.Tooltip",
+        "Configs.InfiniteOverride.Tooltip",
+        "Configs.LavaRainStyle.Both.Label",
+        "Configs.LavaRainStyle.Both.Tooltip",
+        "Configs.LavaRainStyle.Embers.Label",
+        "Configs.LavaRainStyle.Embers.Tooltip",
+        "Configs.LavaRainStyle.SolarFlare.Label",
+        "Configs.LavaRainStyle.SolarFlare.Tooltip",
+        "Configs.LavaRainStyle.Tooltip",
+        "Configs.LimitsConfig.BigSelectionCap.Label",
+        "Configs.LimitsConfig.BigSelectionCap.Tooltip",
+        "Configs.LimitsConfig.CoatingSelectionCap.Label",
+        "Configs.LimitsConfig.CoatingSelectionCap.Tooltip",
+        "Configs.LimitsConfig.DelimitationSelectionCap.Label",
+        "Configs.LimitsConfig.DelimitationSelectionCap.Tooltip",
+        "Configs.LimitsConfig.DisplayName",
+        "Configs.LimitsConfig.HollowSelectionCap.Label",
+        "Configs.LimitsConfig.HollowSelectionCap.Tooltip",
+        "Configs.LimitsConfig.MaxConfirmDistance.Label",
+        "Configs.LimitsConfig.MaxConfirmDistance.Tooltip",
+        "Configs.LimitsConfig.MaxOutlineThickness.Label",
+        "Configs.LimitsConfig.MaxOutlineThickness.Tooltip",
+        "Configs.LimitsConfig.MoldingSelectionCap.Label",
+        "Configs.LimitsConfig.MoldingSelectionCap.Tooltip",
+        "Configs.LimitsConfig.OperationCooldownTicks.Label",
+        "Configs.LimitsConfig.OperationCooldownTicks.Tooltip",
+        "Configs.LimitsConfig.OperationLimits.Header",
+        "Configs.LimitsConfig.Safekeeping.Header",
+        "Configs.LimitsConfig.SafekeepingClearThreshold.Label",
+        "Configs.LimitsConfig.SafekeepingClearThreshold.Tooltip",
+        "Configs.LimitsConfig.SelectionLimits.Header",
+        "Configs.LimitsConfig.SmallSelectionCap.Label",
+        "Configs.LimitsConfig.SmallSelectionCap.Tooltip",
+        "Configs.NonOceanWaterproofTorch.CoralTorch.Label",
+        "Configs.NonOceanWaterproofTorch.CoralTorch.Tooltip",
+        "Configs.NonOceanWaterproofTorch.CursedTorch.Label",
+        "Configs.NonOceanWaterproofTorch.CursedTorch.Tooltip",
+        "Configs.NonOceanWaterproofTorch.EvilTorch.Label",
+        "Configs.NonOceanWaterproofTorch.EvilTorch.Tooltip",
+        "Configs.NonOceanWaterproofTorch.IchorTorch.Label",
+        "Configs.NonOceanWaterproofTorch.IchorTorch.Tooltip",
+        "Configs.NonOceanWaterproofTorch.Tooltip",
+        "Configs.OceanWaterproofTorch.CoralTorch.Label",
+        "Configs.OceanWaterproofTorch.CoralTorch.Tooltip",
+        "Configs.OceanWaterproofTorch.CursedTorch.Label",
+        "Configs.OceanWaterproofTorch.CursedTorch.Tooltip",
+        "Configs.OceanWaterproofTorch.EvilTorch.Label",
+        "Configs.OceanWaterproofTorch.EvilTorch.Tooltip",
+        "Configs.OceanWaterproofTorch.IchorTorch.Label",
+        "Configs.OceanWaterproofTorch.IchorTorch.Tooltip",
+        "Configs.OceanWaterproofTorch.Tooltip",
+        "Configs.OverlayConfig.DisplayName",
+        "Configs.OverlayConfig.NegativeSpaceAlpha.Label",
+        "Configs.OverlayConfig.NegativeSpaceAlpha.Tooltip",
+        "Configs.OverlayConfig.Overlay.Header",
+        "Configs.OverlayConfig.OverlayBrightnessMax.Label",
+        "Configs.OverlayConfig.OverlayBrightnessMax.Tooltip",
+        "Configs.OverlayConfig.OverlayBrightnessMin.Label",
+        "Configs.OverlayConfig.OverlayBrightnessMin.Tooltip",
+        "Configs.OverlayConfig.OverlayRenderMode.Label",
+        "Configs.OverlayConfig.OverlayRenderMode.Tooltip",
+        "Configs.OverlayConfig.SelectionOverlayColor.Label",
+        "Configs.OverlayConfig.SelectionOverlayColor.Tooltip",
+        "Configs.OverlayConfig.ShapeOverlayAlpha.Label",
+        "Configs.OverlayConfig.ShapeOverlayAlpha.Tooltip",
+        "Configs.OverlayConfig.ShowTilingPreview.Label",
+        "Configs.OverlayConfig.ShowTilingPreview.Tooltip",
+        "Configs.OverlayConfig.StampRenderMode.Label",
+        "Configs.OverlayConfig.StampRenderMode.Tooltip",
+        "Configs.OverlayConfig.UsePerFamilyOverlayColor.Label",
+        "Configs.OverlayConfig.UsePerFamilyOverlayColor.Tooltip",
+        "Configs.OverlayRenderMode.AlwaysBoundingBox.Label",
+        "Configs.OverlayRenderMode.AlwaysBoundingBox.Tooltip",
+        "Configs.OverlayRenderMode.AlwaysFullShape.Label",
+        "Configs.OverlayRenderMode.AlwaysFullShape.Tooltip",
+        "Configs.OverlayRenderMode.Auto.Label",
+        "Configs.OverlayRenderMode.Auto.Tooltip",
+        "Configs.OverlayRenderMode.Tooltip",
+        "Configs.PerformanceConfig.DisplayName",
+        "Configs.PerformanceConfig.EnableProgressiveMode.Label",
+        "Configs.PerformanceConfig.EnableProgressiveMode.Tooltip",
+        "Configs.PerformanceConfig.ProgressiveBatchSize.Label",
+        "Configs.PerformanceConfig.ProgressiveBatchSize.Tooltip",
+        "Configs.PerformanceConfig.ProgressiveInterval.Label",
+        "Configs.PerformanceConfig.ProgressiveInterval.Tooltip",
+        "Configs.PerformanceConfig.ProgressiveMode.Header",
+        "Configs.PreferencesConfig.AllowChanneling.Label",
+        "Configs.PreferencesConfig.AllowChanneling.Tooltip",
+        "Configs.PreferencesConfig.AllowChannelingDust.Label",
+        "Configs.PreferencesConfig.AllowChannelingDust.Tooltip",
+        "Configs.PreferencesConfig.AllowChannelingSound.Label",
+        "Configs.PreferencesConfig.AllowChannelingSound.Tooltip",
+        "Configs.PreferencesConfig.Audio.Header",
+        "Configs.PreferencesConfig.BlockExhaustion.Header",
+        "Configs.PreferencesConfig.BlockExhaustion.Label",
+        "Configs.PreferencesConfig.BlockExhaustion.Tooltip",
+        "Configs.PreferencesConfig.DefaultShapeMode.Label",
+        "Configs.PreferencesConfig.DefaultShapeMode.Tooltip",
+        "Configs.PreferencesConfig.DefaultShapeType.Label",
+        "Configs.PreferencesConfig.DefaultShapeType.Tooltip",
+        "Configs.PreferencesConfig.DisplayName",
+        "Configs.PreferencesConfig.EnableWandSounds.Label",
+        "Configs.PreferencesConfig.EnableWandSounds.Tooltip",
+        "Configs.PreferencesConfig.Feedback.Header",
+        "Configs.PreferencesConfig.LavaRainStyle.Label",
+        "Configs.PreferencesConfig.LavaRainStyle.Tooltip",
+        "Configs.PreferencesConfig.MaxUndoStackSize.Label",
+        "Configs.PreferencesConfig.MaxUndoStackSize.Tooltip",
+        "Configs.PreferencesConfig.RainFillEffects.Header",
+        "Configs.PreferencesConfig.RainFillSpawnDusts.Label",
+        "Configs.PreferencesConfig.RainFillSpawnDusts.Tooltip",
+        "Configs.PreferencesConfig.RainFillSummonsClouds.Label",
+        "Configs.PreferencesConfig.RainFillSummonsClouds.Tooltip",
+        "Configs.PreferencesConfig.ShapeDefaults.Header",
+        "Configs.PreferencesConfig.ShowLoreTooltips.Label",
+        "Configs.PreferencesConfig.ShowLoreTooltips.Tooltip",
+        "Configs.PreferencesConfig.StampChanneling.Header",
+        "Configs.PreferencesConfig.Tooltips.Header",
+        "Configs.PreferencesConfig.Undo.Header",
+        "Configs.PreferencesConfig.WandVerbosity.Label",
+        "Configs.PreferencesConfig.WandVerbosity.Tooltip",
+        "Configs.ResourcesConfig.DisplayName",
+        "Configs.ResourcesConfig.EnableInfiniteResource.Label",
+        "Configs.ResourcesConfig.EnableInfiniteResource.Tooltip",
+        "Configs.ResourcesConfig.InfiniteActuatorThreshold.Label",
+        "Configs.ResourcesConfig.InfiniteActuatorThreshold.Tooltip",
+        "Configs.ResourcesConfig.InfiniteActuators.Label",
+        "Configs.ResourcesConfig.InfiniteActuators.Tooltip",
+        "Configs.ResourcesConfig.InfiniteGrassSeedThreshold.Label",
+        "Configs.ResourcesConfig.InfiniteGrassSeedThreshold.Tooltip",
+        "Configs.ResourcesConfig.InfiniteGrassSeeds.Label",
+        "Configs.ResourcesConfig.InfiniteGrassSeeds.Tooltip",
+        "Configs.ResourcesConfig.InfiniteResources.Header",
+        "Configs.ResourcesConfig.InfiniteTileThreshold.Label",
+        "Configs.ResourcesConfig.InfiniteTileThreshold.Tooltip",
+        "Configs.ResourcesConfig.InfiniteTiles.Label",
+        "Configs.ResourcesConfig.InfiniteTiles.Tooltip",
+        "Configs.ResourcesConfig.InfiniteWallThreshold.Label",
+        "Configs.ResourcesConfig.InfiniteWallThreshold.Tooltip",
+        "Configs.ResourcesConfig.InfiniteWalls.Label",
+        "Configs.ResourcesConfig.InfiniteWalls.Tooltip",
+        "Configs.ResourcesConfig.InfiniteWireThreshold.Label",
+        "Configs.ResourcesConfig.InfiniteWireThreshold.Tooltip",
+        "Configs.ResourcesConfig.InfiniteWires.Label",
+        "Configs.ResourcesConfig.InfiniteWires.Tooltip",
+        "Configs.ResourcesConfig.IsInfiniteForActuators.Label",
+        "Configs.ResourcesConfig.IsInfiniteForActuators.Tooltip",
+        "Configs.ResourcesConfig.IsInfiniteForWires.Label",
+        "Configs.ResourcesConfig.IsInfiniteForWires.Tooltip",
+        "Configs.SandboxConfig.AllowDelicateTileDestruction.Label",
+        "Configs.SandboxConfig.AllowDelicateTileDestruction.Tooltip",
+        "Configs.SandboxConfig.AllowDemonAltarDestruction.Label",
+        "Configs.SandboxConfig.AllowDemonAltarDestruction.Tooltip",
+        "Configs.SandboxConfig.AutoOpenChestsOnDestruction.Label",
+        "Configs.SandboxConfig.AutoOpenChestsOnDestruction.Tooltip",
+        "Configs.SandboxConfig.BypassPickaxePower.Label",
+        "Configs.SandboxConfig.BypassPickaxePower.Tooltip",
+        "Configs.SandboxConfig.DisplayName",
+        "Configs.SandboxConfig.EnableUndoCommand.Label",
+        "Configs.SandboxConfig.EnableUndoCommand.Tooltip",
+        "Configs.SandboxConfig.IgnoreLockedKeyRequirements.Label",
+        "Configs.SandboxConfig.IgnoreLockedKeyRequirements.Tooltip",
+        "Configs.SandboxConfig.Sandbox.Header",
+        "Configs.SandboxConfig.SuppressDrops.Label",
+        "Configs.SandboxConfig.SuppressDrops.Tooltip",
+        "Configs.SandboxConfig.VacuumItems.Label",
+        "Configs.SandboxConfig.VacuumItems.Tooltip",
+        "Configs.ShapeMode.Filled.Label",
+        "Configs.ShapeMode.Filled.Tooltip",
+        "Configs.ShapeMode.Hollow.Label",
+        "Configs.ShapeMode.Hollow.Tooltip",
+        "Configs.ShapeMode.Tooltip",
+        "Configs.ShapeType.CardinalLine.Label",
+        "Configs.ShapeType.CardinalLine.Tooltip",
+        "Configs.ShapeType.Diamond.Label",
+        "Configs.ShapeType.Diamond.Tooltip",
+        "Configs.ShapeType.Elbow.Label",
+        "Configs.ShapeType.Elbow.Tooltip",
+        "Configs.ShapeType.Ellipse.Label",
+        "Configs.ShapeType.Ellipse.Tooltip",
+        "Configs.ShapeType.Mold.Label",
+        "Configs.ShapeType.Mold.Tooltip",
+        "Configs.ShapeType.Rectangle.Label",
+        "Configs.ShapeType.Rectangle.Tooltip",
+        "Configs.ShapeType.StraightLine.Label",
+        "Configs.ShapeType.StraightLine.Tooltip",
+        "Configs.ShapeType.Tooltip",
+        "Configs.ShapeType.Triangle.Label",
+        "Configs.ShapeType.Triangle.Tooltip",
+        "Configs.StampConfig.CoatingStampChannelFrames.Label",
+        "Configs.StampConfig.CoatingStampChannelFrames.Tooltip",
+        "Configs.StampConfig.DisplayName",
+        "Configs.StampConfig.StampChannelFrames.Label",
+        "Configs.StampConfig.StampChannelFrames.Tooltip",
+        "Configs.StampConfig.StampChanneling.Header",
+        "Configs.StampConfig.StampExecuteOnClick.Label",
+        "Configs.StampConfig.StampExecuteOnClick.Tooltip",
+        "Configs.StampConfig.StampRepeatFrames.Label",
+        "Configs.StampConfig.StampRepeatFrames.Tooltip",
+        "Configs.StampRenderMode.Precise.Label",
+        "Configs.StampRenderMode.Precise.Tooltip",
+        "Configs.StampRenderMode.Smooth.Label",
+        "Configs.StampRenderMode.Smooth.Tooltip",
+        "Configs.StampRenderMode.Tooltip",
+        "Configs.TorchWheelConfig.AnimateTorchWheel.Label",
+        "Configs.TorchWheelConfig.AnimateTorchWheel.Tooltip",
+        "Configs.TorchWheelConfig.AutoWaterproofTorches.Label",
+        "Configs.TorchWheelConfig.AutoWaterproofTorches.Tooltip",
+        "Configs.TorchWheelConfig.Behavior.Header",
+        "Configs.TorchWheelConfig.DisplayName",
+        "Configs.TorchWheelConfig.EvilTorchRequiresHardmode.Label",
+        "Configs.TorchWheelConfig.EvilTorchRequiresHardmode.Tooltip",
+        "Configs.TorchWheelConfig.NonOceanWaterproofTorch.Label",
+        "Configs.TorchWheelConfig.NonOceanWaterproofTorch.Tooltip",
+        "Configs.TorchWheelConfig.OceanWaterproofTorch.Label",
+        "Configs.TorchWheelConfig.OceanWaterproofTorch.Tooltip",
+        "Configs.TorchWheelConfig.PhotosensitivityWarning.Label",
+        "Configs.TorchWheelConfig.PhotosensitivityWarning.Tooltip",
+        "Configs.TorchWheelConfig.SmartBiomeTorchLookup.Label",
+        "Configs.TorchWheelConfig.SmartBiomeTorchLookup.Tooltip",
+        "Configs.TorchWheelConfig.SmartTorchSelection.Header",
+        "Configs.TorchWheelConfig.SmoothVisualPath.Label",
+        "Configs.TorchWheelConfig.SmoothVisualPath.Tooltip",
+        "Configs.TorchWheelConfig.SubstituteCoralTorchPreHardmode.Label",
+        "Configs.TorchWheelConfig.SubstituteCoralTorchPreHardmode.Tooltip",
+        "Configs.TorchWheelConfig.TorchWheel.Header",
+        "Configs.TorchWheelConfig.TorchWheelFriendly.Label",
+        "Configs.TorchWheelConfig.TorchWheelFriendly.Tooltip",
+        "Configs.TorchWheelConfig.TorchWheelMaxBacktrackSteps.Label",
+        "Configs.TorchWheelConfig.TorchWheelMaxBacktrackSteps.Tooltip",
+        "Configs.TorchWheelConfig.TorchWheelMaxTiles.Label",
+        "Configs.TorchWheelConfig.TorchWheelMaxTiles.Tooltip",
+        "Configs.TorchWheelConfig.TorchWheelMaxTorches.Label",
+        "Configs.TorchWheelConfig.TorchWheelMaxTorches.Tooltip",
+        "Configs.TorchWheelConfig.TorchWheelSpacingD.Label",
+        "Configs.TorchWheelConfig.TorchWheelSpacingD.Tooltip",
+        "Configs.TorchWheelConfig.TorchWheelSpacingS.Label",
+        "Configs.TorchWheelConfig.TorchWheelSpacingS.Tooltip",
+        "Configs.TorchWheelConfig.UnderwaterTorchLookup.Label",
+        "Configs.TorchWheelConfig.UnderwaterTorchLookup.Tooltip",
+        "Configs.TorchWheelConfig.VisualAndSafety.Header",
+        "Configs.WandConfig.AllowDelicateTileDestruction.Label",
+        "Configs.WandConfig.AllowDelicateTileDestruction.Tooltip",
+        "Configs.WandConfig.AllowDemonAltarDestruction.Label",
+        "Configs.WandConfig.AllowDemonAltarDestruction.Tooltip",
+        "Configs.WandConfig.Audio.Header",
+        "Configs.WandConfig.AutoOpenChestsOnDestruction.Label",
+        "Configs.WandConfig.AutoOpenChestsOnDestruction.Tooltip",
+        "Configs.WandConfig.BigSelectionCap.Label",
+        "Configs.WandConfig.BigSelectionCap.Tooltip",
+        "Configs.WandConfig.BypassPickaxePower.Label",
+        "Configs.WandConfig.BypassPickaxePower.Tooltip",
+        "Configs.WandConfig.CarefreeAllowDelicateTileDestruction.Label",
+        "Configs.WandConfig.CarefreeAllowDelicateTileDestruction.Tooltip",
+        "Configs.WandConfig.CarefreeAllowDemonAltarDestruction.Label",
+        "Configs.WandConfig.CarefreeAllowDemonAltarDestruction.Tooltip",
+        "Configs.WandConfig.CarefreeMode.Header",
+        "Configs.WandConfig.CarefreeSuppressDrops.Label",
+        "Configs.WandConfig.CarefreeSuppressDrops.Tooltip",
+        "Configs.WandConfig.CoatingSelectionCap.Label",
+        "Configs.WandConfig.CoatingSelectionCap.Tooltip",
+        "Configs.WandConfig.DisplayName",
+        "Configs.WandConfig.EnableCarefreeMode.Label",
+        "Configs.WandConfig.EnableCarefreeMode.Tooltip",
+        "Configs.WandConfig.EnableInfiniteResource.Label",
+        "Configs.WandConfig.EnableInfiniteResource.Tooltip",
+        "Configs.WandConfig.EnableProgressiveMode.Label",
+        "Configs.WandConfig.EnableProgressiveMode.Tooltip",
+        "Configs.WandConfig.EnableUndoCommand.Label",
+        "Configs.WandConfig.EnableUndoCommand.Tooltip",
+        "Configs.WandConfig.EnableWandSounds.Label",
+        "Configs.WandConfig.EnableWandSounds.Tooltip",
+        "Configs.WandConfig.HollowSelectionCap.Label",
+        "Configs.WandConfig.HollowSelectionCap.Tooltip",
+        "Configs.WandConfig.IgnoreLockedKeyRequirements.Label",
+        "Configs.WandConfig.IgnoreLockedKeyRequirements.Tooltip",
+        "Configs.WandConfig.InfiniteActuatorThreshold.Label",
+        "Configs.WandConfig.InfiniteActuatorThreshold.Tooltip",
+        "Configs.WandConfig.InfiniteActuators.Label",
+        "Configs.WandConfig.InfiniteActuators.Tooltip",
+        "Configs.WandConfig.InfiniteGrassSeedThreshold.Label",
+        "Configs.WandConfig.InfiniteGrassSeedThreshold.Tooltip",
+        "Configs.WandConfig.InfiniteGrassSeeds.Label",
+        "Configs.WandConfig.InfiniteGrassSeeds.Tooltip",
+        "Configs.WandConfig.InfiniteResources.Header",
+        "Configs.WandConfig.InfiniteTileThreshold.Label",
+        "Configs.WandConfig.InfiniteTileThreshold.Tooltip",
+        "Configs.WandConfig.InfiniteTiles.Label",
+        "Configs.WandConfig.InfiniteTiles.Tooltip",
+        "Configs.WandConfig.InfiniteWallThreshold.Label",
+        "Configs.WandConfig.InfiniteWallThreshold.Tooltip",
+        "Configs.WandConfig.InfiniteWalls.Label",
+        "Configs.WandConfig.InfiniteWalls.Tooltip",
+        "Configs.WandConfig.InfiniteWireThreshold.Label",
+        "Configs.WandConfig.InfiniteWireThreshold.Tooltip",
+        "Configs.WandConfig.InfiniteWires.Label",
+        "Configs.WandConfig.InfiniteWires.Tooltip",
+        "Configs.WandConfig.IsInfiniteForActuators.Label",
+        "Configs.WandConfig.IsInfiniteForActuators.Tooltip",
+        "Configs.WandConfig.IsInfiniteForWires.Label",
+        "Configs.WandConfig.IsInfiniteForWires.Tooltip",
+        "Configs.WandConfig.MaxOutlineThickness.Label",
+        "Configs.WandConfig.MaxOutlineThickness.Tooltip",
+        "Configs.WandConfig.Overlay.Header",
+        "Configs.WandConfig.OverlayRenderMode.Label",
+        "Configs.WandConfig.OverlayRenderMode.Tooltip",
+        "Configs.WandConfig.ProgressiveBatchSize.Label",
+        "Configs.WandConfig.ProgressiveBatchSize.Tooltip",
+        "Configs.WandConfig.ProgressiveInterval.Label",
+        "Configs.WandConfig.ProgressiveInterval.Tooltip",
+        "Configs.WandConfig.ProgressiveMode.Header",
+        "Configs.WandConfig.Safekeeping.Header",
+        "Configs.WandConfig.SafekeepingClearThreshold.Label",
+        "Configs.WandConfig.SafekeepingClearThreshold.Tooltip",
+        "Configs.WandConfig.Sandbox.Header",
+        "Configs.WandConfig.SelectionLimits.Header",
+        "Configs.WandConfig.ShowLoreTooltips.Label",
+        "Configs.WandConfig.ShowLoreTooltips.Tooltip",
+        "Configs.WandConfig.SmallSelectionCap.Label",
+        "Configs.WandConfig.SmallSelectionCap.Tooltip",
+        "Configs.WandConfig.SuppressDrops.Label",
+        "Configs.WandConfig.SuppressDrops.Tooltip",
+        "Configs.WandConfig.Tooltips.Header",
+        "Configs.WandConfig.VacuumItems.Label",
+        "Configs.WandConfig.VacuumItems.Tooltip",
+        "GameTips.GitHubContributions",
+        "GameTips.IceBiomeReplacement",
+        "GameTips.VacuumItems",
+        "Items.TorchWheelWandPlatform.DisplayName",
+        "Items.TorchWheelWandPlatform.Tooltip",
+        "Items.TorchWheelWandSolid.DisplayName",
+        "Items.TorchWheelWandSolid.Tooltip",
+        "Items.TorchWheelWandSolidPlatforms.DisplayName",
+        "Items.TorchWheelWandSolidPlatforms.Tooltip",
+        "Items.WandOfBuildingConfirm.DisplayName",
+        "Items.WandOfBuildingConfirm.Tooltip",
+        "Items.WandOfBuildingInstant.DisplayName",
+        "Items.WandOfBuildingInstant.Tooltip",
+        "Items.WandOfBuildingSelect.DisplayName",
+        "Items.WandOfBuildingSelect.Tooltip",
+        "Items.WandOfBuildingStamp.DisplayName",
+        "Items.WandOfBuildingStamp.Tooltip",
+        "Items.WandOfCoatingConfirm.DisplayName",
+        "Items.WandOfCoatingConfirm.Tooltip",
+        "Items.WandOfCoatingInstant.DisplayName",
+        "Items.WandOfCoatingInstant.Tooltip",
+        "Items.WandOfCoatingSelect.DisplayName",
+        "Items.WandOfCoatingSelect.Tooltip",
+        "Items.WandOfCoatingStamp.DisplayName",
+        "Items.WandOfCoatingStamp.Tooltip",
+        "Items.WandOfDelimitationConfirm.DisplayName",
+        "Items.WandOfDelimitationConfirm.Tooltip",
+        "Items.WandOfDelimitationInstant.DisplayName",
+        "Items.WandOfDelimitationInstant.Tooltip",
+        "Items.WandOfDelimitationSelect.DisplayName",
+        "Items.WandOfDelimitationSelect.Tooltip",
+        "Items.WandOfDelimitationStamp.DisplayName",
+        "Items.WandOfDelimitationStamp.Tooltip",
+        "Items.WandOfDismantlingConfirm.DisplayName",
+        "Items.WandOfDismantlingConfirm.Tooltip",
+        "Items.WandOfDismantlingInstant.DisplayName",
+        "Items.WandOfDismantlingInstant.Tooltip",
+        "Items.WandOfDismantlingSelect.DisplayName",
+        "Items.WandOfDismantlingSelect.Tooltip",
+        "Items.WandOfDismantlingStamp.DisplayName",
+        "Items.WandOfDismantlingStamp.Tooltip",
+        "Items.WandOfFluidsConfirm.DisplayName",
+        "Items.WandOfFluidsConfirm.Tooltip",
+        "Items.WandOfFluidsInstant.DisplayName",
+        "Items.WandOfFluidsInstant.Tooltip",
+        "Items.WandOfFluidsSelect.DisplayName",
+        "Items.WandOfFluidsSelect.Tooltip",
+        "Items.WandOfFluidsStamp.DisplayName",
+        "Items.WandOfFluidsStamp.Tooltip",
+        "Items.WandOfMoldingConfirm.DisplayName",
+        "Items.WandOfMoldingConfirm.Tooltip",
+        "Items.WandOfMoldingInstant.DisplayName",
+        "Items.WandOfMoldingInstant.Tooltip",
+        "Items.WandOfMoldingSelect.DisplayName",
+        "Items.WandOfMoldingSelect.Tooltip",
+        "Items.WandOfMoldingStamp.DisplayName",
+        "Items.WandOfMoldingStamp.Tooltip",
+        "Items.WandOfReplacementConfirm.DisplayName",
+        "Items.WandOfReplacementConfirm.Tooltip",
+        "Items.WandOfReplacementInstant.DisplayName",
+        "Items.WandOfReplacementInstant.Tooltip",
+        "Items.WandOfReplacementSelect.DisplayName",
+        "Items.WandOfReplacementSelect.Tooltip",
+        "Items.WandOfReplacementStamp.DisplayName",
+        "Items.WandOfReplacementStamp.Tooltip",
+        "Items.WandOfSafekeepingConfirm.DisplayName",
+        "Items.WandOfSafekeepingConfirm.Tooltip",
+        "Items.WandOfSafekeepingInstant.DisplayName",
+        "Items.WandOfSafekeepingInstant.Tooltip",
+        "Items.WandOfSafekeepingSelect.DisplayName",
+        "Items.WandOfSafekeepingSelect.Tooltip",
+        "Items.WandOfSafekeepingStamp.DisplayName",
+        "Items.WandOfSafekeepingStamp.Tooltip",
+        "Items.WandOfTorchesConfirm.DisplayName",
+        "Items.WandOfTorchesConfirm.Tooltip",
+        "Items.WandOfTorchesInstant.DisplayName",
+        "Items.WandOfTorchesInstant.Tooltip",
+        "Items.WandOfTorchesSelect.DisplayName",
+        "Items.WandOfTorchesSelect.Tooltip",
+        "Items.WandOfTorchesStamp.DisplayName",
+        "Items.WandOfTorchesStamp.Tooltip",
+        "Items.WandOfWiringConfirm.DisplayName",
+        "Items.WandOfWiringConfirm.Tooltip",
+        "Items.WandOfWiringInstant.DisplayName",
+        "Items.WandOfWiringInstant.Tooltip",
+        "Items.WandOfWiringSelect.DisplayName",
+        "Items.WandOfWiringSelect.Tooltip",
+        "Items.WandOfWiringStamp.DisplayName",
+        "Items.WandOfWiringStamp.Tooltip",
+        "Keybinds.Decrease Thickness.DisplayName",
+        "Keybinds.Increase Thickness.DisplayName",
+        "Keybinds.Open Inventory View.DisplayName",
+        "Keybinds.Open Wand Settings.DisplayName",
+        "Keybinds.Toggle Suppress Drops.DisplayName",
+        "Keybinds.Undo Selection Step.DisplayName",
+        "Messages.ClearConfirmPrompt",
+        "Messages.ClearedProtection",
+        "Messages.ClickToConfirm",
+        "Messages.ClickToConfirmOrCancel",
+        "Messages.CoatingHarvestedMoss",
+        "Messages.CoatingNoChanges",
+        "Messages.CoatingPaintedTiles",
+        "Messages.CoatingPaintedWalls",
+        "Messages.CoatingScrapedMoss",
+        "Messages.CoatingScrapedPaint",
+        "Messages.CycleHint",
+        "Messages.DelimitationFilterActive",
+        "Messages.EndPointSet",
+        "Messages.FluidsBubbleCoated",
+        "Messages.FluidsBubblePlaced",
+        "Messages.FluidsBubbleRemoved",
+        "Messages.FluidsDrained",
+        "Messages.FluidsFilled",
+        "Messages.FluidsInvalidRegion",
+        "Messages.FluidsMixed",
+        "Messages.FluidsMixedOnly",
+        "Messages.FluidsNoBasins",
+        "Messages.FluidsNoPockets",
+        "Messages.FluidsNoSeeds",
+        "Messages.FluidsNoTiles",
+        "Messages.FluidsPocketFilled",
+        "Messages.FluidsRainFilled",
+        "Messages.InventoryViewNoParticipant",
+        "Messages.LoreBuilding",
+        "Messages.LoreCoating",
+        "Messages.LoreCommon",
+        "Messages.LoreDelimitation",
+        "Messages.LoreDismantling",
+        "Messages.LoreFluids",
+        "Messages.LoreMolding",
+        "Messages.LoreReplacement",
+        "Messages.LoreSafekeeping",
+        "Messages.LoreShiftHint",
+        "Messages.LoreTorches",
+        "Messages.LoreWiring",
+        "Messages.ModeConfirm",
+        "Messages.ModeInstant",
+        "Messages.ModeSelect",
+        "Messages.ModeStamp",
+        "Messages.MoldingHintExpandCanvas",
+        "Messages.MoldingHintTooFar",
+        "Messages.MoldingNoChange",
+        "Messages.NeedHave",
+        "Messages.NeedTargetItems",
+        "Messages.NoActuatorsInInventory",
+        "Messages.NoPositionsToProtect",
+        "Messages.NoProtectedPositions",
+        "Messages.NoProtectionTargets",
+        "Messages.NoSelectionActive",
+        "Messages.NoSourceInSelection",
+        "Messages.NoSourceItems",
+        "Messages.NoSourceWallsInSelection",
+        "Messages.NoSuitableItem",
+        "Messages.NoTargetItems",
+        "Messages.NoTilesDestroyed",
+        "Messages.NoTilesInSelection",
+        "Messages.NoTilesInShape",
+        "Messages.NoTilesPlaced",
+        "Messages.NoTilesReplaced",
+        "Messages.NoWallItemFound",
+        "Messages.NoWallSourceItems",
+        "Messages.NoWallTargetItems",
+        "Messages.NoWallsPlaced",
+        "Messages.NoWallsReplaced",
+        "Messages.NoWireInInventory",
+        "Messages.NoWiresSelected",
+        "Messages.NoWiringChanges",
+        "Messages.NothingToVoid",
+        "Messages.ObtainHint",
+        "Messages.PickaxeHint",
+        "Messages.ChosenMissingUnderInterrupt",
+        "Messages.SameSourceTarget",
+        "Messages.SameWallSourceTarget",
+        "Messages.SelectClickConfirm",
+        "Messages.SelectClickEnd",
+        "Messages.SelectStartClickAgain",
+        "Messages.SelectStartClickEnd",
+        "Messages.SelectionCancelled",
+        "Messages.SelectionCleared",
+        "Messages.SelectionUnlocked",
+        "Messages.SourceMustBeWall",
+        "Messages.StampClickEnd",
+        "Messages.StampClickLock",
+        "Messages.StampLocked",
+        "Messages.StampUnlocked",
+        "Messages.SuppressDropsOff",
+        "Messages.SuppressDropsOn",
+        "Messages.SwitchedToMode",
+        "Messages.TargetMustBeWallOrAir",
+        "Messages.ThicknessChanged",
+        "Messages.TorchWheelCycleHint",
+        "Messages.TorchWheelKillHint",
+        "Messages.TorchWheelModePlatforms",
+        "Messages.TorchWheelModeTiles",
+        "Messages.TorchWheelSwitchToPlatforms",
+        "Messages.TorchWheelSwitchToTiles",
+        "Messages.TorchesConverted",
+        "Messages.TorchesNoTorchItem",
+        "Messages.TorchesNoValidPositions",
+        "Messages.TorchesNoneConverted",
+        "Messages.TorchesNonePlaced",
+        "Messages.TorchesNoneRemoved",
+        "Messages.TorchesNoneReplaced",
+        "Messages.TorchesPlaced",
+        "Messages.TorchesRemoved",
+        "Messages.TorchesReplaced",
+        "Messages.Undone",
+        "Messages.VoidRequiresCarefree",
+        "Messages.VoidSinglePlayerOnly",
+        "Messages.WiresPlaced",
+        "Messages.WiresRemoved",
+        "Projectiles.ConfirmModeProjectile.DisplayName",
+        "Projectiles.FlyingTorchWheelPlatform.DisplayName",
+        "Projectiles.FlyingTorchWheelSolid.DisplayName",
+        "Projectiles.InstantModeProjectile.DisplayName",
+        "Projectiles.RainCloudProjectile.DisplayName",
+        "Projectiles.SelectModeProjectile.DisplayName",
+        "Projectiles.StampModeProjectile.DisplayName",
+        "Projectiles.TorchWheelPlatformProjectile.DisplayName",
+        "Projectiles.TorchWheelSolidProjectile.DisplayName",
+        "Projectiles.WandActionProjectile.DisplayName",
+        "Projectiles.WandOfFluidsProjectile.DisplayName",
+        "RecipeGroups.AnyGemstone",
+        "RecipeGroups.AnyWandOfBuilding",
+        "RecipeGroups.AnyWandOfDismantling",
+        "UI.Building.GrassSeed",
+        "UI.Building.ObjectType",
+        "UI.Building.Options",
+        "UI.Building.OverwriteSlope",
+        "UI.Building.PlanterBox",
+        "UI.Building.Platform",
+        "UI.Building.Rail",
+        "UI.Building.Rope",
+        "UI.Building.Slope",
+        "UI.Building.SlopeBottomLeft",
+        "UI.Building.SlopeBottomRight",
+        "UI.Building.SlopeDefault",
+        "UI.Building.SlopeHalf",
+        "UI.Building.SlopeTopLeft",
+        "UI.Building.SlopeTopRight",
+        "UI.Building.SolidBlock",
+        "UI.Building.Title",
+        "UI.Building.Wall",
+        "UI.Coating.CoatingType",
+        "UI.Coating.Echo",
+        "UI.Coating.EyedropperHint",
+        "UI.Coating.HarvestMoss",
+        "UI.Coating.Ignore",
+        "UI.Coating.Illuminant",
+        "UI.Coating.Mode",
+        "UI.Coating.Off",
+        "UI.Coating.On",
+        "UI.Coating.PaintColor",
+        "UI.Coating.PaintTile",
+        "UI.Coating.PaintWall",
+        "UI.Coating.Repaint",
+        "UI.Coating.ScrapeMoss",
+        "UI.Coating.ScrapePaint",
+        "UI.Coating.Title",
+        "UI.CollapsibleSection.CollapseTooltip",
+        "UI.CollapsibleSection.ExpandTooltip",
+        "UI.CollapsibleSection.PopoutTooltip",
+        "UI.Common.ActuationIgnore",
+        "UI.Common.ActuationOff",
+        "UI.Common.ActuationOn",
+        "UI.Common.Close",
+        "UI.Common.ConnectDiameter",
+        "UI.Common.ConnectDiameterTooltip",
+        "UI.Common.DefaultOff",
+        "UI.Common.DefaultOn",
+        "UI.Common.EqualDimensions",
+        "UI.Common.InvertSelection",
+        "UI.Common.OpenInventoryView",
+        "UI.Common.OutlineThickness",
+        "UI.Common.PaintSprayer.$parentVal",
+        "UI.Common.PaintSprayer.Coating",
+        "UI.Common.PaintSprayer.Inventory",
+        "UI.Common.PaintSprayer.Off",
+        "UI.Common.ChosenClickToFree",
+        "UI.Common.ChosenItemFallback",
+        "UI.Common.ChosenNotInInventory",
+        "UI.Common.PreservePaint",
+        "UI.Common.Shape",
+        "UI.Common.ShapeCardinal",
+        "UI.Common.ShapeDiamondFilled",
+        "UI.Common.ShapeDiamondHollow",
+        "UI.Common.ShapeElbow",
+        "UI.Common.ShapeEllipseFilled",
+        "UI.Common.ShapeEllipseHollow",
+        "UI.Common.ShapeMold",
+        "UI.Common.ShapeOptions",
+        "UI.Common.ShapeRectFilled",
+        "UI.Common.ShapeRectHollow",
+        "UI.Common.ShapeStraightLine",
+        "UI.Common.ShapeTriangleFilled",
+        "UI.Common.ShapeTriangleHollow",
+        "UI.Common.Slice",
+        "UI.Dismantling.DestroyContainers",
+        "UI.Dismantling.DestroyContainersTooltip",
+        "UI.Dismantling.DestroyTiles",
+        "UI.Dismantling.DestroyWalls",
+        "UI.Dismantling.Options",
+        "UI.Dismantling.Title",
+        "UI.Dismantling.VoidEverything",
+        "UI.Dismantling.VoidEverythingDisabled",
+        "UI.Dismantling.VoidEverythingTooltip",
+        "UI.Fluids.Bubble",
+        "UI.Fluids.CoatInBubble",
+        "UI.Fluids.Drain",
+        "UI.Fluids.Fill",
+        "UI.Fluids.FillMode",
+        "UI.Fluids.FluidOptions",
+        "UI.Fluids.FullLiquid",
+        "UI.Fluids.Honey",
+        "UI.Fluids.Lava",
+        "UI.Fluids.MixLiquids",
+        "UI.Fluids.Operation",
+        "UI.Fluids.OverwriteLiquids",
+        "UI.Fluids.PlaceType",
+        "UI.Fluids.PocketFill",
+        "UI.Fluids.RainFill",
+        "UI.Fluids.SelectiveDrain",
+        "UI.Fluids.Shimmer",
+        "UI.Fluids.Title",
+        "UI.Fluids.Water",
+        "UI.InventoryView.Building.PanelTitle",
+        "UI.InventoryView.Building.TileTitle",
+        "UI.InventoryView.Building.WallTitle",
+        "UI.InventoryView.ClearAllPins",
+        "UI.InventoryView.NoCandidates",
+        "UI.InventoryView.Replacement.PanelTitle",
+        "UI.InventoryView.Replacement.SourceTitle",
+        "UI.InventoryView.Replacement.TargetTitle",
+        "UI.InventoryView.Torches.PanelTitle",
+        "UI.InventoryView.Torches.Title",
+        "UI.Molding.Actions",
+        "UI.Molding.AutoCreateCanvas",
+        "UI.Molding.ClearAll",
+        "UI.Molding.ClearCanvas",
+        "UI.Molding.ClearSelection",
+        "UI.Molding.InvertSelection",
+        "UI.Molding.Mode",
+        "UI.Molding.ModeCanvasEdit",
+        "UI.Molding.ModeSelection",
+        "UI.Molding.OpAdd",
+        "UI.Molding.OpIntersect",
+        "UI.Molding.OpRemove",
+        "UI.Molding.OpXOR",
+        "UI.Molding.Operation",
+        "UI.Molding.Status",
+        "UI.Molding.TeleportToPlayer",
+        "UI.Molding.Title",
+        "UI.Replacement.Air",
+        "UI.Replacement.Options",
+        "UI.Replacement.Planter",
+        "UI.Replacement.Platform",
+        "UI.Replacement.Rail",
+        "UI.Replacement.Rope",
+        "UI.Replacement.SameType",
+        "UI.Replacement.Seeds",
+        "UI.Replacement.SourceType",
+        "UI.Replacement.TargetType",
+        "UI.Replacement.Tile",
+        "UI.Replacement.Title",
+        "UI.Replacement.Wall",
+        "UI.Safekeeping.ClearAll",
+        "UI.Safekeeping.ClearConfirm",
+        "UI.Safekeeping.Mode",
+        "UI.Safekeeping.Protect",
+        "UI.Safekeeping.ProtectTiles",
+        "UI.Safekeeping.ProtectWalls",
+        "UI.Safekeeping.Title",
+        "UI.Safekeeping.Unprotect",
+        "UI.Selection.Actions",
+        "UI.Selection.AutoCreateCanvas",
+        "UI.Selection.ClearAll",
+        "UI.Selection.ClearCanvas",
+        "UI.Selection.ClearSelection",
+        "UI.Selection.InvertSelection",
+        "UI.Selection.Mode",
+        "UI.Selection.ModeCanvasEdit",
+        "UI.Selection.ModeSelection",
+        "UI.Selection.OpAdd",
+        "UI.Selection.OpIntersect",
+        "UI.Selection.OpRemove",
+        "UI.Selection.OpXOR",
+        "UI.Selection.Operation",
+        "UI.Selection.Status",
+        "UI.Selection.TeleportToPlayer",
+        "UI.Selection.Title",
+        "UI.Torches.AlignToExisting",
+        "UI.Torches.BiomeTorch",
+        "UI.Torches.EchoCoatApply",
+        "UI.Torches.EchoCoatIgnore",
+        "UI.Torches.EchoCoatRemove",
+        "UI.Torches.FlipTiling",
+        "UI.Torches.Grid",
+        "UI.Torches.Manhattan",
+        "UI.Torches.ModConvert",
+        "UI.Torches.ModPlace",
+        "UI.Torches.ModRemove",
+        "UI.Torches.ModReplace",
+        "UI.Torches.ModeHeader",
+        "UI.Torches.OverwriteTorches",
+        "UI.Torches.RefBboxBottomLeft",
+        "UI.Torches.RefBboxBottomRight",
+        "UI.Torches.RefBboxTopLeft",
+        "UI.Torches.RefBboxTopRight",
+        "UI.Torches.RefFirstClick",
+        "UI.Torches.RefFirstValid",
+        "UI.Torches.RefMousePos",
+        "UI.Torches.ReferenceHeader",
+        "UI.Torches.SpacingX",
+        "UI.Torches.SpacingY",
+        "UI.Torches.TilingStyle",
+        "UI.Torches.Title",
+        "UI.Torches.TorchOptions",
+        "UI.Wiring.Actuator",
+        "UI.Wiring.BlueWire",
+        "UI.Wiring.GreenWire",
+        "UI.Wiring.Mode",
+        "UI.Wiring.Place",
+        "UI.Wiring.RedWire",
+        "UI.Wiring.Remove",
+        "UI.Wiring.Title",
+        "UI.Wiring.WireTypes",
+        "UI.Wiring.YellowWire"
+      ]
+    }
+  },
+  "dynamics_sha1": "823833b420db1dd3b13baf1c7d34f69cfe6d776b"
+}

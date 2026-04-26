@@ -35,6 +35,7 @@ public class DismantlingSettingsPanel : UIState
     private UIIconButton _diamondFilledBtn, _diamondHollowBtn;
     private UIIconButton _triangleFilledBtn, _triangleHollowBtn;
     private UIIconButton _edgeBtn, _cardinalBtn, _straightLineBtn;
+    private UIIconButton _moldBtn;
 
     private UIText _thicknessValue;
 
@@ -61,8 +62,8 @@ public class DismantlingSettingsPanel : UIState
         _mainPanel.Width.Set(PanelWidth, 0f);
         _mainPanel.HAlign = 0.5f;
         _mainPanel.VAlign = 0.5f;
-        _mainPanel.BackgroundColor = new Color(79, 44, 44, 220);
-        _mainPanel.BorderColor = new Color(60, 20, 20);
+        _mainPanel.BackgroundColor = WandPanelTheme.PanelChrome.DismantlingBg;
+        _mainPanel.BorderColor = WandPanelTheme.PanelChrome.DismantlingBorder;
         Append(_mainPanel);
 
         var mod = ModContent.GetInstance<WorldShapingWandsMod>();
@@ -71,10 +72,10 @@ public class DismantlingSettingsPanel : UIState
         _builder.AddTitle("Dismantling.Title");
 
         // === DESTROY OPTIONS (icon buttons) ===
-        var texDestroyTiles = mod.Assets.Request<Texture2D>("Assets/Icons/DestroyTiles", AssetRequestMode.ImmediateLoad);
-        var texDestroyWalls = mod.Assets.Request<Texture2D>("Assets/Icons/DestroyWalls", AssetRequestMode.ImmediateLoad);
-        var texDestroyContainers = mod.Assets.Request<Texture2D>("Assets/Icons/DestroyContainers", AssetRequestMode.ImmediateLoad);
-        var texVoidEverything = mod.Assets.Request<Texture2D>("Assets/Icons/VoidEverything", AssetRequestMode.ImmediateLoad);
+        var texDestroyTiles = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Destroy/DestroyTiles", AssetRequestMode.ImmediateLoad);
+        var texDestroyWalls = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Destroy/DestroyWalls", AssetRequestMode.ImmediateLoad);
+        var texDestroyContainers = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Destroy/DestroyContainers", AssetRequestMode.ImmediateLoad);
+        var texVoidEverything = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Misc/VoidEverything", AssetRequestMode.ImmediateLoad);
 
         _builder.AddIconToggleRow("Dismantling.Options", new WandPanelBuilder.IconDef[]
         {
@@ -89,10 +90,10 @@ public class DismantlingSettingsPanel : UIState
         _voidEverythingBtn    = destroyBtns[3];
 
         // Tint the destroy buttons to match their semantic colors
-        _destroyTilesBtn.ActiveColor      = new Color(200, 100, 100);
-        _destroyWallsBtn.ActiveColor      = new Color(100, 100, 200);
-        _destroyContainersBtn.ActiveColor = new Color(200, 200, 100);
-        _voidEverythingBtn.ActiveColor    = new Color(220, 40, 40);
+        _destroyTilesBtn.ActiveColor      = WandPanelTheme.DestroyCategories.Tiles;
+        _destroyWallsBtn.ActiveColor      = WandPanelTheme.DestroyCategories.Walls;
+        _destroyContainersBtn.ActiveColor = WandPanelTheme.DestroyCategories.Containers;
+        _voidEverythingBtn.ActiveColor    = WandPanelTheme.DestroyCategories.Void;
 
         // === SHAPE ===
         _builder.AddFullShapeSection(out var shapes);
@@ -107,6 +108,7 @@ public class DismantlingSettingsPanel : UIState
         _edgeBtn          = shapes.Elbow;
         _cardinalBtn      = shapes.Cardinal;
         _straightLineBtn  = shapes.StraightLine;
+        _moldBtn          = shapes.Mold;
 
         // === SLICE ===
         _builder.AddSliceSection(out _sliceGrid, OnSliceChanged);
@@ -115,11 +117,11 @@ public class DismantlingSettingsPanel : UIState
         _builder.AddThicknessSection(out _thicknessValue, AdjustThickness);
 
         // === OPTIONS ===
-        var texEqualDim    = mod.Assets.Request<Texture2D>("Assets/Icons/ToggleEqualDim", AssetRequestMode.ImmediateLoad);
-        var texConnectDiam = mod.Assets.Request<Texture2D>("Assets/Icons/ToggleConnectDiam", AssetRequestMode.ImmediateLoad);
-        var texInvertSel   = mod.Assets.Request<Texture2D>("Assets/Icons/ToggleInvertSel", AssetRequestMode.ImmediateLoad);
+        var texEqualDim    = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleEqualDim", AssetRequestMode.ImmediateLoad);
+        var texConnectDiam = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleConnectDiam", AssetRequestMode.ImmediateLoad);
+        var texInvertSel   = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleInvertSel", AssetRequestMode.ImmediateLoad);
 
-        _builder.AddOptionsSection(new WandPanelBuilder.IconDef[]
+        _builder.AddShapeOptionsSection(new WandPanelBuilder.IconDef[]
         {
             new(texEqualDim,    "Common.EqualDimensions",      isToggle: true),
             new(texConnectDiam, "Common.ConnectDiameterTooltip", isToggle: true, initialState: true),
@@ -156,6 +158,7 @@ public class DismantlingSettingsPanel : UIState
         _diamondHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.Diamond, ShapeMode.Hollow);
         _triangleFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.Triangle, ShapeMode.Filled);
         _triangleHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.Triangle, ShapeMode.Hollow);
+        _moldBtn.OnToggled += (_, _) => SetShape(ShapeType.Mold, ShapeMode.Filled);
 
         _equalDimensionsBtn.OnToggled += (_, _) => ToggleEqualDimensions();
         _connectDiameterBtn.OnToggled += (_, _) => ToggleConnectDiameter();
@@ -179,7 +182,7 @@ public class DismantlingSettingsPanel : UIState
         var settings = GetSettings();
         if (settings == null) return;
         var shape = settings.Shape;
-        int max = ModContent.GetInstance<WandServerConfig>()?.MaxOutlineThickness ?? 10;
+        int max = WandConfigs.Limits?.MaxOutlineThickness ?? 10;
         shape.Thickness = System.Math.Clamp(shape.Thickness + delta, 0, max);
         settings.Shape = shape;
         UpdateThicknessDisplay();
@@ -249,6 +252,7 @@ public class DismantlingSettingsPanel : UIState
         _diamondHollowBtn.Toggled = shape.Shape == ShapeType.Diamond && shape.FillMode == ShapeMode.Hollow;
         _triangleFilledBtn.Toggled = shape.Shape == ShapeType.Triangle && shape.FillMode == ShapeMode.Filled;
         _triangleHollowBtn.Toggled = shape.Shape == ShapeType.Triangle && shape.FillMode == ShapeMode.Hollow;
+        _moldBtn.Toggled = shape.Shape == ShapeType.Mold;
     }
 
     private void UpdateThicknessDisplay()
@@ -303,7 +307,7 @@ public class DismantlingSettingsPanel : UIState
         SyncFromSettings();
 
         // Void Everything: always visible, but Disabled when Carefree Mode is off
-        var serverConfig = ModContent.GetInstance<WandServerConfig>();
+        var serverConfig = WandConfigs.Carefree;
         bool carefreeEnabled = serverConfig?.EnableCarefreeMode == true;
         if (_voidEverythingBtn != null)
         {
@@ -325,7 +329,8 @@ public class DismantlingSettingsPanel : UIState
             Main.LocalPlayer.mouseInterface = true;
 
         if (Main.keyState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.Escape))
-            ModContent.GetInstance<WandUISystem>().CloseAllUI();
+            // (S5 2026-04-25 — Letter #4 §2) Esc preserves IV intent; CloseAllPanels.
+            ModContent.GetInstance<WandUISystem>().CloseAllPanels();
     }
 
     public override void Draw(SpriteBatch spriteBatch)

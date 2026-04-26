@@ -15,6 +15,7 @@ public class WandControls : ModSystem
     public static ModKeybind IncreaseThickness { get; private set; }
     public static ModKeybind DecreaseThickness { get; private set; }
     public static ModKeybind OpenWandUI { get; private set; }
+    public static ModKeybind OpenInventoryView { get; private set; }
     public static ModKeybind UndoStep { get; private set; }
     public static ModKeybind ToggleSuppressDrops { get; private set; }
 
@@ -23,6 +24,10 @@ public class WandControls : ModSystem
         IncreaseThickness = KeybindLoader.RegisterKeybind(Mod, "Increase Thickness", Keys.OemCloseBrackets);
         DecreaseThickness = KeybindLoader.RegisterKeybind(Mod, "Decrease Thickness", Keys.OemOpenBrackets);
         OpenWandUI = KeybindLoader.RegisterKeybind(Mod, "Open Wand Settings", Keys.OemPeriod);
+        // Per Cavendish Letter #5 §7: keybind unbound by default — InventoryView
+        // is a power-user surface and shouldn't compete for default key real estate.
+        // Players opt in via the in-game Controls menu.
+        OpenInventoryView = KeybindLoader.RegisterKeybind(Mod, "Open Inventory View", Keys.None);
         UndoStep = KeybindLoader.RegisterKeybind(Mod, "Undo Selection Step", Keys.Back);
         ToggleSuppressDrops = KeybindLoader.RegisterKeybind(Mod, "Toggle Suppress Drops", Keys.OemSemicolon);
     }
@@ -32,6 +37,7 @@ public class WandControls : ModSystem
         IncreaseThickness = null;
         DecreaseThickness = null;
         OpenWandUI = null;
+        OpenInventoryView = null;
         UndoStep = null;
         ToggleSuppressDrops = null;
     }
@@ -66,6 +72,19 @@ public class WandControls : ModSystem
             uiSystem?.ToggleUIForCurrentWand();
         }
 
+        if (OpenInventoryView?.JustPressed == true)
+        {
+            // 2026-04-23 S3: post hide-on-mismatch, the keybind toggles
+            // *intent* (sticky bit). Pressing with no participant wand held
+            // arms the IV silently — the panel surfaces automatically the
+            // moment a participant wand is equipped. Per Cavendish DesignDoc
+            // §6.3 option (a), no chat hint: keep the keybind quiet for the
+            // power-user case (the previous "no participant" hint was useful
+            // when the keybind hard-failed; arm-and-wait makes it inert).
+            var uiSystem = ModContent.GetInstance<WandUISystem>();
+            uiSystem?.ToggleInventoryView();
+        }
+
         // Undo-step: go back one click in multi-click selection modes.
         // Stamp locked → unlock stamp (go back to "click to lock anchor")
         // Selection locked → unlock selection (go back to "click to set end")
@@ -89,12 +108,12 @@ public class WandControls : ModSystem
             }
         }
 
-        // Toggle Suppress Drops: flips the SuppressDrops setting in WandServerConfig.
+        // Toggle Suppress Drops: flips the SuppressDrops setting in SandboxConfig.
         // In single-player this takes effect immediately. In multiplayer, only the host
         // can change server-side config, so this keybind is a no-op for clients.
         if (ToggleSuppressDrops?.JustPressed == true)
         {
-            var serverConfig = ModContent.GetInstance<WandServerConfig>();
+            var serverConfig = WandConfigs.Sandbox;
             if (serverConfig != null)
             {
                 serverConfig.SuppressDrops = !serverConfig.SuppressDrops;

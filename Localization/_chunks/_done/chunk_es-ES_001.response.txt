@@ -1,0 +1,49 @@
+# Paste agent response for chunk 001 below this line.
+
+###CHUNK-START###
+Key	en-US	es-ES (TRANSLATE)
+Configs.ResourcesConfig.IsInfiniteForWires.Tooltip		
+Configs.LimitsConfig.SmallSelectionCap.Label	Small Shape Cap (Elbow / Cardinal / Straight)	Límite de Forma Pequeña (Codo / Línea Cardinal / Línea Recta)
+Configs.LimitsConfig.BigSelectionCap.Label	Big Shape Cap (Rect / Ellipse / etc.)	Límite de Forma Grande (Rectángulo / Elipse / etc.)
+Configs.LimitsConfig.HollowSelectionCap.Label	Hollow Shape Cap	Límite de Forma Hueca
+Configs.LimitsConfig.CoatingSelectionCap.Label	Coating Wand Cap	Límite de dimensión de Varita de Revestimiento
+Configs.LimitsConfig.MoldingSelectionCap.Label	Molding Wand Cap	Límite de dimensión de Varita de Moldeado
+Configs.LimitsConfig.DelimitationSelectionCap.Label	Delimitation Wand Cap	Límite de dimensión de Varita de Delimitación
+Configs.LimitsConfig.MaxOutlineThickness.Label	Max Outline Thickness	Grosor Máximo del Contorno
+Configs.LimitsConfig.OperationCooldownTicks.Label	Operation Cooldown (ticks)	Tiempo de Enfriamiento (ticks)
+Configs.LimitsConfig.MaxConfirmDistance.Label	Max Confirm Distance (tiles)	Distancia Máxima de Confirmación (bloques)
+Configs.LimitsConfig.SafekeepingClearThreshold.Label	Clear All Confirmation Threshold	Umbral de Confirmación para Limpiar Todo
+Configs.PerformanceConfig.EnableProgressiveMode.Label	Enable Progressive Mode	Habilitar Modo Progresivo
+Configs.PerformanceConfig.ProgressiveBatchSize.Label	Batch Size	Tamaño del Lote
+Configs.PerformanceConfig.ProgressiveInterval.Label	Batch Interval (seconds)	Intervalo del Lote (segundos)
+Configs.StampConfig.StampChannelFrames.Label	Channel Charge Time (frames)	Tiempo de Carga (ticks)
+Configs.StampConfig.StampRepeatFrames.Label	Repeat Interval (frames)	Intervalo de Repetición (tics)
+Configs.StampConfig.CoatingStampChannelFrames.Label	Coating Channel Charge Time (frames)	Tiempo de Carga de Varita de Revestimientos
+Configs.StampConfig.StampExecuteOnClick.Label	Execute on First Click	Ejecutar al Primer Clic
+Configs.TorchWheelConfig.TorchWheelSpacingS.Label	Outline Spacing (S)	Espaciado al Recorrer Contornos
+Configs.TorchWheelConfig.TorchWheelSpacingD.Label	Absolute Spacing (D)	Espaciado Absoluto
+Configs.TorchWheelConfig.TorchWheelMaxTorches.Label	Max Torches Per Shot	Máx. Antorchas por Uso
+Configs.TorchWheelConfig.TorchWheelMaxTiles.Label	Max Tiles (step budget)	Máx. Bloques (pasos)
+Configs.TorchWheelConfig.TorchWheelMaxBacktrackSteps.Label	Max Backtrack Steps	Máx. Pasos de Pre-escaneo
+Configs.TorchWheelConfig.TorchWheelFriendly.Label	Torch Wheel Damages Entities	La Rueda de Antorchas Destruye Ambiente
+Configs.TorchWheelConfig.UnderwaterTorchLookup.Label	Underwater Torch Lookup	Búsqueda de Antorchas Subacuáticas
+Configs.TorchWheelConfig.AutoWaterproofTorches.Label	Auto-Waterproof Torches	Antorchas Impermeables Automáticas
+Configs.TorchWheelConfig.OceanWaterproofTorch.Label	Ocean Waterproof Torch	Antorcha Impermeable para Océano
+Configs.TorchWheelConfig.NonOceanWaterproofTorch.Label	Non-Ocean Waterproof Torch	Antorcha Impermeable (No Océano)
+Configs.TorchWheelConfig.SmartBiomeTorchLookup.Label	Smart Biome Torch Lookup	Búsqueda Inteligente de Antorchas por Bioma
+Configs.TorchWheelConfig.EvilTorchRequiresHardmode.Label	Evil Torch Requires Hardmode	Las Antorchas Malignas Requieren Modo Difícil
+Configs.TorchWheelConfig.SubstituteCoralTorchPreHardmode.Label	Substitute Coral Torch Pre-Hardmode	Substituir Antorcha de Coral Antes del Modo Difícil
+Configs.TorchWheelConfig.SmoothVisualPath.Label	Smooth Visual Path	Suavizar Trayectoria Visual
+Configs.TorchWheelConfig.AnimateTorchWheel.Label	Animate Torch Wheel	Animar la Rueda de Antorchas
+Configs.TorchWheelConfig.PhotosensitivityWarning.Label	Photosensitivity Warning	Advertencia de Fotosensibilidad
+Configs.CarefreeConfig.EnableCarefreeMode.Label	Enable Carefree Mode	Habilitar Modo Despreocupado
+Configs.CarefreeConfig.CarefreeSuppressDrops.Label	Carefree: Suppress Drops	Modo Despreocupado: Suprimir Obtención de Objetos
+Configs.CarefreeConfig.CarefreeSuppressDrops.Tooltip	When Carefree Mode is on, controls whether item drops are suppressed during wand operations.	Cuando el modo despreocupado está activado, determina si se suprime la obtención de objetos durante el uso de los controles.
+Configs.CarefreeConfig.CarefreeAllowDemonAltarDestruction.Label	Carefree: Allow Demon Altar Destruction	Modo Despreocupado: Permitir destrucción de altares demoníacos
+Configs.CarefreeConfig.CarefreeAllowDemonAltarDestruction.Tooltip	When Carefree Mode is on, controls whether Demon/Crimson Altars can be destroyed.	Cuando el modo despreocupado está activado, determina si se pueden destruir altares demoníacos o de carmesí.
+Configs.CarefreeConfig.CarefreeAllowDelicateTileDestruction.Label	Carefree: Allow Delicate Tile Destruction	Modo Despreocupado: Permitir destrucción de bloques delicados
+###CHUNK-END###
+
+# Sentinels (###CHUNK-START### / ###CHUNK-END###) MUST be present.
+# Edit any rows in-place before running chunk_import.py.
+

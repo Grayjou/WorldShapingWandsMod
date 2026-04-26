@@ -104,7 +104,7 @@ public class WandSettings
     /// </summary>
     public void Validate()
     {
-        int max = Terraria.ModLoader.ModContent.GetInstance<Configs.WandServerConfig>()?.MaxOutlineThickness ?? 10;
+        int max = Configs.WandConfigs.Limits?.MaxOutlineThickness ?? 10;
         Thickness = (int)MathHelper.Clamp(Thickness, 0, max);
     }
 

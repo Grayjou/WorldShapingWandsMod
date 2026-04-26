@@ -1,0 +1,25 @@
+{
+        "layers": [
+        {
+            "name": "Base",
+            "index": 0
+        },
+        {
+            "name": "Liquid",
+            "index": 1
+        },
+        {
+            "name": "Outline",
+            "index": 3
+        }
+    ],
+
+    "convolution_matrices": [
+        {
+            "type": "3x3",
+            "layer": 2,
+            "from_layer": 3
+        }
+    ],
+    "export_to": "Content_Source/Projectiles/WandActions/Fluids/WandAction_RainFillShimmer.png"
+}

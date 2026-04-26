@@ -1,0 +1,67 @@
+You are translating UI strings for a Terraria mod called "World Shaping
+Wands" into es-ES (Spain Spanish, neutral register; UI label conventions follow existing translated rows).
+
+OUTPUT FORMAT:
+Return ONLY a valid TSV block. The block MUST start with the marker
+###CHUNK-START### on its own line, contain exactly the same Key column
+as provided (NO additions, NO deletions, NO reordering), and end with
+the marker ###CHUNK-END### on its own line. Reference columns (en-US)
+are read-only context — DO NOT modify them. The rightmost column is
+your es-ES translation.
+
+Do not include any explanatory text outside the markers. Do not wrap
+the output in code fences. Just the marker, the rows, the closing marker.
+
+CHUNK 2 of 9 — es-ES — rows 41-80
+
+###CHUNK-START###
+Key	en-US	es-ES (TRANSLATE)
+Configs.CarefreeConfig.CarefreeAllowDelicateTileDestruction.Tooltip	When Carefree Mode is on, controls whether delicate tiles (e.g. Shadow Orbs, Demon Hearts) can be destroyed.	
+Configs.OverlayConfig.OverlayRenderMode.Label	Overlay Render Mode	
+Configs.OverlayConfig.ShapeOverlayAlpha.Label	Shape Overlay Opacity	
+Configs.OverlayConfig.NegativeSpaceAlpha.Label	Negative Space Opacity	
+Configs.OverlayConfig.SelectionOverlayColor.Label	Selection Overlay Color	
+Configs.OverlayConfig.UsePerFamilyOverlayColor.Label	Per-Family Overlay Color	
+Configs.OverlayConfig.OverlayBrightnessMin.Label	Overlay Brightness Min	
+Configs.OverlayConfig.OverlayBrightnessMax.Label	Overlay Brightness Max	
+Configs.OverlayConfig.ShowTilingPreview.Label	Show Tiling Preview	
+Configs.OverlayConfig.StampRenderMode.Label	Stamp Smoothing	
+Configs.CanvasOverlayConfig.CanvasOutsideAlpha.Label	Outside Dimming Alpha	
+Configs.CanvasOverlayConfig.CanvasFillAlpha.Label	Canvas Fill Alpha	
+Configs.CanvasOverlayConfig.CanvasTileSelectionAlpha.Label	Tile Selection Alpha	
+Configs.CanvasOverlayConfig.CanvasOutsideColor.Label	Outside Dimming Color	
+Configs.CanvasOverlayConfig.CanvasFillColor.Label	Canvas Fill Color	
+Configs.CanvasOverlayConfig.CanvasTileSelectionColor.Label	Tile Selection Color	
+Configs.CanvasOverlayConfig.MoldingOutsideAlpha.Label	Outside Dimming Alpha (Molding)	
+Configs.CanvasOverlayConfig.MoldingCanvasFillAlpha.Label	Canvas Fill Alpha (Molding)	
+Configs.CanvasOverlayConfig.MoldingTileSelectionAlpha.Label	Tile Selection Alpha (Molding)	
+Configs.CanvasOverlayConfig.MoldingOutsideColor.Label	Outside Dimming Color (Molding)	
+Configs.CanvasOverlayConfig.MoldingCanvasColor.Label	Canvas Fill Color (Molding)	
+Configs.CanvasOverlayConfig.MoldingTileSelectionColor.Label	Tile Selection Color (Molding)	
+Configs.PreferencesConfig.ShowLoreTooltips.Label	Show Lore Tooltips	
+Configs.PreferencesConfig.ShowLoreTooltips.Tooltip	When enabled, holding Shift while hovering a wand shows its lore text.\nDisable to hide lore entirely.	
+Configs.PreferencesConfig.EnableWandSounds.Label	Enable Wand Sound Effects	
+Configs.PreferencesConfig.EnableWandSounds.Tooltip	When enabled, wands play custom sound effects on action success.\nDisable for silent operations.	
+Configs.PreferencesConfig.MaxUndoStackSize.Label	Max Undo Stack Size	
+Configs.PreferencesConfig.AllowChanneling.Label	Allow Channeling	
+Configs.PreferencesConfig.AllowChannelingDust.Label	Show Channeling Dust	
+Configs.PreferencesConfig.AllowChannelingSound.Label	Play Channeling Sounds	
+Configs.PreferencesConfig.WandVerbosity.Label	Verbose Feedback	
+Configs.PreferencesConfig.DefaultShapeType.Label	Default Shape	
+Configs.PreferencesConfig.DefaultShapeMode.Label	Default Fill Mode	
+Configs.PreferencesConfig.RainFillSummonsClouds.Label	Summon Rain Clouds	
+Configs.PreferencesConfig.RainFillSpawnDusts.Label	Spawn Rain Dusts	
+Configs.PreferencesConfig.LavaRainStyle.Label	Lava Rain Style	
+Configs.PreferencesConfig.BlockExhaustion.Header	Block Exhaustion Behavior	
+Configs.PreferencesConfig.BlockExhaustion.Label	When You Run Out of Blocks	
+Configs.InfiniteOverride.ForceOff.Tooltip		
+Configs.InfiniteOverride.ForceOff.Label	Force Off	
+###CHUNK-END###
+
+REFERENCE — already-translated rows from es-ES (DO NOT include these in your output, just match their style):
+  UI.Wiring.BlueWire  |  Blue Wire  |  Cable Azul
+  Configs.ResourcesConfig.InfiniteGrassSeedThreshold.Label  |  Grass Seed Threshold  |  Umbral de Semillas
+  UI.Selection.Status  |  Status  |  Estado
+  UI.Selection.ClearCanvas	| Clear Canvas |	Vaciar Canvas
+  UI.Dismantling.VoidEverythingDisabled	| Void Everything requires Carefree Mode to be enabled in server config. |	Desparecer Todo requiere Modo Despreocupado permitido en las configuraciones
+  Configs.OverlayConfig.OverlayRenderMode.Label	| Overlay Render Mode	| Modo de Renderizado de Capa de Vista Previa

@@ -28,4 +28,7 @@ public enum ObjectType : byte
 
     /// <summary>Wall tiles. Used by the replacement wand for wall-to-wall swaps.</summary>
     Wall = 7,
+
+    /// <summary>Torch tiles. Used by the torch wand for placement and replacement.</summary>
+    Torch = 8,
 }

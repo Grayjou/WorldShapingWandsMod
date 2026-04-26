@@ -116,7 +116,9 @@ public static class CoatingPacketHandler
             int x = tile.X;
             int y = tile.Y;
             if (!WorldGen.InWorld(x, y, 1)) continue;
-            if (SafekeepingSystem.IsProtected(x, y)) continue;
+            if (mode == CoatingMode.PaintWall
+                ? SafekeepingSystem.IsWallProtected(x, y)
+                : SafekeepingSystem.IsTileProtected(x, y)) continue;
 
             bool wasChanged = false;
 

@@ -30,7 +30,7 @@ public static class WiringHelper
     /// AND either the threshold is 0 (always infinite) or the player holds
     /// enough wire to meet the threshold.
     /// </summary>
-    public static bool IsInfiniteWireMode(Player player, WandServerConfig config)
+    public static bool IsInfiniteWireMode(Player player, ResourcesConfig config)
     {
         if (config == null || !config.IsInfiniteForWires)
             return false;
@@ -48,7 +48,7 @@ public static class WiringHelper
     /// AND either the threshold is 0 (always infinite) or the player holds
     /// enough actuators to meet the threshold.
     /// </summary>
-    public static bool IsInfiniteActuatorMode(Player player, WandServerConfig config)
+    public static bool IsInfiniteActuatorMode(Player player, ResourcesConfig config)
     {
         if (config == null || !config.IsInfiniteForActuators)
             return false;
@@ -79,7 +79,7 @@ public static class WiringHelper
             if (!WorldGen.InWorld(x, y, 1)) continue;
 
             // Skip protected positions
-            if (SafekeepingSystem.IsProtected(x, y)) continue;
+            if (SafekeepingSystem.IsTileProtected(x, y)) continue;
 
             if (mode == WiringMode.Place)
                 placed += PlaceStep(x, y, wireRed, wireGreen, wireBlue, wireYellow, actuator, player, infiniteWires, infiniteActuators);

@@ -1,0 +1,70 @@
+You are translating UI strings for a Terraria mod called "World Shaping
+Wands" into es-ES (Spain Spanish, neutral register; UI label conventions follow existing translated rows).
+
+OUTPUT FORMAT:
+Return ONLY a valid TSV block. The block MUST start with the marker
+###CHUNK-START### on its own line, contain exactly the same Key column
+as provided (NO additions, NO deletions, NO reordering), and end with
+the marker ###CHUNK-END### on its own line. Reference columns (en-US)
+are read-only context — DO NOT modify them. The rightmost column is
+your es-ES translation.
+
+Do not include any explanatory text outside the markers. Do not wrap
+the output in code fences. Just the marker, the rows, the closing marker.
+
+CHUNK 8 of 9 — es-ES — rows 281-320
+
+###CHUNK-START###
+Key	en-US	es-ES (TRANSLATE)
+Messages.CoatingScrapedMoss	Removed moss from {0} tiles.	
+Messages.CoatingHarvestedMoss	Harvested moss from {0} tiles.	
+Messages.NoTilesInSelection	No tiles in selection area.	
+Messages.DelimitationFilterActive	No action executed. Delimitation Area is active and does not overlap with the selection.	
+Messages.FluidsNoTiles	No tiles in selection.	
+Messages.FluidsInvalidRegion	Invalid region.	
+Messages.FluidsNoSeeds	No valid seed positions — all top tiles are solid.	
+Messages.FluidsNoBasins	No basins found — liquid cannot settle in this terrain.	
+Messages.FluidsNoPockets	No enclosed pockets found in this terrain.	
+Messages.FluidsFilled	Filled {0} tiles with {1}.	
+Messages.FluidsRainFilled	Rain Fill: {0} tiles filled ({1} columns seeded, {2} basins analyzed).	
+Messages.FluidsPocketFilled	Pocket Fill: {0} tiles filled ({1} pocket cells analyzed).	
+Messages.FluidsDrained	Drained {0} tiles.	
+Messages.FluidsBubblePlaced	Placed {0} bubble blocks.	
+Messages.FluidsBubbleRemoved	Removed {0} bubble blocks.	
+Messages.FluidsBubbleCoated	Coated selection with {0} bubble blocks.	
+Messages.FluidsMixed	Mixed {0} tiles into blocks + filled {1} tiles with {2}.	
+Messages.FluidsMixedOnly	Mixed {0} tiles into blocks.	
+Messages.TorchesNoTorchItem	No torch found in inventory.	
+Messages.TorchesNoValidPositions	No valid torch positions in selection.	
+Messages.TorchesNonePlaced	No torches could be placed.	
+Messages.TorchesPlaced	Placed {0} torches.	
+Messages.TorchesNoneReplaced	No torches were replaced.	
+Messages.TorchesReplaced	Replaced {0} torches.	
+Messages.TorchesNoneRemoved	No torches found to remove.	
+Messages.TorchesRemoved	Removed {0} torches.	
+Messages.TorchesNoneConverted	No torches to convert (already biome-matched).	
+Messages.TorchesConverted	Converted {0} torches to biome variant.	
+Messages.SelectStartClickEnd	Selection started. Click to set end point.	
+Messages.SelectStartClickAgain	Selection started. Click again to {0}.	
+Messages.ClickToConfirm	Click again to confirm.	
+Messages.ClickToConfirmOrCancel	Click again to confirm, or right-click to cancel.	
+Messages.StampClickEnd	Stamp: click to set end point.	
+Messages.StampClickLock	Stamp: click to lock anchor position.	
+Messages.SuppressDropsOn	Suppress Drops: ON — tile drops are suppressed.	
+Messages.SuppressDropsOff	Suppress Drops: OFF — tile drops are enabled.	
+Messages.SelectClickEnd	Selection: click to set end point.	
+Messages.SelectClickConfirm	Selection: click to confirm and apply.	
+Messages.NoTilesInShape	No tiles in shape.	
+Messages.MoldingHintTooFar	No cells added — canvas is far away. Use 'Teleport to Player' in the Molding panel to bring it closer.	
+###CHUNK-END###
+
+REFERENCE — already-translated rows from es-ES (DO NOT include these in your output, just match their style):
+  UI.Wiring.BlueWire  |  Blue Wire  |  Cable Azul
+  Configs.ResourcesConfig.InfiniteGrassSeedThreshold.Label  |  Grass Seed Threshold  |  Umbral de Semillas
+  UI.Selection.Status  |  Status  |  Estado
+  UI.Selection.ClearCanvas	| Clear Canvas |	Vaciar Canvas
+  UI.Dismantling.VoidEverythingDisabled	| Void Everything requires Carefree Mode to be enabled in server config. |	Desparecer Todo requiere Modo Despreocupado permitido en las configuraciones
+  Configs.OverlayConfig.OverlayRenderMode.Label	| Overlay Render Mode	| Modo de Renderizado de Capa de Vista Previa
+  CardinalLine| Cardinal Line | Línea Cardinal
+  Actuator | Actuator | Activador
+  Drops | Drops | Objetos Recogibles

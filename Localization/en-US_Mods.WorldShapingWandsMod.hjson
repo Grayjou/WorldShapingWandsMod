@@ -2,6 +2,7 @@ Keybinds: {
 	"Increase Thickness.DisplayName": Increase  Thickness
 	"Decrease Thickness.DisplayName": Decrease  Thickness
 	"Open Wand Settings.DisplayName": Open Wand Settings
+	"Open Inventory View.DisplayName": Open Inventory View
 	"Undo Selection Step.DisplayName": Undo Selection Step
 	"Toggle Suppress Drops.DisplayName": Toggle Suppress Drops
 }
@@ -17,6 +18,9 @@ UI: {
 		Shape: Shape
 		OutlineThickness: Outline Thickness:
 		Close: Close
+		// Shared default-state suffixes (referenced via {$Mods.WorldShapingWandsMod.UI.Common.DefaultOn} in tooltips)
+		DefaultOn: Default: On
+		DefaultOff: Default: Off
 		// Shape hover texts
 		ShapeRectFilled: Rectangle (Filled)
 		ShapeRectHollow: Rectangle (Hollow)
@@ -29,15 +33,52 @@ UI: {
 		ShapeElbow: Elbow
 		ShapeCardinal: Cardinal Line
 		ShapeStraightLine: Straight Line
+		ShapeMold: Mold (from Wand of Molding)
 		EqualDimensions: Equal Dimensions
 		ConnectDiameter: Connect Diameter
 		ConnectDiameterTooltip: Connect Diameter (half shapes only)
 		InvertSelection: Invert Selection
-		PaintSprayer: Paint Sprayer
+
+		PaintSprayer: {
+			$parentVal: Paint Sprayer
+			# Tri-state Paint Sprayer source toggle. Click to cycle: Off -> Inventory -> Coating -> Off.
+			# Inventory: consumes paint from your inventory paint sprayer (vanilla behavior).
+			# Coating: applies the paint color from this wand's Coating Settings panel; no inventory consumption.
+			Off:
+				'''
+				Paint Sprayer: Off
+				Leaves placed tiles unpainted.
+				Click to cycle (Off -> Inventory -> Coating).
+				'''
+			Inventory:
+				'''
+				Paint Sprayer: Inventory
+				Consumes paint from a Paint Sprayer in your inventory (vanilla behavior).
+				Click to cycle.
+				'''
+			Coating:
+				'''
+				Paint Sprayer: Coating Settings
+				Applies the paint color configured in this wand's Coating Settings panel.
+				No inventory paint consumed.
+				Click to cycle.
+				'''
+		}
+
+		PreservePaint: Preserve Paint
 		ActuationIgnore: Actuation: Ignore
 		ActuationOn: Actuation: ON
 		ActuationOff: Actuation: OFF
-		Options: Options
+		OpenInventoryView:
+			'''
+			Open / Close Block Picker
+			Shows the block list for this wand. Pin a block to lock placement to it.
+			(The keybind for this panel is optional once you know about this button.)
+			'''
+		ChosenClickToFree: chosen — click to free
+		ChosenNotInInventory: chosen, but not in your inventory — click to free
+		ChosenItemFallback: chosen {0} not in inventory — using {1} instead
+		ShapeOptions: Shape Options
 		Slice: Shape Slice
 	}
 
@@ -59,6 +100,7 @@ UI: {
 		SlopeTopRight: Slope ◤ (Up-Right)
 		SlopeTopLeft: Slope ◥ (Up-Left)
 		OverwriteSlope: Overwrite Slope
+		Options: Building Options
 	}
 
 	Dismantling: {
@@ -85,6 +127,7 @@ UI: {
 		Seeds: Seeds
 		Air: Air (Remove)
 		Wall: Wall
+		Options: Replacement Options
 		SameType: Same Type
 	}
 
@@ -128,12 +171,147 @@ UI: {
 		On: On
 		Off: Off
 		Repaint: Repaint
+		EyedropperHint: Alt+click a painted tile to copy its colour into Paint Color.
+	}
+
+	CollapsibleSection: {
+		ExpandTooltip: Expand section
+		CollapseTooltip: Collapse section
+		PopoutTooltip: Pop out into a draggable mini-panel
+	}
+
+	Fluids: {
+		Title: Wand of Fluids
+		PlaceType: Liquid Type
+		Water: Water
+		Lava: Lava
+		Honey: Honey
+		Shimmer: Shimmer
+		Bubble: Bubble Block
+		FillMode: Fill Mode
+		FullLiquid: Full Liquid
+		RainFill: Rain Fill
+		PocketFill: Pocket Fill
+		Operation: Operation
+		Fill: Fill
+		Drain: Drain
+		FluidOptions: Fluid Options
+		CoatInBubble: Coat in Bubble
+		MixLiquids: Mix Liquids
+		OverwriteLiquids:
+			'''
+			Overwrite Liquids
+			When enabled, pouring a liquid replaces existing different-typed liquid
+			(e.g. water replaces lava). When disabled, existing liquid blocks the pour.
+			Has no effect when Mix Liquids is on.
+			'''
+		SelectiveDrain: Selective Drain
+	}
+
+	Torches: {
+		Title: Wand of Torches
+		TilingStyle: Tiling Style
+		Manhattan: Manhattan (Diamond Lattice)
+		Grid: Grid (Rectangular)
+		SpacingX: Spacing X:
+		SpacingY: Spacing Y:
+		TorchOptions: Torch Options
+		BiomeTorch: Biome Torch
+		OverwriteTorches: Overwrite Torches
+		EchoCoatIgnore: Echo Coat: Ignore
+		EchoCoatApply: Echo Coat: Apply
+		EchoCoatRemove: Echo Coat: Remove
+		ModeHeader: Mode
+		ModPlace: Place
+		ModReplace: Replace
+		ModRemove: Remove
+		ModConvert: Convert (Biome)
+		ReferenceHeader: Reference Point
+		RefFirstValid: First Valid Tile
+		RefBboxTopLeft: Bbox Top-Left
+		RefBboxTopRight: Bbox Top-Right
+		RefBboxBottomLeft: Bbox Bottom-Left
+		RefBboxBottomRight: Bbox Bottom-Right
+		RefFirstClick: First Click
+		RefMousePos: Mouse Position
+		FlipTiling: Flip Tiling
+		AlignToExisting: Align to Existing Torches
+	}
+
+	Selection: {
+		Title: Wand of Delimitation
+		Mode: Mode
+		ModeSelection: Selection Mode
+		ModeCanvasEdit: Canvas Edit Mode
+		Operation: Operation
+		OpAdd: Add (Union)
+		OpRemove: Remove (Subtract)
+		OpIntersect: Intersect
+		OpXOR: XOR (Toggle)
+		Actions: Actions
+		ClearSelection: Clear Selection
+		InvertSelection: Invert Selection
+		ClearCanvas: Clear Canvas
+		ClearAll: Clear All
+		TeleportToPlayer: Teleport to Player
+		AutoCreateCanvas: Auto-Create Canvas
+		Status: Status
+	}
+
+	Molding: {
+		Title: Wand of Molding
+		Mode: Mode
+		ModeSelection: Selection Mode
+		ModeCanvasEdit: Canvas Edit Mode
+		Operation: Operation
+		OpAdd: Add (Union)
+		OpRemove: Remove (Subtract)
+		OpIntersect: Intersect
+		OpXOR: XOR (Toggle)
+		Actions: Actions
+		ClearSelection: Clear Selection
+		InvertSelection: Invert Selection
+		ClearCanvas: Clear Canvas
+		ClearAll: Clear All
+		TeleportToPlayer: Teleport to Player
+		AutoCreateCanvas: Auto-Create Canvas
+		Status: Status
+	}
+
+	// Phase 2 InventoryView panel (S8 2026-04-22). Panel titles are referenced via
+	// IInventoryViewProvider.PanelTitleKey ("UI.InventoryView.<Family>.PanelTitle").
+	// Section titles come from IInventoryViewSource.TitleKey.
+	//
+	// S9 Phase A vocabulary pass (Cavendish DesignDoc_InventoryViewVocabularyPlan §2):
+	// user-facing strings avoid the engineer-speak "Inventory View"; the namespace
+	// key stays for code/diagnostics. "Source/Target" → "Replace…/…with" so the
+	// Replacement panel reads as a left-to-right sentence.
+	InventoryView: {
+		ClearAllPins: Clear all pins
+		NoCandidates: No matching items in inventory
+
+		Building: {
+			PanelTitle: Building Blocks
+			TileTitle: Tiles
+			WallTitle: Walls
+		}
+
+		Torches: {
+			PanelTitle: Torches
+			Title: Torches
+		}
+
+		Replacement: {
+			PanelTitle: Replace From / To
+			SourceTitle: Replace…
+			TargetTitle: …with
+		}
 	}
 }
 
 Configs: {
-	WandServerConfig: {
-		DisplayName: Server Settings
+	ResourcesConfig: {
+		DisplayName: Resources
 		InfiniteResources.Header: Infinite Resources
 
 		EnableInfiniteResource: {
@@ -145,7 +323,7 @@ Configs: {
 			Label: Tile Threshold
 			Tooltip:
 				'''
-				If you have at least this many of a tile (blocks, platforms, ropes, rails) in your inventory, it will not be consumed. 
+				If you have at least this many of a tile (blocks, platforms, ropes, rails) in your inventory, it will not be consumed.
 				0 = always infinite for tiles.
 				'''
 		}
@@ -242,23 +420,19 @@ Configs: {
 				'''
 		}
 
-		SelectionLimits.Header: Selection Dimension Limits
-
-		SmallSelectionCap: {
-			Label: Small Shape Cap (Elbow / Cardinal / Straight)
-			Tooltip: Maximum dimension (width or height) for Elbow, Cardinal Line, and Straight Line shapes.\nThese shapes are 1D so they can safely be longer.
+		IsInfiniteForActuators: {
+			Tooltip: ""
+			Label: Is Infinite For Actuators
 		}
 
-		BigSelectionCap: {
-			Label: Big Shape Cap (Rect / Ellipse / etc.)
-			Tooltip: Maximum dimension (width or height) for 2D area shapes.\nA cap of 200 means the largest selection is 200×200.
+		IsInfiniteForWires: {
+			Tooltip: ""
+			Label: Is Infinite For Wires
 		}
+	}
 
-		HollowSelectionCap: {
-			Label: Hollow Shape Cap
-			Tooltip: Maximum dimension (width or height) for hollow shapes.\nHollow shapes produce fewer tiles than filled shapes, so they can safely be larger.\nA cap of 400 means the largest hollow selection is 400×400.
-		}
-
+	SandboxConfig: {
+		DisplayName: Sandbox
 		Sandbox.Header: Sandbox Options
 
 		SuppressDrops: {
@@ -343,9 +517,74 @@ Configs: {
 				It is safe to use and will not crash your game.
 				When enabled, players can use /undo and /undoinfo chat commands
 				to undo wand operations and inspect the undo stack.
-				Default: Off
+				{$Mods.WorldShapingWandsMod.UI.Common.DefaultOff}
 				'''
 		}
+	}
+
+	LimitsConfig: {
+		DisplayName: Limits
+		SelectionLimits.Header: Selection Dimension Limits
+
+		SmallSelectionCap: {
+			Label: Small Shape Cap (Elbow / Cardinal / Straight)
+			Tooltip:
+				'''
+				Maximum dimension (width or height) for Elbow, Cardinal Line, and Straight Line shapes.
+				These shapes are 1D so they can safely be longer.
+				'''
+		}
+
+		BigSelectionCap: {
+			Label: Big Shape Cap (Rect / Ellipse / etc.)
+			Tooltip:
+				'''
+				Maximum dimension (width or height) for 2D area shapes.
+				A cap of 200 means the largest selection is 200×200.
+				'''
+		}
+
+		HollowSelectionCap: {
+			Label: Hollow Shape Cap
+			Tooltip:
+				'''
+				Maximum dimension (width or height) for hollow shapes.
+				Hollow shapes produce fewer tiles than filled shapes, so they can safely be larger.
+				A cap of 400 means the largest hollow selection is 400×400.
+				'''
+		}
+
+		CoatingSelectionCap: {
+			Label: Coating Wand Cap
+			Tooltip:
+				'''
+				Maximum dimension (width or height) for Wand of Coating selections.
+				Coating operations are lightweight (no batching, instant application), so a larger cap is safe.
+				Default: 1000.
+				'''
+		}
+
+		MoldingSelectionCap: {
+			Label: Molding Wand Cap
+			Tooltip:
+				'''
+				Maximum dimension (width or height) for Wand of Molding selections.
+				Molding operations only modify the canvas (not world tiles), so a larger cap is safe.
+				Default: 1000.
+				'''
+		}
+
+		DelimitationSelectionCap: {
+			Label: Delimitation Wand Cap
+			Tooltip:
+				'''
+				Maximum dimension (width or height) for Wand of Delimitation selections.
+				Delimitation operations only update a filter region (not world tiles), so a larger cap is safe.
+				Default: 1000.
+				'''
+		}
+
+		OperationLimits.Header: Operation Limits
 
 		MaxOutlineThickness: {
 			Label: Max Outline Thickness
@@ -380,6 +619,20 @@ Configs: {
 				'''
 		}
 
+		Safekeeping.Header: Safekeeping
+
+		SafekeepingClearThreshold: {
+			Label: Clear All Confirmation Threshold
+			Tooltip:
+				'''
+				When the total number of protected tiles and walls exceeds this value, the Clear All button requires a second click to confirm.
+				Set to 0 to disable the confirmation safeguard.
+				'''
+		}
+	}
+
+	PerformanceConfig: {
+		DisplayName: Performance
 		ProgressiveMode.Header: Progressive Mode
 
 		EnableProgressiveMode: {
@@ -408,28 +661,258 @@ Configs: {
 				0.3 seconds gives a satisfying wave-like demolition feel.
 				'''
 		}
+	}
 
-		Safekeeping.Header: Safekeeping
+	StampConfig: {
+		DisplayName: Stamp
+		StampChanneling.Header: Stamp Channeling
 
-		SafekeepingClearThreshold: {
-			Label: Clear All Confirmation Threshold
+		StampChannelFrames: {
+			Label: Channel Charge Time (frames)
 			Tooltip:
 				'''
-				When the total number of protected tiles and walls exceeds this value, the Clear All button requires a second click to confirm.
-				Set to 0 to disable the confirmation safeguard.
+				Number of frames the player must hold left-click before stamp
+				channeling begins (continuous execution). 60 frames = 1 second.
+				Higher values add a safety delay to prevent accidental mass operations.
+				Default: 100 (~1.67 seconds)
 				'''
 		}
 
-		IsInfiniteForActuators: {
-			Tooltip: ""
-			Label: Is Infinite For Actuators
+		StampRepeatFrames: {
+			Label: Repeat Interval (frames)
+			Tooltip:
+				'''
+				Number of frames between repeat executions while stamp channeling
+				is active. Lower values execute faster.
+				60 frames = 1 second, so 10 frames = 6 executions per second.
+				Default: 10
+				'''
 		}
 
-		IsInfiniteForWires: {
-			Tooltip: ""
-			Label: Is Infinite For Wires
+		CoatingStampChannelFrames: {
+			Label: Coating Channel Charge Time (frames)
+			Tooltip:
+				'''
+				Override channel charge time for the Wand of Coating stamp mode.
+				The Coating wand benefits from a shorter charge for the
+				"Free Paint Picasso" experience.
+				Set to 0 for instant channeling (no charge delay).
+				Default: 20 (~0.33 seconds)
+				'''
 		}
 
+		StampExecuteOnClick: {
+			Label: Execute on First Click
+			Tooltip:
+				'''
+				When enabled, the first click of a Stamp wand immediately executes
+				the operation. When disabled, the first click only begins channeling
+				and the operation executes after the full charge duration.
+				{$Mods.WorldShapingWandsMod.UI.Common.DefaultOn}
+				'''
+		}
+	}
+
+	TorchWheelConfig: {
+		DisplayName: Torch Wheel
+		TorchWheel.Header: Torch Wheel
+
+		TorchWheelSpacingS: {
+			Label: Outline Spacing (S)
+			Tooltip:
+				'''
+				Minimum path-distance (along the traced outline) between consecutive
+				torches placed by the Torch Wheel Wand.
+				Higher values spread torches further apart.
+				Default: 12
+				'''
+		}
+
+		TorchWheelSpacingD: {
+			Label: Absolute Spacing (D)
+			Tooltip:
+				'''
+				Minimum Manhattan distance between ANY two torches placed by the
+				Torch Wheel Wand. Prevents clustering on serpentine outlines.
+				Default: 8
+				'''
+		}
+
+		TorchWheelMaxTorches: {
+			Label: Max Torches Per Shot
+			Tooltip:
+				'''
+				Maximum number of torches a single Torch Wheel projectile can place
+				before automatically despawning.
+				Default: 50
+				'''
+		}
+
+		TorchWheelMaxTiles: {
+			Label: Max Tiles (step budget)
+			Tooltip:
+				'''
+				Maximum number of tiles the Torch Wheel projectile can traverse
+				before automatically despawning. The projectile traces walls at
+				a fixed 30 tiles/second, so 500 tiles ≈ 17 seconds.
+				Default: 500
+				'''
+		}
+
+		TorchWheelMaxBacktrackSteps: {
+			Label: Max Backtrack Steps
+			Tooltip:
+				'''
+				Maximum number of steps the Torch Wheel traces backward after the
+				forward pass ends. Backtracking fills the gap left by the sliding-
+				window warm-up near the first torch.
+				Set to -1 for unlimited (capped at Max Tiles).
+				Default: 20
+				'''
+		}
+
+		Behavior.Header: Behavior
+
+		TorchWheelFriendly: {
+			Label: Torch Wheel Damages Entities
+			Tooltip:
+				'''
+				When enabled, Torch Wheel projectiles can damage critters,
+				break pots, and destroy small plants on contact.
+				When disabled, the projectiles are purely passive — they
+				place torches without interacting with anything else.
+				Affects all 4 Torch Wheel projectiles (solid, platform,
+				and both flying variants).
+				{$Mods.WorldShapingWandsMod.UI.Common.DefaultOff}
+				'''
+		}
+
+		SmartTorchSelection.Header: Smart Torch Selection
+
+		UnderwaterTorchLookup: {
+			Label: Underwater Torch Lookup
+			Tooltip:
+				'''
+				When the selected torch can't survive underwater, search
+				the player's inventory for a waterproof torch to use instead.
+				If off, underwater positions are simply skipped.
+				{$Mods.WorldShapingWandsMod.UI.Common.DefaultOn}
+				'''
+		}
+
+		AutoWaterproofTorches: {
+			Label: Auto-Waterproof Torches
+			Tooltip:
+				'''
+				When no waterproof torch is found in inventory, automatically
+				convert regular torches into waterproof variants.
+				Uses Coral Torch in Ocean biome and evil-appropriate torch
+				(Ichor/Cursed) elsewhere.
+				{$Mods.WorldShapingWandsMod.UI.Common.DefaultOff}
+				'''
+		}
+
+		OceanWaterproofTorch: {
+			Label: Ocean Waterproof Torch
+			Tooltip:
+				'''
+				Which waterproof torch to use when auto-converting in Ocean
+				biome areas.
+				Options: Coral Torch, Evil Torch (auto), Cursed Torch, Ichor Torch
+				Default: Coral Torch
+				'''
+		}
+
+		NonOceanWaterproofTorch: {
+			Label: Non-Ocean Waterproof Torch
+			Tooltip:
+				'''
+				Which waterproof torch to use when auto-converting outside
+				Ocean biome areas.
+				Options: Evil Torch (auto), Cursed Torch, Ichor Torch, Coral Torch
+				Default: Evil Torch (auto-selects based on world evil)
+				'''
+		}
+
+		SmartBiomeTorchLookup: {
+			Label: Smart Biome Torch Lookup
+			Tooltip:
+				'''
+				When biome torch conversion is active and the player holds
+				a regular torch, search inventory for the actual biome torch
+				item first. If found, consume the biome torch directly instead
+				of converting a regular torch. This avoids wasting biome torch
+				stacks you have collected.
+				{$Mods.WorldShapingWandsMod.UI.Common.DefaultOn}
+				'''
+		}
+
+		EvilTorchRequiresHardmode: {
+			Label: Evil Torch Requires Hardmode
+			Tooltip:
+				'''
+				When enabled, underwater torch conversion will not produce
+				Ichor or Cursed torches before Hardmode. Combine with
+				'Substitute Coral Torch Pre-Hardmode' to use Coral Torches
+				as a pre-Hardmode fallback.
+				{$Mods.WorldShapingWandsMod.UI.Common.DefaultOn}
+				'''
+		}
+
+		SubstituteCoralTorchPreHardmode: {
+			Label: Substitute Coral Torch Pre-Hardmode
+			Tooltip:
+				'''
+				When 'Evil Torch Requires Hardmode' blocks an evil torch
+				conversion, place a Coral Torch instead. Has no effect if
+				the Hardmode gate is disabled or if already in Hardmode.
+				{$Mods.WorldShapingWandsMod.UI.Common.DefaultOff}
+				'''
+		}
+
+		VisualAndSafety.Header: Visual & Safety
+
+		SmoothVisualPath: {
+			Label: Smooth Visual Path
+			Tooltip:
+				'''
+				When enabled, the Torch Wheel projectile follows a smooth
+				velocity-based trajectory with gentle bobbing, creating an
+				organic "firefly" feel as it traces the outline.
+				When disabled, the projectile uses legacy lerp smoothing
+				which snaps more closely to the logical tile position.
+				{$Mods.WorldShapingWandsMod.UI.Common.DefaultOn}
+				'''
+		}
+
+		AnimateTorchWheel: {
+			Label: Animate Torch Wheel
+			Tooltip:
+				'''
+				Animate the Torch Wheel projectile sprite, cycling its color
+				from grey (#7d7d7d) to gold (#ffe799) based on placement progress.
+				When disabled, the projectile uses a static sprite with no flicker.
+				Disabling this also suppresses the photosensitivity warning.
+				{$Mods.WorldShapingWandsMod.UI.Common.DefaultOn}
+				'''
+		}
+
+		PhotosensitivityWarning: {
+			Label: Photosensitivity Warning
+			Tooltip:
+				'''
+				Show a chat warning on world enter when Outline Spacing (S)
+				is below 6, advising about potential photosensitivity issues
+				from rapid flicker. The warning is suppressed when Animate
+				Torch Wheel is disabled. Most players won't see this warning
+				because the default spacing is 12.
+				{$Mods.WorldShapingWandsMod.UI.Common.DefaultOn}
+				'''
+		}
+	}
+
+	CarefreeConfig: {
+		DisplayName: Carefree Mode
 		CarefreeMode.Header: Carefree Mode
 
 		EnableCarefreeMode: {
@@ -460,22 +943,8 @@ Configs: {
 		}
 	}
 
-	WandClientConfig: {
-		DisplayName: Client Settings
-		Tooltips.Header: Tooltip Options
-
-		ShowLoreTooltips: {
-			Label: Show Lore Tooltips
-			Tooltip: When enabled, holding Shift while hovering a wand shows its lore text.\nDisable to hide lore entirely.
-		}
-
-		Audio.Header: Audio
-
-		EnableWandSounds: {
-			Label: Enable Wand Sound Effects
-			Tooltip: When enabled, wands play custom sound effects on action success.\nDisable for silent operations.
-		}
-
+	OverlayConfig: {
+		DisplayName: Overlay
 		Overlay.Header: Overlay
 
 		OverlayRenderMode: {
@@ -521,6 +990,212 @@ Configs: {
 				'''
 		}
 
+		UsePerFamilyOverlayColor: {
+			Label: Per-Family Overlay Color
+			Tooltip:
+				'''
+				When enabled, the selection overlay uses a unique color
+				for each wand family (Building, Dismantling, etc.).
+				Disable to use the single Selection Overlay Color for all wands.
+				'''
+		}
+
+		OverlayBrightnessMin: {
+			Label: Overlay Brightness Min
+			Tooltip:
+				'''
+				The overlay brightness at the first selection step.
+				Lower values make the first-click overlay dimmer,
+				creating a stronger contrast as you approach execution.
+				'''
+		}
+
+		OverlayBrightnessMax: {
+			Label: Overlay Brightness Max
+			Tooltip:
+				'''
+				The overlay brightness at the final selection step.
+				This is the peak brightness just before execution.
+				'''
+		}
+
+		ShowTilingPreview: {
+			Label: Show Tiling Preview
+			Tooltip:
+				'''
+				When enabled, shows a preview of torch placement positions
+				as amber markers when holding a Wand of Torches with an
+				active selection in Place mode.
+				'''
+		}
+
+		StampRenderMode: {
+			Label: Stamp Smoothing
+			Tooltip:
+				'''
+				Controls how the overlay handles cursor movement when a stamp shape is locked.
+				[c/80FF80:Smooth]: Sub-pixel offset for smooth motion (eliminates jitter).
+				[c/80FF80:Precise]: Snaps to exact tile positions (pixel-perfect, may jitter).
+				'''
+		}
+	}
+
+	CanvasOverlayConfig: {
+		DisplayName: Canvas Overlay
+		CanvasOverlay.Header: Canvas Overlay
+
+		CanvasOutsideAlpha: {
+			Label: Outside Dimming Alpha
+			Tooltip:
+				'''
+				Opacity of the dimming overlay drawn over tiles OUTSIDE the canvas.
+				0.0 = fully transparent, 1.0 = fully opaque.
+				Default: 0.2
+				'''
+		}
+
+		CanvasFillAlpha: {
+			Label: Canvas Fill Alpha
+			Tooltip:
+				'''
+				Opacity of the color fill drawn over canvas tiles (the working area).
+				0.0 = fully transparent, 1.0 = fully opaque.
+				Default: 0.4
+				'''
+		}
+
+		CanvasTileSelectionAlpha: {
+			Label: Tile Selection Alpha
+			Tooltip:
+				'''
+				Opacity of the highlight drawn over selected tiles within the canvas.
+				0.0 = fully transparent, 1.0 = fully opaque.
+				Default: 0.4
+				'''
+		}
+
+		CanvasOutsideColor: {
+			Label: Outside Dimming Color
+			Tooltip:
+				'''
+				Color used for the dimming overlay drawn over tiles OUTSIDE the canvas.
+				Creates a "spotlight" effect so the canvas area stands out.
+				Opacity is controlled by the Outside Dimming Alpha slider above.
+				The alpha channel of this color is ignored.
+				Default: Black (0, 0, 0)
+
+				'''
+		}
+
+		CanvasFillColor: {
+			Label: Canvas Fill Color
+			Tooltip:
+				'''
+				Color used for the fill drawn over canvas tiles (the working area).
+				Visible in Selection mode to show the constraint region.
+				Opacity is controlled by the Canvas Fill Alpha slider above.
+				The alpha channel of this color is ignored.
+				Default: White (255, 255, 255)
+				'''
+		}
+
+		CanvasTileSelectionColor: {
+			Label: Tile Selection Color
+			Tooltip:
+				'''
+				Color used for the highlight drawn over selected tiles within the canvas.
+				Highlights which tiles are part of the current selection.
+				Opacity is controlled by the Tile Selection Alpha slider above.
+				The alpha channel of this color is ignored.
+				Default: Olive (128, 128, 0)
+				'''
+		}
+
+		MoldingCanvasOverlay.Header: Molding Canvas Overlay
+
+		MoldingOutsideAlpha: {
+			Label: Outside Dimming Alpha (Molding)
+			Tooltip:
+				'''
+				Opacity of the dimming overlay drawn over tiles OUTSIDE the molding canvas.
+				0.0 = fully transparent, 1.0 = fully opaque.
+				Default: 0.2
+				'''
+		}
+
+		MoldingCanvasFillAlpha: {
+			Label: Canvas Fill Alpha (Molding)
+			Tooltip:
+				'''
+				Opacity of the color fill drawn over molding canvas tiles (the working area).
+				0.0 = fully transparent, 1.0 = fully opaque.
+				Default: 0.4
+				'''
+		}
+
+		MoldingTileSelectionAlpha: {
+			Label: Tile Selection Alpha (Molding)
+			Tooltip:
+				'''
+				Opacity of the highlight drawn over selected tiles within the molding canvas.
+				0.0 = fully transparent, 1.0 = fully opaque.
+				Default: 0.4
+				'''
+		}
+
+		MoldingOutsideColor: {
+			Label: Outside Dimming Color (Molding)
+			Tooltip:
+				'''
+				Color used for the dimming overlay drawn over tiles OUTSIDE the molding canvas.
+				Creates a dimming effect so the molding canvas area stands out.
+				Opacity is controlled by the Outside Dimming Alpha (Molding) slider above.
+				The alpha channel of this color is ignored.
+				Default: Black (0, 0, 0)
+				'''
+		}
+
+		MoldingCanvasColor: {
+			Label: Canvas Fill Color (Molding)
+			Tooltip:
+				'''
+				Color used for the fill drawn over molding canvas tiles (the working area).
+				Uses a teal/cyan theme to distinguish from the Delimitation wand.
+				Opacity is controlled by the Canvas Fill Alpha (Molding) slider above.
+				The alpha channel of this color is ignored.
+				Default: Pale cyan (200, 255, 255)
+				'''
+		}
+
+		MoldingTileSelectionColor: {
+			Label: Tile Selection Color (Molding)
+			Tooltip:
+				'''
+				Color used for the highlight drawn over selected tiles within the molding canvas.
+				Highlights which tiles are part of the current mold selection.
+				Opacity is controlled by the Tile Selection Alpha (Molding) slider above.
+				The alpha channel of this color is ignored.
+				Default: Teal (0, 180, 180)
+				'''
+		}
+	}
+
+	PreferencesConfig: {
+		DisplayName: Preferences
+		Tooltips.Header: Tooltip Options
+
+		ShowLoreTooltips: {
+			Label: Show Lore Tooltips
+			Tooltip: When enabled, holding Shift while hovering a wand shows its lore text.\nDisable to hide lore entirely.
+		}
+
+		Audio.Header: Audio
+
+		EnableWandSounds: {
+			Label: Enable Wand Sound Effects
+			Tooltip: When enabled, wands play custom sound effects on action success.\nDisable for silent operations.
+		}
+
 		Undo.Header: Undo
 
 		MaxUndoStackSize: {
@@ -534,6 +1209,38 @@ Configs: {
 				'''
 		}
 
+		StampChanneling.Header: Stamp Channeling
+
+		AllowChanneling: {
+			Label: Allow Channeling
+			Tooltip:
+				'''
+				When enabled, stamp wands charge up while holding the use button
+				and repeat their action automatically.
+				Disable to use stamp wands as single-click actions only.
+				'''
+		}
+
+		AllowChannelingDust: {
+			Label: Show Channeling Dust
+			Tooltip:
+				'''
+				When enabled, dust particles are drawn toward the cursor while
+				a stamp wand is charging, and hover around it when fully charged.
+				Disable for a cleaner visual experience.
+				'''
+		}
+
+		AllowChannelingSound: {
+			Label: Play Channeling Sounds
+			Tooltip:
+				'''
+				When enabled, stamp wands play charge-up sound cues at 25%, 50%,
+				and 75% charge progress with increasing pitch.
+				Disable for silent channeling.
+				'''
+		}
+
 		Feedback.Header: Feedback
 
 		WandVerbosity: {
@@ -543,6 +1250,75 @@ Configs: {
 				When enabled, wands show detailed operation feedback messages
 				such as tile counts and placement results in chat.
 				Disable for a quieter experience.
+				'''
+		}
+
+		ShapeDefaults.Header: Shape Defaults
+
+		DefaultShapeType: {
+			Label: Default Shape
+			Tooltip:
+				'''
+				The shape type selected when a wand is first equipped.
+				Does not affect wands that remember their last-used shape.
+				'''
+		}
+
+		DefaultShapeMode: {
+			Label: Default Fill Mode
+			Tooltip:
+				'''
+				The fill mode (Filled or Hollow) selected by default
+				for new wand sessions.
+				'''
+		}
+
+		RainFillEffects.Header: Rain Fill Visual Effects
+
+		RainFillSummonsClouds: {
+			Label: Summon Rain Clouds
+			Tooltip:
+				'''
+				When enabled, Rain Fill and Pocket Fill summon cosmetic cloud
+				projectiles above the selection area during liquid placement.
+				Disable to skip cloud spawning entirely.
+				'''
+		}
+
+		RainFillSpawnDusts: {
+			Label: Spawn Rain Dusts
+			Tooltip:
+				'''
+				When enabled, rain clouds emit per-liquid dust particles
+				(water droplets, lava embers, honey drips, shimmer sparkles).
+				Disable for a cleaner visual experience or better performance.
+				'''
+		}
+
+		LavaRainStyle: {
+			Label: Lava Rain Style
+			Tooltip:
+				'''
+				Visual style for lava rain particles.
+				• Embers — bright glowing core only (default, crisp).
+				• SolarFlare — slower, larger, dreamier blobs.
+				• Both — combined layered look (denser, busier).
+				'''
+		}
+
+		BlockExhaustion: {
+			Header: Block Exhaustion Behavior
+			Label: When You Run Out of Blocks
+			Tooltip:
+				'''
+				Controls what happens when a building wand runs out of the
+				current block mid-placement.
+				• NextBlock — automatically switch to the next matching block in
+				  inventory and continue (default).
+				• Cancel — pre-check stock and refuse to start the operation
+				  unless every tile can be placed from the chosen block.
+				• Interrupt — stop the operation at the first missing block,
+				  leaving placed tiles in place.
 				'''
 		}
 	}
@@ -581,6 +1357,20 @@ Configs: {
 
 		AlwaysBoundingBox: {
 			Label: Always Bounding Box
+			Tooltip: ""
+		}
+	}
+
+	StampRenderMode: {
+		Tooltip: ""
+
+		Precise: {
+			Label: Precise
+			Tooltip: ""
+		}
+
+		Smooth: {
+			Label: Smooth
 			Tooltip: ""
 		}
 	}
@@ -658,6 +1448,11 @@ Configs: {
 
 		HollowSelectionCap: {
 			Label: Hollow Selection Cap
+			Tooltip: ""
+		}
+
+		CoatingSelectionCap: {
+			Label: Coating Wand Cap
 			Tooltip: ""
 		}
 
@@ -784,6 +1579,150 @@ Configs: {
 			Label: Carefree: Allow Delicate Tile Destruction
 			Tooltip: ""
 		}
+	}
+
+	NonOceanWaterproofTorch: {
+		CoralTorch: {
+			Label: Coral Torch
+			Tooltip: ""
+		}
+
+		IchorTorch: {
+			Tooltip: ""
+			Label: Ichor Torch
+		}
+
+		CursedTorch: {
+			Tooltip: ""
+			Label: Cursed Torch
+		}
+
+		EvilTorch: {
+			Tooltip: ""
+			Label: Evil Torch
+		}
+
+		Tooltip: ""
+	}
+
+	OceanWaterproofTorch: {
+		IchorTorch: {
+			Tooltip: ""
+			Label: Ichor Torch
+		}
+
+		CursedTorch: {
+			Tooltip: ""
+			Label: Cursed Torch
+		}
+
+		EvilTorch: {
+			Tooltip: ""
+			Label: Evil Torch
+		}
+
+		CoralTorch: {
+			Tooltip: ""
+			Label: Coral Torch
+		}
+
+		Tooltip: ""
+	}
+
+	ShapeMode: {
+		Hollow: {
+			Tooltip: ""
+			Label: Hollow
+		}
+
+		Filled: {
+			Tooltip: ""
+			Label: Filled
+		}
+
+		Tooltip: ""
+	}
+
+	ShapeType: {
+		Mold: {
+			Tooltip: ""
+			Label: Mold
+		}
+
+		StraightLine: {
+			Tooltip: ""
+			Label: Straight Line
+		}
+
+		CardinalLine: {
+			Tooltip: ""
+			Label: Cardinal Line
+		}
+
+		Elbow: {
+			Tooltip: ""
+			Label: Elbow
+		}
+
+		Triangle: {
+			Tooltip: ""
+			Label: Triangle
+		}
+
+		Diamond: {
+			Tooltip: ""
+			Label: Diamond
+		}
+
+		Ellipse: {
+			Tooltip: ""
+			Label: Ellipse
+		}
+
+		Rectangle: {
+			Tooltip: ""
+			Label: Rectangle
+		}
+
+		Tooltip: ""
+	}
+
+	LavaRainStyle: {
+		Embers: {
+			Label: Embers
+			Tooltip: Bright glowing core only — crisp, low-density (default).
+		}
+
+		SolarFlare: {
+			Label: Solar Flare
+			Tooltip: Slower, larger, dreamier blobs.
+		}
+
+		Both: {
+			Label: Both
+			Tooltip: Combined layered look — denser, busier.
+		}
+
+		Tooltip: ""
+	}
+
+	BlockExhaustionMode: {
+		NextBlock: {
+			Label: Next Block
+			Tooltip: Auto-switch to the next matching block in inventory and continue (default).
+		}
+
+		Cancel: {
+			Label: Cancel
+			Tooltip: Pre-check stock and refuse to start unless every tile can be placed.
+		}
+
+		Interrupt: {
+			Label: Interrupt
+			Tooltip: Stop at the first missing block, leaving placed tiles in place.
+		}
+
+		Tooltip: ""
 	}
 }
 
@@ -923,6 +1862,114 @@ Items: {
 		DisplayName: Wand of Coating (Stamp)
 		Tooltip: Define a coating area once, then stamp it repeatedly
 	}
+
+	WandOfFluidsConfirm: {
+		DisplayName: Wand Of Fluids Confirm
+		Tooltip: ""
+	}
+
+	WandOfFluidsInstant: {
+		DisplayName: Wand Of Fluids Instant
+		Tooltip: ""
+	}
+
+	WandOfFluidsSelect: {
+		DisplayName: Wand Of Fluids Select
+		Tooltip: ""
+	}
+
+	WandOfFluidsStamp: {
+		DisplayName: Wand Of Fluids Stamp
+		Tooltip: ""
+	}
+
+	WandOfTorchesInstant: {
+		DisplayName: Wand of Torches (Instant)
+		Tooltip: Places torches in a tiling pattern across a selected area
+	}
+
+	WandOfTorchesSelect: {
+		DisplayName: Wand of Torches (Select)
+		Tooltip: Places torches in a tiling pattern across a selected area
+	}
+
+	WandOfTorchesConfirm: {
+		DisplayName: Wand of Torches (Confirm)
+		Tooltip: Places torches in a tiling pattern across a selected area
+	}
+
+	WandOfTorchesStamp: {
+		DisplayName: Wand of Torches (Stamp)
+		Tooltip: Define a torch pattern once, then stamp it repeatedly
+	}
+
+	TorchWheelWandSolid: {
+		DisplayName: Torch Wheel Wand (Tiles)
+		Tooltip:
+			'''
+			Fires a projectile that traces block outlines and places torches
+			Left-click to fire — Shift + right-click (held) to recall all active wheels
+			Right-click in inventory to switch to Platforms mode
+			Uses Torch God's Favor for biome torches
+			'''
+	}
+
+	TorchWheelWandSolidPlatforms: {
+		DisplayName: Torch Wheel Wand (Platforms)
+		Tooltip:
+			'''
+			Traces platform surfaces and places torches below them
+			Right-click in inventory to switch to Tiles mode
+			Shift + right-click (held) to recall all active wheels
+			Uses Torch God's Favor for biome torches
+			[c/FF8C00:Platform tracing not yet implemented]
+			'''
+	}
+
+	WandOfDelimitationInstant: {
+		DisplayName: Wand of Delimitation (Instant)
+		Tooltip: Defines canvas and selection regions using geometric shapes
+	}
+
+	WandOfDelimitationSelect: {
+		DisplayName: Wand of Delimitation (Select)
+		Tooltip: Defines canvas and selection regions using geometric shapes
+	}
+
+	WandOfDelimitationConfirm: {
+		DisplayName: Wand of Delimitation (Confirm)
+		Tooltip: Defines canvas and selection regions using geometric shapes
+	}
+
+	WandOfDelimitationStamp: {
+		DisplayName: Wand of Delimitation (Stamp)
+		Tooltip: Define a selection shape once, then stamp it repeatedly
+	}
+
+	TorchWheelWandPlatform: {
+		DisplayName: Torch Wheel Wand (Platform)
+		Tooltip: ""
+	}
+
+	WandOfMoldingInstant: {
+		DisplayName: Wand of Molding (Instant)
+		Tooltip: Sculpts custom shapes from geometric primitives for use with Stamp wands
+	}
+
+	WandOfMoldingSelect: {
+		DisplayName: Wand of Molding (Select)
+		Tooltip: Sculpts custom shapes from geometric primitives for use with Stamp wands
+	}
+
+	WandOfMoldingConfirm: {
+		DisplayName: Wand of Molding (Confirm)
+		Tooltip: Sculpts custom shapes from geometric primitives for use with Stamp wands
+	}
+
+	WandOfMoldingStamp: {
+		DisplayName: Wand of Molding (Stamp)
+		Tooltip: Define a mold shape once, then stamp it repeatedly
+	}
 }
 
 Conditions.NonCraftable: Not craftable. Cycle with right click in inventory.
@@ -933,6 +1980,9 @@ Conditions.NonCraftable: Not craftable. Cycle with right click in inventory.
 Messages: {
 	// ── Common ──────────────────────────────────────────────
 	SelectionCancelled: Selection cancelled.
+	// S8 2026-04-22 — keybind hint when InventoryView toggle pressed without a participating wand held.
+	// S9 vocabulary pass: drop "Inventory View" user-facing wording (DesignDoc Phase A).
+	InventoryViewNoParticipant: The block picker is only available for the Wand of Building, Wand of Replacement, and Wand of Torches.
 	SwitchedToMode: Switched to {0} mode
 	ThicknessChanged: Thickness: {0} — {1}
 	StampUnlocked: Stamp unlocked. Click to set new anchor.
@@ -952,6 +2002,10 @@ Messages: {
 	NoTilesPlaced: No tiles could be placed.
 	NoWallItemFound: No wall item found in inventory.
 	NoWallsPlaced: No walls could be placed.
+	// 2026-04-23 Session 1 (Letter #10 §6) — Interrupt mode refuses to run when the
+	// chosen item isn't currently in inventory. Shown in red chat instead of silently
+	// substituting. Applies to both tile pins and wall pins.
+	ChosenMissingUnderInterrupt: chosen item is not in inventory — Interrupt mode will not substitute. Operation cancelled.
 	// ── Dismantling ─────────────────────────────────────────
 	NoTilesDestroyed: No tiles were destroyed.
 	// ── Void Everything ─────────────────────────────────────
@@ -995,23 +2049,92 @@ Messages: {
 	CoatingScrapedPaint: Scraped paint from {0} positions.
 	CoatingScrapedMoss: Removed moss from {0} tiles.
 	CoatingHarvestedMoss: Harvested moss from {0} tiles.
+	// ── Fluids ──────────────────────────────────────────────
+	NoTilesInSelection: No tiles in selection area.
+	// ── Delimitation Warning ──────────────────────────────
+	DelimitationFilterActive: No action executed. Delimitation Area is active and does not overlap with the selection.
+	FluidsNoTiles: No tiles in selection.
+	FluidsInvalidRegion: Invalid region.
+	FluidsNoSeeds: No valid seed positions — all top tiles are solid.
+	FluidsNoBasins: No basins found — liquid cannot settle in this terrain.
+	FluidsNoPockets: No enclosed pockets found in this terrain.
+	FluidsFilled: Filled {0} tiles with {1}.
+	FluidsRainFilled: Rain Fill: {0} tiles filled ({1} columns seeded, {2} basins analyzed).
+	FluidsPocketFilled: Pocket Fill: {0} tiles filled ({1} pocket cells analyzed).
+	FluidsDrained: Drained {0} tiles.
+	FluidsBubblePlaced: Placed {0} bubble blocks.
+	FluidsBubbleRemoved: Removed {0} bubble blocks.
+	FluidsBubbleCoated: Coated selection with {0} bubble blocks.
+	FluidsMixed: Mixed {0} tiles into blocks + filled {1} tiles with {2}.
+	FluidsMixedOnly: Mixed {0} tiles into blocks.
+	// ── Torches ─────────────────────────────────────────────
+	TorchesNoTorchItem: No torch found in inventory.
+	TorchesNoValidPositions: No valid torch positions in selection.
+	TorchesNonePlaced: No torches could be placed.
+	TorchesPlaced: Placed {0} torches.
+	TorchesNoneReplaced: No torches were replaced.
+	TorchesReplaced: Replaced {0} torches.
+	TorchesNoneRemoved: No torches found to remove.
+	TorchesRemoved: Removed {0} torches.
+	TorchesNoneConverted: No torches to convert (already biome-matched).
+	TorchesConverted: Converted {0} torches to biome variant.
 	// ── Selection prompts (per-mode) ────────────────────────
 	SelectStartClickEnd: Selection started. Click to set end point.
 	SelectStartClickAgain: Selection started. Click again to {0}.
 	ClickToConfirm: Click again to confirm.
 	ClickToConfirmOrCancel: Click again to confirm, or right-click to cancel.
 	EndPointSet: End point set. Click again to confirm.
-	// ── Stamp prompts ───────────────────────────────────────
 	StampClickEnd: Stamp: click to set end point.
+	// ── Selection prompts (per-mode) ────────────────────────
 	StampClickLock: Stamp: click to lock anchor position.
 	StampLocked: Stamp locked! Click to {0}. Right-click to reset.
-	// ── Suppress Drops toggle ────────────────────────────────
 	SuppressDropsOn: Suppress Drops: ON — tile drops are suppressed.
 	SuppressDropsOff: Suppress Drops: OFF — tile drops are enabled.
+	// ── Select Wand prompts ─────────────────────────────────
+	SelectClickEnd: Selection: click to set end point.
+	SelectClickConfirm: Selection: click to confirm and apply.
+	NoTilesInShape: No tiles in shape.
+	MoldingHintTooFar: No cells added — canvas is far away. Use 'Teleport to Player' in the Molding panel to bring it closer.
+	MoldingHintExpandCanvas: No cells added — shape is outside the canvas. Switch to Canvas Edit mode to expand the canvas first.
+	MoldingNoChange: Mold: no change (tiles already match the current selection).
+	// ── Lore ────────────────────────────────────────────────
+	LoreCommon: The Gods of Space let you enact your thoughts into reality.
+	LoreBuilding: The Deity of Creation lets you manifest order and existence at will.
+	LoreDismantling: The Deity of Erasure lets you restore nothingness as you wish.
+	LoreReplacement: The Deity of Transmutation lets you reweave the threads of what already is.
+	LoreWiring: An advanced mechanism wrench, refined beyond the Grand Design. Where gods shape matter, engineers shape purpose.
+	LoreSafekeeping: The Deity of Timelessness lets you separate space from the powers of creation.
+	LoreCoating: The Deity of Chromas lets you dress the world in colours of your choosing.
+	LoreFluids: The Deity of Tides lets you command the flowing matter.
+	LoreTorches: The Torch God lets you spread light across the world with ease. Or awaken their wrath if you dare.
+	LoreDelimitation: The Architect of Boundaries lets you define the canvas of creation.
+	LoreMolding: The Sculptor of Forms lets you mold the blueprints of creation.
+	LoreShiftHint: "[c/888888:Hold [Shift] for lore]"
+	// ── Torch Wheel Tooltips ────────────────────────────────
+	TorchWheelModeTiles: "[c/FFFF00:Mode: Tiles]"
+	TorchWheelModePlatforms: "[c/ADD8E6:Mode: Platforms]"
+	TorchWheelCycleHint: Right-click in inventory to cycle modes
+	TorchWheelKillHint: Shift + Right-click (held) to kill all projectiles
+	TorchWheelSwitchToTiles: Torch Wheel Mode: Tiles
+	TorchWheelSwitchToPlatforms: Torch Wheel Mode: Platforms
 }
 
 GameTips: {
 	VacuumItems: WSW: Don't like picking up items? Activate 'vacuum items' in the config.
 	IceBiomeReplacement: WSW: The Ice Biome got corrupted? Use the Wand of Replacement to swap them for snow. It's immune!
 	GitHubContributions: WSW: Got any bugs? Ideas? Feedback or Art? Check the github repo! Contributions are very welcome.
+}
+
+Projectiles: {
+	RainCloudProjectile.DisplayName: Rain Cloud Projectile
+	FlyingTorchWheelSolid.DisplayName: Flying Torch Wheel
+	TorchWheelSolidProjectile.DisplayName: Torch Wheel
+	TorchWheelPlatformProjectile.DisplayName: Torch Wheel Platform Projectile
+	FlyingTorchWheelPlatform.DisplayName: Flying Torch Wheel Platform
+	WandOfFluidsProjectile.DisplayName: Wand Of Fluids Projectile
+	StampModeProjectile.DisplayName: Stamp Mode Projectile
+	SelectModeProjectile.DisplayName: Select Mode Projectile
+	InstantModeProjectile.DisplayName: Instant Mode Projectile
+	ConfirmModeProjectile.DisplayName: Confirm Mode Projectile
+	WandActionProjectile.DisplayName: Wand Action Projectile
 }

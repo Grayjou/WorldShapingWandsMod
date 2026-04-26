@@ -1,0 +1,47 @@
+# Paste agent response for chunk 006 below this line.
+###CHUNK-START###																									
+Key	en-US	es-ES (TRANSLATE)																							
+Configs.ShapeType.CardinalLine.Label	Cardinal Line	Línea Cardinal																							
+Configs.ShapeType.Elbow.Tooltip																									
+Configs.ShapeType.Elbow.Label	Elbow	Codo																							
+Configs.ShapeType.Triangle.Tooltip																									
+Configs.ShapeType.Triangle.Label	Triangle	Triángulo																							
+Configs.ShapeType.Diamond.Tooltip																									
+Configs.ShapeType.Diamond.Label	Diamond	Diamante																							
+Configs.ShapeType.Ellipse.Tooltip																									
+Configs.ShapeType.Ellipse.Label	Ellipse	Elipse																							
+Configs.ShapeType.Rectangle.Tooltip																									
+Configs.ShapeType.Rectangle.Label	Rectangle	Rectángulo																							
+Configs.ShapeType.Tooltip																									
+Configs.LavaRainStyle.Embers.Label	Embers	Brasas																							
+Configs.LavaRainStyle.Embers.Tooltip	Bright glowing core only — crisp, low-density (default).	Solo núcleo brillante — nítido, baja densidad (predeterminado).																							
+Configs.LavaRainStyle.SolarFlare.Label	Solar Flare	Llamarada Solar																							
+Configs.LavaRainStyle.SolarFlare.Tooltip	Slower, larger, dreamier blobs.	Gotas más lentas, grandes y etéreas.																							
+Configs.LavaRainStyle.Both.Label	Both	Ambas																							
+Configs.LavaRainStyle.Both.Tooltip	Combined layered look — denser, busier.	Aspecto combinado en capas — más denso y cargado.																							
+Configs.LavaRainStyle.Tooltip																									
+Configs.BlockExhaustionMode.NextBlock.Label	Next Block	Siguiente Bloque																							
+Configs.BlockExhaustionMode.NextBlock.Tooltip	Auto-switch to the next matching block in inventory and continue (default).	Cambiar automáticamente al siguiente bloque compatible en el inventario y continuar (predeterminado).																							
+Configs.BlockExhaustionMode.Cancel.Label	Cancel	Cancelar																							
+Configs.BlockExhaustionMode.Cancel.Tooltip	Pre-check stock and refuse to start unless every tile can be placed.	Verificar existencias antes y rechazar iniciar a menos que cada bloque pueda ser colocado.																							
+Configs.BlockExhaustionMode.Interrupt.Label	Interrupt	Interrumpir																							
+Configs.BlockExhaustionMode.Interrupt.Tooltip	Stop at the first missing block, leaving placed tiles in place.	Detenerse en el primer bloque faltante, dejando los bloques que se pudieron colocar																							
+Configs.BlockExhaustionMode.Tooltip																									
+Items.WandOfCoatingInstant.DisplayName	Wand of Coating (Instant)	Varita de Revestimiento (Instantánea)																							
+Items.WandOfCoatingInstant.Tooltip	Paints, scrapes, or de-mosses tiles and walls in a selected area	Pinta, raspa o elimina musgo de bloques y paredes en un área seleccionada																							
+Items.WandOfCoatingSelect.DisplayName	Wand of Coating (Select)	Varita de Revestimiento (Seleccionar)																							
+Items.WandOfCoatingSelect.Tooltip	Paints, scrapes, or de-mosses tiles and walls in a selected area	Pinta, raspa o elimina musgo de bloques y paredes en un área seleccionada																							
+Items.WandOfCoatingConfirm.DisplayName	Wand of Coating (Confirm)	Varita de Revestimiento (Confirmar)																							
+Items.WandOfCoatingConfirm.Tooltip	Paints, scrapes, or de-mosses tiles and walls in a selected area	Pinta, raspa o elimina musgo de bloques y paredes en un área seleccionada																							
+Items.WandOfCoatingStamp.DisplayName	Wand of Coating (Stamp)	Varita de Revestimiento (Sello)																							
+Items.WandOfCoatingStamp.Tooltip	Define a coating area once, then stamp it repeatedly	Define un área de revestimiento una vez, luego estámpala repetidamente																							
+Items.WandOfFluidsConfirm.DisplayName	Wand Of Fluids Confirm	Varita de Fluidos (Confirmar)																							
+Items.WandOfFluidsConfirm.Tooltip																									
+Items.WandOfFluidsInstant.DisplayName	Wand Of Fluids Instant	Varita de Fluidos (Instantánea)																							
+Items.WandOfFluidsInstant.Tooltip																									
+Items.WandOfFluidsSelect.DisplayName	Wand Of Fluids Select	Varita de Fluidos (Seleccionar)																							
+Items.WandOfFluidsSelect.Tooltip																									
+###CHUNK-END###																									
+# Sentinels (###CHUNK-START### / ###CHUNK-END###) MUST be present.
+# Edit any rows in-place before running chunk_import.py.
+

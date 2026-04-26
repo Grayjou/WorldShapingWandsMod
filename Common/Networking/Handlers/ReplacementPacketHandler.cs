@@ -128,9 +128,10 @@ public static class ReplacementPacketHandler
         bool paintSprayer = false)
     {
         var player = Main.player[playerWhoAmI];
-        var config = ModContent.GetInstance<WandServerConfig>();
-        bool suppressDrops = config?.EffectiveSuppressDrops ?? true;
-        bool bypassPickPower = config?.EffectiveBypassPickaxePower ?? false;
+        var config = WandConfigs.Resources;
+        var sandbox = WandConfigs.Sandbox;
+        bool suppressDrops = sandbox?.EffectiveSuppressDrops ?? true;
+        bool bypassPickPower = sandbox?.EffectiveBypassPickaxePower ?? false;
 
         // Target item condition for consumption
         Func<Item, bool> targetCondition = i => !i.IsAir && i.type == targetItemType;
@@ -155,7 +156,7 @@ public static class ReplacementPacketHandler
             int x = tile.X;
             int y = tile.Y;
             if (!WorldGen.InWorld(x, y, 1)) continue;
-            if (SafekeepingSystem.IsProtected(x, y)) continue;
+            if (SafekeepingSystem.IsTileProtected(x, y)) continue;
 
             var t = Main.tile[x, y];
             if (!t.HasTile) continue;
@@ -243,7 +244,7 @@ public static class ReplacementPacketHandler
             NetMessage.SendData(MessageID.SyncEquipment, -1, -1, null, playerWhoAmI, slot);
 
         // Server vacuum: tile replacements (KillTile fallback) may have spawned drops.
-        if (!suppressDrops && config?.VacuumItems == true && affectedPositions.Count > 0)
+        if (!suppressDrops && sandbox?.VacuumItems == true && affectedPositions.Count > 0)
         {
             var bounds = BulkTileOperations.ComputeBounds(affectedPositions);
             BulkTileOperations.ServerVacuumItemsToPlayer(player, bounds);
@@ -268,8 +269,8 @@ public static class ReplacementPacketHandler
         bool paintSprayer = false)
     {
         var player = Main.player[playerWhoAmI];
-        var config = ModContent.GetInstance<WandServerConfig>();
-        bool suppressDrops = config?.EffectiveSuppressDrops ?? true;
+        var config = WandConfigs.Resources;
+        bool suppressDrops = WandConfigs.Sandbox?.EffectiveSuppressDrops ?? true;
 
         // Target item condition for consumption
         Func<Item, bool> targetCondition = i => !i.IsAir && i.type == targetItemType;
@@ -293,7 +294,7 @@ public static class ReplacementPacketHandler
             int x = tile.X;
             int y = tile.Y;
             if (!WorldGen.InWorld(x, y, 1)) continue;
-            if (SafekeepingSystem.IsProtected(x, y)) continue;
+            if (SafekeepingSystem.IsWallProtected(x, y)) continue;
 
             var t = Main.tile[x, y];
             if (t.WallType != sourceWallType) continue;
@@ -355,7 +356,7 @@ public static class ReplacementPacketHandler
             NetMessage.SendData(MessageID.SyncEquipment, -1, -1, null, playerWhoAmI, slot);
 
         // Server vacuum: wall replacements (KillWall, KillTile for hanging objects) may spawn drops.
-        if (!suppressDrops && config?.VacuumItems == true && affectedPositions.Count > 0)
+        if (!suppressDrops && WandConfigs.Sandbox?.VacuumItems == true && affectedPositions.Count > 0)
         {
             var bounds = BulkTileOperations.ComputeBounds(affectedPositions);
             BulkTileOperations.ServerVacuumItemsToPlayer(player, bounds);

@@ -29,6 +29,7 @@ public class WswCommand : ModCommand
         "  toolinfo         — Show pickaxe, hammer, axe power and mining speed\n" +
         "  paintdemo (pd)   — Place a demo strip of all 31 paint colors\n" +
         "    [r|c] [t|w]    — r=row (default), c=column; t=tile (default), w=wall\n" +
+        "  inventoryview (iv) — List candidate item types + choice for the held wand\n" +
         "  help             — Show this help text";
 
     private const int PaintCount = 31; // Colors 0–30
@@ -62,6 +63,11 @@ public class WswCommand : ModCommand
             case "paintdemo":
             case "pd":
                 RunPaintDemo(caller, args);
+                break;
+
+            case "inventoryview":
+            case "iv":
+                RunInventoryView(caller);
                 break;
 
             case "help":
@@ -351,6 +357,60 @@ public class WswCommand : ModCommand
             remaining -= take;
             if (player.inventory[i].stack <= 0)
                 player.inventory[i].TurnToAir();
+        }
+    }
+
+    // ── inventoryview ──────────────────────────────────────
+    /// <summary>
+    /// Smoke-test for the InventoryView v1 backend (S5 2026-04-22).
+    /// Prints, for the player's currently-held wand:
+    ///   1. The wand family,
+    ///   2. Whether it participates in InventoryView,
+    ///   3. The provider's panel title key,
+    ///   4. Each source: title key, candidate item names, and current choice (if any).
+    /// Proves the registry/sources/pins wire end-to-end before any UI is built.
+    /// </summary>
+    private static void RunInventoryView(CommandCaller caller)
+    {
+        var player = caller.Player;
+        var wp = player.GetModPlayer<global::WorldShapingWandsMod.Common.Players.WandPlayer>();
+        var family = global::WorldShapingWandsMod.Common.Items.BaseCyclingWand.GetCurrentFamily(player);
+
+        caller.Reply("─── InventoryView ───", Color.Gold);
+        caller.Reply($"  Held wand family: {family}", Color.LightGray);
+
+        var provider = global::WorldShapingWandsMod.Common.UI.InventoryView.InventoryViewRegistry.GetProvider(player);
+        if (provider == null)
+        {
+            caller.Reply("  Family does not participate in InventoryView.", Color.Gray);
+            caller.Reply("  (Only Building / Torches / Replacement participate.)", Color.Gray);
+            return;
+        }
+
+        caller.Reply($"  Panel title key: {provider.PanelTitleKey}", Color.LightGray);
+        caller.Reply($"  Sources: {provider.Sources.Count}", Color.LightGray);
+
+        for (int s = 0; s < provider.Sources.Count; s++)
+        {
+            var src = provider.Sources[s];
+            int? choice = src.GetSelectedItemType(wp);
+            string pinStr = choice.HasValue ? $"{choice.Value} ({Lang.GetItemNameValue(choice.Value)})" : "<none>";
+            caller.Reply($"  [{s}] {src.TitleKey}", Color.Cyan);
+            caller.Reply($"      choice = {pinStr}", Color.LightGray);
+
+            int count = 0;
+            foreach (int t in src.GetCandidateItemTypes(player))
+            {
+                count++;
+                if (count <= 12)
+                    caller.Reply($"      • {t,5}  {Lang.GetItemNameValue(t)}", Color.LightGray);
+            }
+            if (count == 0)
+                caller.Reply("      (no candidates in inventory)", Color.Gray);
+            else if (count > 12)
+                caller.Reply($"      … +{count - 12} more (total {count})", Color.Gray);
+            else
+                caller.Reply($"      total: {count}", Color.Gray);
         }
     }
 }

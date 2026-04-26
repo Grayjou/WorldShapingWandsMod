@@ -142,7 +142,7 @@ public static class BuildingPacketHandler
         bool? actuation = null)
     {
         var player = Main.player[playerWhoAmI];
-        var config = ModContent.GetInstance<WandServerConfig>();
+        var config = WandConfigs.Resources;
 
         // Find the item in the player's server-side inventory
         Func<Item, bool> condition = i => !i.IsAir && i.type == itemType;
@@ -203,16 +203,16 @@ public static class BuildingPacketHandler
         bool interrupted = false;
         var changedSlots = new HashSet<int>();
         bool wasGen = WorldGen.gen;
-        bool suppressDrops = config?.EffectiveSuppressDrops ?? true;
+        var sandbox = WandConfigs.Sandbox;
+        bool suppressDrops = sandbox?.EffectiveSuppressDrops ?? true;
 
         foreach (Point tile in tilesToProcess)
         {
             int x = tile.X;
             int y = tile.Y;
             if (!WorldGen.InWorld(x, y, 1)) continue;
-            if (SafekeepingSystem.IsProtected(x, y)) continue;
+            if (SafekeepingSystem.IsTileProtected(x, y)) continue;
 
-            // Find source item for this tile
             int idx = PacketUtilities.FindItemSlot(player, condition);
             if (idx < 0)
             {
@@ -246,8 +246,9 @@ public static class BuildingPacketHandler
                     continue;
                 }
 
-                // Same tile type — only apply slope
-                if (existingTile.TileType == (ushort)tileTypeToPlace)
+                // Same tile type AND same style — only apply slope
+                if (existingTile.TileType == (ushort)tileTypeToPlace
+                    && ItemTypeHelper.IsSameTileStyle(existingTile, placeStyle))
                 {
                     if (overwriteSlope)
                     {
@@ -258,13 +259,15 @@ public static class BuildingPacketHandler
                     continue;
                 }
 
-                // Substrate variant skip
-                if (ItemTypeHelper.IsTileVariantOf(existingTile.TileType, tileTypeToPlace))
+                // Substrate variant skip (same-type guard: same TileType with different
+                // style should be replaceable, e.g., Stone Platform → Solar Platform)
+                if (existingTile.TileType != (ushort)tileTypeToPlace
+                    && ItemTypeHelper.IsTileVariantOf(existingTile.TileType, tileTypeToPlace))
                     continue;
 
                 if (!replaceEnabled) continue;
 
-                if (config != null && !config.EffectiveBypassPickaxePower
+                if (sandbox != null && !sandbox.EffectiveBypassPickaxePower
                     && !player.HasEnoughPickPowerToHurtTile(x, y)) continue;
                 if (!WorldGen.CanKillTile(x, y)) continue;
 
@@ -323,7 +326,7 @@ public static class BuildingPacketHandler
             NetMessage.SendData(MessageID.SyncEquipment, -1, -1, null, playerWhoAmI, slot);
 
         // Server vacuum: replacements (KillTile) may have spawned drops.
-        if (!suppressDrops && config?.VacuumItems == true && replaced > 0 && tilesToProcess.Length > 0)
+        if (!suppressDrops && sandbox?.VacuumItems == true && replaced > 0 && tilesToProcess.Length > 0)
         {
             var bounds = BulkTileOperations.ComputeBounds(
                 new List<Point>(tilesToProcess));
@@ -348,7 +351,7 @@ public static class BuildingPacketHandler
         bool paintSprayer = false)
     {
         var player = Main.player[playerWhoAmI];
-        var config = ModContent.GetInstance<WandServerConfig>();
+        var config = WandConfigs.Resources;
 
         Func<Item, bool> condition = i => !i.IsAir && i.type == itemType;
 
@@ -389,14 +392,15 @@ public static class BuildingPacketHandler
         bool interrupted = false;
         var changedSlots = new HashSet<int>();
         bool wasGen = WorldGen.gen;
-        bool suppressDrops = config?.EffectiveSuppressDrops ?? true;
+        var sandbox = WandConfigs.Sandbox;
+        bool suppressDrops = sandbox?.EffectiveSuppressDrops ?? true;
 
         foreach (Point tile in tilesToProcess)
         {
             int x = tile.X;
             int y = tile.Y;
             if (!WorldGen.InWorld(x, y, 1)) continue;
-            if (SafekeepingSystem.IsProtected(x, y)) continue;
+            if (SafekeepingSystem.IsWallProtected(x, y)) continue;
 
             int idx = PacketUtilities.FindItemSlot(player, condition);
             if (idx < 0)
@@ -450,7 +454,7 @@ public static class BuildingPacketHandler
             NetMessage.SendData(MessageID.SyncEquipment, -1, -1, null, playerWhoAmI, slot);
 
         // Server vacuum: wall replacements (KillWall) may have spawned drops.
-        if (!suppressDrops && config?.VacuumItems == true && replaced > 0 && tilesToProcess.Length > 0)
+        if (!suppressDrops && sandbox?.VacuumItems == true && replaced > 0 && tilesToProcess.Length > 0)
         {
             var bounds = BulkTileOperations.ComputeBounds(
                 new List<Point>(tilesToProcess));

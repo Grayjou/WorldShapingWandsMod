@@ -114,7 +114,7 @@ public static class WiringPacketHandler
             int x = tile.X;
             int y = tile.Y;
             if (!WorldGen.InWorld(x, y, 1)) continue;
-            if (SafekeepingSystem.IsProtected(x, y)) continue;
+            if (SafekeepingSystem.IsTileProtected(x, y)) continue;
 
             Tile t = Main.tile[x, y];
 

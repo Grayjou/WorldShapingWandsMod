@@ -40,7 +40,7 @@ public static class PacketUtilities
     /// <returns>True if the operation should be BLOCKED, false if it may proceed.</returns>
     public static bool IsOnCooldown(int whoAmI, WandPacketType packetType)
     {
-        var config = ModContent.GetInstance<WandServerConfig>();
+        var config = WandConfigs.Limits;
         int cooldown = config?.OperationCooldownTicks ?? 12;
         if (cooldown <= 0) return false; // Cooldown disabled
 
@@ -73,7 +73,7 @@ public static class PacketUtilities
     /// </summary>
     public static bool IsLocalPlayerOnCooldown()
     {
-        var config = ModContent.GetInstance<WandServerConfig>();
+        var config = WandConfigs.Limits;
         int cooldown = config?.OperationCooldownTicks ?? 12;
         if (cooldown <= 0) return false;
 
@@ -96,7 +96,7 @@ public static class PacketUtilities
     /// </summary>
     public static WandPacketHeader EnforceDistanceCap(WandPacketHeader header)
     {
-        var config = ModContent.GetInstance<WandServerConfig>();
+        var config = WandConfigs.Limits;
         int cap;
         if (header.Shape == ShapeType.Elbow ||
             header.Shape == ShapeType.CardinalLine ||
@@ -233,8 +233,8 @@ public static class PacketUtilities
             {
                 SlopeType.BottomRight => Terraria.ID.SlopeType.SlopeDownLeft,
                 SlopeType.BottomLeft  => Terraria.ID.SlopeType.SlopeDownRight,
-                SlopeType.TopRight    => Terraria.ID.SlopeType.SlopeUpRight,
-                SlopeType.TopLeft     => Terraria.ID.SlopeType.SlopeUpLeft,
+                SlopeType.TopRight    => Terraria.ID.SlopeType.SlopeUpLeft, // These are inverted, don't ask me why
+                SlopeType.TopLeft     => Terraria.ID.SlopeType.SlopeUpRight,
                 _ => Terraria.ID.SlopeType.Solid
             };
         }

@@ -1,0 +1,70 @@
+You are translating UI strings for a Terraria mod called "World Shaping
+Wands" into es-ES (Spain Spanish, neutral register; UI label conventions follow existing translated rows).
+
+OUTPUT FORMAT:
+Return ONLY a valid TSV block. The block MUST start with the marker
+###CHUNK-START### on its own line, contain exactly the same Key column
+as provided (NO additions, NO deletions, NO reordering), and end with
+the marker ###CHUNK-END### on its own line. Reference columns (en-US)
+are read-only context — DO NOT modify them. The rightmost column is
+your es-ES translation.
+
+Do not include any explanatory text outside the markers. Do not wrap
+the output in code fences. Just the marker, the rows, the closing marker.
+
+CHUNK 6 of 9 — es-ES — rows 201-240
+
+###CHUNK-START###
+Key	en-US	es-ES (TRANSLATE)
+Configs.ShapeType.CardinalLine.Label	Cardinal Line	
+Configs.ShapeType.Elbow.Tooltip		
+Configs.ShapeType.Elbow.Label	Elbow	
+Configs.ShapeType.Triangle.Tooltip		
+Configs.ShapeType.Triangle.Label	Triangle	
+Configs.ShapeType.Diamond.Tooltip		
+Configs.ShapeType.Diamond.Label	Diamond	
+Configs.ShapeType.Ellipse.Tooltip		
+Configs.ShapeType.Ellipse.Label	Ellipse	
+Configs.ShapeType.Rectangle.Tooltip		
+Configs.ShapeType.Rectangle.Label	Rectangle	
+Configs.ShapeType.Tooltip		
+Configs.LavaRainStyle.Embers.Label	Embers	
+Configs.LavaRainStyle.Embers.Tooltip	Bright glowing core only — crisp, low-density (default).	
+Configs.LavaRainStyle.SolarFlare.Label	Solar Flare	
+Configs.LavaRainStyle.SolarFlare.Tooltip	Slower, larger, dreamier blobs.	
+Configs.LavaRainStyle.Both.Label	Both	
+Configs.LavaRainStyle.Both.Tooltip	Combined layered look — denser, busier.	
+Configs.LavaRainStyle.Tooltip		
+Configs.BlockExhaustionMode.NextBlock.Label	Next Block	
+Configs.BlockExhaustionMode.NextBlock.Tooltip	Auto-switch to the next matching block in inventory and continue (default).	
+Configs.BlockExhaustionMode.Cancel.Label	Cancel	
+Configs.BlockExhaustionMode.Cancel.Tooltip	Pre-check stock and refuse to start unless every tile can be placed.	
+Configs.BlockExhaustionMode.Interrupt.Label	Interrupt	
+Configs.BlockExhaustionMode.Interrupt.Tooltip	Stop at the first missing block, leaving placed tiles in place.	
+Configs.BlockExhaustionMode.Tooltip		
+Items.WandOfCoatingInstant.DisplayName	Wand of Coating (Instant)	
+Items.WandOfCoatingInstant.Tooltip	Paints, scrapes, or de-mosses tiles and walls in a selected area	
+Items.WandOfCoatingSelect.DisplayName	Wand of Coating (Select)	
+Items.WandOfCoatingSelect.Tooltip	Paints, scrapes, or de-mosses tiles and walls in a selected area	
+Items.WandOfCoatingConfirm.DisplayName	Wand of Coating (Confirm)	
+Items.WandOfCoatingConfirm.Tooltip	Paints, scrapes, or de-mosses tiles and walls in a selected area	
+Items.WandOfCoatingStamp.DisplayName	Wand of Coating (Stamp)	
+Items.WandOfCoatingStamp.Tooltip	Define a coating area once, then stamp it repeatedly	
+Items.WandOfFluidsConfirm.DisplayName	Wand Of Fluids Confirm	
+Items.WandOfFluidsConfirm.Tooltip		
+Items.WandOfFluidsInstant.DisplayName	Wand Of Fluids Instant	
+Items.WandOfFluidsInstant.Tooltip		
+Items.WandOfFluidsSelect.DisplayName	Wand Of Fluids Select	
+Items.WandOfFluidsSelect.Tooltip		
+###CHUNK-END###
+
+REFERENCE — already-translated rows from es-ES (DO NOT include these in your output, just match their style):
+  UI.Wiring.BlueWire  |  Blue Wire  |  Cable Azul
+  Configs.ResourcesConfig.InfiniteGrassSeedThreshold.Label  |  Grass Seed Threshold  |  Umbral de Semillas
+  UI.Selection.Status  |  Status  |  Estado
+  UI.Selection.ClearCanvas	| Clear Canvas |	Vaciar Canvas
+  UI.Dismantling.VoidEverythingDisabled	| Void Everything requires Carefree Mode to be enabled in server config. |	Desparecer Todo requiere Modo Despreocupado permitido en las configuraciones
+  Configs.OverlayConfig.OverlayRenderMode.Label	| Overlay Render Mode	| Modo de Renderizado de Capa de Vista Previa
+  CardinalLine| Cardinal Line | Línea Cardinal
+  Actuator | Actuator | Activador
+  Drops | Drops | Objetos Recogibles

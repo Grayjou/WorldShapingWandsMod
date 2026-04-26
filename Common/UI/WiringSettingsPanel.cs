@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using Terraria;
@@ -58,8 +58,8 @@ public class WiringSettingsPanel : UIState
         _mainPanel.Width.Set(PanelWidth, 0f);
         _mainPanel.HAlign = 0.5f;
         _mainPanel.VAlign = 0.5f;
-        _mainPanel.BackgroundColor = new Color(79, 79, 44, 220);
-        _mainPanel.BorderColor = new Color(60, 60, 20);
+        _mainPanel.BackgroundColor = WandPanelTheme.PanelChrome.WiringBg;
+        _mainPanel.BorderColor = WandPanelTheme.PanelChrome.WiringBorder;
         Append(_mainPanel);
 
         var mod = ModContent.GetInstance<WorldShapingWandsMod>();
@@ -70,23 +70,23 @@ public class WiringSettingsPanel : UIState
         // === WIRE TYPES ===
         _builder.AddSectionHeader("Wiring.WireTypes");
         _builder.AddToggleRow(
-            "Wiring.RedWire", out _redWireBtn, new Color(200, 80, 80),
-            "Wiring.GreenWire", out _greenWireBtn, new Color(80, 200, 80));
+            "Wiring.RedWire", out _redWireBtn, WandPanelTheme.Wires.Red,
+            "Wiring.GreenWire", out _greenWireBtn, WandPanelTheme.Wires.Green);
         _builder.AddToggleRow(
-            "Wiring.BlueWire", out _blueWireBtn, new Color(80, 80, 200),
-            "Wiring.YellowWire", out _yellowWireBtn, new Color(200, 200, 80));
-        _builder.AddToggleSingle("Wiring.Actuator", out _actuatorBtn, new Color(150, 150, 150));
+            "Wiring.BlueWire", out _blueWireBtn, WandPanelTheme.Wires.Blue,
+            "Wiring.YellowWire", out _yellowWireBtn, WandPanelTheme.Wires.Yellow);
+        _builder.AddToggleSingle("Wiring.Actuator", out _actuatorBtn, WandPanelTheme.Wires.Actuator);
 
         // === MODE ===
         _builder.AddSectionHeader("Wiring.Mode");
         _builder.AddToggleRow(
-            "Wiring.Place", out _placeModeBtn, new Color(100, 200, 100),
-            "Wiring.Remove", out _removeModeBtn, new Color(200, 100, 100),
+            "Wiring.Place", out _placeModeBtn, WandPanelTheme.Wires.PlaceMode,
+            "Wiring.Remove", out _removeModeBtn, WandPanelTheme.Wires.RemoveMode,
             spacing: WandPanelBuilder.AfterToggleGroupSpacing);
         _placeModeBtn.IsRadio = true;
         _removeModeBtn.IsRadio = true;
 
-        // === SHAPE (reduced — wiring only) ===
+        // === SHAPE (reduced � wiring only) ===
         _builder.AddWiringShapeSection(out var shapes);
         _rectFilledBtn    = shapes.RectFilled;
         _edgeBtn          = shapes.Elbow;
@@ -102,11 +102,11 @@ public class WiringSettingsPanel : UIState
         _builder.AddThicknessSection(out _thicknessValue, AdjustThickness);
 
         // === OPTIONS ===
-        var texEqualDim    = mod.Assets.Request<Texture2D>("Assets/Icons/ToggleEqualDim", AssetRequestMode.ImmediateLoad);
-        var texConnectDiam = mod.Assets.Request<Texture2D>("Assets/Icons/ToggleConnectDiam", AssetRequestMode.ImmediateLoad);
-        var texInvertSel   = mod.Assets.Request<Texture2D>("Assets/Icons/ToggleInvertSel", AssetRequestMode.ImmediateLoad);
+        var texEqualDim    = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleEqualDim", AssetRequestMode.ImmediateLoad);
+        var texConnectDiam = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleConnectDiam", AssetRequestMode.ImmediateLoad);
+        var texInvertSel   = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleInvertSel", AssetRequestMode.ImmediateLoad);
 
-        _builder.AddOptionsSection(new WandPanelBuilder.IconDef[]
+        _builder.AddShapeOptionsSection(new WandPanelBuilder.IconDef[]
         {
             new(texEqualDim,    "Common.EqualDimensions",      isToggle: true),
             new(texConnectDiam, "Common.ConnectDiameterTooltip", isToggle: true, initialState: true),
@@ -158,7 +158,7 @@ public class WiringSettingsPanel : UIState
         var settings = GetSettings();
         if (settings == null) return;
         var shape = settings.Shape;
-        int max = ModContent.GetInstance<WandServerConfig>()?.MaxOutlineThickness ?? 10;
+        int max = WandConfigs.Limits?.MaxOutlineThickness ?? 10;
         shape.Thickness = System.Math.Clamp(shape.Thickness + delta, 0, max);
         settings.Shape = shape;
         UpdateThicknessDisplay();
@@ -288,7 +288,8 @@ public class WiringSettingsPanel : UIState
             Main.LocalPlayer.mouseInterface = true;
 
         if (Main.keyState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.Escape))
-            ModContent.GetInstance<WandUISystem>().CloseAllUI();
+            // (S5 2026-04-25 — Letter #4 §2) Esc preserves IV intent; CloseAllPanels.
+            ModContent.GetInstance<WandUISystem>().CloseAllPanels();
     }
 
     public override void Draw(SpriteBatch spriteBatch)

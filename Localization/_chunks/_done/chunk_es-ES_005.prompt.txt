@@ -1,0 +1,70 @@
+You are translating UI strings for a Terraria mod called "World Shaping
+Wands" into es-ES (Spain Spanish, neutral register; UI label conventions follow existing translated rows).
+
+OUTPUT FORMAT:
+Return ONLY a valid TSV block. The block MUST start with the marker
+###CHUNK-START### on its own line, contain exactly the same Key column
+as provided (NO additions, NO deletions, NO reordering), and end with
+the marker ###CHUNK-END### on its own line. Reference columns (en-US)
+are read-only context — DO NOT modify them. The rightmost column is
+your es-ES translation.
+
+Do not include any explanatory text outside the markers. Do not wrap
+the output in code fences. Just the marker, the rows, the closing marker.
+
+CHUNK 5 of 9 — es-ES — rows 161-200
+
+###CHUNK-START###
+Key	en-US	es-ES (TRANSLATE)
+Configs.WandConfig.IsInfiniteForWires.Label	Is Infinite For Wires	
+Configs.WandConfig.IsInfiniteForWires.Tooltip		
+Configs.WandConfig.IsInfiniteForActuators.Label	Is Infinite For Actuators	
+Configs.WandConfig.IsInfiniteForActuators.Tooltip		
+Configs.WandConfig.EnableCarefreeMode.Label	Enable Carefree Mode	
+Configs.WandConfig.EnableCarefreeMode.Tooltip		
+Configs.WandConfig.CarefreeSuppressDrops.Label	Carefree: Suppress Drops	
+Configs.WandConfig.CarefreeSuppressDrops.Tooltip		
+Configs.WandConfig.CarefreeAllowDemonAltarDestruction.Label	Carefree: Allow Demon Altar Destruction	
+Configs.WandConfig.CarefreeAllowDemonAltarDestruction.Tooltip		
+Configs.WandConfig.CarefreeAllowDelicateTileDestruction.Label	Carefree: Allow Delicate Tile Destruction	
+Configs.WandConfig.CarefreeAllowDelicateTileDestruction.Tooltip		
+Configs.NonOceanWaterproofTorch.CoralTorch.Label	Coral Torch	
+Configs.NonOceanWaterproofTorch.CoralTorch.Tooltip		
+Configs.NonOceanWaterproofTorch.IchorTorch.Tooltip		
+Configs.NonOceanWaterproofTorch.IchorTorch.Label	Ichor Torch	
+Configs.NonOceanWaterproofTorch.CursedTorch.Tooltip		
+Configs.NonOceanWaterproofTorch.CursedTorch.Label	Cursed Torch	
+Configs.NonOceanWaterproofTorch.EvilTorch.Tooltip		
+Configs.NonOceanWaterproofTorch.EvilTorch.Label	Evil Torch	
+Configs.NonOceanWaterproofTorch.Tooltip		
+Configs.OceanWaterproofTorch.IchorTorch.Tooltip		
+Configs.OceanWaterproofTorch.IchorTorch.Label	Ichor Torch	
+Configs.OceanWaterproofTorch.CursedTorch.Tooltip		
+Configs.OceanWaterproofTorch.CursedTorch.Label	Cursed Torch	
+Configs.OceanWaterproofTorch.EvilTorch.Tooltip		
+Configs.OceanWaterproofTorch.EvilTorch.Label	Evil Torch	
+Configs.OceanWaterproofTorch.CoralTorch.Tooltip		
+Configs.OceanWaterproofTorch.CoralTorch.Label	Coral Torch	
+Configs.OceanWaterproofTorch.Tooltip		
+Configs.ShapeMode.Hollow.Tooltip		
+Configs.ShapeMode.Hollow.Label	Hollow	
+Configs.ShapeMode.Filled.Tooltip		
+Configs.ShapeMode.Filled.Label	Filled	
+Configs.ShapeMode.Tooltip		
+Configs.ShapeType.Mold.Tooltip		
+Configs.ShapeType.Mold.Label	Mold	
+Configs.ShapeType.StraightLine.Tooltip		
+Configs.ShapeType.StraightLine.Label	Straight Line	
+Configs.ShapeType.CardinalLine.Tooltip		
+###CHUNK-END###
+
+REFERENCE — already-translated rows from es-ES (DO NOT include these in your output, just match their style):
+  UI.Wiring.BlueWire  |  Blue Wire  |  Cable Azul
+  Configs.ResourcesConfig.InfiniteGrassSeedThreshold.Label  |  Grass Seed Threshold  |  Umbral de Semillas
+  UI.Selection.Status  |  Status  |  Estado
+  UI.Selection.ClearCanvas	| Clear Canvas |	Vaciar Canvas
+  UI.Dismantling.VoidEverythingDisabled	| Void Everything requires Carefree Mode to be enabled in server config. |	Desparecer Todo requiere Modo Despreocupado permitido en las configuraciones
+  Configs.OverlayConfig.OverlayRenderMode.Label	| Overlay Render Mode	| Modo de Renderizado de Capa de Vista Previa
+  CardinalLine| Cardinal Line | Línea Cardinal
+  Actuator | Actuator | Activador
+  Drops | Drops | Objetos Recogibles

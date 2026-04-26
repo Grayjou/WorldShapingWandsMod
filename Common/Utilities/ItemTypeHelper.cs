@@ -22,6 +22,22 @@ namespace WorldShapingWandsMod.Common.Utilities
             return tileData != null && (tileData.Width > 1 || tileData.Height > 1);
         }
 
+        /// <summary>
+        /// Checks whether an existing tile's style matches the expected placeStyle.
+        /// For tiles where multiple items share a TileID (platforms, torches, campfires, etc.),
+        /// the style is encoded in TileFrameY (or TileFrameX for some tiles).
+        /// Returns true if the styles match (tile does NOT need replacement).
+        /// </summary>
+        public static bool IsSameTileStyle(Tile existingTile, int placeStyle)
+        {
+            // Guard: if the tile has no TileObjectData, style is always 0
+            var data = TileObjectData.GetTileData(existingTile.TileType, 0);
+            if (data == null) return placeStyle == 0;
+
+            int existingStyle = TileObjectData.GetTileStyle(existingTile);
+            return existingStyle == placeStyle;
+        }
+
         // ────────────────────────────────────────────────────────────
         //  Substrate → Variant Mapping
         // ────────────────────────────────────────────────────────────
@@ -231,7 +247,33 @@ namespace WorldShapingWandsMod.Common.Utilities
         /// Scans hotbar (0-9) first, then main inventory (10-49).
         /// </summary>
         public static Item FindFirstItem(Player player, Func<Item, bool> condition)
+            => FindFirstItem(player, condition, null);
+
+        /// <summary>
+        /// Choice-aware variant. If <paramref name="chosenItemType"/> is non-null, the
+        /// chosen item type is preferred whenever it exists in inventory AND
+        /// satisfies <paramref name="condition"/>. If the choice is missing or no
+        /// longer matches (player consumed all of it, or switched modes), falls
+        /// back to the broad scan exactly as the legacy overload does.
+        /// <para>Used by InventoryView (S6 2026-04-22) so a chosen wall / tile /
+        /// torch / replacement source/target survives execution and is honored
+        /// before the inventory's natural scan order.</para>
+        /// </summary>
+        public static Item FindFirstItem(Player player, Func<Item, bool> condition, int? chosenItemType)
         {
+            // 1) Honor the choice when present and still valid.
+            if (chosenItemType.HasValue && chosenItemType.Value > 0)
+            {
+                int choice = chosenItemType.Value;
+                for (int i = 0; i < 58; i++)
+                {
+                    Item it = player.inventory[i];
+                    if (!it.IsAir && it.type == choice && condition(it))
+                        return it;
+                }
+                // Fall through: choice is stale, run the normal scan.
+            }
+
             // Check hotbar first (indices 0-9)
             for (int i = 0; i < 10; i++)
             {
@@ -265,7 +307,28 @@ namespace WorldShapingWandsMod.Common.Utilities
         /// Returns -1 if none found.
         /// </summary>
         public static int FindFirstItemIndex(Player player, Func<Item, bool> condition)
+            => FindFirstItemIndex(player, condition, null);
+
+        /// <summary>
+        /// Choice-aware variant. If <paramref name="chosenItemType"/> is non-null and
+        /// that item exists in inventory AND satisfies <paramref name="condition"/>,
+        /// returns its index. Otherwise falls back to the broad scan exactly as the
+        /// legacy overload. Used by InventoryView (S6 2026-04-22).
+        /// </summary>
+        public static int FindFirstItemIndex(Player player, Func<Item, bool> condition, int? chosenItemType)
         {
+            if (chosenItemType.HasValue && chosenItemType.Value > 0)
+            {
+                int choice = chosenItemType.Value;
+                for (int i = 0; i < 58; i++)
+                {
+                    Item it = player.inventory[i];
+                    if (!it.IsAir && it.type == choice && condition(it))
+                        return i;
+                }
+                // Fall through.
+            }
+
             for (int i = 0; i < 10; i++)
             {
                 Item item = player.inventory[i];

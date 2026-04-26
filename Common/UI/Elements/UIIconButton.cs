@@ -15,7 +15,7 @@ namespace WorldShapingWandsMod.Common.UI.Elements;
 /// </summary>
 public class UIIconButton : UIElement
 {
-    private readonly Asset<Texture2D> _texture;
+    private Asset<Texture2D> _texture;
     private string _hoverText;
 
     public bool Toggled { get; set; }
@@ -37,10 +37,17 @@ public class UIIconButton : UIElement
     public bool AllowDeselect { get; set; }
 
     /// <summary>Background color when selected.</summary>
-    public Color ActiveColor { get; set; } = new Color(80, 200, 80);
+    public Color ActiveColor { get; set; } = WandPanelTheme.Colors.ActiveGreen;
 
     /// <summary>Background color when not selected.</summary>
-    public Color InactiveColor { get; set; } = new Color(60, 60, 60);
+    public Color InactiveColor { get; set; } = WandPanelTheme.Colors.ElementInactive;
+
+    /// <summary>
+    /// When true, the button is a fire-and-forget action button with no toggle state.
+    /// Clicks play the tick sound and fire <see cref="UIElement.OnLeftClick"/>, but
+    /// <see cref="Toggled"/> is never changed and <see cref="OnToggled"/> is never raised.
+    /// </summary>
+    public bool IsAction { get; set; }
 
     public event MouseEvent OnToggled;
 
@@ -54,13 +61,22 @@ public class UIIconButton : UIElement
         Toggled = initialState;
     }
 
+    /// <summary>
+    /// Swaps the displayed icon texture. Used by tri-state cyclers (e.g. PaintSprayer source toggle)
+    /// that present different artwork per state. Pass a null asset to keep the current texture.
+    /// </summary>
+    public void SetTexture(Asset<Texture2D> texture)
+    {
+        if (texture != null) _texture = texture;
+    }
+
     protected override void DrawSelf(SpriteBatch spriteBatch)
     {
         CalculatedStyle dims = GetDimensions();
         Rectangle rect = dims.ToRectangle();
 
         // Background
-        Color bgColor = Disabled ? new Color(40, 40, 40) : (Toggled ? ActiveColor : InactiveColor);
+        Color bgColor = Disabled ? WandPanelTheme.Colors.Disabled : (Toggled ? ActiveColor : InactiveColor);
         if (IsMouseHovering && !Disabled)
             bgColor = Color.Lerp(bgColor, Color.White, 0.2f);
 
@@ -99,6 +115,13 @@ public class UIIconButton : UIElement
     public override void LeftClick(UIMouseEvent evt)
     {
         if (Disabled) return;
+
+        if (IsAction)
+        {
+            SoundEngine.PlaySound(SoundID.MenuTick);
+            base.LeftClick(evt);
+            return;
+        }
 
         if (IsRadio && Toggled && !AllowDeselect)
             return;

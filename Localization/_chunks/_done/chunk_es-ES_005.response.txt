@@ -1,0 +1,47 @@
+# Paste agent response for chunk 005 below this line.
+###CHUNK-START###		
+Key	en-US	es-ES (TRANSLATE)
+Configs.WandConfig.IsInfiniteForWires.Label	Is Infinite For Wires	Cables Infinitos
+Configs.WandConfig.IsInfiniteForWires.Tooltip		
+Configs.WandConfig.IsInfiniteForActuators.Label	Is Infinite For Actuators	Activadores Infinitos
+Configs.WandConfig.IsInfiniteForActuators.Tooltip		
+Configs.WandConfig.EnableCarefreeMode.Label	Enable Carefree Mode	Activar Modo Despreocupado
+Configs.WandConfig.EnableCarefreeMode.Tooltip		
+Configs.WandConfig.CarefreeSuppressDrops.Label	Carefree: Suppress Drops	Modo Despreocupado: Suprimir Objetos Recogibles
+Configs.WandConfig.CarefreeSuppressDrops.Tooltip		
+Configs.WandConfig.CarefreeAllowDemonAltarDestruction.Label	Carefree: Allow Demon Altar Destruction	Modo Despreocupado: Permitir Destrucción de Altares Demoníacos
+Configs.WandConfig.CarefreeAllowDemonAltarDestruction.Tooltip		
+Configs.WandConfig.CarefreeAllowDelicateTileDestruction.Label	Carefree: Allow Delicate Tile Destruction	Modo Despreocupado: Permitir Destrucción de Bloques Delicados
+Configs.WandConfig.CarefreeAllowDelicateTileDestruction.Tooltip		
+Configs.NonOceanWaterproofTorch.CoralTorch.Label	Coral Torch	Antorcha de Coral
+Configs.NonOceanWaterproofTorch.CoralTorch.Tooltip		
+Configs.NonOceanWaterproofTorch.IchorTorch.Tooltip		
+Configs.NonOceanWaterproofTorch.IchorTorch.Label	Ichor Torch	Antorcha de Icor
+Configs.NonOceanWaterproofTorch.CursedTorch.Tooltip		
+Configs.NonOceanWaterproofTorch.CursedTorch.Label	Cursed Torch	Antorcha Maldita
+Configs.NonOceanWaterproofTorch.EvilTorch.Tooltip		
+Configs.NonOceanWaterproofTorch.EvilTorch.Label	Evil Torch	Antorcha Maligna
+Configs.NonOceanWaterproofTorch.Tooltip		
+Configs.OceanWaterproofTorch.IchorTorch.Tooltip		
+Configs.OceanWaterproofTorch.IchorTorch.Label	Ichor Torch	Antorcha de Icor
+Configs.OceanWaterproofTorch.CursedTorch.Tooltip		
+Configs.OceanWaterproofTorch.CursedTorch.Label	Cursed Torch	Antorcha Maldita
+Configs.OceanWaterproofTorch.EvilTorch.Tooltip		
+Configs.OceanWaterproofTorch.EvilTorch.Label	Evil Torch	Antorcha Maligna
+Configs.OceanWaterproofTorch.CoralTorch.Tooltip		
+Configs.OceanWaterproofTorch.CoralTorch.Label	Coral Torch	Antorcha de Coral
+Configs.OceanWaterproofTorch.Tooltip		
+Configs.ShapeMode.Hollow.Tooltip		
+Configs.ShapeMode.Hollow.Label	Hollow	Hueco
+Configs.ShapeMode.Filled.Tooltip		
+Configs.ShapeMode.Filled.Label	Filled	Relleno
+Configs.ShapeMode.Tooltip		
+Configs.ShapeType.Mold.Tooltip		
+Configs.ShapeType.Mold.Label	Mold	Molde
+Configs.ShapeType.StraightLine.Tooltip		
+Configs.ShapeType.StraightLine.Label	Straight Line	Línea Recta
+Configs.ShapeType.CardinalLine.Tooltip		
+###CHUNK-END###		
+# Sentinels (###CHUNK-START### / ###CHUNK-END###) MUST be present.
+# Edit any rows in-place before running chunk_import.py.
+

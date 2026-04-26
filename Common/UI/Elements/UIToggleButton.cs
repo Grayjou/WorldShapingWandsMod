@@ -16,7 +16,7 @@ public class UIToggleButton : UIElement
     public bool Toggled { get; set; }
     public bool IsRadio { get; set; } = false;
     public Color? TintColor { get; set; } = null;
-    public Color OffColor { get; set; } = new Color(60, 60, 60);
+    public Color OffColor { get; set; } = WandPanelTheme.Colors.ElementInactive;
 
     /// <summary>
     /// When true, the button is visually dimmed and ignores clicks.
@@ -46,7 +46,7 @@ public class UIToggleButton : UIElement
         Rectangle rect = dims.ToRectangle();
 
         Color bgColor = Toggled 
-            ? (TintColor ?? new Color(80, 200, 80)) 
+            ? (TintColor ?? WandPanelTheme.Colors.ActiveGreen) 
             : OffColor;
 
         if (Disabled)

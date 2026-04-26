@@ -21,10 +21,20 @@ public class WandOfReplacementSettings
     public ShapeInfo Shape { get; set; } = ShapeInfo.Default;
 
     /// <summary>
-    /// When true, after replacing each tile/wall, the wand automatically applies the
-    /// first paint colour found in the player's inventory to the replaced surface.
+    /// Tri-state paint-source selector for auto-painting replaced surfaces.
+    /// <c>Off</c> = no auto-paint (default), <c>Inventory</c> = consume paint from inventory,
+    /// <c>CoatingSettings</c> = use the colour stored in the Coating wand settings.
+    /// When both PaintSprayer is active and PreservePaint is ON, PaintSprayer only paints
+    /// tiles/walls that were previously unpainted (PreservePaint wins).
     /// </summary>
-    public bool PaintSprayer { get; set; } = false;
+    public PaintSprayerSource PaintSprayer { get; set; } = PaintSprayerSource.Off;
+
+    /// <summary>
+    /// When true, the original paint color of each replaced tile/wall is preserved
+    /// on the new tile/wall. PreservePaint takes precedence over PaintSprayer:
+    /// if both are ON, PaintSprayer only applies to tiles that had no paint.
+    /// </summary>
+    public bool PreservePaint { get; set; } = true;
 
     /// <summary>
     /// When true, the target type tracks the source type ("Same Type" mode).
@@ -32,6 +42,21 @@ public class WandOfReplacementSettings
     /// NOT inferred from source == target equality.
     /// </summary>
     public bool SameTypeMode { get; set; } = false;
+
+    /// <summary>
+    /// chosen source-item type for the "find" half of replacement (InventoryView v1).
+    /// When non-null, the wand searches inventory for this exact item type as the
+    /// match-source instead of falling back to the broad <see cref="OldObject"/>
+    /// category. Cleared (null) by default.
+    /// </summary>
+    public int? ChosenSourceItemType { get; set; }
+
+    /// <summary>
+    /// chosen target-item type for the "replace-with" half of replacement.
+    /// Honored only when <see cref="SameTypeMode"/> is OFF (otherwise the source
+    /// item type drives both sides). Cleared (null) by default.
+    /// </summary>
+    public int? ChosenTargetItemType { get; set; }
 
     /// <summary>The starting point of the selection.</summary>
     public Point StartPoint { get; set; }
@@ -51,7 +76,10 @@ public class WandOfReplacementSettings
             OldObject = OldObject,
             Shape = Shape,
             PaintSprayer = PaintSprayer,
+            PreservePaint = PreservePaint,
             SameTypeMode = SameTypeMode,
+            ChosenSourceItemType = ChosenSourceItemType,
+            ChosenTargetItemType = ChosenTargetItemType,
             StartPoint = StartPoint,
             EndPoint = EndPoint
         };
@@ -66,8 +94,11 @@ public class WandOfReplacementSettings
         NewObject = ObjectType.Tile;
         OldObject = ObjectType.Tile;
         Shape = ShapeInfo.Default;
-        PaintSprayer = false;
+        PaintSprayer = PaintSprayerSource.Off;
+        PreservePaint = true;
         SameTypeMode = false;
+        ChosenSourceItemType = null;
+        ChosenTargetItemType = null;
         StartPoint = Point.Zero;
         EndPoint = Point.Zero;
     }

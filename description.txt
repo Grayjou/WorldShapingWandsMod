@@ -1,55 +1,70 @@
-World Shaping Wands — A suite of six wand families for large-scale terrain
-editing. Build, dismantle, replace, wire, coat, and protect regions using
-geometric shapes with multiple selection modes.
+World Shaping Wands — 42 wands across 10 families for large-scale world
+editing, plus 2 Torch Wheel wands. Build, shape, paint, wire, flood, torch,
+constrain, and mold any region using geometric shapes.
 
-Wand Families:
-  • Wand of Building — Place tiles, platforms, walls, rope, and more in bulk.
-    Supports slope overwrite and block exhaustion modes.
-  • Wand of Dismantling — Mass-destroy tiles and walls within a shape.
-    Includes container destruction with auto-unlock and item dropping.
-  • Wand of Replacement — Swap one tile type for another across an area.
-    Substrate-variant aware (dirt ↔ grass, mud ↔ jungle grass, etc.).
-  • Wand of Wiring — Place or remove wire colours and actuators in bulk.
-    Full multiplayer packet support with server-side validation.
-  • Wand of Safekeeping — Protect tiles from accidental modification.
-    Persistent (saved with world) and session-only protection modes.
-  • Wand of Coating — Paint tiles and walls, scrape paint, scrape or
-    harvest moss. Supports illuminant and echo coatings.
+10 Wand Families:
+  • Building — Place tiles, walls, platforms, rope, planter boxes, tracks,
+    and grass seeds in bulk. Slope application, block exhaustion modes.
+  • Dismantling — Mass-destroy tiles and walls within a shape. Validates
+    pickaxe power. Container destruction with auto-unlock. Void Everything.
+  • Replacement — Swap one tile or wall type for another across an area.
+    Substrate-variant aware (dirt ↔ grass, mud ↔ jungle grass). Tri-state.
+  • Wiring — Place or remove wire colors and actuators in bulk. Full
+    multiplayer support with server-side validation.
+  • Safekeeping — Protect tiles from accidental modification. Persistent
+    (saved with world) and session-only protection modes.
+  • Coating — Paint tiles and walls, apply or remove illuminant and echo
+    coatings, scrape moss, harvest hanging moss. Tri-state toggles.
+  • Fluids — Pour water, lava, honey, or shimmer in shaped areas. Drain
+    fluids with sponge mode. Three fill modes: Full, Rain, and Pocket.
+  • Torches — Place, replace, remove, or convert torches in geometric
+    patterns. Biome-aware resolution, grid spacing, Manhattan distance.
+  • Delimitation — Define a constraint area that filters all other wands.
+    Canvas + selection with boolean ops (Add, Remove, Intersect, XOR).
+  • Molding — Sculpt custom shapes by painting a mold. Auto-promotes to
+    a reusable template for any wand family. Canvas-based with boolean ops.
+
+Torch Wheel System:
+  • Torch Wheel (Solid) — Follows walls, placing torches at configurable
+    spacing with biome-aware resolution.
+  • Torch Wheel (Platform) — Traces platform paths, placing torches along
+    platforms and handling falls and re-landing.
 
 Selection Modes (each wand has all four):
-  Instant — Click and drag. Executes on release.
-  Select  — Click start point, click end point. Executes immediately.
-  Confirm — Click start, click end, click to confirm. Safe three-step.
-  Stamp   — Define a template, then click to repeat it anywhere.
+  Instant — Click once, shape centered on cursor, executes immediately.
+  Select  — Click start corner, click end corner, executes.
+  Confirm — Click start, click end, preview overlay, confirm or cancel.
+  Stamp   — Define a template, confirm, click to repeat anywhere.
 
 Shape Types: Rectangle, Ellipse, Diamond, Triangle, Half-Ellipse (H/V),
-  Elbow (L-shape), and Cardinal Line. Each supports Filled and Hollow modes
-  with configurable outline thickness and shape slicing (Full/Half-H/Half-V).
+  Elbow (L-shape), Cardinal Line, Straight Line, and Mold (custom).
+  Each supports Filled and Hollow modes with configurable outline thickness
+  and shape slicing (Full / Half-H / Half-V). Equal Dimensions toggle.
 
 Key Features:
-  • Per-wand settings UI panels with draggable icon buttons
-  • Configurable infinite-resource mode with 3-state per-type overrides
-    (Default / ForceOn / ForceOff for tiles, walls, seeds, wires, actuators)
-  • Block exhaustion modes (NextBlock / Interrupt / Cancel)
-  • Full undo support (20-deep stack)
-  • Tile protection system (persistent + session)
-  • Selection overlay with dimension labels, 3 render modes
-    (Auto / AlwaysFullShape / AlwaysBoundingBox)
+  • 10 per-wand settings panels with draggable icon-based UI
+  • 10 mod config files (Resources, Sandbox, Limits, Performance, Stamp,
+    TorchWheel, Carefree, Overlay, Canvas Overlay, Preferences)
+  • Configurable infinite resources per type (tiles, walls, seeds, wires,
+    actuators, paint, fluid)
+  • Full undo/redo support (20-deep stack, /undo /redo /undoinfo commands)
+  • Selection overlay with dimension labels and tile count
+  • Delimitation canvas overlay with configurable colors and opacity
+  • Molding canvas overlay with teal/cyan theme
+  • Fluid-aware overlay colors (water, lava, honey, shimmer)
   • Progressive placement mode (batched waves with visual effects)
-  • Drop suppression toggle
+  • Block exhaustion handling (NextBlock / Interrupt / Cancel)
   • Container destruction with auto-unlock for locked chests
   • Demon altar destruction protection toggle
-  • Shape slicing (halve shapes horizontally or vertically)
-  • Even thickness algorithm for symmetrical outlines
-
-Known Limitations (beta):
-  • Multiplayer support is in progress — wiring has full packet sync,
-    other wands use basic tile sync (functional but not server-validated)
-  • No preview/commit workflow yet (planned for future)
-  • Multi-tile objects (furniture, doors) are skipped by building wand
-  • Undo may leave multi-tile objects in broken states
-  • French and Spanish localizations are structural placeholders
+  • Drop suppression toggle
+  • Crafting recipes with recipe groups (Any Gem, Any Gold Bar, etc.)
+  • Shimmer decraft support (all wands decraft to Amethyst)
+  • Thorium Mod cross-compatibility (Opal/Aquamarine gem support)
+  • Full English localization. Locale files for German, Spanish, French,
+    Italian, Polish, Portuguese (BR), Russian, Chinese (Simplified)
+    are included and will be completed for future updates
 
 Acknowledgments:
+  Developed by Grayjou.
   Inspired by ImproveGame (Quality of Life) and CheatSheet.
   Wiring system architecture informed by MagicWiring.

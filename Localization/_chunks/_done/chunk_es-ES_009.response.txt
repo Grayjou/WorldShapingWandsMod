@@ -1,0 +1,27 @@
+# Paste agent response for chunk 009 below this line.
+###CHUNK-START###		
+Key	en-US	es-ES (TRANSLATE)
+Messages.MoldingHintExpandCanvas	No cells added — shape is outside the canvas. Switch to Canvas Edit mode to expand the canvas first.	No se añadieron celdas — la forma está fuera del canvas. Cambia al modo Editar Canvas para expandir el canvas primero.
+Messages.MoldingNoChange	Mold: no change (tiles already match the current selection).	Molde: sin cambios (los bloques ya coinciden con la selección actual).
+Messages.LoreCommon	The Gods of Space let you enact your thoughts into reality.	Los Dioses del Espacio te permiten convertir tus pensamientos en realidad.
+Messages.LoreBuilding	The Deity of Creation lets you manifest order and existence at will.	La Deidad de la Creación te permite manifestar orden y existencia a voluntad.
+Messages.LoreDismantling	The Deity of Erasure lets you restore nothingness as you wish.	La Deidad de la Eliminación te permite restaurar la nada a tu antojo.
+Messages.LoreReplacement	The Deity of Transmutation lets you reweave the threads of what already is.	La Deidad de la Transmutación te permite retejer los hilos de lo que ya existe.
+Messages.LoreWiring	An advanced mechanism wrench, refined beyond the Grand Design. Where gods shape matter, engineers shape purpose.	Una llave mecánica avanzada, refinada más allá del Gran Diseño. Donde los dioses moldean la materia, los ingenieros moldean el propósito.
+Messages.LoreSafekeeping	The Deity of Timelessness lets you separate space from the powers of creation.	La Deidad de la Eternidad te permite separar el espacio de los poderes de la creación.
+Messages.LoreCoating	The Deity of Chromas lets you dress the world in colours of your choosing.	La Deidad de los Colores te permite vestir el mundo con los colores que elijas.
+Messages.LoreFluids	The Deity of Tides lets you command the flowing matter.	La Deidad de las Mareas te permite comandar la materia fluida.
+Messages.LoreTorches	The Torch God lets you spread light across the world with ease. Or awaken their wrath if you dare.	El Dios de las Antorchas te permite esparcir luz por el mundo con facilidad. O despertar su ira si te atreves.
+Messages.LoreDelimitation	The Architect of Boundaries lets you define the canvas of creation.	El Arquitecto de los Límites te permite definir el canvas de la creación.
+Messages.LoreMolding	The Sculptor of Forms lets you mold the blueprints of creation.	El Escultor de Formas te permite moldear los planos de la creación.
+Messages.LoreShiftHint	[c/888888:Hold [Shift] for lore]	[c/888888:Mantén [Shift] para ver la historia]
+Messages.TorchWheelModeTiles	[c/FFFF00:Mode: Tiles]	[c/FFFF00:Modo: Bloques]
+Messages.TorchWheelModePlatforms	[c/ADD8E6:Mode: Platforms]	[c/ADD8E6:Modo: Plataformas]
+Messages.TorchWheelCycleHint	Right-click in inventory to cycle modes	Clic derecho en el inventario para cambiar de modo
+Messages.TorchWheelKillHint	Shift + Right-click (held) to kill all projectiles	Shift + Clic derecho (mantenido) para eliminar todos los proyectiles
+Messages.TorchWheelSwitchToTiles	Torch Wheel Mode: Tiles	Modo Rueda de Antorchas: Bloques
+Messages.TorchWheelSwitchToPlatforms	Torch Wheel Mode: Platforms	Modo Rueda de Antorchas: Plataformas
+###CHUNK-END###		
+# Sentinels (###CHUNK-START### / ###CHUNK-END###) MUST be present.
+# Edit any rows in-place before running chunk_import.py.
+

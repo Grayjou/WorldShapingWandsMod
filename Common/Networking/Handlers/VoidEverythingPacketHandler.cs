@@ -62,7 +62,7 @@ public static class VoidEverythingPacketHandler
         if (Main.netMode == NetmodeID.Server)
         {
             // Validate Carefree Mode is enabled on the server
-            var config = ModContent.GetInstance<WandServerConfig>();
+            var config = WandConfigs.Carefree;
             if (config == null || !config.EnableCarefreeMode)
             {
                 WandPacketHandler.SendOperationResult(header.PlayerWhoAmI, WandPacketType.VoidEverythingOperation, 0, false,

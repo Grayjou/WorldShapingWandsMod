@@ -5,6 +5,9 @@ using Terraria.GameContent;
 using Terraria.ModLoader;
 using WorldShapingWandsMod.Common.Systems;
 using WorldShapingWandsMod.Content.Items;
+#if DEBUG
+using WorldShapingWandsMod.Common.Debug;
+#endif
 
 namespace WorldShapingWandsMod.Common.Drawing;
 
@@ -28,18 +31,36 @@ public class SafekeepingOverlay : ModSystem
     private static readonly Color BothColor = new(255, 220, 80);       // Gold-ish
 
     /// <summary>Fill opacity for protection squares (0–1).</summary>
-    private const float FillOpacity = 0.22f;
+    private const float DefaultFillOpacity = 0.22f;
 
     /// <summary>Outline opacity for protection square edges (0–1).</summary>
-    private const float OutlineOpacity = 0.45f;
+    private const float DefaultOutlineOpacity = 0.45f;
+
+    private const float FillOpacity = DefaultFillOpacity;
+    private const float OutlineOpacity = DefaultOutlineOpacity;
 
     /// <summary>Outline width in pixels.</summary>
     private const int OutlineWidth = 1;
 
     public override void PostDrawTiles()
     {
+        if (_managedByOverlaySystem) return;
+
         if (Main.gameMenu) return;
 
+        var player = Main.LocalPlayer;
+        if (player?.active != true) return;
+
+        DrawAll();
+    }
+
+    /// <summary>
+    /// Core drawing logic extracted from PostDrawTiles.
+    /// Called directly by <see cref="SafekeepingOverlayAdapter"/> when the overlay
+    /// system is active, or by PostDrawTiles when it is not.
+    /// </summary>
+    public void DrawAll()
+    {
         var player = Main.LocalPlayer;
         if (player?.active != true) return;
 
@@ -104,6 +125,12 @@ public class SafekeepingOverlay : ModSystem
 
         Main.spriteBatch.End();
     }
+
+    /// <summary>
+    /// When true, PostDrawTiles is skipped because the overlay system drives rendering.
+    /// Set by <see cref="SafekeepingOverlayAdapter"/> during initialization.
+    /// </summary>
+    internal bool _managedByOverlaySystem;
 
     private void DrawProtectionSquare(Texture2D pixel, Point tile, Color baseColor)
     {

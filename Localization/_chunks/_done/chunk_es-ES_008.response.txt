@@ -1,0 +1,47 @@
+# Paste agent response for chunk 008 below this line.
+###CHUNK-START###		
+Key	en-US	es-ES (TRANSLATE)
+Messages.CoatingScrapedMoss	Removed moss from {0} tiles.	Se eliminó musgo de {0} bloques.
+Messages.CoatingHarvestedMoss	Harvested moss from {0} tiles.	Se recolectó musgo de {0} bloques.
+Messages.NoTilesInSelection	No tiles in selection area.	No hay bloques en el área de selección.
+Messages.DelimitationFilterActive	No action executed. Delimitation Area is active and does not overlap with the selection.	No se ejecutó ninguna acción. El Área de Delimitación está activa y no se superpone con la selección.
+Messages.FluidsNoTiles	No tiles in selection.	No hay bloques en la selección.
+Messages.FluidsInvalidRegion	Invalid region.	Región no válida.
+Messages.FluidsNoSeeds	No valid seed positions — all top tiles are solid.	No hay posiciones válidas de semilla — todos los bloques superiores son sólidos.
+Messages.FluidsNoBasins	No basins found — liquid cannot settle in this terrain.	No se encontraron cuencas — el líquido no puede asentarse en este terreno.
+Messages.FluidsNoPockets	No enclosed pockets found in this terrain.	No se encontraron cavidades cerradas en este terreno.
+Messages.FluidsFilled	Filled {0} tiles with {1}.	Se rellenaron {0} bloques con {1}.
+Messages.FluidsRainFilled	Rain Fill: {0} tiles filled ({1} columns seeded, {2} basins analyzed).	Relleno por Lluvia: {0} bloques rellenados ({1} columnas sembradas, {2} cuencas analizadas).
+Messages.FluidsPocketFilled	Pocket Fill: {0} tiles filled ({1} pocket cells analyzed).	Relleno de Cavidades: {0} bloques rellenados ({1} celdas de cavidad analizadas).
+Messages.FluidsDrained	Drained {0} tiles.	Se drenaron {0} bloques.
+Messages.FluidsBubblePlaced	Placed {0} bubble blocks.	Se colocaron {0} bloques de burbuja.
+Messages.FluidsBubbleRemoved	Removed {0} bubble blocks.	Se eliminaron {0} bloques de burbuja.
+Messages.FluidsBubbleCoated	Coated selection with {0} bubble blocks.	Se recubrió la selección con {0} bloques de burbuja.
+Messages.FluidsMixed	Mixed {0} tiles into blocks + filled {1} tiles with {2}.	Se mezclaron {0} bloques + se rellenaron {1} bloques con {2}.
+Messages.FluidsMixedOnly	Mixed {0} tiles into blocks.	Se mezclaron {0} bloques.
+Messages.TorchesNoTorchItem	No torch found in inventory.	No se encontró antorcha en el inventario.
+Messages.TorchesNoValidPositions	No valid torch positions in selection.	No hay posiciones válidas para antorchas en la selección.
+Messages.TorchesNonePlaced	No torches could be placed.	No se pudieron colocar antorchas.
+Messages.TorchesPlaced	Placed {0} torches.	Se colocaron {0} antorchas.
+Messages.TorchesNoneReplaced	No torches were replaced.	No se reemplazaron antorchas.
+Messages.TorchesReplaced	Replaced {0} torches.	Se reemplazaron {0} antorchas.
+Messages.TorchesNoneRemoved	No torches found to remove.	No se encontraron antorchas para eliminar.
+Messages.TorchesRemoved	Removed {0} torches.	Se eliminaron {0} antorchas.
+Messages.TorchesNoneConverted	No torches to convert (already biome-matched).	No hay antorchas para convertir (ya coinciden con el bioma).
+Messages.TorchesConverted	Converted {0} torches to biome variant.	Se convirtieron {0} antorchas a la variante del bioma.
+Messages.SelectStartClickEnd	Selection started. Click to set end point.	Selección iniciada. Haz clic para establecer el punto final.
+Messages.SelectStartClickAgain	Selection started. Click again to {0}.	Selección iniciada. Haz clic de nuevo para {0}.
+Messages.ClickToConfirm	Click again to confirm.	Haz clic de nuevo para confirmar.
+Messages.ClickToConfirmOrCancel	Click again to confirm, or right-click to cancel.	Haz clic de nuevo para confirmar, o clic derecho para cancelar.
+Messages.StampClickEnd	Stamp: click to set end point.	Sello: haz clic para establecer el punto final.
+Messages.StampClickLock	Stamp: click to lock anchor position.	Sello: haz clic para fijar la posición de anclaje.
+Messages.SuppressDropsOn	Suppress Drops: ON — tile drops are suppressed.	Suprimir Objetos Recogibles: ACTIVADO — los objetos recogibles están suprimidos.
+Messages.SuppressDropsOff	Suppress Drops: OFF — tile drops are enabled.	Suprimir Objetos Recogibles: DESACTIVADO — los objetos recogibles están activados.
+Messages.SelectClickEnd	Selection: click to set end point.	Selección: haz clic para establecer el punto final.
+Messages.SelectClickConfirm	Selection: click to confirm and apply.	Selección: haz clic para confirmar y aplicar.
+Messages.NoTilesInShape	No tiles in shape.	No hay bloques en la forma.
+Messages.MoldingHintTooFar	No cells added — canvas is far away. Use 'Teleport to Player' in the Molding panel to bring it closer.	No se añadieron celdas — el canvas está lejos. Usa 'Teletransportar al Jugador' en el panel de Moldeo para acercarlo.
+###CHUNK-END###		
+# Sentinels (###CHUNK-START### / ###CHUNK-END###) MUST be present.
+# Edit any rows in-place before running chunk_import.py.
+

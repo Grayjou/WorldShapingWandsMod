@@ -1,0 +1,20 @@
+{
+    "layers": [
+        {
+            "name": "Base",
+            "index": 0
+        },
+        {
+            "name": "Outline",
+            "index": 2
+        }
+    ],
+    "export_to": "Content_Source/Projectiles/WandActions/Fluids/WandAction_DrainLava.png",
+    "convolution_matrices": [
+        {
+            "type": "3x3",
+            "layer": 1,
+            "from_layer": 2
+        }
+    ]
+}

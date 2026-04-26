@@ -1,0 +1,47 @@
+# Paste agent response for chunk 004 below this line.
+###CHUNK-START###		
+Key	en-US	es-ES (TRANSLATE)
+Configs.WandConfig.SmallSelectionCap.Label	Small Selection Cap	Límite de Selección Pequeña
+Configs.WandConfig.SmallSelectionCap.Tooltip		
+Configs.WandConfig.BigSelectionCap.Label	Big Selection Cap	Límite de Selección Grande
+Configs.WandConfig.BigSelectionCap.Tooltip		
+Configs.WandConfig.HollowSelectionCap.Label	Hollow Selection Cap	Límite de Selección Hueca
+Configs.WandConfig.HollowSelectionCap.Tooltip		
+Configs.WandConfig.CoatingSelectionCap.Label	Coating Wand Cap	Límite de Varita de Revestimiento
+Configs.WandConfig.CoatingSelectionCap.Tooltip		
+Configs.WandConfig.SuppressDrops.Label	Suppress Drops	Suprimir Objetos Recogibles
+Configs.WandConfig.SuppressDrops.Tooltip		
+Configs.WandConfig.BypassPickaxePower.Label	Bypass Pickaxe Power	Ignorar Poder de Pico
+Configs.WandConfig.BypassPickaxePower.Tooltip		
+Configs.WandConfig.AllowDemonAltarDestruction.Label	Allow Demon Altar Destruction	Permitir Destrucción de Altares Demoníacos
+Configs.WandConfig.AllowDemonAltarDestruction.Tooltip		
+Configs.WandConfig.AllowDelicateTileDestruction.Label	Allow Delicate Tile Destruction	Permitir Destrucción de Bloques Delicados
+Configs.WandConfig.AllowDelicateTileDestruction.Tooltip		
+Configs.WandConfig.IgnoreLockedKeyRequirements.Label	Ignore Locked Key Requirements	Ignorar Requisitos de Llaves Cerradas
+Configs.WandConfig.IgnoreLockedKeyRequirements.Tooltip		
+Configs.WandConfig.AutoOpenChestsOnDestruction.Label	Auto Open Chests On Destruction	Abrir Cofres Automáticamente al Destruir
+Configs.WandConfig.AutoOpenChestsOnDestruction.Tooltip		
+Configs.WandConfig.VacuumItems.Label	Vacuum Items	Aspirar Objetos
+Configs.WandConfig.VacuumItems.Tooltip		
+Configs.WandConfig.EnableUndoCommand.Label	Enable Undo Commands	Activar Comandos de Deshacer
+Configs.WandConfig.EnableUndoCommand.Tooltip		
+Configs.WandConfig.MaxOutlineThickness.Label	Max Outline Thickness	Grosor Máximo del Contorno
+Configs.WandConfig.MaxOutlineThickness.Tooltip		
+Configs.WandConfig.EnableProgressiveMode.Label	Enable Progressive Mode	Activar Modo Progresivo
+Configs.WandConfig.EnableProgressiveMode.Tooltip		
+Configs.WandConfig.ProgressiveBatchSize.Label	Progressive Batch Size	Tamaño de Lote Progresivo
+Configs.WandConfig.ProgressiveBatchSize.Tooltip		
+Configs.WandConfig.ProgressiveInterval.Label	Progressive Interval	Intervalo Progresivo
+Configs.WandConfig.ProgressiveInterval.Tooltip		
+Configs.WandConfig.ShowLoreTooltips.Label	Show Lore Tooltips	Mostrar Descripciones de Lore
+Configs.WandConfig.ShowLoreTooltips.Tooltip		
+Configs.WandConfig.SafekeepingClearThreshold.Label	Safekeeping Clear Threshold	Umbral de Limpieza de Resguardo
+Configs.WandConfig.SafekeepingClearThreshold.Tooltip		
+Configs.WandConfig.EnableWandSounds.Label	Enable Wand Sounds	Activar Sonidos de Varita
+Configs.WandConfig.EnableWandSounds.Tooltip		
+Configs.WandConfig.OverlayRenderMode.Label	Overlay Render Mode	Modo de Renderizado de Capa de Vista Previa
+Configs.WandConfig.OverlayRenderMode.Tooltip		
+###CHUNK-END###		
+# Sentinels (###CHUNK-START### / ###CHUNK-END###) MUST be present.
+# Edit any rows in-place before running chunk_import.py.
+

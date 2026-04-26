@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using Terraria;
@@ -9,6 +9,7 @@ using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.UI;
 using WorldShapingWandsMod.Common.Configs;
+using WorldShapingWandsMod.Common.Drawing;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Settings;
@@ -38,6 +39,7 @@ public class CoatingSettingsPanel : UIState
     // Paint color picker
     private UIPaintColorButton[] _colorButtons;
     private UIElement _colorPickerContainer;
+    private CollapsibleSection _paintColorSection;
 
     // Shape buttons
     private UIIconButton _rectFilledBtn, _rectHollowBtn;
@@ -45,6 +47,7 @@ public class CoatingSettingsPanel : UIState
     private UIIconButton _diamondFilledBtn, _diamondHollowBtn;
     private UIIconButton _triangleFilledBtn, _triangleHollowBtn;
     private UIIconButton _edgeBtn, _cardinalBtn, _straightLineBtn;
+    private UIIconButton _moldBtn;
 
     private UIText _thicknessValue;
     private UIIconButton _equalDimensionsBtn, _connectDiameterBtn, _invertSelectionBtn, _repaintBtn;
@@ -65,52 +68,10 @@ public class CoatingSettingsPanel : UIState
     private const int   SwatchRows = 4;
     private const int   SwatchCount = 32;
 
-    // Vanilla paint RGB values indexed by PaintID (0-30).
-    private static readonly Color[] PaintColors = new Color[]
-    {
-        Color.Transparent,           // 0 = none
-        new Color(195, 39, 39),      // 1  Red
-        new Color(219, 118, 33),     // 2  Orange
-        new Color(228, 210, 21),     // 3  Yellow
-        new Color(100, 196, 72),     // 4  Lime
-        new Color(53, 165, 38),      // 5  Green
-        new Color(0, 142, 124),      // 6  Teal
-        new Color(0, 165, 209),      // 7  Cyan
-        new Color(0, 118, 209),      // 8  Sky Blue
-        new Color(0, 56, 221),       // 9  Blue
-        new Color(147, 0, 209),      // 10 Purple
-        new Color(102, 0, 209),      // 11 Violet
-        new Color(209, 0, 142),      // 12 Pink
-        new Color(124, 0, 0),        // 13 Deep Red
-        new Color(140, 60, 0),       // 14 Deep Orange
-        new Color(140, 128, 0),      // 15 Deep Yellow
-        new Color(34, 100, 0),       // 16 Deep Lime
-        new Color(0, 80, 0),         // 17 Deep Green
-        new Color(0, 68, 60),        // 18 Deep Teal
-        new Color(0, 68, 110),       // 19 Deep Cyan
-        new Color(0, 40, 124),       // 20 Deep Sky Blue
-        new Color(0, 0, 110),        // 21 Deep Blue
-        new Color(70, 0, 124),       // 22 Deep Purple
-        new Color(56, 0, 110),       // 23 Deep Violet
-        new Color(110, 0, 68),       // 24 Deep Pink
-        new Color(20, 20, 20),       // 25 Black
-        new Color(252, 252, 252),    // 26 White
-        new Color(127, 127, 127),    // 27 Gray
-        new Color(151, 107, 75),     // 28 Brown
-        new Color(0, 0, 0),          // 29 Shadow
-        new Color(230, 0, 255),      // 30 Negative
-    };
-
-    private static readonly string[] PaintColorNames = new string[]
-    {
-        "None",
-        "Red", "Orange", "Yellow", "Lime", "Green",
-        "Teal", "Cyan", "Sky Blue", "Blue", "Purple", "Violet", "Pink",
-        "Deep Red", "Deep Orange", "Deep Yellow", "Deep Lime", "Deep Green",
-        "Deep Teal", "Deep Cyan", "Deep Sky Blue", "Deep Blue",
-        "Deep Purple", "Deep Violet", "Deep Pink",
-        "Black", "White", "Gray", "Brown", "Shadow", "Negative"
-    };
+    // S6 2026-04-24 (W-S6-3): the local PaintColors/PaintColorNames aliases
+    // were inlined into Common/UI/Elements/CoatingPaintColorGrid.Build(...).
+    // Both arrays are still sourced from PaintPalette, just one indirection
+    // shorter at the consumption site.
 
     public override void OnInitialize()
     {
@@ -118,8 +79,8 @@ public class CoatingSettingsPanel : UIState
         _mainPanel.Width.Set(PanelWidth, 0f);
         _mainPanel.HAlign = 0.5f;
         _mainPanel.VAlign = 0.5f;
-        _mainPanel.BackgroundColor = new Color(30, 50, 55, 220);
-        _mainPanel.BorderColor = new Color(0, 100, 90);
+        _mainPanel.BackgroundColor = WandPanelTheme.PanelChrome.CoatingBg;
+        _mainPanel.BorderColor = WandPanelTheme.PanelChrome.CoatingBorder;
         Append(_mainPanel);
 
         var mod = ModContent.GetInstance<WorldShapingWandsMod>();
@@ -128,10 +89,10 @@ public class CoatingSettingsPanel : UIState
         _builder.AddTitle("Coating.Title");
 
         // === MODE (non-radio icon buttons) ===
-        var texPaintTile   = mod.Assets.Request<Texture2D>("Assets/Icons/ModePaintTile",   AssetRequestMode.ImmediateLoad);
-        var texPaintWall   = mod.Assets.Request<Texture2D>("Assets/Icons/ModePaintWall",   AssetRequestMode.ImmediateLoad);
-        var texScrapeMoss  = mod.Assets.Request<Texture2D>("Assets/Icons/ModeScrapeMoss",  AssetRequestMode.ImmediateLoad);
-        var texHarvestMoss = mod.Assets.Request<Texture2D>("Assets/Icons/ModeHarvestMoss", AssetRequestMode.ImmediateLoad);
+        var texPaintTile   = mod.Assets.Request<Texture2D>("Assets_Build/Icons/CoatingModes/ModePaintTile",   AssetRequestMode.ImmediateLoad);
+        var texPaintWall   = mod.Assets.Request<Texture2D>("Assets_Build/Icons/CoatingModes/ModePaintWall",   AssetRequestMode.ImmediateLoad);
+        var texScrapeMoss  = mod.Assets.Request<Texture2D>("Assets_Build/Icons/CoatingModes/ModeScrapeMoss",  AssetRequestMode.ImmediateLoad);
+        var texHarvestMoss = mod.Assets.Request<Texture2D>("Assets_Build/Icons/CoatingModes/ModeHarvestMoss", AssetRequestMode.ImmediateLoad);
 
         _builder.AddSectionHeader("Coating.Mode");
         _builder.AddIconGrid(new WandPanelBuilder.IconDef[]
@@ -153,44 +114,77 @@ public class CoatingSettingsPanel : UIState
             L("Coating.Echo"), out _echoBtn,
             spacing: WandPanelBuilder.AfterToggleGroupSpacing);
 
-        // === PAINT COLOR PICKER (manual section using builder's Y tracker) ===
-        _builder.AddSectionHeader("Coating.PaintColor");
+        // === PAINT COLOR PICKER (CollapsibleSection { Style = Popout }) ===
+        // S+2 2026-04-25 (S1): wrap the swatch grid in a CollapsibleSection per
+        // SessionPlan_WSW_Next3Sessions §S+2 Tasks 2-3 + Cavendish S9 §6
+        // ("the Coating panel is the canary; we want it loud if anything cracks").
+        //
+        // Layout note (intentional, deferred for v1.2.0): when the user pops out
+        // this section, the in-panel block shrinks from
+        //   (HeaderHeight 22f + gridHeight 104f) = 126f
+        // down to just HeaderHeight 22f, leaving a ~104f visual gap above the
+        // Shape section below. This is the *honest* UX (the body really is
+        // floating elsewhere now), and it matches SessionPlan §S+2 step 4(a)
+        // verbatim ("full PaintColor section disappears from in-panel"). A
+        // re-flow pass that shifts the below-sections up on collapse is a
+        // proper UIList migration and is queued in DeferredForNextSession.md
+        // as the v1.2.0 polish item — out of scope for the canary ship.
+        //
+        // PreferenceKey = "Coating.PaintColor" — namespaced per panel so the
+        // same WandPlayer.CollapsedSections dict can serve future migrations
+        // without key collisions.
 
-        float y = _builder.CurrentY;
-        _colorPickerContainer = new UIElement();
-        _colorPickerContainer.Width.Set(0f, 1f);
-        _colorPickerContainer.Top.Set(y, 0f);
+        float paintSectionTop = _builder.CurrentY;
+        var paintColorSection = new CollapsibleSection(
+            titleKey: $"{UIPrefix}.Coating.PaintColor",
+            preferenceKey: "Coating.PaintColor",
+            style: CollapseStyle.Popout);
+        paintColorSection.Top.Set(paintSectionTop, 0f);
+        _mainPanel.Append(paintColorSection);
 
-        _colorButtons = new UIPaintColorButton[SwatchCount];
-        float totalWidth = SwatchCols * SwatchSize + (SwatchCols - 1) * SwatchGap;
-        float startX = (PanelWidth - 2 * Padding - totalWidth) / 2f;
+        _colorPickerContainer = CoatingPaintColorGrid.Build(
+            columns: SwatchCols,
+            containerInnerWidth: PanelWidth - 2 * Padding,
+            onSelect: SetPaintColor,
+            out _colorButtons,
+            swatchSize: SwatchSize,
+            swatchGap: SwatchGap);
+        paintColorSection.SetBody(_colorPickerContainer);
+        paintColorSection.RestoreFromPreferences();
+        _paintColorSection = paintColorSection;
 
-        for (int i = 0; i < SwatchCount; i++)
+        // (v1.1, 2026-04-25 S2 — DesignDoc_PopoutFrameworkV1_1 §3.5 / Invariant I-5;
+        //  semantics revised v1.3 §B, 2026-04-25 S4 — DesignDoc_PopoutFrameworkV1_3 §B
+        //  / Invariant I-11.)
+        // Multi-family ownership: PaintColor is consumed by the Coating wand
+        // family AND by Wand of Building / Wand of Replacement (both expose a
+        // PaintSprayer toggle that applies the selected paint while building /
+        // replacing). The popout therefore stays VISIBLE across the natural
+        // build-with-paint → swap-to-replacement → swap-back flow.
+        //
+        // v1.3 §B reframed the predicate from "auto-close gate" to "visibility
+        // gate" — when this returns false the popout PARKS (body + position
+        // preserved), and resurfaces on the next tick the predicate returns
+        // true. Only ✕ closes for real, so configured state survives any number
+        // of brief hotbar excursions.
+        //
+        // To make this fully modeless (popout always shown until explicit ✕),
+        // flip the predicate to `() => true` — single-line change, reversible
+        // at any time, no schema impact.
+        paintColorSection.OwnerVisibilityCheck = () =>
         {
-            int arrayIndex = i;
-            byte paintByte = (byte)(i < 31 ? i : WandOfCoatingBase.IgnorePaintColor);
-            Color swatchColor = i < 31 ? PaintColors[i] : Color.Transparent;
-            string swatchName = i < 31 ? PaintColorNames[i] : L("Coating.Ignore");
+            var heldMod = Main.LocalPlayer?.HeldItem?.ModItem;
+            return heldMod is WandOfCoatingBase
+                || heldMod is WandOfBuildingBase
+                || heldMod is WandOfReplacementBase;
+        };
 
-            int col = i % SwatchCols;
-            int row = i / SwatchCols;
-            float sx = startX + col * (SwatchSize + SwatchGap);
-            float sy = row * (SwatchSize + SwatchGap);
-
-            var btn = new UIPaintColorButton(paintByte, swatchColor, swatchName);
-            btn.Width.Set(SwatchSize, 0f);
-            btn.Height.Set(SwatchSize, 0f);
-            btn.Left.Set(sx, 0f);
-            btn.Top.Set(sy, 0f);
-            btn.OnLeftClick += (_, _) => SetPaintColor(paintByte);
-            _colorButtons[arrayIndex] = btn;
-            _colorPickerContainer.Append(btn);
-        }
-
+        // The section auto-derives its own Height from header + body (or just
+        // header when collapsed/popped-out). Read it back so the next section
+        // sits flush below.
         float colorPickerHeight = SwatchRows * (SwatchSize + SwatchGap);
-        _colorPickerContainer.Height.Set(colorPickerHeight, 0f);
-        _mainPanel.Append(_colorPickerContainer);
-        _builder.AdvanceY(colorPickerHeight + WandPanelBuilder.AfterIconGridSpacing);
+        _builder.AdvanceY(WandPanelBuilder.SectionHeaderSpacing - 22f /* CollapsibleSection.HeaderHeight */
+                          + colorPickerHeight + WandPanelBuilder.AfterIconGridSpacing);
 
         // === SHAPE ===
         _builder.AddFullShapeSection(out var shapes);
@@ -199,6 +193,7 @@ public class CoatingSettingsPanel : UIState
         _diamondFilledBtn = shapes.DiamondFilled;  _diamondHollowBtn = shapes.DiamondHollow;
         _triangleFilledBtn = shapes.TriangleFilled; _triangleHollowBtn = shapes.TriangleHollow;
         _edgeBtn = shapes.Elbow; _cardinalBtn = shapes.Cardinal; _straightLineBtn = shapes.StraightLine;
+        _moldBtn = shapes.Mold;
 
         // === SLICE ===
         _builder.AddSliceSection(out _sliceGrid, OnSliceChanged);
@@ -207,12 +202,12 @@ public class CoatingSettingsPanel : UIState
         _builder.AddThicknessSection(out _thicknessValue, AdjustThickness);
 
         // === OPTIONS ===
-        var texEqualDim    = mod.Assets.Request<Texture2D>("Assets/Icons/ToggleEqualDim", AssetRequestMode.ImmediateLoad);
-        var texConnectDiam = mod.Assets.Request<Texture2D>("Assets/Icons/ToggleConnectDiam", AssetRequestMode.ImmediateLoad);
-        var texInvertSel   = mod.Assets.Request<Texture2D>("Assets/Icons/ToggleInvertSel", AssetRequestMode.ImmediateLoad);
-        var texRepaint     = mod.Assets.Request<Texture2D>("Assets/Icons/ToggleRepaint", AssetRequestMode.ImmediateLoad);
+        var texEqualDim    = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleEqualDim", AssetRequestMode.ImmediateLoad);
+        var texConnectDiam = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleConnectDiam", AssetRequestMode.ImmediateLoad);
+        var texInvertSel   = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleInvertSel", AssetRequestMode.ImmediateLoad);
+        var texRepaint     = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleRepaint", AssetRequestMode.ImmediateLoad);
 
-        _builder.AddOptionsSection(new WandPanelBuilder.IconDef[]
+        _builder.AddShapeOptionsSection(new WandPanelBuilder.IconDef[]
         {
             new(texEqualDim,    "Common.EqualDimensions",      isToggle: true),
             new(texConnectDiam, "Common.ConnectDiameterTooltip", isToggle: true, initialState: true),
@@ -248,6 +243,7 @@ public class CoatingSettingsPanel : UIState
         _diamondHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.Diamond, ShapeMode.Hollow);
         _triangleFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.Triangle, ShapeMode.Filled);
         _triangleHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.Triangle, ShapeMode.Hollow);
+        _moldBtn.OnToggled += (_, _) => SetShape(ShapeType.Mold, ShapeMode.Filled);
 
         _equalDimensionsBtn.OnToggled += (_, _) => ToggleEqualDimensions();
         _connectDiameterBtn.OnToggled += (_, _) => ToggleConnectDiameter();
@@ -297,7 +293,7 @@ public class CoatingSettingsPanel : UIState
         var settings = GetSettings();
         if (settings == null) return;
         var shape = settings.Shape;
-        int max = ModContent.GetInstance<WandServerConfig>()?.MaxOutlineThickness ?? 10;
+        int max = WandConfigs.Limits?.MaxOutlineThickness ?? 10;
         shape.Thickness = System.Math.Clamp(shape.Thickness + delta, 0, max);
         settings.Shape = shape;
         UpdateThicknessDisplay();
@@ -355,6 +351,7 @@ public class CoatingSettingsPanel : UIState
         _diamondHollowBtn.Toggled = shape.Shape == ShapeType.Diamond && shape.FillMode == ShapeMode.Hollow;
         _triangleFilledBtn.Toggled = shape.Shape == ShapeType.Triangle && shape.FillMode == ShapeMode.Filled;
         _triangleHollowBtn.Toggled = shape.Shape == ShapeType.Triangle && shape.FillMode == ShapeMode.Hollow;
+        _moldBtn.Toggled = shape.Shape == ShapeType.Mold;
     }
 
     private void UpdateThicknessDisplay() { _thicknessValue?.SetText(GetSettings()?.Shape.Thickness.ToString() ?? "1"); }
@@ -388,7 +385,8 @@ public class CoatingSettingsPanel : UIState
             Main.LocalPlayer.mouseInterface = true;
 
         if (Main.keyState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.Escape))
-            ModContent.GetInstance<WandUISystem>().CloseAllUI();
+            // (S5 2026-04-25 — Letter #4 §2) Esc preserves IV intent; CloseAllPanels.
+            ModContent.GetInstance<WandUISystem>().CloseAllPanels();
     }
 
     public override void Draw(SpriteBatch spriteBatch)
@@ -398,69 +396,7 @@ public class CoatingSettingsPanel : UIState
         _builder?.DrawDebugLines(spriteBatch, _mainPanel.GetDimensions());
     }
 
-    // ── Inner class: paint color swatch button ────────────────────────
-    private class UIPaintColorButton : UIElement
-    {
-        private readonly byte _colorIndex;
-        private readonly Color _color;
-        private readonly string _name;
-        public bool IsSelected { get; set; }
-
-        public UIPaintColorButton(byte colorIndex, Color color, string name)
-        {
-            _colorIndex = colorIndex;
-            _color = color;
-            _name = name;
-        }
-
-        protected override void DrawSelf(SpriteBatch spriteBatch)
-        {
-            var dims = GetDimensions();
-            var rect = dims.ToRectangle();
-
-            Color bg = _colorIndex == 0 || _colorIndex == WandOfCoatingBase.IgnorePaintColor
-                ? new Color(40, 40, 40) : _color;
-            spriteBatch.Draw(TextureAssets.MagicPixel.Value, rect, bg);
-
-            if (_colorIndex == 0)
-            {
-                spriteBatch.Draw(TextureAssets.MagicPixel.Value,
-                    new Rectangle(rect.X + 3, rect.Y + 3, rect.Width - 6, 2),
-                    Color.Red * 0.85f);
-                spriteBatch.Draw(TextureAssets.MagicPixel.Value,
-                    new Rectangle(rect.X + 3, rect.Bottom - 5, rect.Width - 6, 2),
-                    Color.Red * 0.85f);
-            }
-
-            if (_colorIndex == WandOfCoatingBase.IgnorePaintColor)
-            {
-                spriteBatch.Draw(TextureAssets.MagicPixel.Value,
-                    new Rectangle(rect.X + 4, rect.Y + rect.Height / 2 - 1, rect.Width - 8, 2),
-                    Color.LightGray * 0.9f);
-            }
-
-            if (IsSelected)
-            {
-                int t = 2;
-                spriteBatch.Draw(TextureAssets.MagicPixel.Value, new Rectangle(rect.X, rect.Y, rect.Width, t), Color.White);
-                spriteBatch.Draw(TextureAssets.MagicPixel.Value, new Rectangle(rect.X, rect.Bottom - t, rect.Width, t), Color.White);
-                spriteBatch.Draw(TextureAssets.MagicPixel.Value, new Rectangle(rect.X, rect.Y, t, rect.Height), Color.White);
-                spriteBatch.Draw(TextureAssets.MagicPixel.Value, new Rectangle(rect.Right - t, rect.Y, t, rect.Height), Color.White);
-            }
-            else if (IsMouseHovering)
-            {
-                int t = 1;
-                Color hover = Color.LightGray * 0.7f;
-                spriteBatch.Draw(TextureAssets.MagicPixel.Value, new Rectangle(rect.X, rect.Y, rect.Width, t), hover);
-                spriteBatch.Draw(TextureAssets.MagicPixel.Value, new Rectangle(rect.X, rect.Bottom - t, rect.Width, t), hover);
-                spriteBatch.Draw(TextureAssets.MagicPixel.Value, new Rectangle(rect.X, rect.Y, t, rect.Height), hover);
-                spriteBatch.Draw(TextureAssets.MagicPixel.Value, new Rectangle(rect.Right - t, rect.Y, t, rect.Height), hover);
-            }
-
-            if (IsMouseHovering && Main.playerInventory == false)
-            {
-                Main.hoverItemName = _name;
-            }
-        }
-    }
+    // -- UIPaintColorButton was promoted to Common/UI/Elements/UIPaintColorButton.cs
+    //    in S6 2026-04-24 (W-S6-3, S+2 prep) so CoatingPaintColorGrid.Build can
+    //    construct it from outside this class. Behaviour is byte-identical.
 }

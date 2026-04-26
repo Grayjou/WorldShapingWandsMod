@@ -35,7 +35,7 @@ public static class VoidEverythingOperation
     {
         if (player == null) return;
 
-        var config = ModContent.GetInstance<WandServerConfig>();
+        var config = WandConfigs.Carefree;
         if (config == null || !config.EnableCarefreeMode)
         {
             Main.NewText(Get("VoidRequiresCarefree"), Color.Gray);
@@ -79,6 +79,69 @@ public static class VoidEverythingOperation
         var snapshottedTiles = new HashSet<Point>();
         var affectedPositions = new List<Point>();
 
+        // ── Container handling ──────────────────────────────────────
+        // Void Everything respects the DestroyContainers toggle from
+        // DismantlingSettings. When off, container tiles are skipped
+        // entirely. When on, containers are properly destroyed using
+        // ContainerHelper (empties contents, removes from world array,
+        // then kills tiles).
+        bool destroyContainers = settings.DestroyContainers;
+        var containerTiles = new HashSet<Point>();
+        int containersDestroyed = 0;
+
+        if (destroyContainers)
+        {
+            // Find and destroy all containers in the selection first
+            // (before the main tile loop, so their tiles don't get half-processed)
+            var containers = ContainerHelper.FindContainers(tiles);
+            foreach (var container in containers)
+            {
+                // Check protection for the container's top-left
+                if (SafekeepingSystem.IsProtected(container.TopLeft.X, container.TopLeft.Y))
+                    continue;
+
+                // Snapshot container tiles before destruction
+                var data = Terraria.ObjectData.TileObjectData.GetTileData(container.TileType, 0);
+                int width = data?.Width ?? 2;
+                int height = data?.Height ?? 2;
+                for (int dx = 0; dx < width; dx++)
+                {
+                    for (int dy = 0; dy < height; dy++)
+                    {
+                        var pt = new Point(container.TopLeft.X + dx, container.TopLeft.Y + dy);
+                        if (!snapshottedTiles.Contains(pt))
+                        {
+                            action.AddSnapshot(pt);
+                            snapshottedTiles.Add(pt);
+                        }
+                        containerTiles.Add(pt);
+                    }
+                }
+
+                var (_, destroyed) = ContainerHelper.DestroyContainer(player, container, suppressDrops: true);
+                if (destroyed)
+                {
+                    containersDestroyed++;
+                    foreach (var pt in containerTiles)
+                        affectedPositions.Add(pt);
+                }
+            }
+        }
+        else
+        {
+            // Build a set of tiles that belong to containers so we can skip them
+            var containers = ContainerHelper.FindContainers(tiles);
+            foreach (var container in containers)
+            {
+                var data = Terraria.ObjectData.TileObjectData.GetTileData(container.TileType, 0);
+                int width = data?.Width ?? 2;
+                int height = data?.Height ?? 2;
+                for (int dx = 0; dx < width; dx++)
+                    for (int dy = 0; dy < height; dy++)
+                        containerTiles.Add(new Point(container.TopLeft.X + dx, container.TopLeft.Y + dy));
+            }
+        }
+
         // Sort top-to-bottom so multi-tile objects collapse correctly
         var sortedTiles = (Point[])tiles.Clone();
         Array.Sort(sortedTiles, (a, b) => a.Y != b.Y ? a.Y.CompareTo(b.Y) : a.X.CompareTo(b.X));
@@ -89,6 +152,7 @@ public static class VoidEverythingOperation
 
         int voided = 0;
         int skippedProtected = 0;
+        int skippedContainers = 0;
 
         try
         {
@@ -98,6 +162,14 @@ public static class VoidEverythingOperation
                 if (SafekeepingSystem.IsProtected(tile.X, tile.Y))
                 {
                     skippedProtected++;
+                    continue;
+                }
+
+                // Skip container tiles (either already processed or being preserved)
+                if (containerTiles.Contains(tile))
+                {
+                    if (!destroyContainers)
+                        skippedContainers++;
                     continue;
                 }
 
@@ -165,7 +237,7 @@ public static class VoidEverythingOperation
             WorldGen.gen = wasGen;
         }
 
-        if (voided == 0)
+        if (voided == 0 && containersDestroyed == 0)
         {
             Main.NewText(Get("NothingToVoid"), Color.Gray);
             return;
@@ -182,14 +254,18 @@ public static class VoidEverythingOperation
         SettleLiquids(bounds);
 
         // Play sound
-        var clientCfg = ModContent.GetInstance<WandClientConfig>();
+        var clientCfg = WandConfigs.Preferences;
         if (clientCfg?.EnableWandSounds == true)
             SoundEngine.PlaySound(SoundID.Tink, player.Center);
 
         // Report
         string msg = $"Voided {voided} tile(s)";
+        if (containersDestroyed > 0)
+            msg += $", {containersDestroyed} container(s)";
         if (skippedProtected > 0)
             msg += $", {skippedProtected} protected";
+        if (skippedContainers > 0)
+            msg += $", {skippedContainers} container tile(s) preserved";
         Main.NewText(msg, Color.OrangeRed);
     }
 

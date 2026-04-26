@@ -1,0 +1,67 @@
+You are translating UI strings for a Terraria mod called "World Shaping
+Wands" into es-ES (Spain Spanish, neutral register; UI label conventions follow existing translated rows).
+
+OUTPUT FORMAT:
+Return ONLY a valid TSV block. The block MUST start with the marker
+###CHUNK-START### on its own line, contain exactly the same Key column
+as provided (NO additions, NO deletions, NO reordering), and end with
+the marker ###CHUNK-END### on its own line. Reference columns (en-US)
+are read-only context — DO NOT modify them. The rightmost column is
+your es-ES translation.
+
+Do not include any explanatory text outside the markers. Do not wrap
+the output in code fences. Just the marker, the rows, the closing marker.
+
+CHUNK 3 of 9 — es-ES — rows 81-120
+
+###CHUNK-START###
+Key	en-US	es-ES (TRANSLATE)
+Configs.InfiniteOverride.ForceOn.Tooltip		
+Configs.InfiniteOverride.ForceOn.Label	Force On	
+Configs.InfiniteOverride.Default.Tooltip		
+Configs.InfiniteOverride.Default.Label	Default	
+Configs.InfiniteOverride.Tooltip		
+Configs.OverlayRenderMode.Tooltip		
+Configs.OverlayRenderMode.Auto.Label	Auto	
+Configs.OverlayRenderMode.Auto.Tooltip		
+Configs.OverlayRenderMode.AlwaysFullShape.Label	Always Full Shape	
+Configs.OverlayRenderMode.AlwaysFullShape.Tooltip		
+Configs.OverlayRenderMode.AlwaysBoundingBox.Label	Always Bounding Box	
+Configs.OverlayRenderMode.AlwaysBoundingBox.Tooltip		
+Configs.StampRenderMode.Tooltip		
+Configs.StampRenderMode.Precise.Label	Precise	
+Configs.StampRenderMode.Precise.Tooltip		
+Configs.StampRenderMode.Smooth.Label	Smooth	
+Configs.StampRenderMode.Smooth.Tooltip		
+Configs.WandConfig.DisplayName	Wand Config	
+Configs.WandConfig.EnableInfiniteResource.Label	Enable Infinite Resource	
+Configs.WandConfig.EnableInfiniteResource.Tooltip		
+Configs.WandConfig.InfiniteTileThreshold.Label	Infinite Tile Threshold	
+Configs.WandConfig.InfiniteTileThreshold.Tooltip		
+Configs.WandConfig.InfiniteWallThreshold.Label	Infinite Wall Threshold	
+Configs.WandConfig.InfiniteWallThreshold.Tooltip		
+Configs.WandConfig.InfiniteGrassSeedThreshold.Label	Infinite Grass Seed Threshold	
+Configs.WandConfig.InfiniteGrassSeedThreshold.Tooltip		
+Configs.WandConfig.InfiniteWireThreshold.Label	Infinite Wire Threshold	
+Configs.WandConfig.InfiniteWireThreshold.Tooltip		
+Configs.WandConfig.InfiniteActuatorThreshold.Label	Infinite Actuator Threshold	
+Configs.WandConfig.InfiniteActuatorThreshold.Tooltip		
+Configs.WandConfig.InfiniteTiles.Label	Infinite Tiles	
+Configs.WandConfig.InfiniteTiles.Tooltip		
+Configs.WandConfig.InfiniteWalls.Label	Infinite Walls	
+Configs.WandConfig.InfiniteWalls.Tooltip		
+Configs.WandConfig.InfiniteGrassSeeds.Label	Infinite Grass Seeds	
+Configs.WandConfig.InfiniteGrassSeeds.Tooltip		
+Configs.WandConfig.InfiniteWires.Label	Infinite Wires	
+Configs.WandConfig.InfiniteWires.Tooltip		
+Configs.WandConfig.InfiniteActuators.Label	Infinite Actuators	
+Configs.WandConfig.InfiniteActuators.Tooltip		
+###CHUNK-END###
+
+REFERENCE — already-translated rows from es-ES (DO NOT include these in your output, just match their style):
+  UI.Wiring.BlueWire  |  Blue Wire  |  Cable Azul
+  Configs.ResourcesConfig.InfiniteGrassSeedThreshold.Label  |  Grass Seed Threshold  |  Umbral de Semillas
+  UI.Selection.Status  |  Status  |  Estado
+  UI.Selection.ClearCanvas	| Clear Canvas |	Vaciar Canvas
+  UI.Dismantling.VoidEverythingDisabled	| Void Everything requires Carefree Mode to be enabled in server config. |	Desparecer Todo requiere Modo Despreocupado permitido en las configuraciones
+  Configs.OverlayConfig.OverlayRenderMode.Label	| Overlay Render Mode	| Modo de Renderizado de Capa de Vista Previa

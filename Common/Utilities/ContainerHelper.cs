@@ -131,7 +131,7 @@ public static class ContainerHelper
         if (!Chest.IsLocked(x, y)) return true; // Already unlocked
 
         // Sandbox: bypass key requirements — unlock without consuming keys
-        var config = ModContent.GetInstance<WandServerConfig>();
+        var config = WandConfigs.Sandbox;
         if (config?.EffectiveIgnoreLockedKeyRequirements == true)
         {
             // Chest.Unlock handles frame shifts for all vanilla locked styles

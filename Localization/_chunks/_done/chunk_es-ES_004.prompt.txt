@@ -1,0 +1,67 @@
+You are translating UI strings for a Terraria mod called "World Shaping
+Wands" into es-ES (Spain Spanish, neutral register; UI label conventions follow existing translated rows).
+
+OUTPUT FORMAT:
+Return ONLY a valid TSV block. The block MUST start with the marker
+###CHUNK-START### on its own line, contain exactly the same Key column
+as provided (NO additions, NO deletions, NO reordering), and end with
+the marker ###CHUNK-END### on its own line. Reference columns (en-US)
+are read-only context — DO NOT modify them. The rightmost column is
+your es-ES translation.
+
+Do not include any explanatory text outside the markers. Do not wrap
+the output in code fences. Just the marker, the rows, the closing marker.
+
+CHUNK 4 of 9 — es-ES — rows 121-160
+
+###CHUNK-START###
+Key	en-US	es-ES (TRANSLATE)
+Configs.WandConfig.SmallSelectionCap.Label	Small Selection Cap	
+Configs.WandConfig.SmallSelectionCap.Tooltip		
+Configs.WandConfig.BigSelectionCap.Label	Big Selection Cap	
+Configs.WandConfig.BigSelectionCap.Tooltip		
+Configs.WandConfig.HollowSelectionCap.Label	Hollow Selection Cap	
+Configs.WandConfig.HollowSelectionCap.Tooltip		
+Configs.WandConfig.CoatingSelectionCap.Label	Coating Wand Cap	
+Configs.WandConfig.CoatingSelectionCap.Tooltip		
+Configs.WandConfig.SuppressDrops.Label	Suppress Drops	
+Configs.WandConfig.SuppressDrops.Tooltip		
+Configs.WandConfig.BypassPickaxePower.Label	Bypass Pickaxe Power	
+Configs.WandConfig.BypassPickaxePower.Tooltip		
+Configs.WandConfig.AllowDemonAltarDestruction.Label	Allow Demon Altar Destruction	
+Configs.WandConfig.AllowDemonAltarDestruction.Tooltip		
+Configs.WandConfig.AllowDelicateTileDestruction.Label	Allow Delicate Tile Destruction	
+Configs.WandConfig.AllowDelicateTileDestruction.Tooltip		
+Configs.WandConfig.IgnoreLockedKeyRequirements.Label	Ignore Locked Key Requirements	
+Configs.WandConfig.IgnoreLockedKeyRequirements.Tooltip		
+Configs.WandConfig.AutoOpenChestsOnDestruction.Label	Auto Open Chests On Destruction	
+Configs.WandConfig.AutoOpenChestsOnDestruction.Tooltip		
+Configs.WandConfig.VacuumItems.Label	Vacuum Items	
+Configs.WandConfig.VacuumItems.Tooltip		
+Configs.WandConfig.EnableUndoCommand.Label	Enable Undo Commands	
+Configs.WandConfig.EnableUndoCommand.Tooltip		
+Configs.WandConfig.MaxOutlineThickness.Label	Max Outline Thickness	
+Configs.WandConfig.MaxOutlineThickness.Tooltip		
+Configs.WandConfig.EnableProgressiveMode.Label	Enable Progressive Mode	
+Configs.WandConfig.EnableProgressiveMode.Tooltip		
+Configs.WandConfig.ProgressiveBatchSize.Label	Progressive Batch Size	
+Configs.WandConfig.ProgressiveBatchSize.Tooltip		
+Configs.WandConfig.ProgressiveInterval.Label	Progressive Interval	
+Configs.WandConfig.ProgressiveInterval.Tooltip		
+Configs.WandConfig.ShowLoreTooltips.Label	Show Lore Tooltips	
+Configs.WandConfig.ShowLoreTooltips.Tooltip		
+Configs.WandConfig.SafekeepingClearThreshold.Label	Safekeeping Clear Threshold	
+Configs.WandConfig.SafekeepingClearThreshold.Tooltip		
+Configs.WandConfig.EnableWandSounds.Label	Enable Wand Sounds	
+Configs.WandConfig.EnableWandSounds.Tooltip		
+Configs.WandConfig.OverlayRenderMode.Label	Overlay Render Mode	
+Configs.WandConfig.OverlayRenderMode.Tooltip		
+###CHUNK-END###
+
+REFERENCE — already-translated rows from es-ES (DO NOT include these in your output, just match their style):
+  UI.Wiring.BlueWire  |  Blue Wire  |  Cable Azul
+  Configs.ResourcesConfig.InfiniteGrassSeedThreshold.Label  |  Grass Seed Threshold  |  Umbral de Semillas
+  UI.Selection.Status  |  Status  |  Estado
+  UI.Selection.ClearCanvas	| Clear Canvas |	Vaciar Canvas
+  UI.Dismantling.VoidEverythingDisabled	| Void Everything requires Carefree Mode to be enabled in server config. |	Desparecer Todo requiere Modo Despreocupado permitido en las configuraciones
+  Configs.OverlayConfig.OverlayRenderMode.Label	| Overlay Render Mode	| Modo de Renderizado de Capa de Vista Previa

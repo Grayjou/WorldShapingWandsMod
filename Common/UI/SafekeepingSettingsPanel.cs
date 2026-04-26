@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using Terraria;
@@ -35,6 +35,7 @@ public class SafekeepingSettingsPanel : UIState
     private UIIconButton _diamondFilledBtn, _diamondHollowBtn;
     private UIIconButton _triangleFilledBtn, _triangleHollowBtn;
     private UIIconButton _edgeBtn, _cardinalBtn, _straightLineBtn;
+    private UIIconButton _moldBtn;
 
     private UIText _thicknessValue;
     private UIIconButton _equalDimensionsBtn, _connectDiameterBtn, _invertSelectionBtn;
@@ -59,8 +60,8 @@ public class SafekeepingSettingsPanel : UIState
         _mainPanel.Width.Set(PanelWidth, 0f);
         _mainPanel.HAlign = 0.5f;
         _mainPanel.VAlign = 0.5f;
-        _mainPanel.BackgroundColor = new Color(54, 44, 79, 220);
-        _mainPanel.BorderColor = new Color(30, 20, 60);
+        _mainPanel.BackgroundColor = WandPanelTheme.PanelChrome.SafekeepingBg;
+        _mainPanel.BorderColor = WandPanelTheme.PanelChrome.SafekeepingBorder;
         Append(_mainPanel);
 
         var mod = ModContent.GetInstance<WorldShapingWandsMod>();
@@ -71,13 +72,13 @@ public class SafekeepingSettingsPanel : UIState
         // === MODE ===
         _builder.AddSectionHeader("Safekeeping.Mode");
         _builder.AddToggleRow(
-            "Safekeeping.Protect", out _protectBtn, new Color(80, 180, 80),
-            "Safekeeping.Unprotect", out _unprotectBtn, new Color(200, 80, 80));
+            "Safekeeping.Protect", out _protectBtn, WandPanelTheme.ProtectModes.Protect,
+            "Safekeeping.Unprotect", out _unprotectBtn, WandPanelTheme.ProtectModes.Unprotect);
 
         // === TARGETS ===
         _builder.AddToggleRow(
-            "Safekeeping.ProtectTiles", out _protectTilesBtn, new Color(100, 140, 200),
-            "Safekeeping.ProtectWalls", out _protectWallsBtn, new Color(150, 100, 180),
+            "Safekeeping.ProtectTiles", out _protectTilesBtn, WandPanelTheme.ProtectModes.Tiles,
+            "Safekeeping.ProtectWalls", out _protectWallsBtn, WandPanelTheme.ProtectModes.Walls,
             spacing: WandPanelBuilder.AfterToggleGroupSpacing);
 
         // === SHAPE ===
@@ -87,6 +88,7 @@ public class SafekeepingSettingsPanel : UIState
         _diamondFilledBtn = shapes.DiamondFilled;  _diamondHollowBtn = shapes.DiamondHollow;
         _triangleFilledBtn = shapes.TriangleFilled; _triangleHollowBtn = shapes.TriangleHollow;
         _edgeBtn = shapes.Elbow; _cardinalBtn = shapes.Cardinal; _straightLineBtn = shapes.StraightLine;
+        _moldBtn = shapes.Mold;
 
         // === SLICE ===
         _builder.AddSliceSection(out _sliceGrid, OnSliceChanged);
@@ -95,11 +97,11 @@ public class SafekeepingSettingsPanel : UIState
         _builder.AddThicknessSection(out _thicknessValue, AdjustThickness);
 
         // === OPTIONS ===
-        var texEqualDim    = mod.Assets.Request<Texture2D>("Assets/Icons/ToggleEqualDim", AssetRequestMode.ImmediateLoad);
-        var texConnectDiam = mod.Assets.Request<Texture2D>("Assets/Icons/ToggleConnectDiam", AssetRequestMode.ImmediateLoad);
-        var texInvertSel   = mod.Assets.Request<Texture2D>("Assets/Icons/ToggleInvertSel", AssetRequestMode.ImmediateLoad);
+        var texEqualDim    = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleEqualDim", AssetRequestMode.ImmediateLoad);
+        var texConnectDiam = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleConnectDiam", AssetRequestMode.ImmediateLoad);
+        var texInvertSel   = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleInvertSel", AssetRequestMode.ImmediateLoad);
 
-        _builder.AddOptionsSection(new WandPanelBuilder.IconDef[]
+        _builder.AddShapeOptionsSection(new WandPanelBuilder.IconDef[]
         {
             new(texEqualDim,    "Common.EqualDimensions",      isToggle: true),
             new(texConnectDiam, "Common.ConnectDiameterTooltip", isToggle: true, initialState: true),
@@ -117,7 +119,7 @@ public class SafekeepingSettingsPanel : UIState
             int walls = SafekeepingSystem.ProtectedWallCount;
             int totalProtected = tiles + walls;
 
-            var config = ModContent.GetInstance<WandServerConfig>();
+            var config = WandConfigs.Limits;
             int threshold = config?.SafekeepingClearThreshold ?? 50;
 
             if (threshold > 0 && totalProtected >= threshold && !_clearConfirmPending)
@@ -125,14 +127,14 @@ public class SafekeepingSettingsPanel : UIState
                 _clearConfirmPending = true;
                 _clearConfirmExpiry = Main.GameUpdateCount + 180;
                 _clearBtn.SetText(L("Safekeeping.ClearConfirm"));
-                _clearBtn.BackgroundColor = new Color(180, 60, 60);
+                _clearBtn.BackgroundColor = WandPanelTheme.Colors.DangerRed;
                 Main.NewText(Get("ClearConfirmPrompt", tiles, walls), Color.Orange);
                 return;
             }
 
             _clearConfirmPending = false;
             _clearBtn.SetText(L("Safekeeping.ClearAll"));
-            _clearBtn.BackgroundColor = new Color(63, 82, 151) * 0.7f;
+            _clearBtn.BackgroundColor = WandPanelTheme.Colors.CloseButton * 0.7f;
             SafekeepingSystem.ClearAll();
             Main.NewText(Get("ClearedProtection", tiles, walls), Color.LightCoral);
         };
@@ -159,6 +161,7 @@ public class SafekeepingSettingsPanel : UIState
         _diamondHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.Diamond, ShapeMode.Hollow);
         _triangleFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.Triangle, ShapeMode.Filled);
         _triangleHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.Triangle, ShapeMode.Hollow);
+        _moldBtn.OnToggled += (_, _) => SetShape(ShapeType.Mold, ShapeMode.Filled);
 
         _equalDimensionsBtn.OnToggled += (_, _) => ToggleEqualDimensions();
         _connectDiameterBtn.OnToggled += (_, _) => ToggleConnectDiameter();
@@ -181,7 +184,7 @@ public class SafekeepingSettingsPanel : UIState
         var settings = GetSettings();
         if (settings == null) return;
         var shape = settings.Shape;
-        int max = ModContent.GetInstance<WandServerConfig>()?.MaxOutlineThickness ?? 10;
+        int max = WandConfigs.Limits?.MaxOutlineThickness ?? 10;
         shape.Thickness = System.Math.Clamp(shape.Thickness + delta, 0, max);
         settings.Shape = shape;
         UpdateThicknessDisplay();
@@ -224,6 +227,7 @@ public class SafekeepingSettingsPanel : UIState
         _diamondHollowBtn.Toggled = shape.Shape == ShapeType.Diamond && shape.FillMode == ShapeMode.Hollow;
         _triangleFilledBtn.Toggled = shape.Shape == ShapeType.Triangle && shape.FillMode == ShapeMode.Filled;
         _triangleHollowBtn.Toggled = shape.Shape == ShapeType.Triangle && shape.FillMode == ShapeMode.Hollow;
+        _moldBtn.Toggled = shape.Shape == ShapeType.Mold;
     }
 
     private void UpdateThicknessDisplay() { _thicknessValue?.SetText(GetSettings()?.Shape.Thickness.ToString() ?? "1"); }
@@ -253,14 +257,15 @@ public class SafekeepingSettingsPanel : UIState
         {
             _clearConfirmPending = false;
             _clearBtn.SetText(L("Safekeeping.ClearAll"));
-            _clearBtn.BackgroundColor = new Color(63, 82, 151) * 0.7f;
+            _clearBtn.BackgroundColor = WandPanelTheme.Colors.CloseButton * 0.7f;
         }
 
         if (_mainPanel.ContainsPoint(Main.MouseScreen))
             Main.LocalPlayer.mouseInterface = true;
 
         if (Main.keyState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.Escape))
-            ModContent.GetInstance<WandUISystem>().CloseAllUI();
+            // (S5 2026-04-25 — Letter #4 §2) Esc preserves IV intent; CloseAllPanels.
+            ModContent.GetInstance<WandUISystem>().CloseAllPanels();
     }
 
     public override void Draw(SpriteBatch spriteBatch)

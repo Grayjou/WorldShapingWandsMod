@@ -15,4 +15,12 @@ public enum ShapeType : byte
     Elbow = 4,
     CardinalLine = 5,
     StraightLine = 6,
+
+    /// <summary>
+    /// User-defined custom shape captured from the Wand of Molding.
+    /// When selected, Stamp wands use the mold's tile set instead of
+    /// a parametric shape. The mold shape ignores ShapeMode/Thickness/Slice
+    /// — it is always exactly the captured tile pattern.
+    /// </summary>
+    Mold = 7,
 }

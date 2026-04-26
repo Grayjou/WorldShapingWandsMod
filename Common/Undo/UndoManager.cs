@@ -14,14 +14,14 @@ public class UndoManager : ModPlayer
     private readonly Stack<UndoAction> _undoStack = new();
 
     /// <summary>
-    /// Returns the configured max undo stack size from <see cref="WandClientConfig"/>,
+    /// Returns the configured max undo stack size from <see cref="PreferencesConfig"/>,
     /// falling back to <see cref="DefaultMaxUndoActions"/> if the config is unavailable.
     /// </summary>
     private static int MaxUndoActions
     {
         get
         {
-            var config = ModContent.GetInstance<WandClientConfig>();
+            var config = WandConfigs.Preferences;
             return config?.MaxUndoStackSize ?? DefaultMaxUndoActions;
         }
     }

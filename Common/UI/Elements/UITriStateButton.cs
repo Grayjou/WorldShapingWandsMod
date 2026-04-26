@@ -29,16 +29,16 @@ public class UITriStateButton : UIElement
     public string BaseName { get; set; }
 
     /// <summary>Background color when in Ignore state.</summary>
-    public Color IgnoreColor { get; set; } = new Color(120, 120, 140);
+    public Color IgnoreColor { get; set; } = WandPanelTheme.Colors.TriStateIgnore;
 
     /// <summary>Background color when in Apply (On) state.</summary>
-    public Color ApplyColor { get; set; } = new Color(80, 200, 80);
+    public Color ApplyColor { get; set; } = WandPanelTheme.Colors.ActiveGreen;
 
     /// <summary>Background color when in Remove (Off) state.</summary>
-    public Color RemoveColor { get; set; } = new Color(180, 70, 70);
+    public Color RemoveColor { get; set; } = WandPanelTheme.Colors.TriStateRemove;
 
     /// <summary>Background color when not active (same as OffColor in UIToggleButton).</summary>
-    public Color InactiveColor { get; set; } = new Color(60, 60, 60);
+    public Color InactiveColor { get; set; } = WandPanelTheme.Colors.ElementInactive;
 
     /// <summary>
     /// When true, the button is visually dimmed and ignores clicks.

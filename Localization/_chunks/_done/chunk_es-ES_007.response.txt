@@ -1,0 +1,47 @@
+# Paste agent response for chunk 007 below this line.
+###CHUNK-START###																									
+Key	en-US   es-ES (TRANSLATE)																							
+Items.WandOfFluidsStamp.DisplayName	Wand Of Fluids Stamp	Varita de Fluidos (Sello)																							
+Items.WandOfFluidsStamp.Tooltip																									
+Items.WandOfTorchesInstant.DisplayName	Wand of Torches (Instant)	Varita de Antorchas (Instantánea)																							
+Items.WandOfTorchesInstant.Tooltip	Places torches in a tiling pattern across a selected area	Coloca antorchas en un patrón repetido a lo largo de un área seleccionada																							
+Items.WandOfTorchesSelect.DisplayName	Wand of Torches (Select)	Varita de Antorchas (Seleccionar)																							
+Items.WandOfTorchesSelect.Tooltip	Places torches in a tiling pattern across a selected area	Coloca antorchas en un patrón repetido a lo largo de un área seleccionada																							
+Items.WandOfTorchesConfirm.DisplayName	Wand of Torches (Confirm)	Varita de Antorchas (Confirmar)																							
+Items.WandOfTorchesConfirm.Tooltip	Places torches in a tiling pattern across a selected area	Coloca antorchas en un patrón repetido a lo largo de un área seleccionada																							
+Items.WandOfTorchesStamp.DisplayName	Wand of Torches (Stamp)	Varita de Antorchas (Sello)																							
+Items.WandOfTorchesStamp.Tooltip	Define a torch pattern once, then stamp it repeatedly	Define un patrón de antorchas una vez, luego estámpalo repetidamente																							
+Items.TorchWheelWandSolid.DisplayName	Torch Wheel Wand (Tiles)	Varita Rueda de Antorchas (Bloques)																							
+Items.TorchWheelWandSolidPlatforms.DisplayName	Torch Wheel Wand (Platforms)	Varita Rueda de Antorchas (Plataformas)																							
+Items.WandOfDelimitationInstant.DisplayName	Wand of Delimitation (Instant)	Varita de Delimitación (Instantánea)																							
+Items.WandOfDelimitationInstant.Tooltip	Defines canvas and selection regions using geometric shapes	Define regiones de canvas y selección usando formas geométricas																							
+Items.WandOfDelimitationSelect.DisplayName	Wand of Delimitation (Select)	Varita de Delimitación (Seleccionar)																							
+Items.WandOfDelimitationSelect.Tooltip	Defines canvas and selection regions using geometric shapes	Define regiones de canvas y selección usando formas geométricas																							
+Items.WandOfDelimitationConfirm.DisplayName	Wand of Delimitation (Confirm)	Varita de Delimitación (Confirmar)																							
+Items.WandOfDelimitationConfirm.Tooltip	Defines canvas and selection regions using geometric shapes	Define regiones de canvas y selección usando formas geométricas																							
+Items.WandOfDelimitationStamp.DisplayName	Wand of Delimitation (Stamp)	Varita de Delimitación (Sello)																							
+Items.WandOfDelimitationStamp.Tooltip	Define a selection shape once, then stamp it repeatedly	Define una forma de selección una vez, luego estámpala repetidamente																							
+Items.TorchWheelWandPlatform.DisplayName	Torch Wheel Wand (Platform)	Varita Rueda de Antorchas (Plataforma)																							
+Items.TorchWheelWandPlatform.Tooltip																									
+Items.WandOfMoldingInstant.DisplayName	Wand of Molding (Instant)	Varita de Moldeo (Instantánea)																							
+Items.WandOfMoldingInstant.Tooltip	Sculpts custom shapes from geometric primitives for use with Stamp wands	Esculpe formas personalizadas a partir de figuras geométricas para usar con varitas de Sello																							
+Items.WandOfMoldingSelect.DisplayName	Wand of Molding (Select)	Varita de Moldeo (Seleccionar)																							
+Items.WandOfMoldingSelect.Tooltip	Sculpts custom shapes from geometric primitives for use with Stamp wands	Esculpe formas personalizadas a partir de figuras geométricas para usar con varitas de Sello																							
+Items.WandOfMoldingConfirm.DisplayName	Wand of Molding (Confirm)	Varita de Moldeo (Confirmar)																							
+Items.WandOfMoldingConfirm.Tooltip	Sculpts custom shapes from geometric primitives for use with Stamp wands	Esculpe formas personalizadas a partir de figuras geométricas para usar con varitas de Sello																							
+Items.WandOfMoldingStamp.DisplayName	Wand of Molding (Stamp)	Varita de Moldeo (Sello)																							
+Items.WandOfMoldingStamp.Tooltip	Define a mold shape once, then stamp it repeatedly	Define una forma de molde una vez, luego estámpala repetidamente																							
+Messages.InventoryViewNoParticipant	The block picker is only available for the Wand of Building, Wand of Replacement, and Wand of Torches.	El selector de bloques solo está disponible para la Varita de Construcción, Varita de Reemplazo y Varita de Antorchas.																							
+Messages.ChosenMissingUnderInterrupt	chosen item is not in inventory — Interrupt mode will not substitute. Operation cancelled.	El objeto fijado no está en el inventario — el modo Interrumpir no lo sustituirá. Operación cancelada.																							
+Messages.VoidRequiresCarefree	Void Everything requires Carefree Mode to be enabled.	Desaparecer Todo requiere que el Modo Despreocupado esté activado.																							
+Messages.VoidSinglePlayerOnly	Void Everything is currently only available in single-player.	Desaparecer Todo actualmente solo está disponible en un jugador.																							
+Messages.NoSelectionActive	No selection is active. Use a wand to select an area first.	No hay selección activa. Usa una varita para seleccionar un área primero.																							
+Messages.NothingToVoid	Nothing to void in the selected area.	No hay nada que desaparecer en el área seleccionada.																							
+Messages.CoatingNoChanges	No changes made.	No se realizaron cambios.																							
+Messages.CoatingPaintedTiles	Painted {0} tiles.	Se pintaron {0} bloques.																							
+Messages.CoatingPaintedWalls	Painted {0} walls.	Se pintaron {0} paredes.																							
+Messages.CoatingScrapedPaint	Scraped paint from {0} positions.	Se raspó la pintura de {0} posiciones.																							
+###CHUNK-END###																									
+# Sentinels (###CHUNK-START### / ###CHUNK-END###) MUST be present.
+# Edit any rows in-place before running chunk_import.py.
+

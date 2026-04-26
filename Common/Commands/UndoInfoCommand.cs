@@ -10,7 +10,7 @@ namespace WorldShapingWandsMod.Common.Commands;
 /// Chat command that inspects undo stack entries without performing an undo.
 /// Shows operation details, snapshot count, timestamp, and resource cost.
 /// Usage: /undoinfo [index]
-/// Gated behind <see cref="WandServerConfig.EnableUndoCommand"/>.
+/// Gated behind <see cref="SandboxConfig.EnableUndoCommand"/>.
 /// </summary>
 public class UndoInfoCommand : ModCommand
 {
@@ -25,7 +25,7 @@ public class UndoInfoCommand : ModCommand
 
     public override void Action(CommandCaller caller, string input, string[] args)
     {
-        var serverConfig = ModContent.GetInstance<WandServerConfig>();
+        var serverConfig = WandConfigs.Sandbox;
         if (serverConfig != null && !serverConfig.EnableUndoCommand)
         {
             caller.Reply("Undo is disabled by default — it's experimental and may cause visual artifacts or resource duplication.", Color.OrangeRed);
@@ -93,7 +93,7 @@ public class UndoInfoCommand : ModCommand
         caller.Reply($"  Timestamp: {action.Timestamp:HH:mm:ss} ({age})", Color.LightGray);
 
         // Resource cost analysis
-        var config = ModContent.GetInstance<WandServerConfig>();
+        var config = WandConfigs.Resources;
         bool infinite = IsInfiniteResources(config);
 
         if (infinite)
@@ -124,7 +124,7 @@ public class UndoInfoCommand : ModCommand
     /// <summary>
     /// Checks if the current config has infinite resources enabled.
     /// </summary>
-    private static bool IsInfiniteResources(WandServerConfig config)
+    private static bool IsInfiniteResources(ResourcesConfig config)
     {
         if (config == null) return false;
         // EnableInfiniteResource is the master toggle; thresholds of 0 also mean infinite

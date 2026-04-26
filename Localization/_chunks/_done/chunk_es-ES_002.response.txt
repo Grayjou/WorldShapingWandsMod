@@ -1,0 +1,47 @@
+# Paste agent response for chunk 002 below this line.
+###CHUNK-START###		
+Key	en-US	es-ES (TRANSLATE)
+Configs.CarefreeConfig.CarefreeAllowDelicateTileDestruction.Tooltip	When Carefree Mode is on, controls whether delicate tiles (e.g. Shadow Orbs, Demon Hearts) can be destroyed.	Cuando el Modo Despreocupado está activado, controla si se pueden destruir los bloques delicados (p. ej., Orbes Sombríos, Corazones Demoníacos).
+Configs.OverlayConfig.OverlayRenderMode.Label	Overlay Render Mode	Modo de Renderizado de Capa de Vista Previa
+Configs.OverlayConfig.ShapeOverlayAlpha.Label	Shape Overlay Opacity	Opacidad de Capa de Vista Previa de Forma
+Configs.OverlayConfig.NegativeSpaceAlpha.Label	Negative Space Opacity	Opacidad de Espacio Negativo
+Configs.OverlayConfig.SelectionOverlayColor.Label	Selection Overlay Color	Color de Capa de Vista Previa de Selección
+Configs.OverlayConfig.UsePerFamilyOverlayColor.Label	Per-Family Overlay Color	Color de Capa de Vista Previa por Familia
+Configs.OverlayConfig.OverlayBrightnessMin.Label	Overlay Brightness Min	Brillo Mínimo de Capa de Vista Previa
+Configs.OverlayConfig.OverlayBrightnessMax.Label	Overlay Brightness Max	Brillo Máximo de Capa de Vista Previa
+Configs.OverlayConfig.ShowTilingPreview.Label	Show Tiling Preview	Mostrar Vista Previa de Teselado
+Configs.OverlayConfig.StampRenderMode.Label	Stamp Smoothing	Suavizado de Sello
+Configs.CanvasOverlayConfig.CanvasOutsideAlpha.Label	Outside Dimming Alpha	Alfa de Atenuación Exterior
+Configs.CanvasOverlayConfig.CanvasFillAlpha.Label	Canvas Fill Alpha	Alfa de Relleno del Canvas
+Configs.CanvasOverlayConfig.CanvasTileSelectionAlpha.Label	Tile Selection Alpha	Alfa de Selección de Bloques
+Configs.CanvasOverlayConfig.CanvasOutsideColor.Label	Outside Dimming Color	Color de Atenuación Exterior
+Configs.CanvasOverlayConfig.CanvasFillColor.Label	Canvas Fill Color	Color de Relleno del Canvas
+Configs.CanvasOverlayConfig.CanvasTileSelectionColor.Label	Tile Selection Color	Color de Selección de Bloques
+Configs.CanvasOverlayConfig.MoldingOutsideAlpha.Label	Outside Dimming Alpha (Molding)	Alfa de Atenuación Exterior (Moldeado)
+Configs.CanvasOverlayConfig.MoldingCanvasFillAlpha.Label	Canvas Fill Alpha (Molding)	Alfa de Relleno del Canvas (Moldeado)
+Configs.CanvasOverlayConfig.MoldingTileSelectionAlpha.Label	Tile Selection Alpha (Molding)	Alfa de Selección de Bloques (Moldeado)
+Configs.CanvasOverlayConfig.MoldingOutsideColor.Label	Outside Dimming Color (Molding)	Color de Atenuación Exterior (Moldeado)
+Configs.CanvasOverlayConfig.MoldingCanvasColor.Label	Canvas Fill Color (Molding)	Color de Relleno del Canvas (Moldeado)
+Configs.CanvasOverlayConfig.MoldingTileSelectionColor.Label	Tile Selection Color (Molding)	Color de Selección de Bloques (Moldeado)
+Configs.PreferencesConfig.ShowLoreTooltips.Label	Show Lore Tooltips	Mostrar Descripciones de Lore
+Configs.PreferencesConfig.ShowLoreTooltips.Tooltip	When enabled, holding Shift while hovering a wand shows its lore text.\nDisable to hide lore entirely.	Cuando está activado, mantener presionado Mayús mientras se pasa el cursor sobre una varita muestra su lore.\nDesactívalo para ocultar la historia por completo.
+Configs.PreferencesConfig.EnableWandSounds.Label	Enable Wand Sound Effects	Activar Efectos de Sonido de Varitas
+Configs.PreferencesConfig.EnableWandSounds.Tooltip	When enabled, wands play custom sound effects on action success.\nDisable for silent operations.	Cuando está activado, las varitas reproducen efectos de sonido personalizados al realizar acciones con éxito.\nDesactívalo para operaciones silenciosas.
+Configs.PreferencesConfig.MaxUndoStackSize.Label	Max Undo Stack Size	Tamaño Máximo de Historial de Deshacer
+Configs.PreferencesConfig.AllowChanneling.Label	Allow Channeling	Permitir Canalización
+Configs.PreferencesConfig.AllowChannelingDust.Label	Show Channeling Dust	Mostrar Polvo de Canalización
+Configs.PreferencesConfig.AllowChannelingSound.Label	Play Channeling Sounds	Reproducir Sonidos de Canalización
+Configs.PreferencesConfig.WandVerbosity.Label	Verbose Feedback	Retroalimentación Detallada
+Configs.PreferencesConfig.DefaultShapeType.Label	Default Shape	Forma Predeterminada
+Configs.PreferencesConfig.DefaultShapeMode.Label	Default Fill Mode	Modo de Relleno Predeterminado
+Configs.PreferencesConfig.RainFillSummonsClouds.Label	Summon Rain Clouds	Invocar Nubes de Lluvia
+Configs.PreferencesConfig.RainFillSpawnDusts.Label	Spawn Rain Dusts	Generar Escarchas de Lluvia
+Configs.PreferencesConfig.LavaRainStyle.Label	Lava Rain Style	Estilo de Lluvia de Lava
+Configs.PreferencesConfig.BlockExhaustion.Header	Block Exhaustion Behavior	Resolución de agotamiento de Bloques
+Configs.PreferencesConfig.BlockExhaustion.Label	When You Run Out of Blocks	Cuando te Quedas sin Bloques
+Configs.InfiniteOverride.ForceOff.Tooltip		
+Configs.InfiniteOverride.ForceOff.Label	Force Off	Forzar Desactivación
+###CHUNK-END###		
+# Sentinels (###CHUNK-START### / ###CHUNK-END###) MUST be present.
+# Edit any rows in-place before running chunk_import.py.
+

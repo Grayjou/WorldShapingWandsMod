@@ -25,6 +25,7 @@ public static class ShapeRegistry
         Register(new ElbowShape());
         Register(new CardinalLineShape());
         Register(new StraightLineShape());
+        Register(new MoldShape());
 
         _initialized = true;
     }

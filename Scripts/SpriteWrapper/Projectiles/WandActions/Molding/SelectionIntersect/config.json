@@ -1,0 +1,21 @@
+{
+
+    "export_to": "Content_Source/Projectiles/WandActions/Molding/WandAction_MoldingSelectionIntersect.png",
+    "layers": [
+        {
+            "name": "Base",
+            "index": 0
+        },
+        {
+            "name": "Outline",
+            "index": 2
+        }
+    ],
+    "convolution_matrices": [
+        {
+            "type": "3x3",
+            "layer": 1,
+            "from_layer": 2
+        }
+    ]
+}
