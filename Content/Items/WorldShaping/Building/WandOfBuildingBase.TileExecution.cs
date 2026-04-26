@@ -45,7 +45,7 @@ namespace WorldShapingWandsMod.Content.Items
                 // Find source item for the packet (client-side pre-validation)
                 var mpBaseCondition = ItemTypeHelper.GetConditions(settings.Object);
                 Func<Item, bool> mpCondition = item => mpBaseCondition(item) && !ItemTypeHelper.IsMultiTileItem(item);
-                int mpIdx = ItemTypeHelper.FindFirstItemIndex(player, mpCondition, settings.ChosenTileItemType);
+                int mpIdx = ItemTypeHelper.FindFirstItemIndex(player, mpCondition, settings.GetChosenTileItemType(settings.Object));
                 if (mpIdx < 0)
                 {
                     Main.NewText(Get("NoSuitableItem", settings.Object), Color.Red);
@@ -75,8 +75,11 @@ namespace WorldShapingWandsMod.Content.Items
             // Find the first matching placement item (block item or tile wand).
             // InventoryView v1 (S6 2026-04-22): if the player has chosen a tile type
             // via the InventoryView panel, prefer that exact item before the broad
-            // scan order. Stale pins (item gone, mode mismatch) fall back silently.
-            int sourceIndex = ItemTypeHelper.FindFirstItemIndex(player, condition, settings.ChosenTileItemType);
+            // scan order. Stale choices (item gone, mode mismatch) fall back silently.
+            // (S1 2026-04-26 fix): choice is keyed by PlaceType so Platform mode
+            // cannot bleed a Solid-mode choice through.
+            int? chosenTileItemType = settings.GetChosenTileItemType(settings.Object);
+            int sourceIndex = ItemTypeHelper.FindFirstItemIndex(player, condition, chosenTileItemType);
             if (sourceIndex < 0)
             {
                 Main.NewText(Get("NoSuitableItem", settings.Object), Color.Red);
@@ -110,8 +113,8 @@ namespace WorldShapingWandsMod.Content.Items
             // path) AND to ProgressiveTileProcessor via the BuildCondition field, so we
             // don't have to thread the choice through ~8 separate call sites.
             var exhaustMode = WandConfigs.Preferences?.BlockExhaustion ?? BlockExhaustionMode.NextBlock;
-            bool pinHonored = settings.ChosenTileItemType.HasValue
-                              && initialSourceItem.type == settings.ChosenTileItemType.Value;
+            bool pinHonored = chosenTileItemType.HasValue
+                              && initialSourceItem.type == chosenTileItemType.Value;
 
             // 2026-04-23 Session 1 (Letter #10 §6 bug): Interrupt + stale-choice hard-stop.
             // GrayJou intent: "Using Exhaust Mode Interrupt, and I have the view open
@@ -131,7 +134,7 @@ namespace WorldShapingWandsMod.Content.Items
             // NextBlock, since Cancel exits here first whenever the choice is stale).
             if ((exhaustMode == BlockExhaustionMode.Interrupt
                     || exhaustMode == BlockExhaustionMode.Cancel)
-                && settings.ChosenTileItemType.HasValue
+                && chosenTileItemType.HasValue
                 && !pinHonored)
             {
                 Main.NewText(Get("ChosenMissingUnderInterrupt"), Color.Red);
@@ -152,7 +155,7 @@ namespace WorldShapingWandsMod.Content.Items
             // toast is keyed and throttled in GhostChoiceToast so a long
             // click-burst against a stale choice only fires once per ~2 s.
             Common.UI.InventoryView.GhostChoiceToast.TryEmit(
-                settings.ChosenTileItemType, initialSourceItem.type);
+                chosenTileItemType, initialSourceItem.type);
 
             // Build shape context (includes slice & connectDiameter from settings)
             var context = settings.Shape.ToShapeContext(

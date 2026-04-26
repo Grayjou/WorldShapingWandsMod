@@ -114,7 +114,7 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
         // Find source item (what tiles/walls to look for in the world)
         // InventoryView v1 (S6 2026-04-22): honor ChosenSourceItemType.
         var srcCondition = ItemTypeHelper.GetConditions(settings.OldObject);
-        Item sourceItem = ItemTypeHelper.FindFirstItem(player, srcCondition, settings.ChosenSourceItemType);
+        Item sourceItem = ItemTypeHelper.FindFirstItem(player, srcCondition, settings.GetChosenSourceItemType(settings.OldObject));
 
         if (sourceItem == null)
             return (null, null);
@@ -136,7 +136,7 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
             var tgtCondition = ItemTypeHelper.GetConditions(settings.NewObject);
             int? targetChoice = settings.SameTypeMode
                 ? sourceItem?.type
-                : settings.ChosenTargetItemType;
+                : settings.GetChosenTargetItemType(settings.NewObject);
 
             if (isWallMode)
             {
@@ -176,7 +176,7 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
         // --- Resolve source item: identifies the SPECIFIC tile type to find in the world ---
         // InventoryView v1 (S6 2026-04-22): honor ChosenSourceItemType.
         var srcCondition = ItemTypeHelper.GetConditions(settings.OldObject);
-        Item sourceItem = ItemTypeHelper.FindFirstItem(player, srcCondition, settings.ChosenSourceItemType);
+        Item sourceItem = ItemTypeHelper.FindFirstItem(player, srcCondition, settings.GetChosenSourceItemType(settings.OldObject));
         if (sourceItem == null)
         {
             Main.NewText(Get("NoSourceItems", settings.OldObject), WandColors.MsgError);
@@ -198,7 +198,7 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
             // not the choice field, so target stays coherent when source choice ghosts.
             int? targetChoice = settings.SameTypeMode
                 ? sourceItem?.type
-                : settings.ChosenTargetItemType;
+                : settings.GetChosenTargetItemType(settings.NewObject);
             targetItem = ItemTypeHelper.FindFirstItem(player, targetCondition, targetChoice);
 
             if (targetItem == null)
@@ -526,7 +526,7 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
         // Find source wall item
         // InventoryView v1 (S6 2026-04-22): honor ChosenSourceItemType for walls.
         var srcCondition = ItemTypeHelper.GetConditions(ObjectType.Wall);
-        Item sourceItem = ItemTypeHelper.FindFirstItem(player, srcCondition, settings.ChosenSourceItemType);
+        Item sourceItem = ItemTypeHelper.FindFirstItem(player, srcCondition, settings.GetChosenSourceItemType(ObjectType.Wall));
         if (sourceItem == null)
         {
             Main.NewText(Get("NoWallSourceItems"), WandColors.MsgError);
@@ -555,7 +555,7 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
             // not the choice field, so target stays coherent when source choice ghosts.
             int? targetChoice = settings.SameTypeMode
                 ? sourceItem?.type
-                : settings.ChosenTargetItemType;
+                : settings.GetChosenTargetItemType(ObjectType.Wall);
             targetItem = ItemTypeHelper.FindFirstItem(player, targetCondition, targetChoice);
 
             if (targetItem == null)

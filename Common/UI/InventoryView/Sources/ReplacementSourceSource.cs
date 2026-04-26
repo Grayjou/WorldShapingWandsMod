@@ -31,7 +31,8 @@ public sealed class ReplacementSourceSource : IInventoryViewSource
         ObjectType obj = wp.ReplacementSettings.OldObject;
         if (obj == ObjectType.Air) yield break; // Air has no inventory representative.
 
-        int? excludeTarget = wp.ReplacementSettings.ChosenTargetItemType;
+        // (S1 2026-04-26 fix): target exclusion is now per-ObjectType aware.
+        int? excludeTarget = wp.ReplacementSettings.GetChosenTargetItemType(wp.ReplacementSettings.NewObject);
         var condition = ItemTypeHelper.GetConditions(obj);
         for (int i = 0; i < 50; i++)
         {
@@ -46,8 +47,11 @@ public sealed class ReplacementSourceSource : IInventoryViewSource
     }
 
     public int? GetSelectedItemType(WandPlayer wp)
-        => wp.ReplacementSettings.ChosenSourceItemType;
+    {
+        // (S1 2026-04-26 fix): independent slot per OldObject sub-mode.
+        return wp.ReplacementSettings.GetChosenSourceItemType(wp.ReplacementSettings.OldObject);
+    }
 
     public void SetSelectedItemType(WandPlayer wp, int? itemType)
-        => wp.ReplacementSettings.ChosenSourceItemType = itemType;
+        => wp.ReplacementSettings.SetChosenSourceItemType(wp.ReplacementSettings.OldObject, itemType);
 }

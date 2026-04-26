@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using WorldShapingWandsMod.Common.Enums;
 
@@ -44,19 +45,49 @@ public class WandOfReplacementSettings
     public bool SameTypeMode { get; set; } = false;
 
     /// <summary>
-    /// chosen source-item type for the "find" half of replacement (InventoryView v1).
-    /// When non-null, the wand searches inventory for this exact item type as the
-    /// match-source instead of falling back to the broad <see cref="OldObject"/>
-    /// category. Cleared (null) by default.
+    /// Per-<see cref="ObjectType"/> chosen source-item type for the "find" half
+    /// of replacement (InventoryView v1 framework). Keyed by
+    /// <see cref="ObjectType"/> so that choosing a wall item in Wall source mode
+    /// does not carry over when the user switches to Tile or Platform source mode.
+    ///
+    /// <para>S1 2026-04-26 (bug fix): previously a single field shared across all
+    /// object types, causing stale choices to persist across mode switches.</para>
     /// </summary>
-    public int? ChosenSourceItemType { get; set; }
+    public Dictionary<ObjectType, int?> ChosenSourceItemTypeByObjectType { get; set; } = new();
+
+    /// <summary>Helper: get the chosen source item type for the given object sub-mode.</summary>
+    public int? GetChosenSourceItemType(ObjectType objectType)
+        => ChosenSourceItemTypeByObjectType.TryGetValue(objectType, out int? v) ? v : null;
+
+    /// <summary>Helper: set or clear the chosen source item type for the given object sub-mode.</summary>
+    public void SetChosenSourceItemType(ObjectType objectType, int? itemType)
+    {
+        if (itemType.HasValue)
+            ChosenSourceItemTypeByObjectType[objectType] = itemType;
+        else
+            ChosenSourceItemTypeByObjectType.Remove(objectType);
+    }
 
     /// <summary>
-    /// chosen target-item type for the "replace-with" half of replacement.
-    /// Honored only when <see cref="SameTypeMode"/> is OFF (otherwise the source
-    /// item type drives both sides). Cleared (null) by default.
+    /// Per-<see cref="ObjectType"/> chosen target-item type for the "replace-with"
+    /// half of replacement. Honored only when <see cref="SameTypeMode"/> is OFF.
+    /// Keyed by <see cref="ObjectType"/> for the same isolation reason as
+    /// <see cref="ChosenSourceItemTypeByObjectType"/>.
     /// </summary>
-    public int? ChosenTargetItemType { get; set; }
+    public Dictionary<ObjectType, int?> ChosenTargetItemTypeByObjectType { get; set; } = new();
+
+    /// <summary>Helper: get the chosen target item type for the given object sub-mode.</summary>
+    public int? GetChosenTargetItemType(ObjectType objectType)
+        => ChosenTargetItemTypeByObjectType.TryGetValue(objectType, out int? v) ? v : null;
+
+    /// <summary>Helper: set or clear the chosen target item type for the given object sub-mode.</summary>
+    public void SetChosenTargetItemType(ObjectType objectType, int? itemType)
+    {
+        if (itemType.HasValue)
+            ChosenTargetItemTypeByObjectType[objectType] = itemType;
+        else
+            ChosenTargetItemTypeByObjectType.Remove(objectType);
+    }
 
     /// <summary>The starting point of the selection.</summary>
     public Point StartPoint { get; set; }
@@ -78,8 +109,8 @@ public class WandOfReplacementSettings
             PaintSprayer = PaintSprayer,
             PreservePaint = PreservePaint,
             SameTypeMode = SameTypeMode,
-            ChosenSourceItemType = ChosenSourceItemType,
-            ChosenTargetItemType = ChosenTargetItemType,
+            ChosenSourceItemTypeByObjectType = new Dictionary<ObjectType, int?>(ChosenSourceItemTypeByObjectType),
+            ChosenTargetItemTypeByObjectType = new Dictionary<ObjectType, int?>(ChosenTargetItemTypeByObjectType),
             StartPoint = StartPoint,
             EndPoint = EndPoint
         };
@@ -97,8 +128,8 @@ public class WandOfReplacementSettings
         PaintSprayer = PaintSprayerSource.Off;
         PreservePaint = true;
         SameTypeMode = false;
-        ChosenSourceItemType = null;
-        ChosenTargetItemType = null;
+        ChosenSourceItemTypeByObjectType = new Dictionary<ObjectType, int?>();
+        ChosenTargetItemTypeByObjectType = new Dictionary<ObjectType, int?>();
         StartPoint = Point.Zero;
         EndPoint = Point.Zero;
     }

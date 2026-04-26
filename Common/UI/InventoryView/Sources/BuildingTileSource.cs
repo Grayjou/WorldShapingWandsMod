@@ -52,8 +52,20 @@ public sealed class BuildingTileSource : IInventoryViewSource
     }
 
     public int? GetSelectedItemType(WandPlayer wp)
-        => wp.BuildingSettings.ChosenTileItemType;
+    {
+        // (S1 2026-04-26 fix) Each PlaceType sub-mode has an independent choice
+        // slot. If the user chose Wood in Solid mode, that choice must NOT appear
+        // active when they switch to Platform mode — Wood fails the platform
+        // condition and the wand would refuse to place anything.
+        PlaceType obj = wp.BuildingSettings.Object;
+        if (obj == PlaceType.Wall) obj = PlaceType.Solid; // defensive; Wall routes to BuildingWallSource
+        return wp.BuildingSettings.GetChosenTileItemType(obj);
+    }
 
     public void SetSelectedItemType(WandPlayer wp, int? itemType)
-        => wp.BuildingSettings.ChosenTileItemType = itemType;
+    {
+        PlaceType obj = wp.BuildingSettings.Object;
+        if (obj == PlaceType.Wall) obj = PlaceType.Solid; // defensive
+        wp.BuildingSettings.SetChosenTileItemType(obj, itemType);
+    }
 }

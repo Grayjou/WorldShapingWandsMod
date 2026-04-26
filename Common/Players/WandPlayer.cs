@@ -845,11 +845,17 @@ public class WandPlayer : ModPlayer
     //  (Response #5 §8 ¶3).
     // ──────────────────────────────────────────────────────────────────────
 
-    private const string TagChoiceBuildingTile = "ChoiceBuildingTile";
+    private const string TagChoiceBuildingTile = "ChoiceBuildingTile"; // Legacy key for backward-compat load (mapped to Solid)
+    private const string TagChoiceBuildingTileKeys = "ChoiceBuildingTileKeys";   // S1 2026-04-26 per-PlaceType dict
+    private const string TagChoiceBuildingTileVals = "ChoiceBuildingTileVals";   // parallel tag-compound list
     private const string TagChoiceBuildingWall = "ChoiceBuildingWall";
     private const string TagChoiceTorch = "ChoiceTorch";
-    private const string TagChoiceReplacementSource = "ChoiceReplacementSource";
-    private const string TagChoiceReplacementTarget = "ChoiceReplacementTarget";
+    private const string TagChoiceReplacementSource = "ChoiceReplacementSource"; // Legacy key (single-slot, pre-S1-2026-04-26)
+    private const string TagChoiceReplacementTarget = "ChoiceReplacementTarget"; // Legacy key (single-slot, pre-S1-2026-04-26)
+    private const string TagChoiceReplacementSourceKeys = "ChoiceReplacementSourceKeys"; // S1 2026-04-26 per-ObjectType dict
+    private const string TagChoiceReplacementSourceVals = "ChoiceReplacementSourceVals";
+    private const string TagChoiceReplacementTargetKeys = "ChoiceReplacementTargetKeys"; // S1 2026-04-26 per-ObjectType dict
+    private const string TagChoiceReplacementTargetVals = "ChoiceReplacementTargetVals";
 
     // ── Collapsible-section persistence (2026-04-23 S4 framework) ───
     // Cavendish DesignDoc_CollapsablePanelSystem.md §2.4 named a SettingsPlayer
@@ -868,11 +874,46 @@ public class WandPlayer : ModPlayer
 
     public override void SaveData(TagCompound tag)
     {
-        TrySetTag(tag, TagChoiceBuildingTile, BuildingSettings.ChosenTileItemType);
+        // Per-PlaceType tile choices (S1 2026-04-26 — each sub-mode is independent).
+        // Serialized as a parallel (byte-key, TagCompound-value) list so each slot
+        // round-trips via ChoiceSerialization's stable (ModName, ItemName) tuple.
+        var tileChoiceDict = BuildingSettings.ChosenTileItemTypeByObjectType;
+        if (tileChoiceDict != null && tileChoiceDict.Count > 0)
+        {
+            var tileKeys = new List<byte>();
+            var tileVals = new List<TagCompound>();
+            foreach (var kv in tileChoiceDict)
+            {
+                var payload = ChoiceSerialization.SaveChoice(kv.Value);
+                if (payload != null)
+                {
+                    tileKeys.Add((byte)kv.Key);
+                    tileVals.Add(payload);
+                }
+            }
+            if (tileKeys.Count > 0)
+            {
+                tag[TagChoiceBuildingTileKeys] = tileKeys;
+                tag[TagChoiceBuildingTileVals] = tileVals;
+            }
+        }
         TrySetTag(tag, TagChoiceBuildingWall, BuildingSettings.ChosenWallItemType);
         TrySetTag(tag, TagChoiceTorch, TorchSettings.ChosenTorchItemType);
-        TrySetTag(tag, TagChoiceReplacementSource, ReplacementSettings.ChosenSourceItemType);
-        TrySetTag(tag, TagChoiceReplacementTarget, ReplacementSettings.ChosenTargetItemType);
+        // Per-ObjectType replacement source/target choices (S1 2026-04-26).
+        var replaceSrcDict = ReplacementSettings.ChosenSourceItemTypeByObjectType;
+        if (replaceSrcDict != null && replaceSrcDict.Count > 0)
+        {
+            var srcKeys = new List<byte>(); var srcVals = new List<TagCompound>();
+            foreach (var kv in replaceSrcDict) { var p = ChoiceSerialization.SaveChoice(kv.Value); if (p != null) { srcKeys.Add((byte)kv.Key); srcVals.Add(p); } }
+            if (srcKeys.Count > 0) { tag[TagChoiceReplacementSourceKeys] = srcKeys; tag[TagChoiceReplacementSourceVals] = srcVals; }
+        }
+        var replaceTgtDict = ReplacementSettings.ChosenTargetItemTypeByObjectType;
+        if (replaceTgtDict != null && replaceTgtDict.Count > 0)
+        {
+            var tgtKeys = new List<byte>(); var tgtVals = new List<TagCompound>();
+            foreach (var kv in replaceTgtDict) { var p = ChoiceSerialization.SaveChoice(kv.Value); if (p != null) { tgtKeys.Add((byte)kv.Key); tgtVals.Add(p); } }
+            if (tgtKeys.Count > 0) { tag[TagChoiceReplacementTargetKeys] = tgtKeys; tag[TagChoiceReplacementTargetVals] = tgtVals; }
+        }
 
         // Collapsible-section state: serialized as parallel string-list payloads
         // (TagCompound's Dictionary support is lossy across versions; parallel
@@ -899,11 +940,55 @@ public class WandPlayer : ModPlayer
 
     public override void LoadData(TagCompound tag)
     {
-        BuildingSettings.ChosenTileItemType = LoadChoiceTag(tag, TagChoiceBuildingTile);
+        BuildingSettings.ChosenTileItemTypeByObjectType = new System.Collections.Generic.Dictionary<PlaceType, int?>();
+        // S1 2026-04-26: new per-PlaceType format.
+        if (tag.ContainsKey(TagChoiceBuildingTileKeys) && tag.ContainsKey(TagChoiceBuildingTileVals))
+        {
+            var tileKeys = tag.GetList<byte>(TagChoiceBuildingTileKeys);
+            var tileVals = tag.GetList<TagCompound>(TagChoiceBuildingTileVals);
+            int n = System.Math.Min(tileKeys.Count, tileVals.Count);
+            for (int i = 0; i < n; i++)
+            {
+                int? loaded = ChoiceSerialization.LoadChoice(tileVals[i]);
+                if (loaded.HasValue)
+                    BuildingSettings.ChosenTileItemTypeByObjectType[(PlaceType)tileKeys[i]] = loaded;
+            }
+        }
+        else if (tag.ContainsKey(TagChoiceBuildingTile))
+        {
+            // Legacy: old single-slot format mapped to Solid sub-mode.
+            int? legacy = LoadChoiceTag(tag, TagChoiceBuildingTile);
+            if (legacy.HasValue)
+                BuildingSettings.ChosenTileItemTypeByObjectType[PlaceType.Solid] = legacy;
+        }
         BuildingSettings.ChosenWallItemType = LoadChoiceTag(tag, TagChoiceBuildingWall);
         TorchSettings.ChosenTorchItemType = LoadChoiceTag(tag, TagChoiceTorch);
-        ReplacementSettings.ChosenSourceItemType = LoadChoiceTag(tag, TagChoiceReplacementSource);
-        ReplacementSettings.ChosenTargetItemType = LoadChoiceTag(tag, TagChoiceReplacementTarget);
+        ReplacementSettings.ChosenSourceItemTypeByObjectType = new System.Collections.Generic.Dictionary<ObjectType, int?>();
+        if (tag.ContainsKey(TagChoiceReplacementSourceKeys) && tag.ContainsKey(TagChoiceReplacementSourceVals))
+        {
+            var srcKeys = tag.GetList<byte>(TagChoiceReplacementSourceKeys);
+            var srcVals = tag.GetList<TagCompound>(TagChoiceReplacementSourceVals);
+            int n = System.Math.Min(srcKeys.Count, srcVals.Count);
+            for (int i = 0; i < n; i++) { int? loaded = ChoiceSerialization.LoadChoice(srcVals[i]); if (loaded.HasValue) ReplacementSettings.ChosenSourceItemTypeByObjectType[(ObjectType)srcKeys[i]] = loaded; }
+        }
+        else if (tag.ContainsKey(TagChoiceReplacementSource))
+        {
+            int? legacy = LoadChoiceTag(tag, TagChoiceReplacementSource);
+            if (legacy.HasValue) ReplacementSettings.ChosenSourceItemTypeByObjectType[ObjectType.Tile] = legacy;
+        }
+        ReplacementSettings.ChosenTargetItemTypeByObjectType = new System.Collections.Generic.Dictionary<ObjectType, int?>();
+        if (tag.ContainsKey(TagChoiceReplacementTargetKeys) && tag.ContainsKey(TagChoiceReplacementTargetVals))
+        {
+            var tgtKeys = tag.GetList<byte>(TagChoiceReplacementTargetKeys);
+            var tgtVals = tag.GetList<TagCompound>(TagChoiceReplacementTargetVals);
+            int n = System.Math.Min(tgtKeys.Count, tgtVals.Count);
+            for (int i = 0; i < n; i++) { int? loaded = ChoiceSerialization.LoadChoice(tgtVals[i]); if (loaded.HasValue) ReplacementSettings.ChosenTargetItemTypeByObjectType[(ObjectType)tgtKeys[i]] = loaded; }
+        }
+        else if (tag.ContainsKey(TagChoiceReplacementTarget))
+        {
+            int? legacy = LoadChoiceTag(tag, TagChoiceReplacementTarget);
+            if (legacy.HasValue) ReplacementSettings.ChosenTargetItemTypeByObjectType[ObjectType.Tile] = legacy;
+        }
 
         CollapsedSections = new Dictionary<string, bool>();
         if (tag.ContainsKey(TagCollapsedSections + "_K") && tag.ContainsKey(TagCollapsedSections + "_V"))
@@ -990,16 +1075,18 @@ public class WandPlayer : ModPlayer
     {
         ClearSelection();
 
-        // Snapshot pins BEFORE the per-world reset wipes them. ResetToDefaults
+        // Snapshot choices BEFORE the per-world reset wipes them. ResetToDefaults
         // intentionally clears every setting (Object/Shape/SelectionMode/etc.)
         // because we want every other setting to start fresh per world entry,
-        // but pins are explicitly per-character-persistent (S8 2026-04-22 per
+        // but choices are explicitly per-character-persistent (S8 2026-04-22 per
         // Cavendish Response #5 §8) so we restore them after the reset.
-        int? pinTile = BuildingSettings.ChosenTileItemType;
+        // (S1 2026-04-26) tile choices are now a per-PlaceType dictionary; copy it.
+        var savedTileChoices = new System.Collections.Generic.Dictionary<PlaceType, int?>(
+            BuildingSettings.ChosenTileItemTypeByObjectType);
         int? pinWall = BuildingSettings.ChosenWallItemType;
         int? pinTorch = TorchSettings.ChosenTorchItemType;
-        int? pinReplaceSrc = ReplacementSettings.ChosenSourceItemType;
-        int? pinReplaceTgt = ReplacementSettings.ChosenTargetItemType;
+        var savedReplaceSrc = new System.Collections.Generic.Dictionary<ObjectType, int?>(ReplacementSettings.ChosenSourceItemTypeByObjectType);
+        var savedReplaceTgt = new System.Collections.Generic.Dictionary<ObjectType, int?>(ReplacementSettings.ChosenTargetItemTypeByObjectType);
 
         Settings.ResetToDefaults();
         BuildingSettings.ResetToDefaults();
@@ -1009,12 +1096,12 @@ public class WandPlayer : ModPlayer
         SafekeepingSettings.ResetToDefaults();
         CoatingSettings.ResetToDefaults();
 
-        // Restore pins after the reset.
-        BuildingSettings.ChosenTileItemType = pinTile;
+        // Restore choices after the reset.
+        BuildingSettings.ChosenTileItemTypeByObjectType = savedTileChoices;
         BuildingSettings.ChosenWallItemType = pinWall;
         TorchSettings.ChosenTorchItemType = pinTorch;
-        ReplacementSettings.ChosenSourceItemType = pinReplaceSrc;
-        ReplacementSettings.ChosenTargetItemType = pinReplaceTgt;
+        ReplacementSettings.ChosenSourceItemTypeByObjectType = savedReplaceSrc;
+        ReplacementSettings.ChosenTargetItemTypeByObjectType = savedReplaceTgt;
 
         // 2026-04-23 Session 2 (Letter #11 — WoR pin/object-type save-load mismatch).
         // Bug GrayJou reported: "I was using the Inventory View to replace walls
@@ -1031,8 +1118,11 @@ public class WandPlayer : ModPlayer
         // match the pin's actual createWall/createTile/torch nature on world
         // entry. This costs nothing when pins are null (default branch), and is
         // a single-shot reconciliation that doesn't fight further user changes.
-        ReconcileReplacementObjectTypeToChoice(pinReplaceSrc, isSource: true);
-        ReconcileReplacementObjectTypeToChoice(pinReplaceTgt, isSource: false);
+        // S1 2026-04-26: Replacement choices are now per-ObjectType dicts, so each
+        // choice IS already keyed to its correct ObjectType. The former
+        // ReconcileReplacementObjectTypeToChoice(pinReplaceSrc/Tgt) calls that patched
+        // the wall-vs-tile mismatch (Letter #11 fix, 2026-04-23 S2) are no longer
+        // needed — the dict key IS the authoritative ObjectType. No reconciliation required.
 
         // Same reconciliation for WoB (tile vs wall choice vs OperationType — though
         // WoB's tile/wall switch is not in scope of the bug report, the same

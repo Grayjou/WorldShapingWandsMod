@@ -27,7 +27,8 @@ public sealed class ReplacementTargetSource : IInventoryViewSource
         ObjectType obj = wp.ReplacementSettings.NewObject;
         if (obj == ObjectType.Air) yield break; // Air-target = removal; no item choice needed.
 
-        int? excludeSource = wp.ReplacementSettings.ChosenSourceItemType;
+        // (S1 2026-04-26 fix): source exclusion is now per-ObjectType aware.
+        int? excludeSource = wp.ReplacementSettings.GetChosenSourceItemType(wp.ReplacementSettings.OldObject);
         var condition = ItemTypeHelper.GetConditions(obj);
         for (int i = 0; i < 50; i++)
         {
@@ -42,8 +43,11 @@ public sealed class ReplacementTargetSource : IInventoryViewSource
     }
 
     public int? GetSelectedItemType(WandPlayer wp)
-        => wp.ReplacementSettings.ChosenTargetItemType;
+    {
+        // (S1 2026-04-26 fix): independent slot per NewObject sub-mode.
+        return wp.ReplacementSettings.GetChosenTargetItemType(wp.ReplacementSettings.NewObject);
+    }
 
     public void SetSelectedItemType(WandPlayer wp, int? itemType)
-        => wp.ReplacementSettings.ChosenTargetItemType = itemType;
+        => wp.ReplacementSettings.SetChosenTargetItemType(wp.ReplacementSettings.NewObject, itemType);
 }

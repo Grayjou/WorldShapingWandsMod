@@ -834,7 +834,7 @@ public class SelectionOverlay : ModSystem
             // inventory saw the tint track Dirt's 999-stack and go white even when the
             // actual placement item (Adamantite) was short. The chosen feed here mirrors the
             // execute path in TileExecution.cs so preview tint ≡ actual operation behaviour.
-            int? chosen = settings.ChosenTileItemType;
+            int? chosen = settings.GetChosenTileItemType(settings.Object);
             int sourceIdx = ItemTypeHelper.FindFirstItemIndex(player, condition, chosen);
             if (sourceIdx < 0)
             {

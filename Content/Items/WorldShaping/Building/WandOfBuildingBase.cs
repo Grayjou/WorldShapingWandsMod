@@ -93,7 +93,7 @@ namespace WorldShapingWandsMod.Content.Items
             var condition = ItemTypeHelper.GetConditions(settings.Object);
             int? choice = settings.Object == PlaceType.Wall
                 ? settings.ChosenWallItemType
-                : settings.ChosenTileItemType;
+                : settings.GetChosenTileItemType(settings.Object);
             Item blockItem = ItemTypeHelper.FindFirstItem(player, condition, choice);
             if (blockItem != null)
             {

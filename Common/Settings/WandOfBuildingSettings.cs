@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using WorldShapingWandsMod.Common.Enums;
 
@@ -43,19 +44,51 @@ public class WandOfBuildingSettings
     public bool? Actuation { get; set; } = null;
 
     /// <summary>
-    /// chosen source-item type for tile placement (InventoryView v1 framework).
-    /// When non-null, the wand prefers the user's explicit choice over
-    /// FindFirstItemIndex's hotbar-scan fallback. Cleared (null) by default;
-    /// the panel's [✕ Clear pin] footer button or a wand-family swap may reset it.
-    /// Read by <c>BuildingTileSource.GetSelectedItemType</c>; written by
-    /// <c>InventoryViewPanel</c> (UI lands in a later session).
+    /// Per-<see cref="PlaceType"/> chosen source-item types for tile-mode placement
+    /// (InventoryView v1 framework). Keyed by <see cref="PlaceType"/> so that
+    /// a chosen Platform item does not persist when the user switches to Solid
+    /// mode, Rope mode, etc. Each object type has an independent choice slot.
+    ///
+    /// <para>S1 2026-04-26 (bug fix): previously this was a single
+    /// <c>int? ChosenTileItemType</c> shared across all tile sub-modes, which
+    /// caused stale choices (e.g., Wood chosen in Solid mode showing as active
+    /// in Platform mode, then failing to find any platform in inventory and
+    /// blocking placement).</para>
+    ///
+    /// <para>Wall is excluded from this dictionary; wall choices live in
+    /// <see cref="ChosenWallItemType"/> (separate because Wall mode uses a
+    /// distinct execution path).</para>
     /// </summary>
-    public int? ChosenTileItemType { get; set; }
+    public Dictionary<PlaceType, int?> ChosenTileItemTypeByObjectType { get; set; } = new();
 
     /// <summary>
-    /// chosen source-item type for wall placement. Same semantics as
-    /// <see cref="ChosenTileItemType"/> but only consulted when the wand's
-    /// active <see cref="Object"/> is <c>PlaceType.Wall</c>.
+    /// Helper: get the chosen tile item type for the currently-active
+    /// <see cref="Object"/> sub-mode. Returns <c>null</c> when no choice is
+    /// set for this sub-mode (falls back to inventory hotbar scan).
+    /// </summary>
+    public int? GetChosenTileItemType(PlaceType objectType)
+    {
+        if (objectType == PlaceType.Wall) return null; // Wall has its own field.
+        return ChosenTileItemTypeByObjectType.TryGetValue(objectType, out int? v) ? v : null;
+    }
+
+    /// <summary>
+    /// Helper: set (or clear) the chosen tile item type for the given
+    /// <see cref="PlaceType"/> sub-mode.
+    /// </summary>
+    public void SetChosenTileItemType(PlaceType objectType, int? itemType)
+    {
+        if (objectType == PlaceType.Wall) return; // Wall has its own field.
+        if (itemType.HasValue)
+            ChosenTileItemTypeByObjectType[objectType] = itemType;
+        else
+            ChosenTileItemTypeByObjectType.Remove(objectType);
+    }
+
+    /// <summary>
+    /// chosen source-item type for wall placement. Same semantics as the tile
+    /// dictionary but only consulted when the wand's active <see cref="Object"/>
+    /// is <c>PlaceType.Wall</c>.
     /// </summary>
     public int? ChosenWallItemType { get; set; }
 
@@ -79,7 +112,7 @@ public class WandOfBuildingSettings
             Shape = Shape,
             PaintSprayer = PaintSprayer,
             Actuation = Actuation,
-            ChosenTileItemType = ChosenTileItemType,
+            ChosenTileItemTypeByObjectType = new Dictionary<PlaceType, int?>(ChosenTileItemTypeByObjectType),
             ChosenWallItemType = ChosenWallItemType,
             StartPoint = StartPoint,
             EndPoint = EndPoint
@@ -98,7 +131,7 @@ public class WandOfBuildingSettings
         Shape = ShapeInfo.Default;
         PaintSprayer = PaintSprayerSource.Off;
         Actuation = null;
-        ChosenTileItemType = null;
+        ChosenTileItemTypeByObjectType = new Dictionary<PlaceType, int?>();
         ChosenWallItemType = null;
         StartPoint = Point.Zero;
         EndPoint = Point.Zero;
