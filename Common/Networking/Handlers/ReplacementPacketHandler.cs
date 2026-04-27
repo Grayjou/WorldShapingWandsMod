@@ -8,6 +8,7 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using WorldShapingWandsMod.Common.Configs;
 using WorldShapingWandsMod.Common.Enums;
+using WorldShapingWandsMod.Common.Settings;
 using WorldShapingWandsMod.Common.Systems;
 using WorldShapingWandsMod.Common.Utilities;
 using WorldShapingWandsMod.Content.Items;
@@ -39,7 +40,7 @@ public static class ReplacementPacketHandler
         ushort sourceTileOrWallType, ushort targetTileOrWallType,
         short targetItemType, bool isWallMode,
         SliceMode slice = SliceMode.Full, bool connectDiameter = true,
-        bool invertSelection = false, bool paintSprayer = false)
+        bool invertSelection = false, PaintSprayerSource paintSprayer = PaintSprayerSource.Off)
     {
         if (Main.netMode != NetmodeID.MultiplayerClient)
             return;
@@ -55,14 +56,14 @@ public static class ReplacementPacketHandler
         );
         WandPacketHeaderIO.WriteCommonHeader(packet, header);
 
-        // Replacement-specific fields (9 bytes + 1 for paintSprayer)
+        // Replacement-specific fields (9 bytes + 1 for paintSprayer source)
         packet.Write((byte)sourceObjectType);
         packet.Write((byte)targetObjectType);
         packet.Write(sourceTileOrWallType);
         packet.Write(targetTileOrWallType);
         packet.Write(targetItemType);
         packet.Write(isWallMode);
-        packet.Write(paintSprayer);
+        packet.Write((byte)paintSprayer);
         packet.Send();
     }
 
@@ -81,7 +82,7 @@ public static class ReplacementPacketHandler
         ushort targetTileOrWallType = reader.ReadUInt16();
         short targetItemType = reader.ReadInt16();
         bool isWallMode = reader.ReadBoolean();
-        bool paintSprayer = reader.ReadBoolean();
+        PaintSprayerSource paintSprayer = (PaintSprayerSource)reader.ReadByte();
 
         if (!PacketUtilities.ValidatePlayer(header.PlayerWhoAmI))
             return;
@@ -125,7 +126,7 @@ public static class ReplacementPacketHandler
         ushort targetTileType,
         short targetItemType,
         bool eraseMode,
-        bool paintSprayer = false)
+        PaintSprayerSource paintSprayer = PaintSprayerSource.Off)
     {
         var player = Main.player[playerWhoAmI];
         var config = WandConfigs.Resources;
@@ -218,7 +219,8 @@ public static class ReplacementPacketHandler
                 {
                     placed.Slope = oldSlope;
                     placed.IsHalfBlock = oldHalf;
-                    if (paintSprayer) WandOfBuildingBase.ApplyPaintSprayerTile(player, x, y, shouldConsume, changedSlots);
+                    if (paintSprayer.IsActive())
+                        WandOfBuildingBase.ApplyPaintSprayerTile(player, x, y, shouldConsume, paintSprayer, changedSlots);
                 }
 
                 replaced++;
@@ -266,7 +268,7 @@ public static class ReplacementPacketHandler
         ushort targetWallType,
         short targetItemType,
         bool eraseMode,
-        bool paintSprayer = false)
+        PaintSprayerSource paintSprayer = PaintSprayerSource.Off)
     {
         var player = Main.player[playerWhoAmI];
         var config = WandConfigs.Resources;
@@ -330,7 +332,8 @@ public static class ReplacementPacketHandler
                     WorldGen.PlaceWall(x, y, targetWallType, mute: true);
                     if (t.WallType == targetWallType)
                     {
-                        if (paintSprayer) WandOfBuildingBase.ApplyPaintSprayerWall(player, x, y, shouldConsume, changedSlots);
+                        if (paintSprayer.IsActive())
+                            WandOfBuildingBase.ApplyPaintSprayerWall(player, x, y, shouldConsume, paintSprayer, changedSlots);
                         replaced++;
                         affectedPositions.Add(tile);
 

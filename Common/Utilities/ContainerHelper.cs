@@ -171,7 +171,7 @@ public static class ContainerHelper
             return Chest.Unlock(x, y);
         }
 
-        // --- Biome chests (TileID.Containers, styles 23–27) ---
+        // --- Biome chests (TileID.Containers, styles 23–27 and 36) ---
         // Requires respective biome key (consumed) and Plantera defeated.
         // Chest.Unlock handles the frame shift (shift -180, e.g. style 23 → style 18).
         if (tileType == TileID.Containers)

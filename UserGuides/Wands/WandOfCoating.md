@@ -1,6 +1,6 @@
 # Wand of Coating — User Guide
 
-> **Wand Family**: Coating / Painting
+> **Wand Family**: Coating (Paint & Coating)
 > **Variants**: Instant · Select · Confirm · Stamp
 > **Cycle Key**: Right-click the wand in inventory to cycle between variants
 
@@ -8,138 +8,224 @@
 
 ## Overview
 
-The Wand of Coating applies paint, coatings (Illuminant/Echo), and moss management
-to tiles and walls in shaped areas. It replaces Terraria's single-tile paintbrush and
-scraper with a bulk area tool.
+The Wand of Coating is the bulk paint, coating, and moss-management tool. It replaces
+Terraria's single-tile paintbrush, paint scraper, and moss harvester with a shaped,
+area-of-effect tool. You select a shape, choose what to paint (or scrape), and the wand
+applies the change to every tile or wall inside the shape in one stroke.
+
+Use it whenever you want to:
+
+- Re-paint a section of your build in a different colour without going block-by-block.
+- Apply Illuminant or Echo coatings across an entire room or facade.
+- Strip paint and coatings from large areas you've previously decorated.
+- Trim hanging long-moss for decorative drops, or reset stone moss to plain stone.
+
+---
+
+## Quick Start
+
+1. **Equip** the Wand of Coating (Instant is the easiest to start with).
+2. Open the **settings panel** (default: hold the wand and press the settings hotkey).
+3. Pick a **Mode** (PaintTile / PaintWall / ScrapeMoss / HarvestMoss) and a **Paint Colour**
+   (or leave Paint Colour at *Ignore* if you only want to manage Illuminant / Echo).
+4. Set the **Illuminant** and **Echo** tri-state toggles to *Apply*, *Remove*, or *Ignore*.
+5. **Click** in the world — the shape centred on your cursor is coated immediately.
+
+In **Select**, **Confirm**, and **Stamp** modes, **right-click** during selection to cancel
+and clear the preview.
 
 ---
 
 ## Variants
 
 | Variant | Clicks | How It Works |
-|---|---|---|
-| **Instant** | 1 click | Click once → shape centered on cursor is coated immediately |
-| **Select** | 2 clicks | Click start corner → click end corner → area coated |
-| **Confirm** | 3 clicks | Click start → click end → see preview → click to confirm or right-click to cancel |
-| **Stamp** | 4 clicks | Click start → click end → see preview → confirm → stamp repeatedly at new positions |
+|---------|--------|--------------|
+| **Instant** | 1 | Shape centred on cursor, applied immediately |
+| **Select** | 2 | Click start corner → click end corner → area applied |
+| **Confirm** | 3 | Click start → click end → preview → click to confirm or right-click to cancel |
+| **Stamp** | 4 | Click start → click end → confirm → stamp the same shape repeatedly |
 
-### Right-Click Cancel
-
-In **Select**, **Confirm**, and **Stamp** modes, right-click at any time during selection
-to cancel the operation and clear the preview.
+> Stamp mode for Coating uses a **dedicated repeat cadence** (default `1` tick between
+> repeats) so painting feels responsive while held — separate from the slower default
+> stamp cadence used by destructive wands.
 
 ---
 
 ## Coating Modes
 
-The wand has four operating modes:
+The wand has four primary modes selected from the settings panel:
 
-### PaintTile (Default)
+### PaintTile (default)
 
-Applies the selected paint colour to **foreground tiles** (blocks).
-
-- **Paint Colour** (1–30): Any of Terraria’s 30 paint colours, or 0 for “None” (strips paint)
-- **Illuminant** tri-state toggle: Ignore / Apply / Remove
-- **Echo** tri-state toggle: Ignore / Apply / Remove
-- Use **Ignore** to leave existing coatings unchanged
-- Use **Apply** to add the coating
-- Use **Remove** to strip the coating
+Applies the configured Paint Colour, Illuminant, and Echo state to **foreground tiles**
+(blocks, platforms, ropes, etc.) within the shape.
 
 ### PaintWall
 
-Same as PaintTile but targets **background walls** instead of foreground tiles.
+Same operation as PaintTile, but targets **background walls** instead.
 
 ### ScrapeMoss
 
-Removes moss from stone tiles by converting moss variants (green moss stone,
-red moss stone, etc.) back to their base stone type. Also strips any paint
-from the affected tiles.
-
-- Only affects tiles that have moss variants
-- Drops moss items (matches vanilla scraper behaviour)
+Removes **moss variants** from stone tiles by converting them back to plain stone, strips
+any paint from those tiles, and drops the moss as an item — matching vanilla Paint Scraper
+behaviour. Tiles that don't have a moss variant are skipped.
 
 ### HarvestMoss
 
-Trims **long hanging moss** (LongMoss tile type) down to short moss. Drops moss
-items with a 25% chance per tile, matching vanilla scraper behaviour.
-
-- Only targets `TileID.LongMoss` — does NOT affect short moss on stone tiles
-- Useful for harvesting decorative hanging moss without removing the base
+Trims **long hanging moss** (`TileID.LongMoss`) down to short moss. Drops moss items at the
+vanilla 25% per-tile chance. **Does not** affect short moss already on stone tiles — only
+the hanging variants.
 
 ---
 
-## Settings Summary
+## Paint Colour & Coating Tri-States
 
-| Setting | Used In | Description |
-|---|---|---|
-| **Mode** | All | PaintTile · PaintWall · ScrapeMoss · HarvestMoss |
-| **Paint Colour** | PaintTile, PaintWall | Colour index 0–30 (0 = strip paint) |
-| **Illuminant** | PaintTile, PaintWall | Tri-state: Ignore / Apply / Remove |
-| **Echo** | PaintTile, PaintWall | Tri-state: Ignore / Apply / Remove |
-| **Shape** | All | Rectangle · Ellipse · Diamond · Triangle · Elbow · Lines |
-| **Fill Mode** | All | Filled · Hollow |
-| **Thickness** | All | Outline/line thickness |
+The Wand of Coating is built around three independent properties that can each be left
+alone, applied, or removed.
+
+| Property | Values | Notes |
+|----------|--------|-------|
+| **Paint Colour** | `Ignore` (255), `None` (0), or any of the **30 vanilla paints** (1–30) | `Ignore` leaves the existing paint untouched. `None` strips paint to bare. 1–30 apply that colour. |
+| **Illuminant** | `Ignore` / `Apply` / `Remove` | Tri-state toggle. |
+| **Echo**       | `Ignore` / `Apply` / `Remove` | Tri-state toggle. |
+
+### Tri-state semantics
+
+| State | Result on each tile |
+|-------|---------------------|
+| **Ignore** | Coating is left **unchanged** — neither added nor removed. |
+| **Apply** | Coating is **added** if it isn't already there. |
+| **Remove** | Coating is **removed** if it's currently there. |
+
+This independence is the wand's most important feature: you can repaint without touching
+existing Illuminant or Echo, or strip a coating without touching paint, etc.
+
+### Common combinations
+
+| Goal | Mode | Paint Colour | Illuminant | Echo |
+|------|------|--------------|------------|------|
+| Re-paint walls to red, keep coatings | `PaintWall` | Red | Ignore | Ignore |
+| Glow-up an entire room | `PaintTile` | Ignore | Apply | Ignore |
+| Hide a vault under Echo | `PaintWall` | Ignore | Ignore | Apply |
+| Strip everything (paint + coatings) | `PaintTile` | None (0) | Remove | Remove |
+| Add Illuminant + Echo, no colour change | `PaintTile` | Ignore | Apply | Apply |
+
+### Repaint toggle
+
+A separate **Repaint** boolean in the settings panel controls how the wand treats tiles
+that are *already* painted a different colour:
+
+- **Repaint ON** (default) — already-painted tiles are over-painted with the new colour.
+- **Repaint OFF** — already-painted tiles are skipped; only **unpainted** surfaces are
+  coloured. Useful for filling in gaps without disturbing existing decoration.
 
 ---
 
-## Coating Interaction Table
+## Shape & Selection
 
-The Illuminant and Echo tri-state toggles work as follows:
+All standard shapes are available:
 
-| State | Result |
-|---|---|
-| **Apply** | Coating is **applied** to all tiles in the selection |
-| **Remove** | Coating is **removed** from all tiles in the selection |
-| **Ignore** | Coating is **left unchanged** (neither added nor removed) |
+`Rectangle · Ellipse · Diamond · Triangle · Elbow · Cardinal Line · Straight Line`
 
-This means you can:
-- **Add paint + Illuminant without touching Echo**: Set Paint=colour, Illuminant=Apply, Echo=Ignore
-- **Strip all coatings**: Set Paint=0, Illuminant=Remove, Echo=Remove
-- **Only add Echo**: Set Illuminant=Ignore, Echo=Apply
+with the usual options:
+
+- **Filled / Hollow**
+- **Equal Dimensions** (force squares / circles)
+- **Slice Mode** (top/bottom/left/right halves)
+- **Connect Diameter** (connect opposite points for Hollow Ellipse / Diamond)
+- **Thickness** (outline / line width)
+
+The **Mold** shape from a Wand of Molding template is also available — paint, scrape, or
+coat any custom mold you've sculpted.
 
 ---
 
 ## Server Config Settings
 
-| Setting | Default | Effect |
-|---|---|---|
-| **MaxOperationSize** | 10000 | Maximum tiles per operation |
+| Setting | Config | Default | Effect |
+|---------|--------|---------|--------|
+| **MaxOperationSize** | Limits | 10000 | Maximum tiles per operation |
+| **EvilTorchRequiresHardmode** | (n/a) | — | Coating doesn't gate on hardmode; this only affects torches. |
 
-> Note: Coating operations don't destroy tiles, so SuppressDrops, BypassPickaxePower,
-> and protection settings do not apply.
+> Coating operations don't destroy tiles, so **SuppressDrops**, **BypassPickaxePower**, and
+> the protection toggles do not apply. Paint inventory consumption is governed by Terraria's
+> standard rules — paint is consumed per tile unless you've enabled an infinite-paint mode
+> in your loadout.
+
+---
+
+## Client Config Settings
+
+| Setting | Config | Default | Effect |
+|---------|--------|---------|--------|
+| **EnableWandSounds** | Preferences | ON | Plays the `Item109` completion sound after each operation |
+| **EnableProgressiveProcessing** | Performance | ON | Visualises large operations in batches (singleplayer only) |
+| **Overlay colours** | Overlay / CanvasOverlay | — | Coating uses the family-coloured selection overlay (see **Wand Colours**) |
 
 ---
 
 ## Multiplayer Behaviour
 
 | Aspect | Singleplayer | Multiplayer |
-|---|---|---|
+|--------|--------------|-------------|
 | Coating application | ✅ Instant | ✅ Instant (server-side) |
-| Completion sound | ✅ Item109 sound | ✅ Item109 sound (via OperationResult) |
-| Completion message | ✅ Chat message | ✅ Chat message (via OperationResult) |
-| Progressive batching | ✅ Visual batches | ❌ Instant |
-| Undo | ✅ Works | ❌ Not yet supported |
+| Completion sound + chat message | ✅ | ✅ (via `OperationResult`) |
+| Progressive batching | ✅ | ❌ Server processes all at once |
+| Undo (`/undo`) | ✅ | ✅ |
 
 ---
 
-## Tips
+## Interactions With Other Systems
 
-1. **Strip paint in bulk**: Set Mode to PaintTile, Paint Colour to 0 (None),
-   and both Ignore toggles OFF → removes all paint and coatings from tiles.
+### Delimitation Area
 
-2. **Hidden bases**: Use Echo coating to make walls and tiles invisible.
-   Great for hidden rooms in adventure maps.
+If a **Wand of Delimitation** area is active, the Wand of Coating only paints tiles inside
+the delimitation selection — exactly like every other wand family. Tiles outside the
+delimitation area are silently skipped. If your shape lands entirely outside the
+delimitation area, you'll see:
 
-3. **Illuminant lighting**: Apply Illuminant coating instead of placing torches
-   or light sources. Tiles glow at 100% brightness without any visible light source.
+> *"No action executed. Delimitation Area is active and does not overlap with the selection."*
 
-4. **Moss farming**: Use HarvestMoss mode to trim long hanging moss for decorative
-   moss items without removing the base moss from stone tiles.
+See the **[Wand of Delimitation](WandOfDelimitation.md)** guide for full details.
 
-5. **Selective coating**: Use the Ignore toggles to change only paint or only
-   coatings without affecting the other. This prevents accidentally stripping
-   existing Illuminant/Echo coatings when repainting.
+### Undo / Safekeeping
 
-6. **Paint requirement**: You need the appropriate paint items in your inventory
-   (just like using a regular paintbrush). The wand consumes paint per tile
-   unless the server config makes paint infinite.
+Every Coating operation is recorded as a **TileSnapshot** in the undo history. Use the
+undo hotkey (or `/undo`) to revert the last operation; `/undoinfo` previews the cost.
+This works in both singleplayer and multiplayer.
+
+### Building & Replacement Paint Sprayer
+
+The Wand of Building and Wand of Replacement both expose a **Paint Sprayer** tri-state with
+a `CoatingSettings` option. When set, those wands pull their paint colour directly from
+*this* wand's settings, so configuring the Wand of Coating once paints everything you build
+or replace afterwards in the same colour without consuming inventory paint.
+
+---
+
+## Tips & Tricks
+
+- **Strip absolutely everything**: `PaintTile` mode, Paint Colour `None`, Illuminant
+  `Remove`, Echo `Remove`. Now you have a one-click "reset to bare" wand.
+- **Hidden bases**: `PaintWall` + Echo `Apply` makes background walls effectively
+  invisible — perfect for adventure-map secret rooms.
+- **Bulk Illuminant lighting**: Apply Illuminant across a ceiling for ambient glow with
+  no torches and no spawn-blocking light tiles.
+- **Decorate without disturbing**: `Repaint OFF` lets you fill in unpainted tiles only,
+  preserving the work you already did.
+- **Pair with Delimitation**: Use a Delimitation area to paint exactly one wall of a
+  multi-room build without leaking colour into adjacent rooms.
+- **Mold for signage**: Sculpt a logo with the Wand of Molding, switch to Wand of
+  Coating in Stamp mode, pick the Mold shape — and stamp the logo painted in any colour
+  anywhere on the map.
+
+---
+
+## See Also
+
+- **[Wand of Delimitation](WandOfDelimitation.md)** — Constrain coating to a precise area.
+- **[Wand of Molding](WandOfMolding.md)** — Provides the custom Mold shape.
+- **[Wand of Building](WandOfBuilding.md)** — Auto-paint placed tiles using Coating's settings.
+- **[Wand of Replacement](WandOfReplacement.md)** — Auto-paint replaced tiles using Coating's settings.
+- **[Wand of Torches](WandOfTorches.md)** — Echo-coat torches as they're placed (shared coating system).
+- **[Wand of Safekeeping](WandOfSafekeeping.md)** — Protect coated tiles from accidental edits.

@@ -29,7 +29,7 @@ namespace WorldShapingWandsMod.Common.Configs
         [Increment(1)]
         [LabelKey("$Mods.WorldShapingWandsMod.Configs.StampConfig.StampRepeatFrames.Label")]
         [TooltipKey("$Mods.WorldShapingWandsMod.Configs.StampConfig.StampRepeatFrames.Tooltip")]
-        public int StampRepeatFrames { get; set; } = 10;
+        public int StampRepeatFrames { get; set; } = 3;
 
         [DefaultValue(20)]
         [Range(0, 300)]
@@ -37,6 +37,13 @@ namespace WorldShapingWandsMod.Common.Configs
         [LabelKey("$Mods.WorldShapingWandsMod.Configs.StampConfig.CoatingStampChannelFrames.Label")]
         [TooltipKey("$Mods.WorldShapingWandsMod.Configs.StampConfig.CoatingStampChannelFrames.Tooltip")]
         public int CoatingStampChannelFrames { get; set; } = 20;
+
+        [DefaultValue(1)]
+        [Range(1, 60)]
+        [Increment(1)]
+        [LabelKey("$Mods.WorldShapingWandsMod.Configs.StampConfig.CoatingStampRepeatFrames.Label")]
+        [TooltipKey("$Mods.WorldShapingWandsMod.Configs.StampConfig.CoatingStampRepeatFrames.Tooltip")]
+        public int CoatingStampRepeatFrames { get; set; } = 1;
 
         /// <summary>
         /// When true, the first click of a Stamp wand immediately executes the

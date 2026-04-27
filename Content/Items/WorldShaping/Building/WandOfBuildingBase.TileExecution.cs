@@ -143,9 +143,13 @@ namespace WorldShapingWandsMod.Content.Items
 
             if (exhaustMode != BlockExhaustionMode.NextBlock || pinHonored)
             {
-                // For tile wands the consumable is the ammo type, not the wand itself; otherwise choice to the item type.
-                int chosenAmmoType = initialSourceItem.tileWand >= 0 ? initialSourceItem.tileWand : initialSourceItem.type;
-                condition = i => !i.IsAir && i.type == chosenAmmoType;
+                // Narrow placement lookup to the exact chosen placement item.
+                // IMPORTANT: for tile wands this must stay the wand item type (not ammo type),
+                // otherwise downstream placement lookups resolve to ammo blocks (e.g., Wood)
+                // and place the wrong tile instead of the wand's createTile.
+                // Ammo consumption remains handled separately by ConsumeOneItem / stock checks.
+                int chosenPlacementItemType = initialSourceItem.type;
+                condition = i => !i.IsAir && i.type == chosenPlacementItemType;
             }
 
             // S10 (Letter #10 polish — ghost-choice toast, second on Cavendish's
@@ -296,8 +300,13 @@ namespace WorldShapingWandsMod.Content.Items
                         if (existingTile.TileType == (ushort)src0.createTile
                             && ItemTypeHelper.IsSameTileStyle(existingTile, src0.placeStyle))
                         {
-                            // Same type AND same style — only queue for slope overwrite, never destroy.
-                            if (settings.OverwriteSlope && NeedsSlopeChange(tile.X, tile.Y, settings.Slope))
+                            // Same type AND same style — apply in-place modifications (slope/actuation/paint).
+                            // Never destroy+rebuild. IsSlopeOnly is a legacy name; it now covers all three.
+                            bool sameNeedsSlope     = settings.OverwriteSlope && NeedsSlopeChange(tile.X, tile.Y, settings.Slope);
+                            bool sameNeedsActuation = settings.Actuation != null;
+                            bool sameNeedsPaint     = settings.PaintSprayer.IsActive();
+
+                            if (sameNeedsSlope || sameNeedsActuation || sameNeedsPaint)
                             {
                                 action.AddSnapshot(tile);
                                 buildTiles.Add(new ProgressiveTileProcessor.TileBuildingInfo
@@ -517,23 +526,26 @@ namespace WorldShapingWandsMod.Content.Items
                         continue;
                     }
 
-                    // Same tile type? Check if we need a slope change.
-                    // Don't destroy+rebuild just to change the slope — apply in-place.
-                    // This check runs BEFORE replaceMode: slope correction is non-destructive
-                    // (no item consumed, no tile removed) so it should always be allowed.
+                    // Same tile type? Apply in-place modifications (slope, actuation, paint) without
+                    // destroying + rebuilding. None of these consume the tile item.
+                    // This check runs BEFORE replaceMode: these are all non-destructive edits.
                     if (existingTile.TileType == tType
                         && ItemTypeHelper.IsSameTileStyle(existingTile, srcItem.placeStyle))
                     {
-                        // Tile is the same type AND same style — but if OverwriteSlope is on and the slope differs,
-                        // apply the new slope in-place without consuming an item.
-                        if (settings.OverwriteSlope && NeedsSlopeChange(tile.X, tile.Y, settings.Slope))
+                        bool needsSlope      = settings.OverwriteSlope && NeedsSlopeChange(tile.X, tile.Y, settings.Slope);
+                        bool needsActuation  = settings.Actuation != null;
+                        bool needsPaint      = settings.PaintSprayer.IsActive();
+
+                        if (needsSlope || needsActuation || needsPaint)
                         {
                             action.AddSnapshot(tile);
-                            ApplySlope(tile.X, tile.Y, settings.Slope);
+                            if (needsSlope)     ApplySlope(tile.X, tile.Y, settings.Slope);
+                            if (needsActuation) ApplyActuation(tile.X, tile.Y, settings.Actuation);
+                            if (needsPaint)     ApplyPaintSprayerTile(player, tile.X, tile.Y, shouldConsume, settings.PaintSprayer);
                             affectedPositions.Add(tile);
                             replaced++;
                         }
-                        continue; // Either slope was applied or nothing to do
+                        continue; // In-place edits done (or nothing to do) — never destroy+rebuild same type
                     }
 
                     // Substrate-variant skip: if the existing tile is a grass/moss

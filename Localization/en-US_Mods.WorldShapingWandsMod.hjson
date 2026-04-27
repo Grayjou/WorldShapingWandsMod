@@ -36,7 +36,7 @@ UI: {
 		ShapeMold: Mold (from Wand of Molding)
 		EqualDimensions: Equal Dimensions
 		ConnectDiameter: Connect Diameter
-		ConnectDiameterTooltip: Connect Diameter (half shapes only)
+		ConnectDiameterTooltip: Connect Diameter (hollow half-shapes only; does not clear pre-existing tiles on the open side)
 		InvertSelection: Invert Selection
 
 		PaintSprayer: {
@@ -684,8 +684,9 @@ Configs: {
 				'''
 				Number of frames between repeat executions while stamp channeling
 				is active. Lower values execute faster.
-				60 frames = 1 second, so 10 frames = 6 executions per second.
-				Default: 10
+				60 frames = 1 second, so 3 frames = 20 executions per second.
+				Applies to all stamp wands except the Wand of Coating.
+				Default: 3
 				'''
 		}
 
@@ -698,6 +699,17 @@ Configs: {
 				"Free Paint Picasso" experience.
 				Set to 0 for instant channeling (no charge delay).
 				Default: 20 (~0.33 seconds)
+				'''
+		}
+
+		CoatingStampRepeatFrames: {
+			Label: Coating Repeat Interval (frames)
+			Tooltip:
+				'''
+				Override repeat interval for the Wand of Coating stamp mode.
+				Lower values execute faster; 1 frame means repaint every logic tick
+				once channeling is active.
+				Default: 1
 				'''
 		}
 
@@ -1759,17 +1771,17 @@ Items: {
 
 	WandOfReplacementInstant: {
 		DisplayName: Wand of Replacement (Instant)
-		Tooltip: Replaces tiles in a selected area
+		Tooltip: Replaces all tiles of the source type with the target type in a selected area\nSource and target can be pinned from the Inventory View
 	}
 
 	WandOfReplacementSelect: {
 		DisplayName: Wand of Replacement (Select)
-		Tooltip: Replaces tiles in a selected area
+		Tooltip: Replaces all tiles of the source type with the target type in a selected area\nSource and target can be pinned from the Inventory View
 	}
 
 	WandOfReplacementConfirm: {
 		DisplayName: Wand of Replacement (Confirm)
-		Tooltip: Replaces tiles in a selected area
+		Tooltip: Replaces all tiles of the source type with the target type in a selected area\nSource and target can be pinned from the Inventory View
 	}
 
 	WandOfWiringInstant: {
@@ -1799,7 +1811,7 @@ Items: {
 
 	WandOfReplacementStamp: {
 		DisplayName: Wand of Replacement (Stamp)
-		Tooltip: Define a replacement area once, then stamp it repeatedly
+		Tooltip: Define a replacement area once, then stamp it repeatedly\nSource and target can be pinned from the Inventory View
 	}
 
 	WandOfWiringStamp: {

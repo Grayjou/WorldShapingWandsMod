@@ -34,5 +34,11 @@ public class WandOfCoatingStamp : WandOfCoatingBase
         return config?.CoatingStampChannelFrames ?? 20;
     }
 
+    protected override int GetRepeatFrames()
+    {
+        var config = WandConfigs.Stamp;
+        return config?.CoatingStampRepeatFrames ?? 1;
+    }
+
     public override void AddRecipes() => RegisterNonInstantRecipe<WandOfCoatingInstant>();
 }

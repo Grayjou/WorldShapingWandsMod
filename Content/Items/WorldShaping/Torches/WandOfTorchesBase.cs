@@ -410,11 +410,9 @@ public abstract class WandOfTorchesBase : BaseCyclingWand
             if (!tile.HasTile || !TileID.Sets.Torch[tile.TileType])
                 continue;
 
-            // Only convert torches that ARE biome torches (placed by the
-            // biome torch system). Leave decorative torches untouched.
-            // This matches Torch God's Favor behavior — never converts
-            // Rainbow, Ultrabright, or other intentionally-placed torches.
-            if (!TorchPlacementHelper.IsBiomeTorch(tile))
+            // Only convert torches that ARE biome torches or regular torches.
+            // Leave decorative torches (Rainbow, Ultrabright, etc.) untouched.
+            if (!TorchPlacementHelper.IsBiomeTorch(tile) && !TorchPlacementHelper.IsRegularTorch(tile))
                 continue;
 
             // Get current torch identity

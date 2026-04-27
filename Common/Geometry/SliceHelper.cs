@@ -78,6 +78,12 @@ public static class SliceHelper
     /// 
     /// For HalfHorizontal: removes tiles along the horizontal center row(s).
     /// For HalfVertical: removes tiles along the vertical center column(s).
+    /// 
+    /// Thickness-aware: when the outline has thickness &gt; 1 (Chebyshev band),
+    /// the flat-side band is up to <c>thickness</c> tiles deep. All tiles in
+    /// that band are removed so the diameter stays visually open regardless of
+    /// outline thickness. A band width of at least 1 is always enforced so
+    /// thin outlines (thickness 0 or 1) behave identically to before.
     /// </summary>
     public static HashSet<Point> RemoveDiameterEdge(HashSet<Point> outlineTiles, ShapeContext context)
     {
@@ -87,32 +93,27 @@ public static class SliceHelper
         var bounds = context.GetBounds();
         var result = new HashSet<Point>(outlineTiles);
 
+        // Band width = number of tile rows/columns adjacent to the diameter
+        // that belong to the outline. For thin outlines (thickness 0 or 1) this
+        // is always 1. For thick outlines it matches the configured thickness.
+        int bandWidth = Math.Max(1, context.Thickness);
+
         if (context.Slice == SliceMode.HalfHorizontal)
         {
             bool keepTop = IsStartAbove(context);
             float centerY = bounds.Top + (bounds.Height - 1) / 2f;
 
-            // The diameter row is at the boundary of the slice.
-            // For keepTop: diameter is the bottom-most row of the half
-            // For keepBottom: diameter is the top-most row of the half
-            // Remove tiles whose only reason for being in the outline is
-            // that they sit on the diameter edge.
             int diameterY = keepTop
                 ? (int)Math.Floor(centerY)
                 : (int)Math.Ceiling(centerY);
 
-            // Remove tiles on the diameter row that don't have neighbors
-            // further into the shape interior (they're purely diameter-edge tiles)
+            // Remove the full diameter band on the flat side of the half-shape.
+            // keepTop  → band runs from (diameterY - bandWidth + 1) up to diameterY  (bottom rows)
+            // keepBot  → band runs from diameterY up to (diameterY + bandWidth - 1)  (top rows)
             result.RemoveWhere(p =>
-            {
-                if (p.Y != diameterY) return false;
-                // Keep if tile also touches the curved boundary (has non-diameter outline neighbors)
-                // Remove if it's a pure diameter tile
-                bool hasAboveNeighborInSet = keepTop && outlineTiles.Contains(new Point(p.X, p.Y - 1));
-                bool hasBelowNeighborInSet = !keepTop && outlineTiles.Contains(new Point(p.X, p.Y + 1));
-                // If it has a neighbor in the outline on the interior side, it's a corner/curve tile — keep it
-                return !(hasAboveNeighborInSet || hasBelowNeighborInSet);
-            });
+                keepTop
+                    ? p.Y >= diameterY - (bandWidth - 1) && p.Y <= diameterY
+                    : p.Y >= diameterY && p.Y <= diameterY + (bandWidth - 1));
         }
         else // HalfVertical
         {
@@ -124,12 +125,9 @@ public static class SliceHelper
                 : (int)Math.Ceiling(centerX);
 
             result.RemoveWhere(p =>
-            {
-                if (p.X != diameterX) return false;
-                bool hasLeftNeighborInSet = keepLeft && outlineTiles.Contains(new Point(p.X - 1, p.Y));
-                bool hasRightNeighborInSet = !keepLeft && outlineTiles.Contains(new Point(p.X + 1, p.Y));
-                return !(hasLeftNeighborInSet || hasRightNeighborInSet);
-            });
+                keepLeft
+                    ? p.X >= diameterX - (bandWidth - 1) && p.X <= diameterX
+                    : p.X >= diameterX && p.X <= diameterX + (bandWidth - 1));
         }
 
         return result;

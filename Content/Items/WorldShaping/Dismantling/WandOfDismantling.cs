@@ -181,7 +181,6 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
         foreach (Point tile in sortedTiles)
         {
             if (!WorldGen.InWorld(tile.X, tile.Y, 1)) continue;
-            if (SafekeepingSystem.IsProtected(tile.X, tile.Y)) { skipped++; continue; }
 
             // Skip tiles already destroyed by the container pass
             if (containerTiles.Contains(tile)) continue;
@@ -221,6 +220,12 @@ public abstract class WandOfDismantlingBase : BaseCyclingWand
 
             bool willDestroyWall = settings.DestroyWalls
                 && tileData.WallType > WallID.None;
+
+            // Check protection independently: skip only what's actually protected AND being destroyed
+            if (willDestroyTile && SafekeepingSystem.IsTileProtected(tile.X, tile.Y))
+                willDestroyTile = false;
+            if (willDestroyWall && SafekeepingSystem.IsWallProtected(tile.X, tile.Y))
+                willDestroyWall = false;
 
             if (!willDestroyTile && !willDestroyWall) { skipped++; continue; }
 

@@ -1,15 +1,15 @@
 Keybinds: {
 	"Increase Thickness.DisplayName": Aumentar Grosor
 	"Decrease Thickness.DisplayName": Disminuir Grosor
-	"Open Wand Settings.DisplayName": Abrir Configuración de Varita
+	"Open Wand Settings.DisplayName": Abrir ConfiguraciÃ³n de Varita
 	"Open Inventory View.DisplayName": Abrir Ventana de Inventario
-	"Undo Selection Step.DisplayName": Deshacer Paso de Selección
+	"Undo Selection Step.DisplayName": Deshacer Paso de SelecciÃ³n
 	"Toggle Suppress Drops.DisplayName": Alternar Suprimir Objetos
 }
 
 RecipeGroups: {
 	AnyGemstone: Gema Cualquiera
-	AnyWandOfBuilding: Cualquier Varita de Construcción
+	AnyWandOfBuilding: Cualquier Varita de ConstrucciÃ³n
 	AnyWandOfDismantling: Cualquier Varita de Desmantelamiento
 }
 
@@ -26,22 +26,22 @@ UI: {
 		DefaultOn: Activado por Defecto
 		DefaultOff: Desactivado por Defecto
 		// Shape hover texts
-		ShapeRectFilled: Rectángulo (Relleno)
-		ShapeRectHollow: Rectángulo (Hueco)
+		ShapeRectFilled: RectÃ¡ngulo (Relleno)
+		ShapeRectHollow: RectÃ¡ngulo (Hueco)
 		ShapeEllipseFilled: Elipse (Rellena)
 		ShapeEllipseHollow: Elipse (Hueca)
 		ShapeDiamondFilled: Diamante (Relleno)
 		ShapeDiamondHollow: Diamante (Hueco)
-		ShapeTriangleFilled: Triángulo (Relleno)
-		ShapeTriangleHollow: Triángulo (Hueco)
+		ShapeTriangleFilled: TriÃ¡ngulo (Relleno)
+		ShapeTriangleHollow: TriÃ¡ngulo (Hueco)
 		ShapeElbow: Codo
-		ShapeCardinal: Línea Cardinal
-		ShapeStraightLine: Línea Recta
+		ShapeCardinal: LÃ­nea Cardinal
+		ShapeStraightLine: LÃ­nea Recta
 		ShapeMold: Molde (forma personalizada)
 		EqualDimensions: Igualar Dimensiones
-		ConnectDiameter: Conectar Diámetro
-		ConnectDiameterTooltip: Conectar Díametro (Sólo formas a la mitad)
-		InvertSelection: Invertir Selección
+		ConnectDiameter: Conectar DiÃ¡metro
+		ConnectDiameterTooltip: Conectar DÃ­ametro (SÃ³lo formas a la mitad)
+		InvertSelection: Invertir SelecciÃ³n
 
 		PaintSprayer: {
 			// $parentVal: Paint Sprayer
@@ -87,9 +87,9 @@ UI: {
 	}
 
 	Building: {
-		Title: Varita de Construcción
+		Title: Varita de ConstrucciÃ³n
 		ObjectType: Tipo de Objeto
-		SolidBlock: Bloque Sólido
+		SolidBlock: Bloque SÃ³lido
 		Platform: Plataforma
 		Rope: Cuerda
 		Rail: Riel
@@ -99,12 +99,12 @@ UI: {
 		Slope: Rampa
 		SlopeDefault: Bloque Completo
 		SlopeHalf: Medio Bloque
-		SlopeBottomRight: Rampa ◣ (Abajo-Derecha)
-		SlopeBottomLeft: Rampa ◢ (Abajo-Izquierda)
-		SlopeTopRight: Rampa ◤ (Arriba-Derecha)
-		SlopeTopLeft: Rampa ◥ (Arriba-Izquierda)
+		SlopeBottomRight: Rampa â—£ (Abajo-Derecha)
+		SlopeBottomLeft: Rampa â—¢ (Abajo-Izquierda)
+		SlopeTopRight: Rampa â—¤ (Arriba-Derecha)
+		SlopeTopLeft: Rampa â—¥ (Arriba-Izquierda)
 		OverwriteSlope: Sobrescribir Rampa
-		Options: Opciones de Construcción
+		Options: Opciones de ConstrucciÃ³n
 	}
 
 	Dismantling: {
@@ -113,9 +113,9 @@ UI: {
 		DestroyTiles: Destruir Bloques
 		DestroyWalls: Destruir Paredes
 		DestroyContainers: Destruir Cofres
-		DestroyContainersTooltip: Solo activo cuando Destruir Bloques también está activado
+		DestroyContainersTooltip: Solo activo cuando Destruir Bloques tambiÃ©n estÃ¡ activado
 		VoidEverything: Desaparecer Todo
-		VoidEverythingTooltip: Permitir Desaparecer Todo. Este modo destruye todos los objetos, líquidos y activadores en vez de desmantelar normalmente
+		VoidEverythingTooltip: Permitir Desaparecer Todo. Este modo destruye todos los objetos, lÃ­quidos y activadores en vez de desmantelar normalmente
 		VoidEverythingDisabled: Desparecer Todo requiere Modo Despreocupado permitido en las configuraciones
 	}
 
@@ -149,7 +149,7 @@ UI: {
 	}
 
 	Safekeeping: {
-		Title: Varita de Preservación
+		Title: Varita de PreservaciÃ³n
 		Mode: Modo
 		Protect: Proteger
 		Unprotect: Desproteger
@@ -179,14 +179,14 @@ UI: {
 	}
 
 	CollapsibleSection: {
-		ExpandTooltip: Expandir sección
-		CollapseTooltip: Contraer sección
+		ExpandTooltip: Expandir secciÃ³n
+		CollapseTooltip: Contraer secciÃ³n
 		PopoutTooltip: Abrir en un mini-panel flotante
 	}
 
 	Fluids: {
 		Title: Varita de Fluidos
-		PlaceType: Tipo de Líquido
+		PlaceType: Tipo de LÃ­quido
 		Water: Agua
 		Lava: Lava
 		Honey: Miel
@@ -196,12 +196,12 @@ UI: {
 		FullLiquid: Llenado Completo
 		RainFill: Llenado de Lluvia
 		PocketFill: Llenado de Cavidades
-		Operation: Operación
+		Operation: OperaciÃ³n
 		Fill: Llenar
 		Drain: Drenar
 		FluidOptions: Opciones de Fluidos
 		CoatInBubble: Recubrir con Burbuja
-		MixLiquids: Mezclar Líquidos
+		MixLiquids: Mezclar LÃ­quidos
 		/* OverwriteLiquids:
 			'''
 			Overwrite Liquids
@@ -215,8 +215,8 @@ UI: {
 	Torches: {
 		Title: Varita de Antorchas
 		TilingStyle: Estilo de Teselado
-		Manhattan: Manhattan (Teselado Mínimo)
-		Grid: Cuadrícula
+		Manhattan: Manhattan (Teselado MÃ­nimo)
+		Grid: CuadrÃ­cula
 		SpacingX: Espaciado en X
 		SpacingY: Espaciado en Y
 		TorchOptions: Opciones de Antorchas
@@ -231,33 +231,33 @@ UI: {
 		ModRemove: Remover
 		ModConvert: Convertir a Bioma
 		ReferenceHeader: Punto de Referencia
-		RefFirstValid: Primer Posición Válida
-		RefBboxTopLeft: Esquina sup. izq. de Selección
-		RefBboxTopRight: Esquina sup. der. de Selección
-		RefBboxBottomLeft: Esquina inf. izq. de Selección
-		RefBboxBottomRight: Esquina inf. der. de Selección
+		RefFirstValid: Primer PosiciÃ³n VÃ¡lida
+		RefBboxTopLeft: Esquina sup. izq. de SelecciÃ³n
+		RefBboxTopRight: Esquina sup. der. de SelecciÃ³n
+		RefBboxBottomLeft: Esquina inf. izq. de SelecciÃ³n
+		RefBboxBottomRight: Esquina inf. der. de SelecciÃ³n
 		RefFirstClick: Esquina de Primer Click
-		RefMousePos: Posición del Ratón
+		RefMousePos: PosiciÃ³n del RatÃ³n
 		FlipTiling: Alternar Teselado
 		AlignToExisting: Alinear a Antorchas Existentes
 	}
 
 	Selection: {
-		Title: Varita de Delimitación
+		Title: Varita de DelimitaciÃ³n
 		Mode: Modo
-		ModeSelection: Modo Selección
+		ModeSelection: Modo SelecciÃ³n
 		ModeCanvasEdit: Modo Ajuste de Canvas
-		Operation: Operación
-		OpAdd: Añadir (Unión)
+		Operation: OperaciÃ³n
+		OpAdd: AÃ±adir (UniÃ³n)
 		OpRemove: Remover (Substraer)
-		OpIntersect: Intersección
+		OpIntersect: IntersecciÃ³n
 		OpXOR: XOR (Alternar)
 		Actions: Acciones
-		ClearSelection: Vaciar Selección
-		InvertSelection: Invertir Selección
+		ClearSelection: Vaciar SelecciÃ³n
+		InvertSelection: Invertir SelecciÃ³n
 		ClearCanvas: Vaciar Canvas
 		ClearAll: Vaciar Todo
-		TeleportToPlayer: Teletransportar a mi posición
+		TeleportToPlayer: Teletransportar a mi posiciÃ³n
 		AutoCreateCanvas: Auto-creado de Canvas
 		Status: Estado
 	}
@@ -265,19 +265,19 @@ UI: {
 	Molding: {
 		Title: Varita de Moldeado
 		Mode: Modo
-		ModeSelection: Modo Selección
+		ModeSelection: Modo SelecciÃ³n
 		ModeCanvasEdit: Modo Ajuste de Canvas
-		Operation: Operación
-		OpAdd: Añadir (Unión)
+		Operation: OperaciÃ³n
+		OpAdd: AÃ±adir (UniÃ³n)
 		OpRemove: Remover (Substraer)
-		OpIntersect: Intersección
+		OpIntersect: IntersecciÃ³n
 		OpXOR: XOR (Alternar)
 		Actions: Acciones
-		ClearSelection: Vaciar Selección
-		InvertSelection: Invertir Selección
+		ClearSelection: Vaciar SelecciÃ³n
+		InvertSelection: Invertir SelecciÃ³n
 		ClearCanvas: Vaciar Canvas
 		ClearAll: Vaciar Todo
-		TeleportToPlayer: Teletransportar a mi posición
+		TeleportToPlayer: Teletransportar a mi posiciÃ³n
 		AutoCreateCanvas: Auto-creado de Canvas
 		Status: Estado
 	}
@@ -295,7 +295,7 @@ UI: {
 		NoCandidates: Cero objetos del tipo en inventario
 
 		Building: {
-			PanelTitle: Bloques de Construcción
+			PanelTitle: Bloques de ConstrucciÃ³n
 			TileTitle: Objetos
 			WallTitle: Muros
 		}
@@ -320,7 +320,7 @@ Configs: {
 
 		EnableInfiniteResource: {
 			Label: Activar Recursos Infinitos
-			Tooltip: Al estar activo, las varitas de construcción y reemplazo dejarán de consumir objetos si tienes suficientes en tu inventario. Establece el umbral en 0 para nunca consumir
+			Tooltip: Al estar activo, las varitas de construcciÃ³n y reemplazo dejarÃ¡n de consumir objetos si tienes suficientes en tu inventario. Establece el umbral en 0 para nunca consumir
 		}
 
 		InfiniteTileThreshold: {
@@ -458,7 +458,7 @@ Configs: {
 		}
 
 		AllowDemonAltarDestruction: {
-			Label: Permitir Destrucción de Altares Malvados
+			Label: Permitir DestrucciÃ³n de Altares Malvados
 			/* Tooltip:
 				'''
 				When enabled, the Wand of Dismantling can destroy Demon Altars and Crimson Altars.
@@ -468,7 +468,7 @@ Configs: {
 		}
 
 		AllowDelicateTileDestruction: {
-			Label: Permitir Destrucción de Objetos Delicados
+			Label: Permitir DestrucciÃ³n de Objetos Delicados
 			/* Tooltip:
 				'''
 				When enabled, the Wand of Dismantling can destroy "delicate" tiles
@@ -491,7 +491,7 @@ Configs: {
 		}
 
 		AutoOpenChestsOnDestruction: {
-			Label: Abrir Cofres bajo llave automáticamente al desmantelar
+			Label: Abrir Cofres bajo llave automÃ¡ticamente al desmantelar
 			/* Tooltip:
 				'''
 				When enabled, the Wand of Dismantling automatically empties and destroys
@@ -531,7 +531,7 @@ Configs: {
 		// SelectionLimits.Header: Selection Dimension Limits
 
 		SmallSelectionCap: {
-			Label: Límite de Forma Pequeña (Codo / Línea Cardinal / Línea Recta)
+			Label: LÃ­mite de Forma PequeÃ±a (Codo / LÃ­nea Cardinal / LÃ­nea Recta)
 			/* Tooltip:
 				'''
 				Maximum dimension (width or height) for Elbow, Cardinal Line, and Straight Line shapes.
@@ -540,7 +540,7 @@ Configs: {
 		}
 
 		BigSelectionCap: {
-			Label: Límite de Forma Grande (Rectángulo / Elipse / etc.)
+			Label: LÃ­mite de Forma Grande (RectÃ¡ngulo / Elipse / etc.)
 			/* Tooltip:
 				'''
 				Maximum dimension (width or height) for 2D area shapes.
@@ -549,7 +549,7 @@ Configs: {
 		}
 
 		HollowSelectionCap: {
-			Label: Límite de Forma Hueca
+			Label: LÃ­mite de Forma Hueca
 			/* Tooltip:
 				'''
 				Maximum dimension (width or height) for hollow shapes.
@@ -559,7 +559,7 @@ Configs: {
 		}
 
 		CoatingSelectionCap: {
-			Label: Límite de dimensión de Varita de Revestimiento
+			Label: LÃ­mite de dimensiÃ³n de Varita de Revestimiento
 			/* Tooltip:
 				'''
 				Maximum dimension (width or height) for Wand of Coating selections.
@@ -569,7 +569,7 @@ Configs: {
 		}
 
 		MoldingSelectionCap: {
-			Label: Límite de dimensión de Varita de Moldeado
+			Label: LÃ­mite de dimensiÃ³n de Varita de Moldeado
 			/* Tooltip:
 				'''
 				Maximum dimension (width or height) for Wand of Molding selections.
@@ -579,7 +579,7 @@ Configs: {
 		}
 
 		DelimitationSelectionCap: {
-			Label: Límite de dimensión de Varita de Delimitación
+			Label: LÃ­mite de dimensiÃ³n de Varita de DelimitaciÃ³n
 			/* Tooltip:
 				'''
 				Maximum dimension (width or height) for Wand of Delimitation selections.
@@ -591,7 +591,7 @@ Configs: {
 		OperationLimits.Header: Operation Limits
 
 		MaxOutlineThickness: {
-			Label: Grosor Máximo del Contorno
+			Label: Grosor MÃ¡ximo del Contorno
 			/* Tooltip:
 				'''
 				Maximum outline thickness for hollow shapes.
@@ -612,7 +612,7 @@ Configs: {
 		}
 
 		MaxConfirmDistance: {
-			Label: Distancia Máxima de Confirmación (bloques)
+			Label: Distancia MÃ¡xima de ConfirmaciÃ³n (bloques)
 			/* Tooltip:
 				'''
 				Maximum distance (in tiles) from the closest edge of the selection
@@ -626,7 +626,7 @@ Configs: {
 		// Safekeeping.Header: Safekeeping
 
 		SafekeepingClearThreshold: {
-			Label: Umbral de Confirmación para Limpiar Todo
+			Label: Umbral de ConfirmaciÃ³n para Limpiar Todo
 			/* Tooltip:
 				'''
 				When the total number of protected tiles and walls exceeds this value, the Clear All button requires a second click to confirm.
@@ -649,7 +649,7 @@ Configs: {
 		}
 
 		ProgressiveBatchSize: {
-			Label: Tamaño del Lote
+			Label: TamaÃ±o del Lote
 			/* Tooltip:
 				'''
 				Number of tiles processed per batch in progressive mode.
@@ -683,13 +683,14 @@ Configs: {
 		}
 
 		StampRepeatFrames: {
-			Label: Intervalo de Repetición (tics)
+			Label: Intervalo de RepeticiÃ³n (tics)
 			/* Tooltip:
 				'''
 				Number of frames between repeat executions while stamp channeling
 				is active. Lower values execute faster.
-				60 frames = 1 second, so 10 frames = 6 executions per second.
-				Default: 10
+				60 frames = 1 second, so 3 frames = 20 executions per second.
+				Applies to all stamp wands except the Wand of Coating.
+				Default: 3
 				''' */
 		}
 
@@ -702,6 +703,17 @@ Configs: {
 				"Free Paint Picasso" experience.
 				Set to 0 for instant channeling (no charge delay).
 				Default: 20 (~0.33 seconds)
+				''' */
+		}
+
+		CoatingStampRepeatFrames: {
+			// Label: Coating Repeat Interval (frames)
+			/* Tooltip:
+				'''
+				Override repeat interval for the Wand of Coating stamp mode.
+				Lower values execute faster; 1 frame means repaint every logic tick
+				once channeling is active.
+				Default: 1
 				''' */
 		}
 
@@ -743,7 +755,7 @@ Configs: {
 		}
 
 		TorchWheelMaxTorches: {
-			Label: Máx. Antorchas por Uso
+			Label: MÃ¡x. Antorchas por Uso
 			/* Tooltip:
 				'''
 				Maximum number of torches a single Torch Wheel projectile can place
@@ -753,7 +765,7 @@ Configs: {
 		}
 
 		TorchWheelMaxTiles: {
-			Label: Máx. Bloques (pasos)
+			Label: MÃ¡x. Bloques (pasos)
 			/* Tooltip:
 				'''
 				Maximum number of tiles the Torch Wheel projectile can traverse
@@ -764,7 +776,7 @@ Configs: {
 		}
 
 		TorchWheelMaxBacktrackSteps: {
-			Label: Máx. Pasos de Pre-escaneo
+			Label: MÃ¡x. Pasos de Pre-escaneo
 			/* Tooltip:
 				'''
 				Maximum number of steps the Torch Wheel traces backward after the
@@ -794,7 +806,7 @@ Configs: {
 		// SmartTorchSelection.Header: Smart Torch Selection
 
 		UnderwaterTorchLookup: {
-			Label: Búsqueda de Antorchas Subacuáticas
+			Label: BÃºsqueda de Antorchas SubacuÃ¡ticas
 			/* Tooltip:
 				'''
 				When the selected torch can't survive underwater, search
@@ -805,7 +817,7 @@ Configs: {
 		}
 
 		AutoWaterproofTorches: {
-			Label: Antorchas Impermeables Automáticas
+			Label: Antorchas Impermeables AutomÃ¡ticas
 			/* Tooltip:
 				'''
 				When no waterproof torch is found in inventory, automatically
@@ -817,7 +829,7 @@ Configs: {
 		}
 
 		OceanWaterproofTorch: {
-			Label: Antorcha Impermeable para Océano
+			Label: Antorcha Impermeable para OcÃ©ano
 			/* Tooltip:
 				'''
 				Which waterproof torch to use when auto-converting in Ocean
@@ -828,7 +840,7 @@ Configs: {
 		}
 
 		NonOceanWaterproofTorch: {
-			Label: Antorcha Impermeable (No Océano)
+			Label: Antorcha Impermeable (No OcÃ©ano)
 			/* Tooltip:
 				'''
 				Which waterproof torch to use when auto-converting outside
@@ -839,7 +851,7 @@ Configs: {
 		}
 
 		SmartBiomeTorchLookup: {
-			Label: Búsqueda Inteligente de Antorchas por Bioma
+			Label: BÃºsqueda Inteligente de Antorchas por Bioma
 			/* Tooltip:
 				'''
 				When biome torch conversion is active and the player holds
@@ -852,7 +864,7 @@ Configs: {
 		}
 
 		EvilTorchRequiresHardmode: {
-			Label: Las Antorchas Malignas Requieren Modo Difícil
+			Label: Las Antorchas Malignas Requieren Modo DifÃ­cil
 			/* Tooltip:
 				'''
 				When enabled, underwater torch conversion will not produce
@@ -864,7 +876,7 @@ Configs: {
 		}
 
 		SubstituteCoralTorchPreHardmode: {
-			Label: Substituir Antorcha de Coral Antes del Modo Difícil
+			Label: Substituir Antorcha de Coral Antes del Modo DifÃ­cil
 			/* Tooltip:
 				'''
 				When 'Evil Torch Requires Hardmode' blocks an evil torch
@@ -932,18 +944,18 @@ Configs: {
 		}
 
 		CarefreeSuppressDrops: {
-			Label: Modo Despreocupado: Suprimir Obtención de Objetos
-			Tooltip: Cuando el modo despreocupado está activado, determina si se suprime la obtención de objetos durante el uso de los controles.
+			Label: Modo Despreocupado: Suprimir ObtenciÃ³n de Objetos
+			Tooltip: Cuando el modo despreocupado estÃ¡ activado, determina si se suprime la obtenciÃ³n de objetos durante el uso de los controles.
 		}
 
 		CarefreeAllowDemonAltarDestruction: {
-			Label: Modo Despreocupado: Permitir destrucción de altares demoníacos
-			Tooltip: Cuando el modo despreocupado está activado, determina si se pueden destruir altares demoníacos o de carmesí.
+			Label: Modo Despreocupado: Permitir destrucciÃ³n de altares demonÃ­acos
+			Tooltip: Cuando el modo despreocupado estÃ¡ activado, determina si se pueden destruir altares demonÃ­acos o de carmesÃ­.
 		}
 
 		CarefreeAllowDelicateTileDestruction: {
-			Label: Modo Despreocupado: Permitir destrucción de bloques delicados
-			Tooltip: Cuando el Modo Despreocupado está activado, controla si se pueden destruir los bloques delicados (p. ej., Orbes Sombríos, Corazones Demoníacos).
+			Label: Modo Despreocupado: Permitir destrucciÃ³n de bloques delicados
+			Tooltip: Cuando el Modo Despreocupado estÃ¡ activado, controla si se pueden destruir los bloques delicados (p. ej., Orbes SombrÃ­os, Corazones DemonÃ­acos).
 		}
 	}
 
@@ -985,7 +997,7 @@ Configs: {
 		}
 
 		SelectionOverlayColor: {
-			Label: Color de Capa de Vista Previa de Selección
+			Label: Color de Capa de Vista Previa de SelecciÃ³n
 			/* Tooltip:
 				'''
 				The base color used for the selection overlay highlight.
@@ -1005,7 +1017,7 @@ Configs: {
 		}
 
 		OverlayBrightnessMin: {
-			Label: Brillo Mínimo de Capa de Vista Previa
+			Label: Brillo MÃ­nimo de Capa de Vista Previa
 			/* Tooltip:
 				'''
 				The overlay brightness at the first selection step.
@@ -1015,7 +1027,7 @@ Configs: {
 		}
 
 		OverlayBrightnessMax: {
-			Label: Brillo Máximo de Capa de Vista Previa
+			Label: Brillo MÃ¡ximo de Capa de Vista Previa
 			/* Tooltip:
 				'''
 				The overlay brightness at the final selection step.
@@ -1049,7 +1061,7 @@ Configs: {
 		// CanvasOverlay.Header: Canvas Overlay
 
 		CanvasOutsideAlpha: {
-			Label: Alfa de Atenuación Exterior
+			Label: Alfa de AtenuaciÃ³n Exterior
 			/* Tooltip:
 				'''
 				Opacity of the dimming overlay drawn over tiles OUTSIDE the canvas.
@@ -1069,7 +1081,7 @@ Configs: {
 		}
 
 		CanvasTileSelectionAlpha: {
-			Label: Alfa de Selección de Bloques
+			Label: Alfa de SelecciÃ³n de Bloques
 			/* Tooltip:
 				'''
 				Opacity of the highlight drawn over selected tiles within the canvas.
@@ -1079,7 +1091,7 @@ Configs: {
 		}
 
 		CanvasOutsideColor: {
-			Label: Color de Atenuación Exterior
+			Label: Color de AtenuaciÃ³n Exterior
 			/* Tooltip:
 				'''
 				Color used for the dimming overlay drawn over tiles OUTSIDE the canvas.
@@ -1104,7 +1116,7 @@ Configs: {
 		}
 
 		CanvasTileSelectionColor: {
-			Label: Color de Selección de Bloques
+			Label: Color de SelecciÃ³n de Bloques
 			/* Tooltip:
 				'''
 				Color used for the highlight drawn over selected tiles within the canvas.
@@ -1118,7 +1130,7 @@ Configs: {
 		// MoldingCanvasOverlay.Header: Molding Canvas Overlay
 
 		MoldingOutsideAlpha: {
-			Label: Alfa de Atenuación Exterior (Moldeado)
+			Label: Alfa de AtenuaciÃ³n Exterior (Moldeado)
 			/* Tooltip:
 				'''
 				Opacity of the dimming overlay drawn over tiles OUTSIDE the molding canvas.
@@ -1138,7 +1150,7 @@ Configs: {
 		}
 
 		MoldingTileSelectionAlpha: {
-			Label: Alfa de Selección de Bloques (Moldeado)
+			Label: Alfa de SelecciÃ³n de Bloques (Moldeado)
 			/* Tooltip:
 				'''
 				Opacity of the highlight drawn over selected tiles within the molding canvas.
@@ -1148,7 +1160,7 @@ Configs: {
 		}
 
 		MoldingOutsideColor: {
-			Label: Color de Atenuación Exterior (Moldeado)
+			Label: Color de AtenuaciÃ³n Exterior (Moldeado)
 			/* Tooltip:
 				'''
 				Color used for the dimming overlay drawn over tiles OUTSIDE the molding canvas.
@@ -1172,7 +1184,7 @@ Configs: {
 		}
 
 		MoldingTileSelectionColor: {
-			Label: Color de Selección de Bloques (Moldeado)
+			Label: Color de SelecciÃ³n de Bloques (Moldeado)
 			/* Tooltip:
 				'''
 				Color used for the highlight drawn over selected tiles within the molding canvas.
@@ -1190,20 +1202,20 @@ Configs: {
 
 		ShowLoreTooltips: {
 			Label: Mostrar Descripciones de Lore
-			Tooltip: Cuando está activado, mantener presionado Mayús mientras se pasa el cursor sobre una varita muestra su lore.\nDesactívalo para ocultar la historia por completo.
+			Tooltip: Cuando estÃ¡ activado, mantener presionado MayÃºs mientras se pasa el cursor sobre una varita muestra su lore.\nDesactÃ­valo para ocultar la historia por completo.
 		}
 
 		// Audio.Header: Audio
 
 		EnableWandSounds: {
 			Label: Activar Efectos de Sonido de Varitas
-			Tooltip: Cuando está activado, las varitas reproducen efectos de sonido personalizados al realizar acciones con éxito.\nDesactívalo para operaciones silenciosas.
+			Tooltip: Cuando estÃ¡ activado, las varitas reproducen efectos de sonido personalizados al realizar acciones con Ã©xito.\nDesactÃ­valo para operaciones silenciosas.
 		}
 
 		// Undo.Header: Undo
 
 		MaxUndoStackSize: {
-			Label: Tamaño Máximo de Historial de Deshacer
+			Label: TamaÃ±o MÃ¡ximo de Historial de Deshacer
 			/* Tooltip:
 				'''
 				The maximum number of wand operations stored in the undo history.
@@ -1216,7 +1228,7 @@ Configs: {
 		// StampChanneling.Header: Stamp Channeling
 
 		AllowChanneling: {
-			Label: Permitir Canalización
+			Label: Permitir CanalizaciÃ³n
 			/* Tooltip:
 				'''
 				When enabled, stamp wands charge up while holding the use button
@@ -1226,7 +1238,7 @@ Configs: {
 		}
 
 		AllowChannelingDust: {
-			Label: Mostrar Polvo de Canalización
+			Label: Mostrar Polvo de CanalizaciÃ³n
 			/* Tooltip:
 				'''
 				When enabled, dust particles are drawn toward the cursor while
@@ -1236,7 +1248,7 @@ Configs: {
 		}
 
 		AllowChannelingSound: {
-			Label: Reproducir Sonidos de Canalización
+			Label: Reproducir Sonidos de CanalizaciÃ³n
 			/* Tooltip:
 				'''
 				When enabled, stamp wands play charge-up sound cues at 25%, 50%,
@@ -1248,7 +1260,7 @@ Configs: {
 		// Feedback.Header: Feedback
 
 		WandVerbosity: {
-			Label: Retroalimentación Detallada
+			Label: RetroalimentaciÃ³n Detallada
 			/* Tooltip:
 				'''
 				When enabled, wands show detailed operation feedback messages
@@ -1311,7 +1323,7 @@ Configs: {
 		}
 
 		BlockExhaustion: {
-			Header: Resolución de agotamiento de Bloques
+			Header: ResoluciÃ³n de agotamiento de Bloques
 			Label: Cuando te Quedas sin Bloques
 			/* Tooltip:
 				'''
@@ -1330,7 +1342,7 @@ Configs: {
 	InfiniteOverride: {
 		ForceOff: {
 			// Tooltip: ""
-			Label: Forzar Desactivación
+			Label: Forzar DesactivaciÃ³n
 		}
 
 		ForceOn: {
@@ -1380,7 +1392,7 @@ Configs: {
 	}
 
 	WandConfig: {
-		DisplayName: Configuración de Varita
+		DisplayName: ConfiguraciÃ³n de Varita
 		// InfiniteResources.Header: Enable Infinite Resource Header
 
 		EnableInfiniteResource: {
@@ -1441,22 +1453,22 @@ Configs: {
 		// SelectionLimits.Header: Small Selection Cap Header
 
 		SmallSelectionCap: {
-			Label: Límite de Selección Pequeña
+			Label: LÃ­mite de SelecciÃ³n PequeÃ±a
 			// Tooltip: ""
 		}
 
 		BigSelectionCap: {
-			Label: Límite de Selección Grande
+			Label: LÃ­mite de SelecciÃ³n Grande
 			// Tooltip: ""
 		}
 
 		HollowSelectionCap: {
-			Label: Límite de Selección Hueca
+			Label: LÃ­mite de SelecciÃ³n Hueca
 			// Tooltip: ""
 		}
 
 		CoatingSelectionCap: {
-			Label: Límite de Varita de Revestimiento
+			Label: LÃ­mite de Varita de Revestimiento
 			// Tooltip: ""
 		}
 
@@ -1473,12 +1485,12 @@ Configs: {
 		}
 
 		AllowDemonAltarDestruction: {
-			Label: Permitir Destrucción de Altares Demoníacos
+			Label: Permitir DestrucciÃ³n de Altares DemonÃ­acos
 			// Tooltip: ""
 		}
 
 		AllowDelicateTileDestruction: {
-			Label: Permitir Destrucción de Bloques Delicados
+			Label: Permitir DestrucciÃ³n de Bloques Delicados
 			// Tooltip: ""
 		}
 
@@ -1488,7 +1500,7 @@ Configs: {
 		}
 
 		AutoOpenChestsOnDestruction: {
-			Label: Abrir Cofres Automáticamente al Destruir
+			Label: Abrir Cofres AutomÃ¡ticamente al Destruir
 			// Tooltip: ""
 		}
 
@@ -1503,7 +1515,7 @@ Configs: {
 		}
 
 		MaxOutlineThickness: {
-			Label: Grosor Máximo del Contorno
+			Label: Grosor MÃ¡ximo del Contorno
 			// Tooltip: ""
 		}
 
@@ -1515,7 +1527,7 @@ Configs: {
 		}
 
 		ProgressiveBatchSize: {
-			Label: Tamaño de Lote Progresivo
+			Label: TamaÃ±o de Lote Progresivo
 			// Tooltip: ""
 		}
 
@@ -1575,12 +1587,12 @@ Configs: {
 		}
 
 		CarefreeAllowDemonAltarDestruction: {
-			Label: Modo Despreocupado: Permitir Destrucción de Altares Demoníacos
+			Label: Modo Despreocupado: Permitir DestrucciÃ³n de Altares DemonÃ­acos
 			// Tooltip: ""
 		}
 
 		CarefreeAllowDelicateTileDestruction: {
-			Label: Modo Despreocupado: Permitir Destrucción de Bloques Delicados
+			Label: Modo Despreocupado: Permitir DestrucciÃ³n de Bloques Delicados
 			// Tooltip: ""
 		}
 	}
@@ -1655,12 +1667,12 @@ Configs: {
 
 		StraightLine: {
 			// Tooltip: ""
-			Label: Línea Recta
+			Label: LÃ­nea Recta
 		}
 
 		CardinalLine: {
 			// Tooltip: ""
-			Label: Línea Cardinal
+			Label: LÃ­nea Cardinal
 		}
 
 		Elbow: {
@@ -1670,7 +1682,7 @@ Configs: {
 
 		Triangle: {
 			// Tooltip: ""
-			Label: Triángulo
+			Label: TriÃ¡ngulo
 		}
 
 		Diamond: {
@@ -1685,7 +1697,7 @@ Configs: {
 
 		Rectangle: {
 			// Tooltip: ""
-			Label: Rectángulo
+			Label: RectÃ¡ngulo
 		}
 
 		// Tooltip: ""
@@ -1694,17 +1706,17 @@ Configs: {
 	LavaRainStyle: {
 		Embers: {
 			Label: Brasas
-			Tooltip: Solo núcleo brillante — nítido, baja densidad (predeterminado).
+			Tooltip: Solo nÃºcleo brillante â€” nÃ­tido, baja densidad (predeterminado).
 		}
 
 		SolarFlare: {
 			Label: Llamarada Solar
-			Tooltip: Gotas más lentas, grandes y etéreas.
+			Tooltip: Gotas mÃ¡s lentas, grandes y etÃ©reas.
 		}
 
 		Both: {
 			Label: Ambas
-			Tooltip: Aspecto combinado en capas — más denso y cargado.
+			Tooltip: Aspecto combinado en capas â€” mÃ¡s denso y cargado.
 		}
 
 		// Tooltip: ""
@@ -1713,7 +1725,7 @@ Configs: {
 	BlockExhaustionMode: {
 		NextBlock: {
 			Label: Siguiente Bloque
-			Tooltip: Cambiar automáticamente al siguiente bloque compatible en el inventario y continuar (predeterminado).
+			Tooltip: Cambiar automÃ¡ticamente al siguiente bloque compatible en el inventario y continuar (predeterminado).
 		}
 
 		Cancel: {
@@ -1733,12 +1745,12 @@ Configs: {
 Items: {
 	WandOfDismantlingInstant: {
 		Tooltip: ""
-		DisplayName: Varita de Desmantelamiento (Instantáneo)
+		DisplayName: Varita de Desmantelamiento (InstantÃ¡neo)
 	}
 
 	WandOfDismantlingSelect: {
 		Tooltip: ""
-		DisplayName: Varita de Desmantelamiento (Selección)
+		DisplayName: Varita de Desmantelamiento (SelecciÃ³n)
 	}
 
 	WandOfDismantlingConfirm: {
@@ -1747,53 +1759,53 @@ Items: {
 	}
 
 	WandOfBuildingInstant: {
-		DisplayName: Varita de Construcción (Instantáneo)
-		Tooltip: Coloca Bloques en un área seleccionada
+		DisplayName: Varita de ConstrucciÃ³n (InstantÃ¡neo)
+		Tooltip: Coloca Bloques en un Ã¡rea seleccionada
 	}
 
 	WandOfBuildingSelect: {
-		DisplayName: Varita de Construcción (Selección)
-		Tooltip: Coloca Bloques en un área seleccionada
+		DisplayName: Varita de ConstrucciÃ³n (SelecciÃ³n)
+		Tooltip: Coloca Bloques en un Ã¡rea seleccionada
 	}
 
 	WandOfBuildingConfirm: {
-		DisplayName: Varita de Construcción (Confirmar)
-		Tooltip: Coloca Bloques en un área seleccionada
+		DisplayName: Varita de ConstrucciÃ³n (Confirmar)
+		Tooltip: Coloca Bloques en un Ã¡rea seleccionada
 	}
 
 	WandOfReplacementInstant: {
-		DisplayName: Varita de Reemplazo (Instantáneo)
-		Tooltip: Reemplaza Bloques en un área seleccionada
+		DisplayName: Varita de Reemplazo (InstantÃ¡neo)
+		Tooltip: Reemplaza todos los bloques del tipo fuente con el tipo destino en un Ã¡rea seleccionada\nLa fuente y el destino pueden fijarse desde la Vista de Inventario
 	}
 
 	WandOfReplacementSelect: {
-		DisplayName: Varita de Reemplazo (Selección)
-		Tooltip: Reemplaza Bloques en un área seleccionada
+		DisplayName: Varita de Reemplazo (SelecciÃ³n)
+		Tooltip: Reemplaza todos los bloques del tipo fuente con el tipo destino en un Ã¡rea seleccionada\nLa fuente y el destino pueden fijarse desde la Vista de Inventario
 	}
 
 	WandOfReplacementConfirm: {
 		DisplayName: Varita de Reemplazo (Confirmar)
-		Tooltip: Reemplaza Bloques en un área seleccionada
+		Tooltip: Reemplaza todos los bloques del tipo fuente con el tipo destino en un Ã¡rea seleccionada\nLa fuente y el destino pueden fijarse desde la Vista de Inventario
 	}
 
 	WandOfWiringInstant: {
-		DisplayName: Varita de Cableado (Instantáneo)
-		Tooltip: Coloca o quita cables y actuadores en un área seleccionada
+		DisplayName: Varita de Cableado (InstantÃ¡neo)
+		Tooltip: Coloca o quita cables y actuadores en un Ã¡rea seleccionada
 	}
 
 	WandOfWiringSelect: {
-		DisplayName: Varita de Cableado (Selección)
-		Tooltip: Coloca o quita cables y actuadores en un área seleccionada
+		DisplayName: Varita de Cableado (SelecciÃ³n)
+		Tooltip: Coloca o quita cables y actuadores en un Ã¡rea seleccionada
 	}
 
 	WandOfWiringConfirm: {
 		DisplayName: Varita de Cableado (Confirmar)
-		Tooltip: Coloca o quita cables y actuadores en un área seleccionada
+		Tooltip: Coloca o quita cables y actuadores en un Ã¡rea seleccionada
 	}
 
 	WandOfBuildingStamp: {
-		DisplayName: Varita de Construcción (Sello)
-		Tooltip: Define una forma una vez, luego repítela con el sello
+		DisplayName: Varita de ConstrucciÃ³n (Sello)
+		Tooltip: Define una forma una vez, luego repÃ­tela con el sello
 	}
 
 	WandOfDismantlingStamp: {
@@ -1803,52 +1815,52 @@ Items: {
 
 	WandOfReplacementStamp: {
 		DisplayName: Varita de Reemplazo (Sello)
-		Tooltip: Define un área de reemplazo una vez, luego repítela con el sello
+		Tooltip: Define un área de reemplazo una vez, luego repítela con el sello\nLa fuente y el destino pueden fijarse desde la Vista de Inventario
 	}
 
 	WandOfWiringStamp: {
 		DisplayName: Varita de Cableado (Sello)
-		Tooltip: Define un área de cableado una vez, luego repítela con el sello
+		Tooltip: Define un Ã¡rea de cableado una vez, luego repÃ­tela con el sello
 	}
 
 	WandOfSafekeepingInstant: {
-		DisplayName: Varita de Preservación (Instantánea)
-		Tooltip: Protege o desprotege Bloques en un área seleccionada
+		DisplayName: Varita de PreservaciÃ³n (InstantÃ¡nea)
+		Tooltip: Protege o desprotege Bloques en un Ã¡rea seleccionada
 	}
 
 	WandOfSafekeepingSelect: {
-		DisplayName: Varita de Preservación (Selección)
-		Tooltip: Protege o desprotege Bloques en un área seleccionada
+		DisplayName: Varita de PreservaciÃ³n (SelecciÃ³n)
+		Tooltip: Protege o desprotege Bloques en un Ã¡rea seleccionada
 	}
 
 	WandOfSafekeepingConfirm: {
-		DisplayName: Varita de Preservación (Confirmar)
-		Tooltip: Protege o desprotege Bloques en un área seleccionada
+		DisplayName: Varita de PreservaciÃ³n (Confirmar)
+		Tooltip: Protege o desprotege Bloques en un Ã¡rea seleccionada
 	}
 
 	WandOfSafekeepingStamp: {
-		DisplayName: Varita de Preservación (Sello)
-		Tooltip: Define un área de Preservación una vez, luego repítela con el sello
+		DisplayName: Varita de PreservaciÃ³n (Sello)
+		Tooltip: Define un Ã¡rea de PreservaciÃ³n una vez, luego repÃ­tela con el sello
 	}
 
 	WandOfCoatingInstant: {
-		DisplayName: Varita de Revestimiento (Instantánea)
-		Tooltip: Pinta, raspa o elimina musgo de bloques y paredes en un área seleccionada
+		DisplayName: Varita de Revestimiento (InstantÃ¡nea)
+		Tooltip: Pinta, raspa o elimina musgo de bloques y paredes en un Ã¡rea seleccionada
 	}
 
 	WandOfCoatingSelect: {
 		DisplayName: Varita de Revestimiento (Seleccionar)
-		Tooltip: Pinta, raspa o elimina musgo de bloques y paredes en un área seleccionada
+		Tooltip: Pinta, raspa o elimina musgo de bloques y paredes en un Ã¡rea seleccionada
 	}
 
 	WandOfCoatingConfirm: {
 		DisplayName: Varita de Revestimiento (Confirmar)
-		Tooltip: Pinta, raspa o elimina musgo de bloques y paredes en un área seleccionada
+		Tooltip: Pinta, raspa o elimina musgo de bloques y paredes en un Ã¡rea seleccionada
 	}
 
 	WandOfCoatingStamp: {
 		DisplayName: Varita de Revestimiento (Sello)
-		Tooltip: Define un área de revestimiento una vez, luego estámpala repetidamente
+		Tooltip: Define un Ã¡rea de revestimiento una vez, luego estÃ¡mpala repetidamente
 	}
 
 	WandOfFluidsConfirm: {
@@ -1857,7 +1869,7 @@ Items: {
 	}
 
 	WandOfFluidsInstant: {
-		DisplayName: Varita de Fluidos (Instantánea)
+		DisplayName: Varita de Fluidos (InstantÃ¡nea)
 		// Tooltip: ""
 	}
 
@@ -1872,23 +1884,23 @@ Items: {
 	}
 
 	WandOfTorchesInstant: {
-		DisplayName: Varita de Antorchas (Instantánea)
-		Tooltip: Coloca antorchas en un patrón repetido a lo largo de un área seleccionada
+		DisplayName: Varita de Antorchas (InstantÃ¡nea)
+		Tooltip: Coloca antorchas en un patrÃ³n repetido a lo largo de un Ã¡rea seleccionada
 	}
 
 	WandOfTorchesSelect: {
 		DisplayName: Varita de Antorchas (Seleccionar)
-		Tooltip: Coloca antorchas en un patrón repetido a lo largo de un área seleccionada
+		Tooltip: Coloca antorchas en un patrÃ³n repetido a lo largo de un Ã¡rea seleccionada
 	}
 
 	WandOfTorchesConfirm: {
 		DisplayName: Varita de Antorchas (Confirmar)
-		Tooltip: Coloca antorchas en un patrón repetido a lo largo de un área seleccionada
+		Tooltip: Coloca antorchas en un patrÃ³n repetido a lo largo de un Ã¡rea seleccionada
 	}
 
 	WandOfTorchesStamp: {
 		DisplayName: Varita de Antorchas (Sello)
-		Tooltip: Define un patrón de antorchas una vez, luego estámpalo repetidamente
+		Tooltip: Define un patrÃ³n de antorchas una vez, luego estÃ¡mpalo repetidamente
 	}
 
 	TorchWheelWandSolid: {
@@ -1915,23 +1927,23 @@ Items: {
 	}
 
 	WandOfDelimitationInstant: {
-		DisplayName: Varita de Delimitación (Instantánea)
-		Tooltip: Define regiones de canvas y selección usando formas geométricas
+		DisplayName: Varita de DelimitaciÃ³n (InstantÃ¡nea)
+		Tooltip: Define regiones de canvas y selecciÃ³n usando formas geomÃ©tricas
 	}
 
 	WandOfDelimitationSelect: {
-		DisplayName: Varita de Delimitación (Seleccionar)
-		Tooltip: Define regiones de canvas y selección usando formas geométricas
+		DisplayName: Varita de DelimitaciÃ³n (Seleccionar)
+		Tooltip: Define regiones de canvas y selecciÃ³n usando formas geomÃ©tricas
 	}
 
 	WandOfDelimitationConfirm: {
-		DisplayName: Varita de Delimitación (Confirmar)
-		Tooltip: Define regiones de canvas y selección usando formas geométricas
+		DisplayName: Varita de DelimitaciÃ³n (Confirmar)
+		Tooltip: Define regiones de canvas y selecciÃ³n usando formas geomÃ©tricas
 	}
 
 	WandOfDelimitationStamp: {
-		DisplayName: Varita de Delimitación (Sello)
-		Tooltip: Define una forma de selección una vez, luego estámpala repetidamente
+		DisplayName: Varita de DelimitaciÃ³n (Sello)
+		Tooltip: Define una forma de selecciÃ³n una vez, luego estÃ¡mpala repetidamente
 	}
 
 	TorchWheelWandPlatform: {
@@ -1940,23 +1952,23 @@ Items: {
 	}
 
 	WandOfMoldingInstant: {
-		DisplayName: Varita de Moldeo (Instantánea)
-		Tooltip: Esculpe formas personalizadas a partir de figuras geométricas para usar con varitas de Sello
+		DisplayName: Varita de Moldeo (InstantÃ¡nea)
+		Tooltip: Esculpe formas personalizadas a partir de figuras geomÃ©tricas para usar con varitas de Sello
 	}
 
 	WandOfMoldingSelect: {
 		DisplayName: Varita de Moldeo (Seleccionar)
-		Tooltip: Esculpe formas personalizadas a partir de figuras geométricas para usar con varitas de Sello
+		Tooltip: Esculpe formas personalizadas a partir de figuras geomÃ©tricas para usar con varitas de Sello
 	}
 
 	WandOfMoldingConfirm: {
 		DisplayName: Varita de Moldeo (Confirmar)
-		Tooltip: Esculpe formas personalizadas a partir de figuras geométricas para usar con varitas de Sello
+		Tooltip: Esculpe formas personalizadas a partir de figuras geomÃ©tricas para usar con varitas de Sello
 	}
 
 	WandOfMoldingStamp: {
 		DisplayName: Varita de Moldeo (Sello)
-		Tooltip: Define una forma de molde una vez, luego estámpala repetidamente
+		Tooltip: Define una forma de molde una vez, luego estÃ¡mpala repetidamente
 	}
 }
 
@@ -1967,53 +1979,53 @@ Conditions.NonCraftable: No fabricable. Cicla modo con clic derecho en el invent
 // These replace hardcoded Main.NewText() strings across the codebase.
 Messages: {
 	// ── Common ──────────────────────────────────────────────
-	SelectionCancelled: Selección cancelada.
+	SelectionCancelled: SelecciÃ³n cancelada.
 	// S8 2026-04-22 — keybind hint when InventoryView toggle pressed without a participating wand held.
 	// S9 vocabulary pass: drop "Inventory View" user-facing wording (DesignDoc Phase A).
-	InventoryViewNoParticipant: El selector de bloques solo está disponible para la Varita de Construcción, Varita de Reemplazo y Varita de Antorchas.
+	InventoryViewNoParticipant: El selector de bloques solo estÃ¡ disponible para la Varita de ConstrucciÃ³n, Varita de Reemplazo y Varita de Antorchas.
 	SwitchedToMode: Cambiado a modo {0}
-	ThicknessChanged: Grosor: {0} — {1}
+	ThicknessChanged: Grosor: {0} â€” {1}
 	StampUnlocked: Sello retirado. Haz clic para establecer un nuevo anclaje.
-	SelectionUnlocked: Selección desbloqueada. Muévete para ajustar el punto final.
-	SelectionCleared: Selección borrada.
+	SelectionUnlocked: SelecciÃ³n desbloqueada. MuÃ©vete para ajustar el punto final.
+	SelectionCleared: SelecciÃ³n borrada.
 	// ── Tooltip strings ─────────────────────────────────────
-	ModeInstant: Haz clic y arrastra para seleccionar área
+	ModeInstant: Haz clic y arrastra para seleccionar Ã¡rea
 	ModeSelect: Haz clic en inicio, luego en fin
 	ModeConfirm: Haz clic en inicio, en fin, y luego haz clic para confirmar
-	ModeStamp: Haz clic en inicio, en fin, haz clic para sellar la forma y posición, luego haz clic para repetir
+	ModeStamp: Haz clic en inicio, en fin, haz clic para sellar la forma y posiciÃ³n, luego haz clic para repetir
 	CycleHint: Haz clic derecho en el inventario para cambiar de modo
-	PickaxeHint: Usa tu pico más fuerte para verificaciones de poder de bloque
-	ObtainHint: "[c/AAAAAA:Obtén otros modos haciendo clic derecho en esta varita en tu inventario]"
+	PickaxeHint: Usa tu pico mÃ¡s fuerte para verificaciones de poder de bloque
+	ObtainHint: "[c/AAAAAA:ObtÃ©n otros modos haciendo clic derecho en esta varita en tu inventario]"
 	// ── Building ────────────────────────────────────────────
-	NoSuitableItem: No se encontró un objeto adecuado para {0}.
-	NeedHave: Necesitas {0} {1}, tienes {2}. Operación cancelada.
-	NoTilesPlaced: No se pudo colocar ningún bloque.
-	NoWallItemFound: No se encontró ningún objeto de pared en el inventario.
+	NoSuitableItem: No se encontrÃ³ un objeto adecuado para {0}.
+	NeedHave: Necesitas {0} {1}, tienes {2}. OperaciÃ³n cancelada.
+	NoTilesPlaced: No se pudo colocar ningÃºn bloque.
+	NoWallItemFound: No se encontrÃ³ ningÃºn objeto de pared en el inventario.
 	NoWallsPlaced: No se pudo colocar ninguna pared.
 	// 2026-04-23 Session 1 (Letter #10 §6) — Interrupt mode refuses to run when the
 	// chosen item isn't currently in inventory. Shown in red chat instead of silently
 	// substituting. Applies to both tile pins and wall pins.
-	ChosenMissingUnderInterrupt: El objeto escogido no está en el inventario — el modo Interrumpir no lo sustituirá. Operación cancelada.
+	ChosenMissingUnderInterrupt: El objeto escogido no estÃ¡ en el inventario â€” el modo Interrumpir no lo sustituirÃ¡. OperaciÃ³n cancelada.
 	// ── Dismantling ─────────────────────────────────────────
-	NoTilesDestroyed: No se destruyó ningún bloque.
+	NoTilesDestroyed: No se destruyÃ³ ningÃºn bloque.
 	// ── Void Everything ─────────────────────────────────────
-	VoidRequiresCarefree: Desaparecer Todo requiere que el Modo Despreocupado esté activado.
-	VoidSinglePlayerOnly: Desaparecer Todo actualmente solo está disponible en un jugador.
-	NoSelectionActive: No hay selección activa. Usa una varita para seleccionar un área primero.
-	NothingToVoid: No hay nada que desaparecer en el área seleccionada.
+	VoidRequiresCarefree: Desaparecer Todo requiere que el Modo Despreocupado estÃ© activado.
+	VoidSinglePlayerOnly: Desaparecer Todo actualmente solo estÃ¡ disponible en un jugador.
+	NoSelectionActive: No hay selecciÃ³n activa. Usa una varita para seleccionar un Ã¡rea primero.
+	NothingToVoid: No hay nada que desaparecer en el Ã¡rea seleccionada.
 	// ── Replacement ─────────────────────────────────────────
 	NoSourceItems: No hay objetos de {0} en el inventario para identificar el bloque de origen.
 	SameSourceTarget: El origen y el destino son el mismo bloque [i:{0}].
 	NoTargetItems: No se encontraron objetos de {0} en el inventario.
-	NoSourceInSelection: No se encontró {0} en la selección.
+	NoSourceInSelection: No se encontrÃ³ {0} en la selecciÃ³n.
 	NeedTargetItems: Necesitas {0} [i:{1}], tienes {2}.
-	NoTilesReplaced: No se pudo reemplazar ningún bloque.
+	NoTilesReplaced: No se pudo reemplazar ningÃºn bloque.
 	SourceMustBeWall: El tipo de origen debe ser Pared para reemplazar paredes.
 	NoWallSourceItems: No hay objetos de pared en el inventario para identificar la pared de origen.
 	TargetMustBeWallOrAir: El tipo de destino debe ser Pared o Aire (Eliminar) para reemplazar paredes.
 	SameWallSourceTarget: El origen y el destino son la misma pared [i:{0}].
 	NoWallTargetItems: No se encontraron objetos de pared para el destino.
-	NoSourceWallsInSelection: No se encontraron paredes de {0} en la selección.
+	NoSourceWallsInSelection: No se encontraron paredes de {0} en la selecciÃ³n.
 	NoWallsReplaced: No se pudo reemplazar ninguna pared.
 	// ── Wiring ──────────────────────────────────────────────
 	NoWiresSelected: No se seleccionaron cables ni actuadores.
@@ -2023,10 +2035,10 @@ Messages: {
 	WiresRemoved: Se eliminaron {0} segmentos de cable.
 	NoWiringChanges: No se realizaron cambios.
 	// ── Safekeeping ─────────────────────────────────────────
-	NoProtectionTargets: No se seleccionaron objetivos de protección (bloques o paredes).
-	NoPositionsToProtect: No hay posiciones para proteger en la selección.
-	NoProtectedPositions: No hay posiciones protegidas en la selección.
-	ClearedProtection: Se desprotegió todo ({0} bloques, {1} paredes).
+	NoProtectionTargets: No se seleccionaron objetivos de protecciÃ³n (bloques o paredes).
+	NoPositionsToProtect: No hay posiciones para proteger en la selecciÃ³n.
+	NoProtectedPositions: No hay posiciones protegidas en la selecciÃ³n.
+	ClearedProtection: Se desprotegiÃ³ todo ({0} bloques, {1} paredes).
 	ClearConfirmPrompt: Haz clic de nuevo para desproteger {0} bloque(s) y {1} pared(es).
 	// ── Undo ────────────────────────────────────────────────
 	Undone: retirado: {0} ({1} bloques)
@@ -2034,17 +2046,17 @@ Messages: {
 	CoatingNoChanges: No se realizaron cambios.
 	CoatingPaintedTiles: Se pintaron {0} bloques.
 	CoatingPaintedWalls: Se pintaron {0} paredes.
-	CoatingScrapedPaint: Se raspó la pintura de {0} posiciones.
-	CoatingScrapedMoss: Se eliminó musgo de {0} bloques.
-	CoatingHarvestedMoss: Se recolectó musgo de {0} bloques.
+	CoatingScrapedPaint: Se raspÃ³ la pintura de {0} posiciones.
+	CoatingScrapedMoss: Se eliminÃ³ musgo de {0} bloques.
+	CoatingHarvestedMoss: Se recolectÃ³ musgo de {0} bloques.
 	// ── Fluids ──────────────────────────────────────────────
-	NoTilesInSelection: No hay bloques en el área de selección.
+	NoTilesInSelection: No hay bloques en el Ã¡rea de selecciÃ³n.
 	// ── Delimitation Warning ──────────────────────────────
-	DelimitationFilterActive: No se ejecutó ninguna acción. El Área de Delimitación está activa y no se superpone con la selección.
-	FluidsNoTiles: No hay bloques en la selección.
-	FluidsInvalidRegion: Región no válida.
-	FluidsNoSeeds: No hay posiciones válidas de semilla — todos los bloques superiores son sólidos.
-	FluidsNoBasins: No se encontraron cuencas — el líquido no puede asentarse en este terreno.
+	DelimitationFilterActive: No se ejecutÃ³ ninguna acciÃ³n. El Ãrea de DelimitaciÃ³n estÃ¡ activa y no se superpone con la selecciÃ³n.
+	FluidsNoTiles: No hay bloques en la selecciÃ³n.
+	FluidsInvalidRegion: RegiÃ³n no vÃ¡lida.
+	FluidsNoSeeds: No hay posiciones vÃ¡lidas de semilla â€” todos los bloques superiores son sÃ³lidos.
+	FluidsNoBasins: No se encontraron cuencas â€” el lÃ­quido no puede asentarse en este terreno.
 	FluidsNoPockets: No se encontraron cavidades cerradas en este terreno.
 	FluidsFilled: Se rellenaron {0} bloques con {1}.
 	FluidsRainFilled: Relleno por Lluvia: {0} bloques rellenados ({1} columnas sembradas, {2} cuencas analizadas).
@@ -2052,12 +2064,12 @@ Messages: {
 	FluidsDrained: Se drenaron {0} bloques.
 	FluidsBubblePlaced: Se colocaron {0} bloques de burbuja.
 	FluidsBubbleRemoved: Se eliminaron {0} bloques de burbuja.
-	FluidsBubbleCoated: Se recubrió la selección con {0} bloques de burbuja.
+	FluidsBubbleCoated: Se recubriÃ³ la selecciÃ³n con {0} bloques de burbuja.
 	FluidsMixed: Se mezclaron {0} bloques + se rellenaron {1} bloques con {2}.
 	FluidsMixedOnly: Se mezclaron {0} bloques.
 	// ── Torches ─────────────────────────────────────────────
-	TorchesNoTorchItem: No se encontró antorcha en el inventario.
-	TorchesNoValidPositions: No hay posiciones válidas para antorchas en la selección.
+	TorchesNoTorchItem: No se encontrÃ³ antorcha en el inventario.
+	TorchesNoValidPositions: No hay posiciones vÃ¡lidas para antorchas en la selecciÃ³n.
 	TorchesNonePlaced: No se pudieron colocar antorchas.
 	TorchesPlaced: Se colocaron {0} antorchas.
 	TorchesNoneReplaced: No se reemplazaron antorchas.
@@ -2067,37 +2079,37 @@ Messages: {
 	TorchesNoneConverted: No hay antorchas para convertir (ya coinciden con el bioma).
 	TorchesConverted: Se convirtieron {0} antorchas a la variante del bioma.
 	// ── Selection prompts (per-mode) ────────────────────────
-	SelectStartClickEnd: Selección iniciada. Haz clic para establecer el punto final.
-	SelectStartClickAgain: Selección iniciada. Haz clic de nuevo para {0}.
+	SelectStartClickEnd: SelecciÃ³n iniciada. Haz clic para establecer el punto final.
+	SelectStartClickAgain: SelecciÃ³n iniciada. Haz clic de nuevo para {0}.
 	ClickToConfirm: Haz clic de nuevo para confirmar.
 	ClickToConfirmOrCancel: Haz clic de nuevo para confirmar, o clic derecho para cancelar.
 	EndPointSet: Punto final establecido. Haz clic de nuevo para confirmar.
 	StampClickEnd: Sello: haz clic para establecer el punto final.
 	// ── Selection prompts (per-mode) ────────────────────────
-	StampClickLock: Sello: haz clic para fijar la posición de anclaje.
-	StampLocked: ¡Sello establecido! Haz clic para {0}. Clic derecho para reiniciar.
-	SuppressDropsOn: Suprimir Objetos Recogibles: ACTIVADO — los objetos recogibles están suprimidos.
-	SuppressDropsOff: Suprimir Objetos Recogibles: DESACTIVADO — los objetos recogibles están activados.
+	StampClickLock: Sello: haz clic para fijar la posiciÃ³n de anclaje.
+	StampLocked: Â¡Sello establecido! Haz clic para {0}. Clic derecho para reiniciar.
+	SuppressDropsOn: Suprimir Objetos Recogibles: ACTIVADO â€” los objetos recogibles estÃ¡n suprimidos.
+	SuppressDropsOff: Suprimir Objetos Recogibles: DESACTIVADO â€” los objetos recogibles estÃ¡n activados.
 	// ── Select Wand prompts ─────────────────────────────────
-	SelectClickEnd: Selección: haz clic para establecer el punto final.
-	SelectClickConfirm: Selección: haz clic para confirmar y aplicar.
+	SelectClickEnd: SelecciÃ³n: haz clic para establecer el punto final.
+	SelectClickConfirm: SelecciÃ³n: haz clic para confirmar y aplicar.
 	NoTilesInShape: No hay bloques en la forma.
-	MoldingHintTooFar: No se añadieron celdas — el canvas está lejos. Usa 'Teletransportar al Jugador' en el panel de Moldeo para acercarlo.
-	MoldingHintExpandCanvas: No se añadieron celdas — la forma está fuera del canvas. Cambia al modo Editar Canvas para expandir el canvas primero.
-	MoldingNoChange: Molde: sin cambios (los bloques ya coinciden con la selección actual).
+	MoldingHintTooFar: No se aÃ±adieron celdas â€” el canvas estÃ¡ lejos. Usa 'Teletransportar al Jugador' en el panel de Moldeo para acercarlo.
+	MoldingHintExpandCanvas: No se aÃ±adieron celdas â€” la forma estÃ¡ fuera del canvas. Cambia al modo Editar Canvas para expandir el canvas primero.
+	MoldingNoChange: Molde: sin cambios (los bloques ya coinciden con la selecciÃ³n actual).
 	// ── Lore ────────────────────────────────────────────────
 	LoreCommon: Los Dioses del Espacio te permiten convertir tus pensamientos en realidad.
-	LoreBuilding: La Deidad de la Creación te permite manifestar orden y existencia a voluntad.
-	LoreDismantling: La Deidad de la Eliminación te permite restaurar la nada a tu antojo.
-	LoreReplacement: La Deidad de la Transmutación te permite retejer los hilos de lo que ya existe.
-	LoreWiring: Una llave mecánica avanzada, refinada más allá del Gran Diseño. Donde los dioses moldean la materia, los ingenieros moldean el propósito.
-	LoreSafekeeping: La Deidad de la Eternidad te permite separar el espacio de los poderes de la creación.
+	LoreBuilding: La Deidad de la CreaciÃ³n te permite manifestar orden y existencia a voluntad.
+	LoreDismantling: La Deidad de la EliminaciÃ³n te permite restaurar la nada a tu antojo.
+	LoreReplacement: La Deidad de la TransmutaciÃ³n te permite retejer los hilos de lo que ya existe.
+	LoreWiring: Una llave mecÃ¡nica avanzada, refinada mÃ¡s allÃ¡ del Gran DiseÃ±o. Donde los dioses moldean la materia, los ingenieros moldean el propÃ³sito.
+	LoreSafekeeping: La Deidad de la Eternidad te permite separar el espacio de los poderes de la creaciÃ³n.
 	LoreCoating: La Deidad de los Colores te permite vestir el mundo con los colores que elijas.
 	LoreFluids: La Deidad de las Mareas te permite comandar la materia fluida.
 	LoreTorches: El Dios de las Antorchas te permite esparcir luz por el mundo con facilidad. O despertar su ira si te atreves.
-	LoreDelimitation: El Arquitecto de los Límites te permite definir el canvas de la creación.
-	LoreMolding: El Escultor de Formas te permite moldear los planos de la creación.
-	LoreShiftHint: "[c/888888:Mantén [Shift] para ver la historia]"
+	LoreDelimitation: El Arquitecto de los LÃ­mites te permite definir el canvas de la creaciÃ³n.
+	LoreMolding: El Escultor de Formas te permite moldear los planos de la creaciÃ³n.
+	LoreShiftHint: "[c/888888:MantÃ©n [Shift] para ver la historia]"
 	// ── Torch Wheel Tooltips ────────────────────────────────
 	TorchWheelModeTiles: "[c/FFFF00:Modo: Bloques]"
 	TorchWheelModePlatforms: "[c/ADD8E6:Modo: Plataformas]"
@@ -2108,9 +2120,9 @@ Messages: {
 }
 
 GameTips: {
-	VacuumItems: WSW: ¿Cansado de recoger objetos? Activa 'aspirar objetos' en la configuración.
-	IceBiomeReplacement: WSW: ¿El Bioma de Hielo se corrompió? Usa la Varita de Reemplazo para cambiarlos por nieve. ¡Es inmune!
-	GitHubContributions: WSW: ¿Tienes algún bug? ¿Ideas? ¿Feedback o Arte? ¡Revisa el repositorio de github! Las contribuciones son muy bienvenidas.
+	VacuumItems: WSW: Â¿Cansado de recoger objetos? Activa 'aspirar objetos' en la configuraciÃ³n.
+	IceBiomeReplacement: WSW: Â¿El Bioma de Hielo se corrompiÃ³? Usa la Varita de Reemplazo para cambiarlos por nieve. Â¡Es inmune!
+	GitHubContributions: WSW: Â¿Tienes algÃºn bug? Â¿Ideas? Â¿Feedback o Arte? Â¡Revisa el repositorio de github! Las contribuciones son muy bienvenidas.
 }
 
 Projectiles: {

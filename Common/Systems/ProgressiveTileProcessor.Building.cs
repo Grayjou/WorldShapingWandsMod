@@ -95,11 +95,14 @@ public partial class ProgressiveTileProcessor
             ushort tType = (ushort)srcItem.createTile;
             var existingTile = Main.tile[info.Position.X, info.Position.Y];
 
-            // Slope-only: same-type tile, just apply the slope change
+            // Same-type in-place edit: apply slope, actuation, and/or paint without destroying the tile.
+            // (IsSlopeOnly is a legacy name — it now covers all three in-place modifications.)
             if (info.IsSlopeOnly)
             {
                 if (op.OverwriteSlope)
                     ApplyBuildSlope(info.Position.X, info.Position.Y, op.SlopeType);
+                WandOfBuildingBase.ApplyActuation(info.Position.X, info.Position.Y, info.Actuation);
+                WandOfBuildingBase.ApplyPaintSprayerTile(op.Player, info.Position.X, info.Position.Y, op.ShouldConsume, info.PaintSprayer);
                 batchPlaced++;
                 batchPositions.Add(info.Position);
                 continue;

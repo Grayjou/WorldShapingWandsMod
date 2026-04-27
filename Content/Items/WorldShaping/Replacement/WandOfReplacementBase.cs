@@ -226,7 +226,7 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
                 sourceType, targetType,
                 (short)(targetItem?.type ?? 0), isWallMode: false,
                 settings.Shape.Slice, settings.Shape.ConnectDiameter,
-                settings.Shape.InvertSelection, settings.PaintSprayer.IsActive());
+                settings.Shape.InvertSelection, settings.PaintSprayer);
             return;
         }
 
@@ -582,7 +582,7 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
                 sourceWallType, eraseMode ? (ushort)0 : targetWallType,
                 (short)(targetItem?.type ?? 0), isWallMode: true,
                 settings.Shape.Slice, settings.Shape.ConnectDiameter,
-                settings.Shape.InvertSelection, settings.PaintSprayer.IsActive());
+                settings.Shape.InvertSelection, settings.PaintSprayer);
             return;
         }
 

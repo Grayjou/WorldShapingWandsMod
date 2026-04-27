@@ -176,6 +176,18 @@ public static class TorchPlacementHelper
         return false;
     }
 
+    /// <summary>
+    /// Determines whether the tile is a regular vanilla torch
+    /// (TileID.Torches with place style 0).
+    /// </summary>
+    public static bool IsRegularTorch(Tile tile)
+    {
+        if (!tile.HasTile || !TileID.Sets.Torch[tile.TileType])
+            return false;
+
+        return tile.TileType == TileID.Torches && (tile.TileFrameY / 22) == 0;
+    }
+
     // ── Torch Item Detection ─────────────────────────────────────
 
     /// <summary>

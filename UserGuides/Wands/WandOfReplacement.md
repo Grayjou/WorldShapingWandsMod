@@ -8,121 +8,221 @@
 
 ## Overview
 
-The Wand of Replacement swaps one type of tile or wall for another within a shaped area.
-It replaces the existing material with a new one of your choice, preserving the terrain
-shape while changing its composition. Think of it as "find and replace" for terrain.
+The Wand of Replacement is a "find and replace" for terrain. It swaps one type of tile or
+wall for another within a shaped area while preserving everything else: surrounding tiles,
+slope where possible, paint (if you ask it to), and the build's overall geometry. It's the
+right tool when you want to *change* a structure rather than rebuild it.
+
+Common workflows:
+
+- Convert a stone hideout into a wood cabin without losing the layout.
+- Swap dirt walls for stone bricks across an entire room.
+- Re-grass a corrupted area in one stroke.
+- Replace platforms in bulk without picking each one off.
+
+---
+
+## Quick Start
+
+1. **Equip** any Wand of Replacement variant.
+2. Open the **settings panel** and pick the **Source object type** (what you're replacing)
+   and **Target object type** (what it becomes). Or click **Same Type** to do a like-for-
+   like swap (Tile → Tile, Wall → Wall, etc.).
+3. Optionally **chose** a specific source and/or target item via right-click in the slot
+   buttons (the *InventoryView* picker — see below). Otherwise the wand uses the first
+   matching item on your hotbar / inventory.
+4. **Click** in the world — every matching source tile inside the shape is replaced.
+
+In **Select**, **Confirm**, and **Stamp** modes, **right-click** during selection to
+cancel and clear the preview.
 
 ---
 
 ## Variants
 
 | Variant | Clicks | How It Works |
-|---|---|---|
-| **Instant** | 1 click | Click once → shape centered on cursor is replaced immediately |
-| **Select** | 2 clicks | Click start corner → click end corner → area replaced |
-| **Confirm** | 3 clicks | Click start → click end → see preview → click to confirm or right-click to cancel |
-| **Stamp** | 4 clicks | Click start → click end → see preview → confirm → stamp repeatedly at new positions |
-
-### Right-Click Cancel
-
-In **Select**, **Confirm**, and **Stamp** modes, right-click at any time during selection
-to cancel the operation and clear the preview.
+|---------|--------|--------------|
+| **Instant** | 1 | Shape centred on cursor, applied immediately |
+| **Select** | 2 | Click start corner → click end corner → area replaced |
+| **Confirm** | 3 | Click start → click end → preview → click to confirm or right-click to cancel |
+| **Stamp** | 4 | Click start → click end → confirm → stamp repeatedly at new positions |
 
 ---
 
-## Settings (Cycled In-Game)
+## Object Types
 
-### Object Types
-
-The replacement wand operates on a source → target pair. The selected object type
-determines what is replaced and what it becomes.
+The replacement wand operates on a **Source → Target** pair. Both sides choose from the
+same enum:
 
 | Object Type | Description |
-|---|---|
-| **Tile** | Standard blocks (dirt, stone, wood, etc.) |
+|-------------|-------------|
+| **Tile** | Standard solid blocks (dirt, stone, wood, brick, etc.) |
 | **Platform** | Platform tiles (wood platform, stone platform, etc.) |
-| **Rope** | Rope variants (rope, vine rope, silk rope, etc.) |
+| **Rope** | Rope variants (rope, vine rope, silk rope, web rope) |
 | **PlanterBox** | Planter boxes for growing herbs |
-| **Air** | Empty space — erases matching tiles without replacement |
-| **Wall** | Background walls (stone wall, wood wall, etc.) |
+| **Air** | Empty space — used as a **target** to erase matching source tiles |
+| **Wall** | Background walls |
 
-> **Note**: Seeds and Rails were removed from the replacement wand UI due to
-> complex substrate/variant interactions. They remain available in the building wand.
+> **Seeds** and **Rails** were intentionally removed from the Replacement wand UI because
+> their substrate / variant interactions don't fit a clean replace pipeline. Use the
+> Wand of Building for those.
 
-### How Object Type Works
+### Same Type Mode
 
-- **OldObject** (source): The type of object to look for in the selection
-- **NewObject** (target): The type of object to replace it with
+Clicking **Same Type** in the settings panel locks the target to the source: Tile→Tile,
+Wall→Wall, etc. This is the most common workflow ("just swap this material for another
+of the same kind") and is set explicitly — it is not inferred from accidental equality.
 
-Example: Setting OldObject=Tile, NewObject=Tile, then selecting stone and having
-dirt in your inventory → all stone tiles in the area become dirt tiles.
+### Per-object-type chosen items (InventoryView)
 
-### Shape Settings
+Each object type has its own independent **chosen-item** slot for both Source and Target.
+That means choosing *Stone* as the Source while in **Tile** mode does NOT carry over when
+you switch to **Wall** mode — your Wall-mode source choice is remembered separately.
 
-| Setting | Options | Description |
-|---|---|---|
-| **Shape** | Rectangle · Ellipse · Diamond · Triangle · Elbow · CardinalLine · StraightLine | Geometric shape of the operation area |
-| **Fill Mode** | Filled · Hollow | Whether to fill the entire shape or just the outline |
-| **Thickness** | 1–50 | Line/outline thickness (for hollow shapes and lines) |
-| **Equal Dimensions** | ON/OFF | Forces equal width and height |
-| **Slice** | Full · HalfHorizontal · HalfVertical | Cuts the shape in half |
+This isolation was added in the 2026-04-26 InventoryView v1 framework after a bug where
+a chosen Solid item would persist into Platform mode and prevent placement. Each sub-mode
+now has its own clean slot.
+
+When no chosen item is set, the wand falls back to scanning your hotbar / inventory for
+the first matching item — exactly like vanilla bulk-replace mods.
+
+---
+
+## Paint Behaviour
+
+The Wand of Replacement provides two independent paint controls:
+
+### PreservePaint (default ON)
+
+When ON, every replaced tile / wall keeps the **paint colour** it originally had. So if
+you replace painted stone with painted wood, the wood inherits the stone's paint.
+
+### Paint Sprayer (tri-state)
+
+A separate **Paint Sprayer** selector chooses where new paint comes from for tiles that
+didn't have any paint before:
+
+| State | Behaviour |
+|-------|-----------|
+| **Off** (default) | No auto-painting. |
+| **Inventory** | Pulls and consumes paint from your inventory (vanilla Paint Sprayer parity). |
+| **CoatingSettings** | Pulls the paint colour from your **Wand of Coating** settings. **Does not** consume inventory paint. |
+
+### Interaction
+
+`PreservePaint` always wins on **previously painted** tiles. `PaintSprayer` only applies
+to tiles that **had no paint** before replacement. This way you can re-paint accents
+across a build (PaintSprayer = CoatingSettings) without overwriting deliberately painted
+features.
+
+---
+
+## Replacement Algorithm
+
+The wand uses a two-pass approach to maximise compatibility:
+
+1. **`ReplaceTile` (preferred)** — Terraria's native tile-conversion call. Fast,
+   preserves paint and coatings automatically, and produces no item drops. The wand
+   tries this path first whenever the source and target are compatible.
+2. **`KillTile + PlaceTile` (fallback)** — When `ReplaceTile` isn't possible (e.g.,
+   incompatible families or special-case tiles), the wand destroys the old tile and
+   places the new one. This path may produce an item drop unless `SuppressDrops` is on.
+
+You don't choose between paths; the wand picks automatically per tile.
+
+---
+
+## Shape & Selection
+
+All standard shapes are available:
+
+`Rectangle · Ellipse · Diamond · Triangle · Elbow · Cardinal Line · Straight Line`
+
+plus the **Mold** shape from any Wand of Molding template.
+
+Shape options: `Filled / Hollow · Equal Dimensions · Slice Mode · Connect Diameter · Thickness`.
 
 ---
 
 ## Server Config Settings
 
-| Setting | Default | Effect |
-|---|---|---|
-| **SuppressDrops** | OFF | When ON, replaced tiles don't drop items |
-| **VacuumItems** | ON | Teleports dropped items to the player |
-| **BypassPickaxePower** | OFF | Ignores pickaxe power requirements for breaking tiles |
-| **MaxOperationSize** | 10000 | Maximum tiles per operation |
+| Setting | Config | Default | Effect |
+|---------|--------|---------|--------|
+| **SuppressDrops** | Sandbox | OFF | Replaced tiles drop nothing |
+| **VacuumItems** | Sandbox | ON | Pulls item drops to player (SP only) |
+| **BypassPickaxePower** | Sandbox | OFF | Ignores pickaxe-power gating during fallback Kill+Place |
+| **MaxOperationSize** | Limits | 10000 | Cap on tiles per operation |
+
+---
+
+## Client Config Settings
+
+| Setting | Config | Default | Effect |
+|---------|--------|---------|--------|
+| **EnableWandSounds** | Preferences | ON | Plays the `Item29` completion sound |
+| **EnableProgressiveProcessing** | Performance | ON | Visualises large operations in batches (SP only) |
 
 ---
 
 ## Multiplayer Behaviour
 
 | Aspect | Singleplayer | Multiplayer |
-|---|---|---|
-| Per-tile replacement effects | ✅ Visual feedback | ❌ Silent |
-| Completion sound | ✅ Item29 sound | ✅ Item29 sound (via OperationResult) |
-| Completion message | ✅ Chat message | ✅ Chat message (via OperationResult) |
-| Progressive batching | ✅ Visual batches | ❌ Instant |
-| Vacuum items | ✅ Works | ❌ Not yet supported |
-| Undo | ✅ Works | ❌ Not yet supported |
+|--------|--------------|-------------|
+| Per-tile replacement effects | ✅ | ❌ Silent (engine behaviour) |
+| Completion sound + chat message | ✅ | ✅ (via `OperationResult`) |
+| Progressive batching | ✅ | ❌ Server processes the whole batch at once |
+| Vacuum items | ✅ | ❌ Items scatter |
+| Undo (`/undo`) | ✅ | ✅ |
 
 ---
 
-## Replacement Logic
+## Interactions With Other Systems
 
-The wand uses a two-pass approach for maximum compatibility:
+### Delimitation Area
 
-1. **ReplaceTile (preferred)**: Uses Terraria's native `WorldGen.ReplaceTile` method,
-   which handles tile type conversion without breaking/placing. Faster, preserves
-   paint and coatings, and doesn't create item drops.
+When a Wand of Delimitation area is active, the Wand of Replacement only replaces tiles
+**inside** the delimitation area. Tiles outside are silently skipped. If your shape lands
+entirely outside it, you'll see:
 
-2. **KillTile + PlaceTile (fallback)**: When `ReplaceTile` isn't possible (e.g.,
-   incompatible tile types), the wand falls back to destroying the old tile and
-   placing the new one. This path may create item drops.
+> *"No action executed. Delimitation Area is active and does not overlap with the selection."*
+
+See **[Wand of Delimitation](WandOfDelimitation.md)** for the full picture.
+
+### Undo / Safekeeping
+
+Replacement records the original tile data before each swap, so undo restores the exact
+prior state — paint, slope, liquid, and wiring all intact. Works in SP and MP.
+
+### Wand of Coating
+
+When Paint Sprayer is set to **CoatingSettings**, the colour comes from the player's
+Wand of Coating's `PaintColor` field. Configure once on the Coating wand, then run
+replacements anywhere with consistent paint without burning through inventory paint.
 
 ---
 
-## Tips
+## Tips & Tricks
 
-1. **Wall replacement**: Set both OldObject and NewObject to **Wall** to replace
-   background walls. This is the only way to change walls in bulk.
+- **Refresh a build's material**: Same Type Mode + Tile, replace stone with marble across
+  the whole castle in one stroke.
+- **Erase one material only**: Set Source = Tile (any kind), Target = Air, with a chosen
+  source item — only that material disappears, leaving everything else.
+- **Re-grass corrupted ground**: Source = Tile (corrupt grass), Target = Tile (regular
+  grass), Same Type OFF, target chosen as a grass seed analogue. (For mass-seeding workflows
+  the Wand of Building's `GrassSeed` mode is often more direct.)
+- **Re-paint without re-painting**: PreservePaint ON + Paint Sprayer = CoatingSettings —
+  any tile that had no paint receives the Coating wand's colour, while painted features
+  stay untouched.
+- **Stamp + Mold for templated swaps**: Sculpt a window-frame mold once, then Stamp-
+  replace stone with glass within that mold anywhere in the world.
 
-2. **Selective replacement**: The wand only replaces tiles that match the target
-   material. Empty spaces are skipped — no accidental fills.
+---
 
-3. **Material source**: The replacement material is determined by your currently
-   selected inventory item. Hold the block you want to place.
+## See Also
 
-4. **Confirm mode for safety**: When replacing near valuable structures, use
-   Confirm mode to preview the area before committing.
-
-5. **Seeds on grass**: Use the Seeds object type to spread grass, corruption,
-   crimson, or hallow seeds across a large area of compatible blocks.
-
-6. **Air for partial clearing**: Set NewObject to Air to selectively erase tiles
-   that match a specific type, leaving others untouched.
+- **[Wand of Building](WandOfBuilding.md)** — Place new tiles instead of swapping existing ones.
+- **[Wand of Coating](WandOfCoating.md)** — Configures the colour used by Paint Sprayer's *CoatingSettings* mode.
+- **[Wand of Dismantling](WandOfDismantling.md)** — Destroys tiles instead of swapping them.
+- **[Wand of Delimitation](WandOfDelimitation.md)** — Constrain replacement to a precise area.
+- **[Wand of Safekeeping](WandOfSafekeeping.md)** — Protect tiles or walls so Replacement can't touch them.
+- **[Wand of Molding](WandOfMolding.md)** — Provides the custom Mold shape.

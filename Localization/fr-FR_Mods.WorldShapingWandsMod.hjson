@@ -1,22 +1,22 @@
 Keybinds: {
-	"Increase Thickness.DisplayName": Augmenter l'épaisseur
-	"Decrease Thickness.DisplayName": Diminuer l'épaisseur
-	"Open Wand Settings.DisplayName": Ouvrir les paramètres de la baguette
+	"Increase Thickness.DisplayName": Augmenter l'Ã©paisseur
+	"Decrease Thickness.DisplayName": Diminuer l'Ã©paisseur
+	"Open Wand Settings.DisplayName": Ouvrir les paramÃ¨tres de la baguette
 	// "Open Inventory View.DisplayName": Open Inventory View
-	"Undo Selection Step.DisplayName": Annuler l'étape de sélection
-	"Toggle Suppress Drops.DisplayName": Activer/Désactiver la suppression des drops
+	"Undo Selection Step.DisplayName": Annuler l'Ã©tape de sÃ©lection
+	"Toggle Suppress Drops.DisplayName": Activer/DÃ©sactiver la suppression des drops
 }
 
 RecipeGroups: {
 	AnyGemstone: N'importe quelle gemme
 	AnyWandOfBuilding: N'importe quelle baguette de construction
-	AnyWandOfDismantling: N'importe quelle baguette de démantèlement
+	AnyWandOfDismantling: N'importe quelle baguette de dÃ©mantÃ¨lement
 }
 
 UI: {
 	Common: {
 		Shape: Forme
-		OutlineThickness: Épaisseur du contour :
+		OutlineThickness: Ã‰paisseur du contour :
 		Close: Fermer
 		// Shared default-state suffixes (referenced via {$Mods.WorldShapingWandsMod.UI.Common.DefaultOn} in tooltips)
 		// DefaultOn: Default: On
@@ -33,10 +33,10 @@ UI: {
 		ShapeElbow: Coude
 		ShapeCardinal: Ligne cardinale
 		// ShapeStraightLine: Straight Line
-		ShapeMold: Moule (forme personnalisée)
-		EqualDimensions: Dimensions égales
-		ConnectDiameter: Connecter le diamètre
-		// ConnectDiameterTooltip: Connect Diameter (half shapes only)
+		ShapeMold: Moule (forme personnalisÃ©e)
+		EqualDimensions: Dimensions Ã©gales
+		ConnectDiameter: Connecter le diamÃ¨tre
+		// ConnectDiameterTooltip: Connect Diameter (hollow half-shapes only; does not clear pre-existing tiles on the open side)
 		// InvertSelection: Invert Selection
 
 		PaintSprayer: {
@@ -90,26 +90,26 @@ UI: {
 		Rope: Corde
 		Rail: Rail
 		GrassSeed: Graine d'herbe
-		PlanterBox: Bac à plantation
+		PlanterBox: Bac Ã  plantation
 		Wall: Mur
 		Slope: Pente
 		SlopeDefault: Bloc complet
 		SlopeHalf: Demi-bloc
-		SlopeBottomRight: Pente ◣ (Bas-Droite)
-		SlopeBottomLeft: Pente ◢ (Bas-Gauche)
-		SlopeTopRight: Pente ◤ (Haut-Droite)
-		SlopeTopLeft: Pente ◥ (Haut-Gauche)
+		SlopeBottomRight: Pente â—£ (Bas-Droite)
+		SlopeBottomLeft: Pente â—¢ (Bas-Gauche)
+		SlopeTopRight: Pente â—¤ (Haut-Droite)
+		SlopeTopLeft: Pente â—¥ (Haut-Gauche)
 		OverwriteSlope: Remplacer la pente
 		// Options: Building Options
 	}
 
 	Dismantling: {
-		Title: Baguette de démantèlement
+		Title: Baguette de dÃ©mantÃ¨lement
 		Options: Options
-		DestroyTiles: Détruire les blocs
-		DestroyWalls: Détruire les murs
-		DestroyContainers: Détruire les coffres
-		DestroyContainersTooltip: Actif uniquement lorsque Détruire les blocs est également activé
+		DestroyTiles: DÃ©truire les blocs
+		DestroyWalls: DÃ©truire les murs
+		DestroyContainers: DÃ©truire les coffres
+		DestroyContainersTooltip: Actif uniquement lorsque DÃ©truire les blocs est Ã©galement activÃ©
 		// VoidEverything: Void Everything
 		// VoidEverythingTooltip: Toggle Void Everything mode. When active, dismantling operations will obliterate all tiles, walls, liquids, wires, and actuators instead of normal dismantling.
 		// VoidEverythingDisabled: Void Everything requires Carefree Mode to be enabled in server config.
@@ -128,11 +128,11 @@ UI: {
 		Air: Air (Supprimer)
 		Wall: Mur
 		// Options: Replacement Options
-		SameType: Même Type
+		SameType: MÃªme Type
 	}
 
 	Wiring: {
-		Title: Baguette de câblage
+		Title: Baguette de cÃ¢blage
 		WireTypes: Types de fil
 		RedWire: Fil rouge
 		GreenWire: Fil vert
@@ -145,13 +145,13 @@ UI: {
 	}
 
 	Safekeeping: {
-		Title: Baguette de préservation
+		Title: Baguette de prÃ©servation
 		Mode: Mode
-		Protect: Protéger
-		Unprotect: Déprotéger
-		ProtectTiles: Protéger les blocs
-		ProtectWalls: Protéger les murs
-		ClearAll: Tout déprotéger
+		Protect: ProtÃ©ger
+		Unprotect: DÃ©protÃ©ger
+		ProtectTiles: ProtÃ©ger les blocs
+		ProtectWalls: ProtÃ©ger les murs
+		ClearAll: Tout dÃ©protÃ©ger
 		ClearConfirm: Cliquez pour confirmer !
 	}
 
@@ -197,7 +197,7 @@ UI: {
 		// Drain: Drain
 		FluidOptions: Options de Fluides
 		CoatInBubble: Enrober de Bulle
-		MixLiquids: Mélanger les Liquides
+		MixLiquids: MÃ©langer les Liquides
 		/* OverwriteLiquids:
 			'''
 			Overwrite Liquids
@@ -684,8 +684,9 @@ Configs: {
 				'''
 				Number of frames between repeat executions while stamp channeling
 				is active. Lower values execute faster.
-				60 frames = 1 second, so 10 frames = 6 executions per second.
-				Default: 10
+				60 frames = 1 second, so 3 frames = 20 executions per second.
+				Applies to all stamp wands except the Wand of Coating.
+				Default: 3
 				''' */
 		}
 
@@ -698,6 +699,17 @@ Configs: {
 				"Free Paint Picasso" experience.
 				Set to 0 for instant channeling (no charge delay).
 				Default: 20 (~0.33 seconds)
+				''' */
+		}
+
+		CoatingStampRepeatFrames: {
+			// Label: Coating Repeat Interval (frames)
+			/* Tooltip:
+				'''
+				Override repeat interval for the Wand of Coating stamp mode.
+				Lower values execute faster; 1 frame means repaint every logic tick
+				once channeling is active.
+				Default: 1
 				''' */
 		}
 
@@ -1729,102 +1741,102 @@ Configs: {
 Items: {
 	WandOfDismantlingInstant: {
 		Tooltip: ""
-		DisplayName: Baguette de démantèlement (Instantanée)
+		DisplayName: Baguette de dÃ©mantÃ¨lement (InstantanÃ©e)
 	}
 
 	WandOfDismantlingSelect: {
 		Tooltip: ""
-		DisplayName: Baguette de démantèlement (Sélection)
+		DisplayName: Baguette de dÃ©mantÃ¨lement (SÃ©lection)
 	}
 
 	WandOfDismantlingConfirm: {
 		Tooltip: ""
-		DisplayName: Baguette de démantèlement (Confirmation)
+		DisplayName: Baguette de dÃ©mantÃ¨lement (Confirmation)
 	}
 
 	WandOfBuildingInstant: {
-		DisplayName: Baguette de construction (Instantanée)
-		Tooltip: Place des blocs dans une zone sélectionnée
+		DisplayName: Baguette de construction (InstantanÃ©e)
+		Tooltip: Place des blocs dans une zone sÃ©lectionnÃ©e
 	}
 
 	WandOfBuildingSelect: {
-		DisplayName: Baguette de construction (Sélection)
-		Tooltip: Place des blocs dans une zone sélectionnée
+		DisplayName: Baguette de construction (SÃ©lection)
+		Tooltip: Place des blocs dans une zone sÃ©lectionnÃ©e
 	}
 
 	WandOfBuildingConfirm: {
 		DisplayName: Baguette de construction (Confirmation)
-		Tooltip: Place des blocs dans une zone sélectionnée
+		Tooltip: Place des blocs dans une zone sÃ©lectionnÃ©e
 	}
 
 	WandOfReplacementInstant: {
-		DisplayName: Baguette de remplacement (Instantanée)
-		Tooltip: Remplace des blocs dans une zone sélectionnée
+		DisplayName: Baguette de remplacement (InstantanÃ©e)
+		Tooltip: Remplace tous les blocs du type source par le type cible dans une zone sÃ©lectionnÃ©e\nLa source et la cible peuvent Ãªtre Ã©pinglÃ©es depuis la Vue d'inventaire
 	}
 
 	WandOfReplacementSelect: {
-		DisplayName: Baguette de remplacement (Sélection)
-		Tooltip: Remplace des blocs dans une zone sélectionnée
+		DisplayName: Baguette de remplacement (SÃ©lection)
+		Tooltip: Remplace tous les blocs du type source par le type cible dans une zone sÃ©lectionnÃ©e\nLa source et la cible peuvent Ãªtre Ã©pinglÃ©es depuis la Vue d'inventaire
 	}
 
 	WandOfReplacementConfirm: {
 		DisplayName: Baguette de remplacement (Confirmation)
-		Tooltip: Remplace des blocs dans une zone sélectionnée
+		Tooltip: Remplace tous les blocs du type source par le type cible dans une zone sÃ©lectionnÃ©e\nLa source et la cible peuvent Ãªtre Ã©pinglÃ©es depuis la Vue d'inventaire
 	}
 
 	WandOfWiringInstant: {
-		DisplayName: Baguette de câblage (Instantanée)
-		Tooltip: Place ou retire des fils et des actionneurs dans une zone sélectionnée
+		DisplayName: Baguette de cÃ¢blage (InstantanÃ©e)
+		Tooltip: Place ou retire des fils et des actionneurs dans une zone sÃ©lectionnÃ©e
 	}
 
 	WandOfWiringSelect: {
-		DisplayName: Baguette de câblage (Sélection)
-		Tooltip: Place ou retire des fils et des actionneurs dans une zone sélectionnée
+		DisplayName: Baguette de cÃ¢blage (SÃ©lection)
+		Tooltip: Place ou retire des fils et des actionneurs dans une zone sÃ©lectionnÃ©e
 	}
 
 	WandOfWiringConfirm: {
-		DisplayName: Baguette de câblage (Confirmation)
-		Tooltip: Place ou retire des fils et des actionneurs dans une zone sélectionnée
+		DisplayName: Baguette de cÃ¢blage (Confirmation)
+		Tooltip: Place ou retire des fils et des actionneurs dans une zone sÃ©lectionnÃ©e
 	}
 
 	WandOfBuildingStamp: {
 		DisplayName: Baguette de construction (Tampon)
-		Tooltip: Définissez une forme une fois, puis reproduisez-la avec le tampon
+		Tooltip: DÃ©finissez une forme une fois, puis reproduisez-la avec le tampon
 	}
 
 	WandOfDismantlingStamp: {
 		Tooltip: ""
-		DisplayName: Baguette de démantèlement (Tampon)
+		DisplayName: Baguette de dÃ©mantÃ¨lement (Tampon)
 	}
 
 	WandOfReplacementStamp: {
 		DisplayName: Baguette de remplacement (Tampon)
-		Tooltip: Définissez une zone de remplacement une fois, puis reproduisez-la avec le tampon
+		Tooltip: Définissez une zone de remplacement une fois, puis reproduisez-la avec le tampon\nLa source et la cible peuvent être épinglées depuis la Vue d'inventaire
 	}
 
 	WandOfWiringStamp: {
-		DisplayName: Baguette de câblage (Tampon)
-		Tooltip: Définissez une zone de câblage une fois, puis reproduisez-la avec le tampon
+		DisplayName: Baguette de cÃ¢blage (Tampon)
+		Tooltip: DÃ©finissez une zone de cÃ¢blage une fois, puis reproduisez-la avec le tampon
 	}
 
 	WandOfSafekeepingInstant: {
-		DisplayName: Baguette de préservation (Instantanée)
-		Tooltip: Protège ou déprotège des blocs dans une zone sélectionnée
+		DisplayName: Baguette de prÃ©servation (InstantanÃ©e)
+		Tooltip: ProtÃ¨ge ou dÃ©protÃ¨ge des blocs dans une zone sÃ©lectionnÃ©e
 	}
 
 	WandOfSafekeepingSelect: {
-		DisplayName: Baguette de préservation (Sélection)
-		Tooltip: Protège ou déprotège des blocs dans une zone sélectionnée
+		DisplayName: Baguette de prÃ©servation (SÃ©lection)
+		Tooltip: ProtÃ¨ge ou dÃ©protÃ¨ge des blocs dans une zone sÃ©lectionnÃ©e
 	}
 
 	WandOfSafekeepingConfirm: {
-		DisplayName: Baguette de préservation (Confirmation)
-		Tooltip: Protège ou déprotège des blocs dans une zone sélectionnée
+		DisplayName: Baguette de prÃ©servation (Confirmation)
+		Tooltip: ProtÃ¨ge ou dÃ©protÃ¨ge des blocs dans une zone sÃ©lectionnÃ©e
 	}
 
 	WandOfSafekeepingStamp: {
-		DisplayName: Baguette de préservation (Tampon)
-		Tooltip: Définissez une zone de préservation une fois, puis reproduisez-la avec le tampon
+		DisplayName: Baguette de prÃ©servation (Tampon)
+		Tooltip: DÃ©finissez une zone de prÃ©servation une fois, puis reproduisez-la avec le tampon
 	}
 
 	WandOfCoatingInstant: {
@@ -1963,35 +1975,35 @@ Conditions.NonCraftable: Non fabriquable. Changez de mode avec un clic droit dan
 // These replace hardcoded Main.NewText() strings across the codebase.
 Messages: {
 	// ── Common ──────────────────────────────────────────────
-	SelectionCancelled: Sélection annulée.
+	SelectionCancelled: SÃ©lection annulÃ©e.
 	// S8 2026-04-22 — keybind hint when InventoryView toggle pressed without a participating wand held.
 	// S9 vocabulary pass: drop "Inventory View" user-facing wording (DesignDoc Phase A).
 	// InventoryViewNoParticipant: The block picker is only available for the Wand of Building, Wand of Replacement, and Wand of Torches.
 	SwitchedToMode: Passage en mode {0}
-	ThicknessChanged: Épaisseur : {0} — {1}
-	StampUnlocked: Tampon relâché. Cliquez pour définir un nouvel ancrage.
-	SelectionUnlocked: Sélection déverrouillée. Déplacez-vous pour ajuster le point final.
-	SelectionCleared: Sélection effacée.
+	ThicknessChanged: Ã‰paisseur : {0} â€” {1}
+	StampUnlocked: Tampon relÃ¢chÃ©. Cliquez pour dÃ©finir un nouvel ancrage.
+	SelectionUnlocked: SÃ©lection dÃ©verrouillÃ©e. DÃ©placez-vous pour ajuster le point final.
+	SelectionCleared: SÃ©lection effacÃ©e.
 	// ── Tooltip strings ─────────────────────────────────────
-	ModeInstant: Cliquez et faites glisser pour sélectionner une zone
-	ModeSelect: Cliquez sur le début, puis sur la fin
-	ModeConfirm: Cliquez sur le début, sur la fin, puis cliquez pour confirmer
-	ModeStamp: Cliquez sur le début, sur la fin, cliquez pour sceller la forme et la position, puis cliquez pour répéter
+	ModeInstant: Cliquez et faites glisser pour sÃ©lectionner une zone
+	ModeSelect: Cliquez sur le dÃ©but, puis sur la fin
+	ModeConfirm: Cliquez sur le dÃ©but, sur la fin, puis cliquez pour confirmer
+	ModeStamp: Cliquez sur le dÃ©but, sur la fin, cliquez pour sceller la forme et la position, puis cliquez pour rÃ©pÃ©ter
 	CycleHint: Cliquez droit dans l'inventaire pour changer de mode
-	PickaxeHint: Utilise votre pioche la plus puissante pour les vérifications de puissance de bloc
+	PickaxeHint: Utilise votre pioche la plus puissante pour les vÃ©rifications de puissance de bloc
 	ObtainHint: "[c/AAAAAA:Obtenez d'autres modes en cliquant droit sur cette baguette dans votre inventaire]"
 	// ── Building ────────────────────────────────────────────
-	NoSuitableItem: Aucun objet approprié trouvé pour {0}.
-	NeedHave: Besoin de {0} {1}, vous en avez {2}. Opération annulée.
-	NoTilesPlaced: Aucun bloc n'a pu être placé.
-	NoWallItemFound: Aucun objet de mur trouvé dans l'inventaire.
-	NoWallsPlaced: Aucun mur n'a pu être placé.
+	NoSuitableItem: Aucun objet appropriÃ© trouvÃ© pour {0}.
+	NeedHave: Besoin de {0} {1}, vous en avez {2}. OpÃ©ration annulÃ©e.
+	NoTilesPlaced: Aucun bloc n'a pu Ãªtre placÃ©.
+	NoWallItemFound: Aucun objet de mur trouvÃ© dans l'inventaire.
+	NoWallsPlaced: Aucun mur n'a pu Ãªtre placÃ©.
 	// 2026-04-23 Session 1 (Letter #10 §6) — Interrupt mode refuses to run when the
 	// chosen item isn't currently in inventory. Shown in red chat instead of silently
 	// substituting. Applies to both tile pins and wall pins.
 	// ChosenMissingUnderInterrupt: chosen item is not in inventory — Interrupt mode will not substitute. Operation cancelled.
 	// ── Dismantling ─────────────────────────────────────────
-	NoTilesDestroyed: Aucun bloc n'a été détruit.
+	NoTilesDestroyed: Aucun bloc n'a Ã©tÃ© dÃ©truit.
 	// ── Void Everything ─────────────────────────────────────
 	// VoidRequiresCarefree: Void Everything requires Carefree Mode to be enabled.
 	// VoidSinglePlayerOnly: Void Everything is currently only available in single-player.
@@ -1999,33 +2011,33 @@ Messages: {
 	// NothingToVoid: Nothing to void in the selected area.
 	// ── Replacement ─────────────────────────────────────────
 	NoSourceItems: Aucun objet de {0} dans l'inventaire pour identifier le bloc source.
-	SameSourceTarget: La source et la cible sont le même bloc [i:{0}].
-	NoTargetItems: Aucun objet de {0} trouvé dans l'inventaire.
-	NoSourceInSelection: Aucun {0} trouvé dans la sélection.
+	SameSourceTarget: La source et la cible sont le mÃªme bloc [i:{0}].
+	NoTargetItems: Aucun objet de {0} trouvÃ© dans l'inventaire.
+	NoSourceInSelection: Aucun {0} trouvÃ© dans la sÃ©lection.
 	NeedTargetItems: Besoin de {0} [i:{1}], vous en avez {2}.
-	NoTilesReplaced: Aucun bloc n'a pu être remplacé.
-	SourceMustBeWall: Le type source doit être Mur pour remplacer des murs.
+	NoTilesReplaced: Aucun bloc n'a pu Ãªtre remplacÃ©.
+	SourceMustBeWall: Le type source doit Ãªtre Mur pour remplacer des murs.
 	NoWallSourceItems: Aucun objet de mur dans l'inventaire pour identifier le mur source.
-	TargetMustBeWallOrAir: Le type cible doit être Mur ou Air (Supprimer) pour remplacer des murs.
-	SameWallSourceTarget: La source et la cible sont le même mur [i:{0}].
-	NoWallTargetItems: Aucun objet de mur trouvé pour la cible.
-	NoSourceWallsInSelection: Aucun mur {0} trouvé dans la sélection.
-	NoWallsReplaced: Aucun mur n'a pu être remplacé.
+	TargetMustBeWallOrAir: Le type cible doit Ãªtre Mur ou Air (Supprimer) pour remplacer des murs.
+	SameWallSourceTarget: La source et la cible sont le mÃªme mur [i:{0}].
+	NoWallTargetItems: Aucun objet de mur trouvÃ© pour la cible.
+	NoSourceWallsInSelection: Aucun mur {0} trouvÃ© dans la sÃ©lection.
+	NoWallsReplaced: Aucun mur n'a pu Ãªtre remplacÃ©.
 	// ── Wiring ──────────────────────────────────────────────
-	NoWiresSelected: Aucun fil ou actionneur sélectionné.
+	NoWiresSelected: Aucun fil ou actionneur sÃ©lectionnÃ©.
 	NoWireInInventory: Aucun fil dans l'inventaire.
 	NoActuatorsInInventory: Aucun actionneur dans l'inventaire.
-	WiresPlaced: "{0} segments de fil placés."
-	WiresRemoved: "{0} segments de fil retirés."
-	NoWiringChanges: Aucune modification effectuée.
+	WiresPlaced: "{0} segments de fil placÃ©s."
+	WiresRemoved: "{0} segments de fil retirÃ©s."
+	NoWiringChanges: Aucune modification effectuÃ©e.
 	// ── Safekeeping ─────────────────────────────────────────
-	NoProtectionTargets: Aucune cible de protection sélectionnée (blocs ou murs).
-	NoPositionsToProtect: Aucune position à protéger dans la sélection.
-	NoProtectedPositions: Aucune position protégée dans la sélection.
-	ClearedProtection: Toute protection a été retirée ({0} blocs, {1} murs).
-	ClearConfirmPrompt: Cliquez à nouveau pour déprotéger {0} bloc(s) et {1} mur(s).
+	NoProtectionTargets: Aucune cible de protection sÃ©lectionnÃ©e (blocs ou murs).
+	NoPositionsToProtect: Aucune position Ã  protÃ©ger dans la sÃ©lection.
+	NoProtectedPositions: Aucune position protÃ©gÃ©e dans la sÃ©lection.
+	ClearedProtection: Toute protection a Ã©tÃ© retirÃ©e ({0} blocs, {1} murs).
+	ClearConfirmPrompt: Cliquez Ã  nouveau pour dÃ©protÃ©ger {0} bloc(s) et {1} mur(s).
 	// ── Undo ────────────────────────────────────────────────
-	Undone: Annulé : {0} ({1} blocs)
+	Undone: AnnulÃ© : {0} ({1} blocs)
 	// ── Coating ─────────────────────────────────────────────
 	// CoatingNoChanges: No changes made.
 	// CoatingPaintedTiles: Painted {0} tiles.
@@ -2063,15 +2075,15 @@ Messages: {
 	// TorchesNoneConverted: No torches to convert (already biome-matched).
 	// TorchesConverted: Converted {0} torches to biome variant.
 	// ── Selection prompts (per-mode) ────────────────────────
-	SelectStartClickEnd: Sélection démarrée. Cliquez pour définir le point final.
-	SelectStartClickAgain: Sélection démarrée. Cliquez à nouveau pour {0}.
-	ClickToConfirm: Cliquez à nouveau pour confirmer.
-	ClickToConfirmOrCancel: Cliquez à nouveau pour confirmer, ou clic droit pour annuler.
-	EndPointSet: Point final défini. Cliquez à nouveau pour confirmer.
-	StampClickEnd: Tampon : cliquez pour définir le point final.
+	SelectStartClickEnd: SÃ©lection dÃ©marrÃ©e. Cliquez pour dÃ©finir le point final.
+	SelectStartClickAgain: SÃ©lection dÃ©marrÃ©e. Cliquez Ã  nouveau pour {0}.
+	ClickToConfirm: Cliquez Ã  nouveau pour confirmer.
+	ClickToConfirmOrCancel: Cliquez Ã  nouveau pour confirmer, ou clic droit pour annuler.
+	EndPointSet: Point final dÃ©fini. Cliquez Ã  nouveau pour confirmer.
+	StampClickEnd: Tampon : cliquez pour dÃ©finir le point final.
 	// ── Selection prompts (per-mode) ────────────────────────
 	StampClickLock: Tampon : cliquez pour fixer la position de l'ancrage.
-	StampLocked: Tampon défini ! Cliquez pour {0}. Clic droit pour réinitialiser.
+	StampLocked: Tampon dÃ©fini ! Cliquez pour {0}. Clic droit pour rÃ©initialiser.
 	// SuppressDropsOn: Suppress Drops: ON — tile drops are suppressed.
 	// SuppressDropsOff: Suppress Drops: OFF — tile drops are enabled.
 	// ── Select Wand prompts ─────────────────────────────────
@@ -2105,8 +2117,8 @@ Messages: {
 
 GameTips: {
 	VacuumItems: WSW: Marre de ramasser les objets ? Activez 'aspirer les objets' dans la configuration.
-	IceBiomeReplacement: WSW: Le Biome de Glace a été corrompu ? Utilisez la Baguette de Remplacement pour les échanger contre de la neige. C'est immunisé !
-	GitHubContributions: WSW: Vous avez des bugs ? Des idées ? Des retours ou de l'art ? Consultez le dépôt github ! Les contributions sont les bienvenues.
+	IceBiomeReplacement: WSW: Le Biome de Glace a Ã©tÃ© corrompu ? Utilisez la Baguette de Remplacement pour les Ã©changer contre de la neige. C'est immunisÃ© !
+	GitHubContributions: WSW: Vous avez des bugs ? Des idÃ©es ? Des retours ou de l'art ? Consultez le dÃ©pÃ´t github ! Les contributions sont les bienvenues.
 }
 
 Projectiles: {

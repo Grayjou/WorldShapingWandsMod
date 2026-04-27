@@ -178,5 +178,13 @@ Hints are rate-limited (one every 3 seconds) to avoid message spam during channe
 
 ## See Also
 
-- **Wand of Delimitation** — Uses the same canvas/selection architecture for tile filtering
-- **Common Concepts** — Selection modes, shapes, overlays (coming soon)
+- **[Wand of Delimitation](WandOfDelimitation.md)** — Uses the same canvas/selection architecture for tile filtering.
+- **[Wand of Building](WandOfBuilding.md)** — Stamp Building uses your Mold as a custom shape template.
+- **[Wand of Dismantling](WandOfDismantling.md)** — Mold + Stamp = repeatable carve-outs.
+- **[Wand of Wiring](WandOfWiring.md)** — Wire any custom mold you've sculpted.
+- **[Wand of Torches](WandOfTorches.md)** — Torch any custom mold using the lattice.
+- **[Wand of Coating](WandOfCoating.md)** — Paint any custom mold.
+- **[Wand of Fluids](WandOfFluids.md)** — Mold-shaped pools and bubble tanks.
+- **[Wand of Replacement](WandOfReplacement.md)** — Replace tiles within your Mold template.
+- **[Common Concepts](../CommonConcepts.md)** — Selection modes, shapes, overlays, undo, safekeeping, delimitation.
+- **[Getting Started](../GettingStarted.md)** — 5-minute orientation for new players.

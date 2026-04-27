@@ -44,7 +44,7 @@ public abstract class BaseCyclingWand : ModItem
 
     private const int DefaultStampChannelFrames = 100;
 
-    private const int DefaultStampRepeatFrames = 10;
+    private const int DefaultStampRepeatFrames = 3;
 
     public abstract int GetNextModeItemType();
 
@@ -270,7 +270,7 @@ public abstract class BaseCyclingWand : ModItem
     /// <summary>
     /// Returns the number of frames between repeat executions while channeling.
     /// </summary>
-    protected int GetRepeatFrames()
+    protected virtual int GetRepeatFrames()
     {
         var config = WandConfigs.Stamp;
         return config?.StampRepeatFrames ?? DefaultStampRepeatFrames;
