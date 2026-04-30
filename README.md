@@ -212,6 +212,3 @@ dotnet build --no-restore -p:TargetFramework=net8.0
 ## License
 
 [MIT](LICENSE) — see `LICENSE` for details.
-
-The `ClonedMagicWiring/` directory contains reference material from the
-[MagicWiring](https://github.com/Grayjou/MagicWiringMod) mod and retains its original license.

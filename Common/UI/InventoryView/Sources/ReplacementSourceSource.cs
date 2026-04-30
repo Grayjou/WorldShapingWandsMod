@@ -54,4 +54,13 @@ public sealed class ReplacementSourceSource : IInventoryViewSource
 
     public void SetSelectedItemType(WandPlayer wp, int? itemType)
         => wp.ReplacementSettings.SetChosenSourceItemType(wp.ReplacementSettings.OldObject, itemType);
+
+    public IEnumerable<int> GetPinnedItemTypes(WandPlayer wp)
+        => wp.ReplacementSettings.GetPinnedSourceItemTypes(wp.ReplacementSettings.OldObject);
+
+    public bool IsPinned(WandPlayer wp, int itemType)
+        => wp.ReplacementSettings.GetPinnedSourceItemTypes(wp.ReplacementSettings.OldObject).Contains(itemType);
+
+    public void TogglePin(WandPlayer wp, int itemType)
+        => wp.ReplacementSettings.TogglePinnedSourceItemType(wp.ReplacementSettings.OldObject, itemType);
 }

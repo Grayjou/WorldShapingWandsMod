@@ -67,4 +67,3 @@ Key Features:
 Acknowledgments:
   Developed by Grayjou.
   Inspired by ImproveGame (Quality of Life) and CheatSheet.
-  Wiring system architecture informed by MagicWiring.

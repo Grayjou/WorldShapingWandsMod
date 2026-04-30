@@ -1,7 +1,9 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using ReLogic.Content;
 using Terraria;
 using Terraria.GameContent;
+using Terraria.ModLoader;
 using Terraria.UI;
 using WorldShapingWandsMod.Common.Drawing;
 using WorldShapingWandsMod.Content.Items;
@@ -28,6 +30,32 @@ namespace WorldShapingWandsMod.Common.UI.Elements;
 /// </remarks>
 public class UIPaintColorButton : UIElement
 {
+    /// <summary>
+    /// Vanilla PaintID for the Negative paint, which inverts the rendered
+    /// tile colour. Calling out the literal here so the swatch-draw branch
+    /// below does not have to reference <see cref="PaintPalette"/> by index.
+    /// </summary>
+    private const byte NegativePaintIndex = 30;
+
+    // Lazy-loaded baked icons for the Negative paint (S13 2026-04-28). The
+    // flat magenta swatch read as "just another pink chip"; the baked glyph
+    // (cyan + magenta quadrants + central crosshair) communicates the
+    // colour-inversion concept far better. Two sizes ship so we can pick
+    // the closer-fit at draw time and avoid linear-filter blur on the
+    // hand-tuned 23×23 design. See generate_negative_paint_icon.py.
+    private static Asset<Texture2D> _negativeIcon1x;
+    private static Asset<Texture2D> _negativeIcon2x;
+
+    private static Asset<Texture2D> NegativeIcon1x
+        => _negativeIcon1x ??= ModContent.Request<Texture2D>(
+            "WorldShapingWandsMod/Assets_Build/Icons/Misc/PaintNegative",
+            AssetRequestMode.ImmediateLoad);
+
+    private static Asset<Texture2D> NegativeIcon2x
+        => _negativeIcon2x ??= ModContent.Request<Texture2D>(
+            "WorldShapingWandsMod/Assets_Build/Icons/Misc/PaintNegative_2x",
+            AssetRequestMode.ImmediateLoad);
+
     private readonly byte _colorIndex;
     private readonly Color _color;
     private readonly string _name;
@@ -53,6 +81,18 @@ public class UIPaintColorButton : UIElement
         Color bg = _colorIndex == 0 || _colorIndex == WandOfCoatingBase.IgnorePaintColor
             ? WandPanelTheme.Colors.Disabled : _color;
         spriteBatch.Draw(TextureAssets.MagicPixel.Value, rect, bg);
+
+        if (_colorIndex == NegativePaintIndex)
+        {
+            // Replace the flat magenta fill with the baked Negative glyph.
+            // Pick the 2× source whenever the swatch is at least 30 px so
+            // the larger pickers (e.g. Color Replace 26 px swatches @ 1.x
+            // UI scale, ≥30 px effective) sample from the higher-fidelity
+            // copy. Below 30 px we read from the native 23×23 source.
+            int targetEdge = System.Math.Min(rect.Width, rect.Height);
+            var icon = (targetEdge >= 30 ? NegativeIcon2x : NegativeIcon1x).Value;
+            spriteBatch.Draw(icon, rect, Color.White);
+        }
 
         if (_colorIndex == 0)
         {

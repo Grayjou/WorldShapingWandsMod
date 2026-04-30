@@ -14,6 +14,7 @@ using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Settings;
 using WorldShapingWandsMod.Common.UI.Elements;
+using WorldShapingWandsMod.Common.UI.Elements.Builders;
 
 namespace WorldShapingWandsMod.Common.UI;
 
@@ -43,6 +44,10 @@ public class MoldingSettingsPanel : UIState
     private UIIconButton _triangleFilledBtn, _triangleHollowBtn;
     private UIIconButton _edgeBtn, _cardinalBtn, _straightLineBtn;
     private UIIconButton _moldBtn;
+
+    // Stencil-slot row (per MultipleStencilsPlan.md §0.1, S6 2026-04-28)
+    private UIIconButton[] _stencilSlotBtns;
+    private ReLogic.Content.Asset<Texture2D>[] _stencilSlotIconAssets;
 
     // Shape options
     private UIIconButton _equalDimensionsBtn, _connectDiameterBtn, _invertSelectionBtn;
@@ -135,13 +140,43 @@ public class MoldingSettingsPanel : UIState
         //  Shape Grid (standard 11-shape layout)
         // ═══════════════════════════════════════════════════════════════
 
-        _builder.AddFullShapeSection(out var shapes);
+        // ════════════════════════════════════════════════════════════════
+        //  Shape Grid (12-cell standard + 5-cell stencil-slot row)
+        //  Per MultipleStencilsPlan.md §0.1 — stencil wands gain a +1 row of
+        //  StencilChoice{1..5} cells under the standard grid for direct slot
+        //  switching. Mold cell hover-icon swap wired below per §0.2.
+        // ════════════════════════════════════════════════════════════════
+
+        _builder.AddStencilShapeSection(out var stencilGrid);
+        var shapes = stencilGrid.Shapes;
         _rectFilledBtn = shapes.RectFilled; _rectHollowBtn = shapes.RectHollow;
         _ellipseFilledBtn = shapes.EllipseFilled; _ellipseHollowBtn = shapes.EllipseHollow;
         _diamondFilledBtn = shapes.DiamondFilled; _diamondHollowBtn = shapes.DiamondHollow;
         _triangleFilledBtn = shapes.TriangleFilled; _triangleHollowBtn = shapes.TriangleHollow;
         _edgeBtn = shapes.Elbow; _cardinalBtn = shapes.Cardinal; _straightLineBtn = shapes.StraightLine;
         _moldBtn = shapes.Mold;
+        _stencilSlotBtns = stencilGrid.StencilSlots;
+
+        // Cache stencil icon assets so the Mold-cell HoverTextureProvider lambda
+        // can resolve them without repeated Asset<>.Request<> calls per frame.
+        _stencilSlotIconAssets = new ReLogic.Content.Asset<Texture2D>[MoldingWandPlayer.StencilSlotCount];
+        for (int i = 0; i < MoldingWandPlayer.StencilSlotCount; i++)
+        {
+            _stencilSlotIconAssets[i] = mod.Assets.Request<Texture2D>(
+                $"Assets_Build/Icons/Shapes/Stencil/StencilChoice{i + 1}",
+                AssetRequestMode.ImmediateLoad);
+        }
+
+        // (S11 2026-04-29 \u2014 Bug 3 fix; StencilEditVsActOn.md \u00a73)
+        // Mold cell wiring is shared across every WSW wand panel via
+        // MoldCellWiring.WireActOnPicker: hover-icon swap shows the
+        // ACT-ON slot's StencilChoice; right-click opens the ACT-ON
+        // picker (writes ActOnStencilSlot, NOT ActiveStencilSlot \u2014 the
+        // EDIT slot belongs to the 5-button stencil row underneath the
+        // shape grid). The Wand of Molding uses the same helper as every
+        // other wand because per the user's S11 example, WoM also stamps
+        // Mold Shape from the ACT-ON slot.
+        Common.UI.Elements.MoldCellWiring.WireActOnPicker(_moldBtn);
 
         // ═══════════════════════════════════════════════════════════════
         //  Slice
@@ -265,6 +300,19 @@ public class MoldingSettingsPanel : UIState
         _triangleFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.Triangle, ShapeMode.Filled);
         _triangleHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.Triangle, ShapeMode.Hollow);
         _moldBtn.OnToggled += (_, _) => SetShape(ShapeType.Mold, ShapeMode.Filled);
+
+        // Stencil-slot row — left-click sets ActiveStencilSlot to N (0-indexed).
+        // Per plan §0.1: "Each cell is a direct-select for that slot." Toggled
+        // state synced in UpdateStencilSlotButtons() below.
+        for (int i = 0; i < _stencilSlotBtns.Length; i++)
+        {
+            int slotIdx = i; // capture for closure
+            _stencilSlotBtns[i].OnToggled += (_, _) =>
+            {
+                var mwp = Main.LocalPlayer?.GetModPlayer<MoldingWandPlayer>();
+                if (mwp != null) mwp.ActiveStencilSlot = (byte)slotIdx;
+            };
+        }
 
         // Shape options
         _equalDimensionsBtn.OnToggled += (_, _) => ToggleEqualDimensions();
@@ -555,11 +603,22 @@ public class MoldingSettingsPanel : UIState
         UpdateModeButtons();
         UpdateOperationButtons();
         UpdateShapeButtons();
+        UpdateStencilSlotButtons();
         UpdateThicknessDisplay();
         UpdateShapeOptions();
         UpdateAutoCreateCanvas();
         UpdateSliceGrid();
         UpdateStatusDisplay();
+    }
+
+    private void UpdateStencilSlotButtons()
+    {
+        if (_stencilSlotBtns == null) return;
+        var mwp = GetMoldingWandPlayer();
+        if (mwp == null) return;
+        int active = mwp.ActiveStencilSlot;
+        for (int i = 0; i < _stencilSlotBtns.Length; i++)
+            _stencilSlotBtns[i].Toggled = (i == active);
     }
 
     // ═══════════════════════════════════════════════════════════════════

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("WorldShapingWandsMod")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+87c42bc9af8804ea650a785db8e187f011b15170")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d66903fdc0768277d4f17e4e8e2c171a4b55ef07")]
 [assembly: System.Reflection.AssemblyProductAttribute("WorldShapingWandsMod")]
 [assembly: System.Reflection.AssemblyTitleAttribute("WorldShapingWandsMod")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

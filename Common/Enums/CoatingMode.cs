@@ -31,4 +31,20 @@ public enum CoatingMode : byte
     /// Does NOT affect short moss tiles — only targets TileID.LongMoss.
     /// </summary>
     HarvestMoss = 4,
+
+    /// <summary>
+    /// (S11 2026-04-28; ColorReplacePlan.md §3 + GrayJou worried-client
+    /// review of S10) Replace one paint colour with another across the
+    /// selection, on the channel chosen in the Color Replace SubUI
+    /// (<see cref="ColorReplaceChannel"/> Tile or Wall) using the
+    /// (source, target) tuple stored in <see cref="WandOfCoatingSettings"/>.
+    /// Sits in the Mode radio row alongside PaintTile/PaintWall/ScrapeMoss/
+    /// HarvestMoss because semantically the player picks ONE thing the wand
+    /// does at a time; the prior “separate fire-on-click action” framing
+    /// from S8–S10 was per GrayJou's S11 review *“there is some
+    /// misunderstanding as if these operations were perpendicular in some
+    /// sense”* — they are not. Source/target/channel remain configured via
+    /// the right-click SubUI on the same button.
+    /// </summary>
+    ColorReplace = 5,
 }

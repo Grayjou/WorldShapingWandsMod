@@ -109,22 +109,66 @@ public class UIDraggablePanel : UIPanel
             float newX = Main.mouseX - _dragOffset.X;
             float newY = Main.mouseY - _dragOffset.Y;
 
-            CalculatedStyle dims = GetDimensions();
-            float minX = -(dims.Width - 40f);
-            float maxX = Main.screenWidth - 40f;
-            float minY = 0f;
-            float maxY = Main.screenHeight - 40f;
-
-            newX = MathHelper.Clamp(newX, minX, maxX);
-            newY = MathHelper.Clamp(newY, minY, maxY);
+            (newX, newY) = ClampPanelToScreen(newX, newY);
 
             Left.Set(newX, 0f);
             Top.Set(newY, 0f);
             Recalculate();
         }
+        else if (_hasBeenDragged)
+        {
+            // (S1 2026-04-28 P 1*2) Re-clamp every frame after the panel has
+            // ever been dragged. Fixes the "stuck offscreen" bug where a
+            // resolution change (or a stale persisted position) could leave
+            // the drag handle outside the screen with no way to reach it.
+            CalculatedStyle dims = GetDimensions();
+            float curX = dims.X;
+            float curY = dims.Y;
+            (float clX, float clY) = ClampPanelToScreen(curX, curY);
+            if (clX != curX || clY != curY)
+            {
+                Left.Set(clX, 0f);
+                Top.Set(clY, 0f);
+                Recalculate();
+            }
+        }
 
         if (ContainsPoint(Main.MouseScreen))
             Main.LocalPlayer.mouseInterface = true;
+    }
+
+    /// <summary>
+    /// (S1 2026-04-28 P 1*2) Clamp a candidate panel top-left position so the
+    /// panel stays mostly on-screen, guaranteeing the drag handle remains
+    /// reachable regardless of where it sits on the panel chrome.
+    /// </summary>
+    /// <remarks>
+    /// Previous (pre-S1 2026-04-28) clamp only required a 40px sliver of the
+    /// panel to remain visible from any single edge. For panels whose drag
+    /// handle is anchored opposite that edge (e.g. InventoryView's top-right
+    /// handle clipped off when only the left sliver was visible), the user
+    /// could lose the handle entirely. The new clamp keeps the entire panel
+    /// within screen bounds plus a small <see cref="EdgeSlack"/> overshoot,
+    /// which both fixes the bug and matches typical desktop window behavior.
+    /// </remarks>
+    private (float x, float y) ClampPanelToScreen(float x, float y)
+    {
+        const float EdgeSlack = 40f;
+        CalculatedStyle dims = GetDimensions();
+
+        float minX = -EdgeSlack;
+        float maxX = Main.screenWidth - dims.Width + EdgeSlack;
+        float minY = 0f;
+        float maxY = Main.screenHeight - dims.Height + EdgeSlack;
+
+        // Guard against pathological cases (panel larger than screen).
+        if (maxX < minX) maxX = minX;
+        if (maxY < minY) maxY = minY;
+
+        return (
+            MathHelper.Clamp(x, minX, maxX),
+            MathHelper.Clamp(y, minY, maxY)
+        );
     }
 
     /// <summary>

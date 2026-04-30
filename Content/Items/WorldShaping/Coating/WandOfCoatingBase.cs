@@ -43,6 +43,12 @@ public abstract class WandOfCoatingBase : BaseCyclingWand
             CoatingMode.PaintWall   => WandAction.CoatingPaintWall,
             CoatingMode.ScrapeMoss  => WandAction.CoatingScrapeMoss,
             CoatingMode.HarvestMoss => WandAction.CoatingHarvestMoss,
+            // S11: Color Replace is a paint-family operation; reuse the
+            // PaintTile projectile sprite rather than minting a new asset
+            // (the wand projectile only briefly flashes during cast — the
+            // visual cost of distinguishing replace-vs-paint there is far
+            // higher than the win, per the S11 “no new art” default).
+            CoatingMode.ColorReplace => WandAction.CoatingPaintTile,
             _                       => WandAction.CoatingPaintTile,
         };
     }
@@ -79,6 +85,10 @@ public abstract class WandOfCoatingBase : BaseCyclingWand
             CoatingMode.PaintWall => ItemID.PaintRoller,
             CoatingMode.ScrapeMoss => ItemID.PaintScraper,
             CoatingMode.HarvestMoss => ItemID.PaintScraper,
+            // S11: ColorReplace shares the Paintbrush cursor — it is a paint
+            // operation in the player's mental model, just one that targets
+            // an existing colour rather than the brush colour.
+            CoatingMode.ColorReplace => ItemID.Paintbrush,
             _ => ItemID.Paintbrush
         };
         player.cursorItemIconPush = 26;
@@ -202,6 +212,22 @@ public abstract class WandOfCoatingBase : BaseCyclingWand
     {
         var settings = wandPlayer.CoatingSettings;
         var selection = wandPlayer.GetVisualSelection();
+
+        // (S11 2026-04-28; GrayJou worried-client review of S10) Color Replace
+        // is now a fully-fledged member of the CoatingMode radio family.
+        // Short-circuit to its own packet/loop so it can carry the
+        // (source, target, channel) tuple that the regular CoatingOperation
+        // packet doesn't model. Per S11 verbatim: *"if we select the
+        // ReplacePaint, the Mode should be ReplacePaint (Selected) and
+        // PaintTiles should be (Not Selected). [...] the action itself does
+        // nothing because I can't select it. It still acts as if the mode
+        // was PaintTiles even when I click ReplacePaint."* This branch is
+        // the gameplay-side closure of that defect.
+        if (settings.Mode == CoatingMode.ColorReplace)
+        {
+            ExecuteColorReplace(player, wandPlayer, settings, selection);
+            return;
+        }
 
         // --- MP: send packet to server and return early ---
         if (Main.netMode == NetmodeID.MultiplayerClient)
@@ -578,4 +604,124 @@ public abstract class WandOfCoatingBase : BaseCyclingWand
         [TileID.VioletMoss]  = ItemID.VioletMoss,
         [TileID.RainbowMoss] = ItemID.RainbowMoss,
     };
+
+    // ============================================================================
+    //  Color Replace execution path (S11 2026-04-28 \u2014 promoted from
+    //  CoatingSettingsPanel.FireColorReplace where it lived in S10 as a
+    //  panel-button action. With Color Replace now a CoatingMode the
+    //  canonical entry point is ExecuteCoating, which delegates here.)
+    // ============================================================================
+
+    /// <summary>
+    /// Executes the Color Replace operation for the given player + selection.
+    /// Mirrors <see cref="ExecuteCoating"/>'s MP / SP split:
+    /// <list type="bullet">
+    ///   <item>MP client: send <see cref="WandPacketType.ColorReplaceOperation"/>
+    ///     packet and return; server-side handler runs the same loop with
+    ///     re-validation and broadcasts the changes.</item>
+    ///   <item>SP / server-local: iterate the shape's tile set, repaint any
+    ///     tile/wall whose current paint matches
+    ///     <see cref="WandOfCoatingSettings.ColorReplaceSource"/> to
+    ///     <see cref="WandOfCoatingSettings.ColorReplaceTarget"/> on the
+    ///     <see cref="WandOfCoatingSettings.ColorReplaceChannel"/> channel.</item>
+    /// </list>
+    /// Silent fall-through if either side is Ignore (255), or source==target
+    /// (no-op tuples per ColorReplacePlan.md \u00a70.4 / \u00a76).
+    /// </summary>
+    private static void ExecuteColorReplace(
+        Player player, WandPlayer wandPlayer,
+        WandOfCoatingSettings s, Common.Selection.SelectionState selection)
+    {
+        // \u00a70.4 silent fall-through.
+        if (s.ColorReplaceSource == 255 || s.ColorReplaceTarget == 255)
+            return;
+        if (s.ColorReplaceSource == s.ColorReplaceTarget)
+            return;
+
+        if (!selection.IsActive)
+        {
+            // The wand only fires on a confirmed cast, so an empty selection
+            // here means the player tried to fire without committing one.
+            ShowNullResultRaw(wandPlayer,
+                Terraria.Localization.Language.GetTextValue(
+                    "Mods.WorldShapingWandsMod.UI.Coating.ColorReplace.NoSelection"),
+                WandColors.MsgInfo);
+            return;
+        }
+
+        // \u2500\u2500 MP: send packet to server and return early \u2500\u2500
+        if (Main.netMode == NetmodeID.MultiplayerClient)
+        {
+            CoatingPacketHandler.SendColorReplaceOperation(
+                selection.StartTile, selection.EndTile,
+                s.Shape.Shape, s.Shape.FillMode,
+                s.Shape.Thickness, s.Shape.EqualDimensions,
+                selection.VerticalFirst, player.whoAmI,
+                s.ColorReplaceSource, s.ColorReplaceTarget,
+                s.ColorReplaceChannel,
+                s.Shape.Slice, s.Shape.ConnectDiameter,
+                s.Shape.InvertSelection);
+            return;
+        }
+
+        // \u2500\u2500 SP: resolve the shape's tile set and repaint locally \u2500\u2500
+        var context = s.Shape.ToShapeContext(
+            selection.StartTile, selection.EndTile, selection.VerticalFirst);
+        var tileSet = ShapeRegistry.GetShapeTiles(s.Shape.Shape, context);
+        var invertedTiles = s.Shape.ApplyInversion(tileSet.Tiles.ToArray(), context);
+        var swp = player.GetModPlayer<DelimitationWandPlayer>();
+        invertedTiles = swp.FilterBySelection(invertedTiles);
+
+        bool wallChannel = s.ColorReplaceChannel == ColorReplaceChannel.Wall;
+        int changed = 0;
+        foreach (var p in invertedTiles)
+        {
+            int x = p.X, y = p.Y;
+            if (!WorldGen.InWorld(x, y, 1)) continue;
+
+            if (wallChannel)
+            {
+                if (Common.Systems.SafekeepingSystem.IsWallProtected(x, y)) continue;
+                var tile = Main.tile[x, y];
+                if (tile.WallType == WallID.None) continue;
+                if (tile.WallColor != s.ColorReplaceSource) continue;
+                WorldGen.paintWall(x, y, s.ColorReplaceTarget, true);
+                changed++;
+            }
+            else
+            {
+                if (Common.Systems.SafekeepingSystem.IsTileProtected(x, y)) continue;
+                var tile = Main.tile[x, y];
+                if (!tile.HasTile) continue;
+                if (tile.TileColor != s.ColorReplaceSource) continue;
+                WorldGen.paintTile(x, y, s.ColorReplaceTarget, true);
+                changed++;
+            }
+        }
+
+        if (changed == 0)
+        {
+            ShowNullResultRaw(wandPlayer,
+                Terraria.Localization.Language.GetTextValue(
+                    "Mods.WorldShapingWandsMod.UI.Coating.ColorReplace.NoChanges"),
+                WandColors.MsgInfo);
+            return;
+        }
+
+        // Broadcast the changed bounding rect for non-MP-client paths.
+        NetMessage.SendTileSquare(-1,
+            System.Math.Min(selection.StartTile.X, selection.EndTile.X),
+            System.Math.Min(selection.StartTile.Y, selection.EndTile.Y),
+            System.Math.Abs(selection.EndTile.X - selection.StartTile.X) + 1,
+            System.Math.Abs(selection.EndTile.Y - selection.StartTile.Y) + 1);
+
+        var clientCfg = WandConfigs.Preferences;
+        if (clientCfg?.EnableWandSounds == true)
+            SoundEngine.PlaySound(SoundID.Item109 with { Volume = 0.6f }, player.Center);
+
+        Main.NewText(
+            Terraria.Localization.Language.GetTextValue(
+                "Mods.WorldShapingWandsMod.UI.Coating.ColorReplace.Changed", changed),
+            WandColors.MsgCoating);
+    }
 }

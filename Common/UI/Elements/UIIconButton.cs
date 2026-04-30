@@ -18,6 +18,22 @@ public class UIIconButton : UIElement
     private Asset<Texture2D> _texture;
     private string _hoverText;
 
+    /// <summary>
+    /// Optional alternate texture displayed only while the cursor hovers the
+    /// button. Used by hover-icon-swap patterns (e.g. Mold-cell stencil hint,
+    /// Magic Wand Read/Apply hover variants, ColorReplace 2-half preview).
+    /// When both <see cref="HoverTexture"/> and <see cref="HoverTextureProvider"/>
+    /// are non-null, the provider wins (lets callers vary by selection state).
+    /// </summary>
+    public Asset<Texture2D> HoverTexture { get; set; }
+
+    /// <summary>
+    /// Optional lambda returning the hover-state texture (overrides
+    /// <see cref="HoverTexture"/> when non-null). May return null to fall
+    /// back to the base icon.
+    /// </summary>
+    public System.Func<Asset<Texture2D>> HoverTextureProvider { get; set; }
+
     public bool Toggled { get; set; }
     public bool IsRadio { get; set; } = true;
 
@@ -28,6 +44,15 @@ public class UIIconButton : UIElement
 
     /// <summary>Gets or sets the tooltip text shown on hover.</summary>
     public string HoverText { get => _hoverText; set => _hoverText = value; }
+
+    /// <summary>
+    /// (S12 2026-04-29) Optional dynamic tooltip provider, evaluated every
+    /// frame the button is hovered. When set and returning a non-empty
+    /// string, takes precedence over <see cref="HoverText"/>. Used by the
+    /// Mold cell to render "Mold{N} (from Wand of Molding)" without panel
+    /// rebuilds. Mirrors the <see cref="HoverTextureProvider"/> pattern.
+    /// </summary>
+    public System.Func<string> HoverTextProvider { get; set; }
 
     /// <summary>
     /// When true and <see cref="IsRadio"/> is also true, clicking an already-toggled
@@ -95,9 +120,15 @@ public class UIIconButton : UIElement
             new Rectangle(rect.Right - bw, rect.Y, bw, rect.Height), borderColor);
 
         // Icon — draw centered within the button
-        if (_texture?.Value != null)
+        Asset<Texture2D> drawAsset = _texture;
+        if (IsMouseHovering && !Disabled)
         {
-            Texture2D tex = _texture.Value;
+            Asset<Texture2D> hover = HoverTextureProvider?.Invoke() ?? HoverTexture;
+            if (hover?.Value != null) drawAsset = hover;
+        }
+        if (drawAsset?.Value != null)
+        {
+            Texture2D tex = drawAsset.Value;
             Vector2 iconPos = new Vector2(
                 rect.X + (rect.Width - tex.Width) / 2f,
                 rect.Y + (rect.Height - tex.Height) / 2f
@@ -106,9 +137,12 @@ public class UIIconButton : UIElement
         }
 
         // Hover tooltip
-        if (IsMouseHovering && !string.IsNullOrEmpty(_hoverText))
+        if (IsMouseHovering)
         {
-            Main.hoverItemName = _hoverText;
+            string txt = HoverTextProvider?.Invoke();
+            if (string.IsNullOrEmpty(txt)) txt = _hoverText;
+            if (!string.IsNullOrEmpty(txt))
+                Main.hoverItemName = txt;
         }
     }
 

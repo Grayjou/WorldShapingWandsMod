@@ -1,4 +1,4 @@
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using Terraria;
@@ -11,9 +11,27 @@ using WorldShapingWandsMod.Common.Enums;
 namespace WorldShapingWandsMod.Common.UI.Elements;
 
 /// <summary>
-/// A compact horizontal row of 3 buttons for selecting a SliceMode:
-///   [Full] [Half-H] [Half-V]
-/// Each button is a radio toggle — exactly one is active at any time.
+/// A compact horizontal row of 5 small icon buttons for selecting a SliceMode:
+///   [Full] [Half-H] [Half-V] [Q-H] [Q-V]
+/// Each button is a radio toggle \u2014 exactly one is active at any time.
+///
+/// <para>(S14 2026-04-29; per GrayJou S14 verbatim: *"I want to turn the
+/// shape slices buttons into icon buttons. Very small ones. Please make
+/// sure the size of the two variants of button icons we have are
+/// centralized."*) Cell size now reads from
+/// <see cref="WandPanelBuilder.SmallIconBtnSize"/> +
+/// <see cref="WandPanelBuilder.SmallIconGap"/> so the two centralised icon
+/// button sizes (36 = <see cref="WandPanelBuilder.IconBtnSize"/>;
+/// 22 = <see cref="WandPanelBuilder.SmallIconBtnSize"/>) remain the
+/// single source of truth for every cell in the mod. Pre-S14 the cells
+/// hard-coded a bespoke 44\u00d728 size that bypassed both constants.</para>
+///
+/// <para><b>Asset status</b>: Slice icon assets are still pending (see
+/// <c>dev_notes/dev_tasks/pending_assets.md</c> \u00a72). Until they ship
+/// each cell renders a small text label (<c>"Full"</c> / <c>"H"</c> /
+/// <c>"V"</c> / <c>"qH"</c> / <c>"qV"</c>) inside the small cell, plus the
+/// full descriptive tooltip on hover. Swapping in real icons is a one-line
+/// change at the per-cell construction site (see TODO marker).</para>
 /// </summary>
 public class UISliceGrid : UIElement
 {
@@ -23,41 +41,57 @@ public class UISliceGrid : UIElement
     /// <summary>Raised when the selection changes.</summary>
     public event Action<SliceMode> OnChanged;
 
-    private readonly UISliceCell[] _cells = new UISliceCell[3];
+    // (S12 2026-04-29; HalfShapeQuickSlice.md \u00a76) Grid grows from 3 cells
+    // to 5 cells to host SliceMode.QuickHalfHorizontal + QuickHalfVertical.
+    // (S14 2026-04-29) Cell size now sourced from the centralised
+    // SmallIconBtnSize / SmallIconGap constants on WandPanelBuilder so
+    // every "small icon button" in the mod tracks one source of truth.
+    private const int CellCount = 5;
+    private readonly UISliceCell[] _cells = new UISliceCell[CellCount];
 
-    // Cell size and gap
-    private const float CellWidth = 54f;
-    private const float CellHeight = 28f;
-    private const float Gap = 4f;
+    // Cell size and gap \u2014 centralised via WandPanelBuilder.
+    private const float CellWidth  = WandPanelBuilder.SmallIconBtnSize; // 22f
+    private const float CellHeight = WandPanelBuilder.SmallIconBtnSize; // 22f (square)
+    private const float Gap        = WandPanelBuilder.SmallIconGap;     // 4f
 
     private static readonly SliceMode[] Modes =
     {
         SliceMode.Full,
         SliceMode.HalfHorizontal,
         SliceMode.HalfVertical,
+        SliceMode.QuickHalfHorizontal,
+        SliceMode.QuickHalfVertical,
     };
 
+    // (S14 2026-04-29) Short labels rendered inside the small cells until
+    // the dedicated 16\u00d716 slice icons ship. See pending_assets.md \u00a72.
+    // TODO: pending Slices/* assets \u2014 swap _cellLabels rendering for
+    // texture-asset rendering once the 5 PNGs land.
     private static readonly string[] CellLabels =
     {
-        "Full",
-        "Half-H",
-        "Half-V",
+        "Fl", // Full
+        "H",  // Half-Horizontal
+        "V",  // Half-Vertical
+        "qH", // Quick-Half-Horizontal
+        "qV", // Quick-Half-Vertical
     };
 
     private static readonly string[] CellTooltips =
     {
         "Full shape (no slicing)",
-        "Half shape — horizontal split (drag direction picks top/bottom)",
-        "Half shape — vertical split (drag direction picks left/right)",
+        "Half shape \u2014 horizontal split (drag bbox = full shape; drag direction picks top/bottom)",
+        "Half shape \u2014 vertical split (drag bbox = full shape; drag direction picks left/right)",
+        "Quick half \u2014 horizontal split (drag bbox = the half itself; saves you dragging twice as far)",
+        "Quick half \u2014 vertical split (drag bbox = the half itself; saves you dragging twice as far)",
     };
 
     public UISliceGrid()
     {
-        float totalWidth = CellWidth * 3 + Gap * 2;
+        float totalWidth = CellWidth * CellCount + Gap * (CellCount - 1);
         Width.Set(totalWidth, 0f);
         Height.Set(CellHeight, 0f);
 
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < CellCount; i++)
         {
             var mode = Modes[i];
             var cell = new UISliceCell(CellLabels[i], CellTooltips[i]);
@@ -84,7 +118,7 @@ public class UISliceGrid : UIElement
         SoundEngine.PlaySound(SoundID.MenuTick);
 
         // Update radio states
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < CellCount; i++)
             _cells[i].Toggled = (i == index);
 
         OnChanged?.Invoke(Value);
@@ -97,11 +131,17 @@ public class UISliceGrid : UIElement
     public void SetValue(SliceMode mode)
     {
         Value = mode;
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < CellCount; i++)
             _cells[i].Toggled = (Modes[i] == mode);
     }
 
-    /// <summary>A single cell in the slice picker.</summary>
+    /// <summary>
+    /// A single small cell in the slice picker. Renders identically to a
+    /// <see cref="UIIconButton"/> in the SmallIconBtn-size family
+    /// (background \u2192 border \u2192 centred content \u2192 hover lerp), but
+    /// substitutes a short text label for the missing slice icon asset
+    /// until the dedicated PNGs ship (see <c>pending_assets.md</c> \u00a72).
+    /// </summary>
     private class UISliceCell : UIElement
     {
         public bool Toggled { get; set; }
@@ -135,10 +175,13 @@ public class UISliceGrid : UIElement
             spriteBatch.Draw(TextureAssets.MagicPixel.Value, new Rectangle(rect.X, rect.Y, 1, rect.Height), border);
             spriteBatch.Draw(TextureAssets.MagicPixel.Value, new Rectangle(rect.Right - 1, rect.Y, 1, rect.Height), border);
 
-            // Label text — centered
+            // Label text \u2014 small, centered. (Asset placeholder; see class
+            // docblock + pending_assets.md \u00a72.) Scale tuned to fit the
+            // SmallIconBtnSize cell (22\u00d722) without clipping the wider
+            // 2-char labels ("qH", "qV").
             var font = Terraria.GameContent.FontAssets.MouseText.Value;
             Vector2 textSize = font.MeasureString(_label);
-            float scale = 0.65f;
+            float scale = 0.55f;
             Vector2 pos = new Vector2(
                 rect.X + (rect.Width - textSize.X * scale) / 2f,
                 rect.Y + (rect.Height - textSize.Y * scale) / 2f

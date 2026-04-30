@@ -33,4 +33,13 @@ public sealed class TorchSource : IInventoryViewSource
 
     public void SetSelectedItemType(WandPlayer wp, int? itemType)
         => wp.TorchSettings.ChosenTorchItemType = itemType;
+
+    public IEnumerable<int> GetPinnedItemTypes(WandPlayer wp)
+        => wp.TorchSettings.PinnedTorchItemTypes;
+
+    public bool IsPinned(WandPlayer wp, int itemType)
+        => wp.TorchSettings.PinnedTorchItemTypes.Contains(itemType);
+
+    public void TogglePin(WandPlayer wp, int itemType)
+        => wp.TorchSettings.TogglePinnedTorchItemType(itemType);
 }

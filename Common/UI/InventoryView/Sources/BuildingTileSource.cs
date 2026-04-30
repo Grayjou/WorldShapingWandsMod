@@ -68,4 +68,25 @@ public sealed class BuildingTileSource : IInventoryViewSource
         if (obj == PlaceType.Wall) obj = PlaceType.Solid; // defensive
         wp.BuildingSettings.SetChosenTileItemType(obj, itemType);
     }
+
+    public IEnumerable<int> GetPinnedItemTypes(WandPlayer wp)
+    {
+        PlaceType obj = wp.BuildingSettings.Object;
+        if (obj == PlaceType.Wall) obj = PlaceType.Solid;
+        return wp.BuildingSettings.GetPinnedTileItemTypes(obj);
+    }
+
+    public bool IsPinned(WandPlayer wp, int itemType)
+    {
+        PlaceType obj = wp.BuildingSettings.Object;
+        if (obj == PlaceType.Wall) obj = PlaceType.Solid;
+        return wp.BuildingSettings.GetPinnedTileItemTypes(obj).Contains(itemType);
+    }
+
+    public void TogglePin(WandPlayer wp, int itemType)
+    {
+        PlaceType obj = wp.BuildingSettings.Object;
+        if (obj == PlaceType.Wall) obj = PlaceType.Solid;
+        wp.BuildingSettings.TogglePinnedTileItemType(obj, itemType);
+    }
 }

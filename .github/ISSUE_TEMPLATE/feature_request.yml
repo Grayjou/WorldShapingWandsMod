@@ -1,0 +1,50 @@
+name: ✨ Feature Request
+description: Suggest a new wand mode, shape, toggle, or quality-of-life upgrade.
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Concrete proposals beat blue-sky wishlists. Tell us **what** you want
+        and **why** — the "why" is what lets us pick the right shape for the
+        feature even if the exact mechanism shifts.
+  - type: dropdown
+    id: area
+    attributes:
+      label: What area does this touch?
+      options:
+        - New wand family
+        - New mode within an existing wand
+        - New shape
+        - Settings panel / UI
+        - Multiplayer-specific
+        - Performance / large selections
+        - Localization
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      placeholder: |
+        e.g. "When I'm building large rooms, repeatedly toggling Repaint
+        between sessions is tedious because ..."
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behaviour
+      placeholder: e.g. "Add a Tile/Wall channel toggle to the Color Replace picker so ..."
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you've considered
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional context, sketches, or links

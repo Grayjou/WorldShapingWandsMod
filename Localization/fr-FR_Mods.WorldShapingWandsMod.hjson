@@ -34,6 +34,21 @@ UI: {
 		ShapeCardinal: Ligne cardinale
 		// ShapeStraightLine: Straight Line
 		ShapeMold: Moule (forme personnalisÃ©e)
+		# (S12 2026-04-29; per GrayJou S12 prompt: "the Mold Shape Label is
+		# Mold (From Wand of Molding), and I had already stated more than
+		# once that it should be Mold{SelectedStencilNum} (From Wand of
+		# Molding) to be more clear and encourage exploration".) {0} is the
+		# 1-indexed ACT-ON stencil slot the Mold cell will stamp from.
+		# Used by MoldCellWiring.cs for every wand's Mold cell hover text.
+		# (S14 2026-04-29; per GrayJou S14 verbatim: *"the molding shape
+		# label still doesnt have the space and the #, idk why"*) Polished
+		# from `Mold{0}` to `Mold #{0}` so the slot index reads as a
+		# proper ordinal ("Mold #3") instead of running together ("Mold3").
+		# The S13 changelog claimed this had landed, but only the C# side
+		# was touched (`HoverTextProvider` rewiring); the locale value
+		# itself stayed at the pre-S13 form. Fixed here, no code change
+		# needed.
+		// ShapeMoldFmt: Mold #{0} (from Wand of Molding)
 		EqualDimensions: Dimensions Ã©gales
 		ConnectDiameter: Connecter le diamÃ¨tre
 		// ConnectDiameterTooltip: Connect Diameter (hollow half-shapes only; does not clear pre-existing tiles on the open side)
@@ -78,8 +93,83 @@ UI: {
 		// ChosenClickToFree: chosen — click to free
 		// ChosenNotInInventory: chosen, but not in your inventory — click to free
 		// ChosenItemFallback: chosen {0} not in inventory — using {1} instead
+		// (S15 2026-04-28 PersistentPin) Right-click toggles pin state on IV slots.
+		// Pinned items always render in the panel, even when no longer in inventory.
+		// Chosen overrides pinned visually (NOT additive) per GrayJou's S15 spec.
+		// PinnedRightClickToUnpin: pinned — right-click to unpin
+		// PinnedNotInInventory: pinned, but not in your inventory — right-click to unpin
 		ShapeOptions: Options de forme
 		// Slice: Shape Slice
+	}
+
+	// (S4 2026-04-28) Strings for the shared SubPanel primitive (UISubPanel).
+	SubPanel: {
+		// (S13 2026-04-28) Tooltip key names describe the *action a click would
+		// take* (the inverse of the current state). UISubPanel shows LockTooltip
+		// while UNLOCKED (so the action is "lock") and UnlockTooltip while
+		// LOCKED (so the action is "unlock"). Body copy is state-led on line 1
+		// and action-led after, to match what the player sees on hover.
+		/* LockTooltip:
+			'''
+			Unlocked
+			This SubUI will close on the next pick.
+			Click to lock it open.
+			''' */
+		/* UnlockTooltip:
+			'''
+			Locked open
+			This SubUI stays open after you make a selection.
+			Click to unlock — it will close on the next pick.
+			''' */
+		// CloseTooltip: Close
+	}
+
+	# Stencil-slot row appended below the shape selector on stencil wands
+	# (Wand of Molding; Wand of Delimitation TBD). Per MultipleStencilsPlan.md
+	# §0.1, S6 2026-04-28. Slots are 1-indexed in UI, 0-indexed internally.
+	# Stencil.PickerTitle added S7 2026-04-28 for the right-click SubUI picker
+	# (MultipleStencilsPlan.md §0.2, first true SubUI primitive consumer).
+	# ActOnPickerTitle added S11 2026-04-29 for the cross-wand ACT-ON picker
+	# (StencilEditVsActOn.md §3, separates EDIT slot vs ACT-ON slot per
+	# GrayJou's S11 worked example: "Stencil Creation Edition =/= Stencil
+	# Shape Usage").
+	Stencil: {
+		// PickerTitle: Stencil Slot
+		# (S13 2026-04-29; per GrayJou S13: *"change the locale value from
+		# Mold Source Stencil to just Stencil since the source part is
+		# redundant and the panel opens from an icon that says Mold from wand
+		# of molding so it's already clear that it's related to molding"*.)
+		// ActOnPickerTitle: Stencil
+		/* Slot1:
+			'''
+			Stencil Slot 1
+			Click to switch the active stencil to slot 1.
+			Mold-shape operations use the active slot's canvas.
+			''' */
+		/* Slot2:
+			'''
+			Stencil Slot 2
+			Click to switch the active stencil to slot 2.
+			Mold-shape operations use the active slot's canvas.
+			''' */
+		/* Slot3:
+			'''
+			Stencil Slot 3
+			Click to switch the active stencil to slot 3.
+			Mold-shape operations use the active slot's canvas.
+			''' */
+		/* Slot4:
+			'''
+			Stencil Slot 4
+			Click to switch the active stencil to slot 4.
+			Mold-shape operations use the active slot's canvas.
+			''' */
+		/* Slot5:
+			'''
+			Stencil Slot 5
+			Click to switch the active stencil to slot 5.
+			Mold-shape operations use the active slot's canvas.
+			''' */
 	}
 
 	Building: {
@@ -172,6 +262,35 @@ UI: {
 		// Off: Off
 		// Repaint: Repaint
 		// EyedropperHint: Alt+click a painted tile to copy its colour into Paint Color.
+
+		# Color Replace action (S8 2026-04-28; ColorReplacePlan.md §3).
+		# One-shot action: left-click fires the replace using the stored
+		# (source colour, target colour) on the current channel (Tile/Wall
+		# follows the wand's Mode toggle); right-click opens the picker SubUI.
+		# Either side = Ignore (255) silently no-ops the action.
+		ColorReplace: {
+			// Section: Color Replace
+			// SubUITitle: Color Replace
+			// SourceLabel: Source colour (only this is matched)
+			// TargetLabel: Target colour (matched becomes this)
+			# S9 2026-04-28: Channel toggle reinstated per ColorReplacePlan §3.4 —
+			# decouples Color Replace from the wand's CoatingMode toggle row.
+			// ChannelTile: Tile
+			// ChannelWall: Wall
+			# S10 2026-04-28: operation result toasts (Phase 2 ship).
+			// NoSelection: Color Replace: no selection.
+			// NoChanges: Color Replace: no matching paint in selection.
+			// Changed: Replaced paint on {0} tile(s).
+			/* ButtonTooltipFmt:
+				'''
+				Color Replace
+				Source: {0}
+				Target: {1}
+				Channel: {2}
+				Left-click to select this mode. Right-click to configure.
+				Cast the wand at a selection to fire.
+				''' */
+		}
 	}
 
 	CollapsibleSection: {
@@ -1697,6 +1816,16 @@ Configs: {
 		}
 
 		// Tooltip: ""
+
+		MagicWandRead: {
+			// Label: Magic Wand Read
+			// Tooltip: ""
+		}
+
+		MagicWandApply: {
+			// Label: Magic Wand Apply
+			// Tooltip: ""
+		}
 	}
 
 	LavaRainStyle: {

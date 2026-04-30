@@ -81,6 +81,15 @@ public class WandTorchSettings
     /// </summary>
     public int? ChosenTorchItemType { get; set; }
 
+    /// <summary>Pinned torch item types (S15 PersistentPin). Stale-reference; right-click toggles in IV.</summary>
+    public System.Collections.Generic.HashSet<int> PinnedTorchItemTypes { get; set; } = new();
+
+    /// <summary>Toggle pin for a torch item.</summary>
+    public void TogglePinnedTorchItemType(int itemType)
+    {
+        if (!PinnedTorchItemTypes.Add(itemType)) PinnedTorchItemTypes.Remove(itemType);
+    }
+
     /// <summary>Shape and selection parameters (shape type, slice mode, etc.).</summary>
     public ShapeInfo Shape { get; set; } = ShapeInfo.Default;
 
@@ -106,6 +115,7 @@ public class WandTorchSettings
             FlipTiling = FlipTiling,
             AlignToExistingTorches = AlignToExistingTorches,
             ChosenTorchItemType = ChosenTorchItemType,
+            PinnedTorchItemTypes = new System.Collections.Generic.HashSet<int>(PinnedTorchItemTypes),
             Shape = Shape,
             StartPoint = StartPoint,
             EndPoint = EndPoint,
@@ -126,6 +136,7 @@ public class WandTorchSettings
         FlipTiling = false;
         AlignToExistingTorches = true;
         ChosenTorchItemType = null;
+        PinnedTorchItemTypes = new System.Collections.Generic.HashSet<int>();
         Shape = ShapeInfo.Default;
         StartPoint = Point.Zero;
         EndPoint = Point.Zero;

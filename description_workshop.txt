@@ -67,5 +67,7 @@ Craft any wand at a Work Bench. Each family has its own recipe using gems and ba
 [h2]Credits[/h2]
 Developed by Grayjou.
 [url=https://github.com/Grayjou/WorldShapingWandsMod]GitHub Repository[/url]
+[url=https://github.com/Grayjou/WorldShapingWandsMod/issues/new/choose]Report a bug or request a feature (GitHub Issues)[/url]
 Inspired by [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2797518634]ImproveGame[/url] and [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2563784437]CheatSheet[/url].
-Wiring architecture informed by MagicWiring.
+[url=https://docs.google.com/forms/d/e/1FAIpQLSduQ3jrGDimSOlXckDxlGYViQB2n6xs4YGVGKadwvVbSNnVZg/viewform?usp=publish-editor]Feedback Form[/url]
+[url=https://youtu.be/efFl87qZdgw]YouTube Introduction[/url]

@@ -61,6 +61,19 @@ public class WandPanelBuilder
     /// <summary>Gap between icon buttons in a grid.</summary>
     public const float IconGap = 6f;
 
+    /// <summary>
+    /// (S12 2026-04-29; per GrayJou S12 prompt: <i>"Make an Icon button
+    /// style that is 16x16 to apply to the Stencil icons in the SubPanel"</i>)
+    /// Compact 22x22 icon button used by the stencil-slot row so that the
+    /// new 16x16 stencil icons fit snugly with a 3px frame on each side
+    /// instead of swimming inside a 36x36 cell. Apply via
+    /// <see cref="AddSmallIconGrid"/>.
+    /// </summary>
+    public const float SmallIconBtnSize = 22f;
+
+    /// <summary>(S12) Tighter inter-icon gap that matches the smaller cell size.</summary>
+    public const float SmallIconGap = 4f;
+
     /// <summary>Standard toggle button width (text-based toggles).</summary>
     public const float ButtonWidth = 140f;
 
@@ -225,6 +238,52 @@ public class WandPanelBuilder
         return this;
     }
 
+    /// <summary>
+    /// (S12 2026-04-29; "16x16 icon button style" per GrayJou S12 prompt)
+    /// Compact variant of <see cref="AddIconGrid"/> using
+    /// <see cref="SmallIconBtnSize"/> + <see cref="SmallIconGap"/>. Built
+    /// for the stencil-slot row whose new 16x16 art clipped out of the
+    /// SubPanel inside the standard 36x36 cells. Same row-centering and
+    /// section-tracking semantics as <see cref="AddIconGrid"/>.
+    /// </summary>
+    public WandPanelBuilder AddSmallIconGrid(IconDef[] icons, int iconsPerRow, out UIIconButton[] buttons)
+    {
+        MarkSection();
+        buttons = new UIIconButton[icons.Length];
+        int totalIcons = icons.Length;
+        int rowCount = (totalIcons + iconsPerRow - 1) / iconsPerRow;
+
+        for (int row = 0; row < rowCount; row++)
+        {
+            int startIdx = row * iconsPerRow;
+            int iconsInThisRow = Math.Min(iconsPerRow, totalIcons - startIdx);
+
+            float totalWidth = SmallIconBtnSize * iconsInThisRow + SmallIconGap * (iconsInThisRow - 1);
+            float startX = (_panelWidth - totalWidth) / 2f - _padding;
+
+            for (int col = 0; col < iconsInThisRow; col++)
+            {
+                int idx = startIdx + col;
+                var def = icons[idx];
+                var btn = new UIIconButton(def.Texture, def.HoverText, def.InitialState)
+                {
+                    IsRadio = !def.IsToggle,
+                };
+                btn.Width.Set(SmallIconBtnSize, 0f);
+                btn.Height.Set(SmallIconBtnSize, 0f);
+                btn.Left.Set(startX + (SmallIconBtnSize + SmallIconGap) * col, 0f);
+                btn.Top.Set(CurrentY, 0f);
+                _panel.Append(btn);
+                buttons[idx] = btn;
+            }
+
+            bool isLastRow = (row == rowCount - 1);
+            CurrentY += SmallIconBtnSize + (isLastRow ? AfterIconGridSpacing : SmallIconGap);
+        }
+
+        return this;
+    }
+
     // -------------------------------------------------------------------
     // Section: Full Shape Grid (the 11-shape standard grid)
     // -------------------------------------------------------------------
@@ -286,6 +345,59 @@ public class WandPanelBuilder
 
         return this;
     }
+
+    // -------------------------------------------------------------------
+    // Section: Stencil-augmented Shape Grid (stencil wands only)
+    // -------------------------------------------------------------------
+
+    /// <summary>
+    /// Result of <see cref="AddStencilShapeSection"/> — the standard 12-cell
+    /// shape grid plus a 5-cell stencil-slot row appended below.
+    /// </summary>
+    public struct StencilShapeGridResult
+    {
+        public ShapeGridResult Shapes;
+        /// <summary>The 5 stencil-slot buttons (index 0..4 = slots 1..5).</summary>
+        public UIIconButton[] StencilSlots;
+    }
+
+    /// <summary>
+    /// Adds the standard shape grid AND a 5-cell stencil-slot row underneath,
+    /// per <c>MultipleStencilsPlan.md</c> §0.1. Used by stencil wands (Molding,
+    /// Delimitation when wired). The stencil row uses
+    /// <c>Assets_Build/Icons/Shapes/Stencil/StencilChoice{1..5}.png</c>.
+    /// </summary>
+    public WandPanelBuilder AddStencilShapeSection(out StencilShapeGridResult result)
+    {
+        // 1. Standard shape grid first (re-uses all existing layout logic).
+        AddFullShapeSection(out var shapes);
+
+        // 2. Stencil-slot row — (S12 2026-04-29) uses AddSmallIconGrid so
+        // the new 16x16 StencilChoice art (resized via
+        // Scripts/AssetGen/scale_down_stencil_icons.py) sits in compact
+        // 22x22 cells instead of clipping out of a 36x36 chrome.
+        var mod = ModContent.GetInstance<WorldShapingWandsMod>();
+        var stencilIcons = new IconDef[]
+        {
+            new(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/Stencil/StencilChoice1", AssetRequestMode.ImmediateLoad), "Stencil.Slot1"),
+            new(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/Stencil/StencilChoice2", AssetRequestMode.ImmediateLoad), "Stencil.Slot2"),
+            new(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/Stencil/StencilChoice3", AssetRequestMode.ImmediateLoad), "Stencil.Slot3"),
+            new(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/Stencil/StencilChoice4", AssetRequestMode.ImmediateLoad), "Stencil.Slot4"),
+            new(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/Stencil/StencilChoice5", AssetRequestMode.ImmediateLoad), "Stencil.Slot5"),
+        };
+        AddSmallIconGrid(stencilIcons, 5, out var stencilBtns);
+
+        result = new StencilShapeGridResult
+        {
+            Shapes = shapes,
+            StencilSlots = stencilBtns,
+        };
+        return this;
+    }
+
+    // -------------------------------------------------------------------
+    // Section: Wiring Shape Grid (reduced)
+    // -------------------------------------------------------------------
 
     /// <summary>
     /// Shape definition for the reduced Wiring shape grid (no hollow variants, no ellipse).

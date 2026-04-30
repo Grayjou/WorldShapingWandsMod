@@ -120,8 +120,12 @@ public abstract class WandOfWiringBase : BaseCyclingWand
         // Check materials for Place mode (respects per-type InfiniteResource config)
         var config = WandConfigs.Resources;
         var clientCfg = WandConfigs.Preferences;
-        bool infiniteWires = WiringHelper.IsInfiniteWireMode(player, config);
-        bool infiniteActuators = WiringHelper.IsInfiniteActuatorMode(player, config);
+        // (S1 2026-04-28 P 1*1) Carefree Mode also bypasses wire/actuator
+        // consumption — placing wires shouldn't drain inventory when the
+        // player has explicitly opted out of resource costs at the world level.
+        bool carefree = WandConfigs.Carefree?.EnableCarefreeMode == true;
+        bool infiniteWires = carefree || WiringHelper.IsInfiniteWireMode(player, config);
+        bool infiniteActuators = carefree || WiringHelper.IsInfiniteActuatorMode(player, config);
 
         if (settings.Mode == WiringMode.Place && !infiniteWires)
         {

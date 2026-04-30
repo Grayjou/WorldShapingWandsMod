@@ -368,7 +368,7 @@ public class WswCommand : ModCommand
     ///   2. Whether it participates in InventoryView,
     ///   3. The provider's panel title key,
     ///   4. Each source: title key, candidate item names, and current choice (if any).
-    /// Proves the registry/sources/pins wire end-to-end before any UI is built.
+    /// Proves the registry/sources/choices wire end-to-end before any UI is built.
     /// </summary>
     private static void RunInventoryView(CommandCaller caller)
     {
@@ -394,9 +394,9 @@ public class WswCommand : ModCommand
         {
             var src = provider.Sources[s];
             int? choice = src.GetSelectedItemType(wp);
-            string pinStr = choice.HasValue ? $"{choice.Value} ({Lang.GetItemNameValue(choice.Value)})" : "<none>";
+            string choiceStr = choice.HasValue ? $"{choice.Value} ({Lang.GetItemNameValue(choice.Value)})" : "<none>";
             caller.Reply($"  [{s}] {src.TitleKey}", Color.Cyan);
-            caller.Reply($"      choice = {pinStr}", Color.LightGray);
+            caller.Reply($"      choice = {choiceStr}", Color.LightGray);
 
             int count = 0;
             foreach (int t in src.GetCandidateItemTypes(player))

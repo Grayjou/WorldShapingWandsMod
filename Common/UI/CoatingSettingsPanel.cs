@@ -1,3 +1,4 @@
+using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
@@ -11,9 +12,12 @@ using Terraria.UI;
 using WorldShapingWandsMod.Common.Configs;
 using WorldShapingWandsMod.Common.Drawing;
 using WorldShapingWandsMod.Common.Enums;
+using WorldShapingWandsMod.Common.Geometry;
+using WorldShapingWandsMod.Common.Networking.Handlers;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Settings;
 using WorldShapingWandsMod.Common.UI.Elements;
+using WorldShapingWandsMod.Common.UI.Elements.Builders;
 using WorldShapingWandsMod.Content.Items;
 
 namespace WorldShapingWandsMod.Common.UI;
@@ -39,7 +43,7 @@ public class CoatingSettingsPanel : UIState
     // Paint color picker
     private UIPaintColorButton[] _colorButtons;
     private UIElement _colorPickerContainer;
-    private CollapsibleSection _paintColorSection;
+    private PaintColorSection _paintColorSection;
 
     // Shape buttons
     private UIIconButton _rectFilledBtn, _rectHollowBtn;
@@ -52,6 +56,10 @@ public class CoatingSettingsPanel : UIState
     private UIText _thicknessValue;
     private UIIconButton _equalDimensionsBtn, _connectDiameterBtn, _invertSelectionBtn, _repaintBtn;
     private UISliceGrid _sliceGrid;
+
+    // S8 2026-04-28 — ColorReplacePlan.md §3.1: single action button with
+    // palette-swap rendering + right-click → ColorReplaceConfigSubPanel.
+    private UIColorReplaceButton _colorReplaceBtn;
 
     private WandPanelBuilder _builder;
 
@@ -94,18 +102,47 @@ public class CoatingSettingsPanel : UIState
         var texScrapeMoss  = mod.Assets.Request<Texture2D>("Assets_Build/Icons/CoatingModes/ModeScrapeMoss",  AssetRequestMode.ImmediateLoad);
         var texHarvestMoss = mod.Assets.Request<Texture2D>("Assets_Build/Icons/CoatingModes/ModeHarvestMoss", AssetRequestMode.ImmediateLoad);
 
+        // (S9 2026-04-28; ColorReplacePlan.md §3.4 + GrayJou worried-client review)
+        // The Mode section is now a 5-cell row: 4 mode toggles + 1 Color
+        // Replace action button. The standalone "Color Replace" section that
+        // S8 placed below the Options row is gone — it lived in its own
+        // section header but the action is conceptually a Mode-adjacent
+        // operation, so it sits beside the Mode toggles. Layout math mirrors
+        // WandPanelBuilder.AddIconGrid so spacing is identical.
+        var texReplaceBase   = mod.Assets.Request<Texture2D>("Assets_Build/Icons/CoatingModes/ModePaintReplace",              AssetRequestMode.ImmediateLoad);
+        var texIgnoreSource  = mod.Assets.Request<Texture2D>("Assets_Build/Icons/CoatingModes/ModePaintReplaceIgnoreSource", AssetRequestMode.ImmediateLoad);
+        var texIgnoreTarget  = mod.Assets.Request<Texture2D>("Assets_Build/Icons/CoatingModes/ModePaintReplaceIgnoreTarget", AssetRequestMode.ImmediateLoad);
+        // S10 (GrayJou worried-client review): the both-Ignore composed view
+        // of the two halves was opaque-checkerboard same-tone as the chrome
+        // bg; resolve to the dedicated bake GrayJou shipped in S6 instead.
+        var texIgnoreBoth    = mod.Assets.Request<Texture2D>("Assets_Build/Icons/CoatingModes/ModePaintReplaceIgnoreBoth",   AssetRequestMode.ImmediateLoad);
+
         _builder.AddSectionHeader("Coating.Mode");
-        _builder.AddIconGrid(new WandPanelBuilder.IconDef[]
-        {
-            new(texPaintTile,   "Coating.PaintTile",   isToggle: true),
-            new(texPaintWall,   "Coating.PaintWall",   isToggle: true),
-            new(texScrapeMoss,  "Coating.ScrapeMoss",  isToggle: true),
-            new(texHarvestMoss, "Coating.HarvestMoss", isToggle: true),
-        }, iconsPerRow: 4, out var modeBtns);
-        _paintTileBtn   = modeBtns[0]; _paintTileBtn.IsRadio = false;
-        _paintWallBtn   = modeBtns[1]; _paintWallBtn.IsRadio = false;
-        _scrapeMossBtn  = modeBtns[2]; _scrapeMossBtn.IsRadio = false;
-        _harvestMossBtn = modeBtns[3]; _harvestMossBtn.IsRadio = false;
+        const int modeCellCount = 5;
+        float modeRowTotalWidth = WandPanelBuilder.IconBtnSize * modeCellCount
+                                + WandPanelBuilder.IconGap * (modeCellCount - 1);
+        float modeRowStartX = (PanelWidth - modeRowTotalWidth) / 2f - Padding;
+        float modeRowY = _builder.CurrentY;
+        float ModeCellLeft(int i) => modeRowStartX
+                                   + (WandPanelBuilder.IconBtnSize + WandPanelBuilder.IconGap) * i;
+
+        _paintTileBtn   = MakeModeToggle(texPaintTile,   "Coating.PaintTile",   ModeCellLeft(0), modeRowY);
+        _paintWallBtn   = MakeModeToggle(texPaintWall,   "Coating.PaintWall",   ModeCellLeft(1), modeRowY);
+        _scrapeMossBtn  = MakeModeToggle(texScrapeMoss,  "Coating.ScrapeMoss",  ModeCellLeft(2), modeRowY);
+        _harvestMossBtn = MakeModeToggle(texHarvestMoss, "Coating.HarvestMoss", ModeCellLeft(3), modeRowY);
+        _mainPanel.Append(_paintTileBtn);
+        _mainPanel.Append(_paintWallBtn);
+        _mainPanel.Append(_scrapeMossBtn);
+        _mainPanel.Append(_harvestMossBtn);
+
+        _colorReplaceBtn = new UIColorReplaceButton(texReplaceBase, texIgnoreSource, texIgnoreTarget, texIgnoreBoth);
+        _colorReplaceBtn.Width.Set(WandPanelBuilder.IconBtnSize, 0f);
+        _colorReplaceBtn.Height.Set(WandPanelBuilder.IconBtnSize, 0f);
+        _colorReplaceBtn.Left.Set(ModeCellLeft(4), 0f);
+        _colorReplaceBtn.Top.Set(modeRowY, 0f);
+        _mainPanel.Append(_colorReplaceBtn);
+
+        _builder.AdvanceY(WandPanelBuilder.IconBtnSize + WandPanelBuilder.AfterIconGridSpacing);
 
         // === COATING TYPE (Illuminant / Echo tri-state) ===
         _builder.AddSectionHeader("Coating.CoatingType");
@@ -114,33 +151,25 @@ public class CoatingSettingsPanel : UIState
             L("Coating.Echo"), out _echoBtn,
             spacing: WandPanelBuilder.AfterToggleGroupSpacing);
 
-        // === PAINT COLOR PICKER (CollapsibleSection { Style = Popout }) ===
-        // S+2 2026-04-25 (S1): wrap the swatch grid in a CollapsibleSection per
-        // SessionPlan_WSW_Next3Sessions §S+2 Tasks 2-3 + Cavendish S9 §6
-        // ("the Coating panel is the canary; we want it loud if anything cracks").
+        // === PAINT COLOR PICKER (PaintColorSection — popout-flavour UISection) ===
+        // (Phase C 2026-04-29 — SubUI Migration Plan §Phase C) Migrated from
+        // legacy `CollapsibleSection { Style = Popout }` + `CollapsedPopoutHost`
+        // to the unified `UISection`/`WandSubPanel` substrate. Behaviour is
+        // byte-identical for the player: ⧧ pops out, ✕ collapses back, position
+        // persists across world restarts via `WandPlayer.PopoutPositions["Coating.PaintColor"]`
+        // (legacy key preserved verbatim — zero save-data migration needed).
         //
         // Layout note (intentional, deferred for v1.2.0): when the user pops out
         // this section, the in-panel block shrinks from
         //   (HeaderHeight 22f + gridHeight 104f) = 126f
         // down to just HeaderHeight 22f, leaving a ~104f visual gap above the
         // Shape section below. This is the *honest* UX (the body really is
-        // floating elsewhere now), and it matches SessionPlan §S+2 step 4(a)
-        // verbatim ("full PaintColor section disappears from in-panel"). A
-        // re-flow pass that shifts the below-sections up on collapse is a
+        // floating elsewhere now), and matches every prior session's contract.
+        // A re-flow pass that shifts the below-sections up on collapse is a
         // proper UIList migration and is queued in DeferredForNextSession.md
-        // as the v1.2.0 polish item — out of scope for the canary ship.
-        //
-        // PreferenceKey = "Coating.PaintColor" — namespaced per panel so the
-        // same WandPlayer.CollapsedSections dict can serve future migrations
-        // without key collisions.
+        // as the v1.2.0 polish item — out of scope for Phase C.
 
         float paintSectionTop = _builder.CurrentY;
-        var paintColorSection = new CollapsibleSection(
-            titleKey: $"{UIPrefix}.Coating.PaintColor",
-            preferenceKey: "Coating.PaintColor",
-            style: CollapseStyle.Popout);
-        paintColorSection.Top.Set(paintSectionTop, 0f);
-        _mainPanel.Append(paintColorSection);
 
         _colorPickerContainer = CoatingPaintColorGrid.Build(
             columns: SwatchCols,
@@ -149,9 +178,6 @@ public class CoatingSettingsPanel : UIState
             out _colorButtons,
             swatchSize: SwatchSize,
             swatchGap: SwatchGap);
-        paintColorSection.SetBody(_colorPickerContainer);
-        paintColorSection.RestoreFromPreferences();
-        _paintColorSection = paintColorSection;
 
         // (v1.1, 2026-04-25 S2 — DesignDoc_PopoutFrameworkV1_1 §3.5 / Invariant I-5;
         //  semantics revised v1.3 §B, 2026-04-25 S4 — DesignDoc_PopoutFrameworkV1_3 §B
@@ -171,19 +197,25 @@ public class CoatingSettingsPanel : UIState
         // To make this fully modeless (popout always shown until explicit ✕),
         // flip the predicate to `() => true` — single-line change, reversible
         // at any time, no schema impact.
-        paintColorSection.OwnerVisibilityCheck = () =>
-        {
-            var heldMod = Main.LocalPlayer?.HeldItem?.ModItem;
-            return heldMod is WandOfCoatingBase
-                || heldMod is WandOfBuildingBase
-                || heldMod is WandOfReplacementBase;
-        };
+        var paintColorSection = new PaintColorSection(
+            swatchGrid: _colorPickerContainer,
+            ownerVisibility: () =>
+            {
+                var heldMod = Main.LocalPlayer?.HeldItem?.ModItem;
+                return heldMod is WandOfCoatingBase
+                    || heldMod is WandOfBuildingBase
+                    || heldMod is WandOfReplacementBase;
+            });
+        paintColorSection.Top.Set(paintSectionTop, 0f);
+        _mainPanel.Append(paintColorSection);
+        paintColorSection.Build();
+        _paintColorSection = paintColorSection;
 
         // The section auto-derives its own Height from header + body (or just
-        // header when collapsed/popped-out). Read it back so the next section
-        // sits flush below.
+        // header when popped-out). Read it back so the next section sits flush
+        // below.
         float colorPickerHeight = SwatchRows * (SwatchSize + SwatchGap);
-        _builder.AdvanceY(WandPanelBuilder.SectionHeaderSpacing - 22f /* CollapsibleSection.HeaderHeight */
+        _builder.AdvanceY(WandPanelBuilder.SectionHeaderSpacing - 22f /* UISection.HeaderHeightConst */
                           + colorPickerHeight + WandPanelBuilder.AfterIconGridSpacing);
 
         // === SHAPE ===
@@ -194,6 +226,8 @@ public class CoatingSettingsPanel : UIState
         _triangleFilledBtn = shapes.TriangleFilled; _triangleHollowBtn = shapes.TriangleHollow;
         _edgeBtn = shapes.Elbow; _cardinalBtn = shapes.Cardinal; _straightLineBtn = shapes.StraightLine;
         _moldBtn = shapes.Mold;
+        // (S11 2026-04-29 — Bug 3 fix; StencilEditVsActOn.md §3)
+        Common.UI.Elements.MoldCellWiring.WireActOnPicker(_moldBtn);
 
         // === SLICE ===
         _builder.AddSliceSection(out _sliceGrid, OnSliceChanged);
@@ -218,6 +252,15 @@ public class CoatingSettingsPanel : UIState
         _connectDiameterBtn = optBtns[1];
         _invertSelectionBtn = optBtns[2];
         _repaintBtn         = optBtns[3];
+
+        // === COLOR REPLACE ACTION (S9 2026-04-28; moved from its own section
+        //  into the Mode row above per ColorReplacePlan.md §3.4 / GrayJou
+        //  worried-client review). The asset loads + button construction now
+        //  live next to the Mode header. The standalone "Coating.ColorReplace.
+        //  Section" header that S8 placed below the Options block is gone —
+        //  it added an extra section gap for a single button that conceptually
+        //  belongs alongside the Mode toggles. Tooltip + click wiring stay
+        //  identical (left-click fires, right-click opens the picker SubUI).
 
         // === CLOSE ===
         _builder.AddCloseButton();
@@ -249,6 +292,24 @@ public class CoatingSettingsPanel : UIState
         _connectDiameterBtn.OnToggled += (_, _) => ToggleConnectDiameter();
         _invertSelectionBtn.OnToggled += (_, _) => ToggleInvertSelection();
         _repaintBtn.OnToggled += (_, _) => ToggleRepaint();
+
+        // === COLOR REPLACE WIRING (S8 2026-04-28; revised S11) ===
+        // S11 (GrayJou worried-client review): Color Replace is now a real
+        // member of the Mode radio row (CoatingMode.ColorReplace). Left-click
+        // SELECTS the mode (mutually exclusive with PaintTile/PaintWall/
+        // ScrapeMoss/HarvestMoss); the actual operation fires when the player
+        // CASTS the wand at the world, same as every other Mode. Right-click
+        // still toggles the config SubUI for source/target/channel.
+        _colorReplaceBtn.OnLeftClick += (_, _) =>
+        {
+            var s = GetSettings();
+            if (s == null) return;
+            s.Mode = CoatingMode.ColorReplace;
+            UpdateModeButtons();
+            UpdateColorReplaceButton();
+            UpdateColorPickerVisibility();
+        };
+        _colorReplaceBtn.OnRightClick += (_, _) => ToggleColorReplaceSubUI();
     }
 
     private WandOfCoatingSettings GetSettings() =>
@@ -305,6 +366,112 @@ public class CoatingSettingsPanel : UIState
     private void ToggleRepaint() { var s = GetSettings(); if (s == null) return; s.Repaint = _repaintBtn.Toggled; }
     private void OnSliceChanged(SliceMode slice) { var s = GetSettings(); if (s == null) return; var sh = s.Shape; sh.Slice = slice; s.Shape = sh; }
 
+    // ============================================================================
+    //  Color Replace SubUI wiring (S8 2026-04-28; ColorReplacePlan.md §3)
+    //
+    //  S11 NOTE: the standalone `FireColorReplace` method that lived here in
+    //  S10 was promoted to `WandOfCoatingBase.ExecuteColorReplace` (called
+    //  from `ExecuteCoating` when `Mode == ColorReplace`). Color Replace is
+    //  now a real CoatingMode radio member; the panel button just selects
+    //  the mode (left-click) or opens this SubUI (right-click).
+    // ============================================================================
+
+    /// <summary>
+    /// Right-click handler on the Color Replace button. Toggle-close UX: if the
+    /// picker SubUI is already open and anchored to this button, close it;
+    /// otherwise open a fresh one. Mirrors the StencilPickerSubPanel pattern
+    /// landed in S7 — same SubUI primitive, same toggle-close detection idiom.
+    /// </summary>
+    private void ToggleColorReplaceSubUI()
+    {
+        var sys = ModContent.GetInstance<WandUISystem>();
+        if (sys?.WandSubPanelHost == null) return;
+
+        foreach (var existing in sys.WandSubPanelHost.Panels)
+        {
+            if (existing.IdentityKey == ColorReplaceConfigBuilder.IdentityKey
+                && ReferenceEquals(existing.Host, _colorReplaceBtn))
+            {
+                sys.CloseWandSubPanel(existing);
+                if (_colorReplaceBtn != null) _colorReplaceBtn.IsWandSubPanelOpen = false;
+                return;
+            }
+        }
+
+        // S10 (GrayJou worried-client review): "the other panel doesn't get
+        // deselected" — when opening the Color Replace picker, retract the
+        // PaintColor popout so the player has a single visible config surface
+        // at a time (matches every other modal-ish UI in the panel set).
+        if (_paintColorSection != null && _paintColorSection.IsPoppedOut
+            && _paintColorSection.ActivePopout != null)
+        {
+            sys.CloseWandSubPanel(_paintColorSection.ActivePopout);
+        }
+
+        var picker = WandSubPanelFactories.CreateColorReplaceConfig(
+            host: _colorReplaceBtn,
+            onChanged: (src, tgt) =>
+            {
+                if (_colorReplaceBtn == null) return;
+                _colorReplaceBtn.SourcePaint = src;
+                _colorReplaceBtn.TargetPaint = tgt;
+                _colorReplaceBtn.HoverText = BuildColorReplaceTooltip(src, tgt);
+            });
+        // S10: keep the host icon's "I'm in active config mode" green visible
+        // for as long as the picker lives. Cleared by the OnClose subscription
+        // below so manual dismiss / Esc / click-outside also reset the visual.
+        picker.OnClose += () =>
+        {
+            if (_colorReplaceBtn != null) _colorReplaceBtn.IsWandSubPanelOpen = false;
+        };
+        if (_colorReplaceBtn != null) _colorReplaceBtn.IsWandSubPanelOpen = true;
+        sys.OpenWandSubPanel(picker);
+        picker.AnchorToHost();
+    }
+
+    private string BuildColorReplaceTooltip(byte src, byte tgt)
+    {
+        string srcName = ResolvePaintName(src);
+        string tgtName = ResolvePaintName(tgt);
+        // S9: channel is now the explicit ColorReplaceChannel setting,
+        // independent of the wand's CoatingMode toggle row.
+        var ch = GetSettings()?.ColorReplaceChannel ?? ColorReplaceChannel.Tile;
+        string channel = ch == ColorReplaceChannel.Wall
+            ? L("Coating.ColorReplace.ChannelWall")
+            : L("Coating.ColorReplace.ChannelTile");
+        return Language.GetTextValue(
+            "Mods.WorldShapingWandsMod.UI.Coating.ColorReplace.ButtonTooltipFmt",
+            srcName, tgtName, channel);
+    }
+
+    private static string ResolvePaintName(byte paint)
+    {
+        if (paint == 255)
+            return Language.GetTextValue("Mods.WorldShapingWandsMod.UI.Coating.Ignore");
+        if (paint < PaintPalette.Count)
+            return PaintPalette.Names[paint];
+        return paint.ToString();
+    }
+
+    private void UpdateColorReplaceButton()
+    {
+        var s = GetSettings();
+        if (s == null || _colorReplaceBtn == null) return;
+        _colorReplaceBtn.SourcePaint = s.ColorReplaceSource;
+        _colorReplaceBtn.TargetPaint = s.ColorReplaceTarget;
+        // S11 (GrayJou worried-client review of S10): no greying, no alpha
+        // reduction. Per verbatim: *“we don't have to grey or reduce the
+        // alpha of the button because the green icon background already
+        // works. No greying always full alpha.”* Toggled (set inside
+        // UpdateModeButtons) carries the active-mode signal; the radio
+        // family makes the empty-selection greying redundant anyway since
+        // selecting the mode without a selection just means “next cast
+        // does Color Replace” — a perfectly normal pre-armed state.
+        _colorReplaceBtn.IsActive = true;
+        _colorReplaceBtn.Toggled = s.Mode == CoatingMode.ColorReplace;
+        _colorReplaceBtn.HoverText = BuildColorReplaceTooltip(s.ColorReplaceSource, s.ColorReplaceTarget);
+    }
+
     private void UpdateModeButtons()
     {
         var settings = GetSettings();
@@ -313,6 +480,10 @@ public class CoatingSettingsPanel : UIState
         _paintWallBtn.Toggled  = settings.Mode == CoatingMode.PaintWall;
         _scrapeMossBtn.Toggled = settings.Mode == CoatingMode.ScrapeMoss;
         _harvestMossBtn.Toggled = settings.Mode == CoatingMode.HarvestMoss;
+        // S11: ColorReplace is the 5th radio member; Toggled drives the
+        // ActiveGreen background on the custom button.
+        if (_colorReplaceBtn != null)
+            _colorReplaceBtn.Toggled = settings.Mode == CoatingMode.ColorReplace;
     }
 
     private void UpdateColorPickerVisibility()
@@ -374,6 +545,7 @@ public class CoatingSettingsPanel : UIState
         UpdateConnectDiameterButton();
         UpdateInvertSelectionButton();
         UpdateRepaintButton();
+        UpdateColorReplaceButton();
     }
 
     public override void Update(GameTime gameTime)
@@ -399,4 +571,24 @@ public class CoatingSettingsPanel : UIState
     // -- UIPaintColorButton was promoted to Common/UI/Elements/UIPaintColorButton.cs
     //    in S6 2026-04-24 (W-S6-3, S+2 prep) so CoatingPaintColorGrid.Build can
     //    construct it from outside this class. Behaviour is byte-identical.
+
+    /// <summary>
+    /// Builds a non-radio toggle icon button at the given (left, top) inside the
+    /// Mode row. Mirrors <c>WandPanelBuilder.MakeToggleIconBtn</c> verbatim;
+    /// duplicated here because that helper is private and the Mode row was
+    /// hand-rolled in S9 to interleave a non-toggle <see cref="UIColorReplaceButton"/>
+    /// as the 5th cell.
+    /// </summary>
+    private static UIIconButton MakeModeToggle(Asset<Texture2D> texture, string locKey, float left, float top)
+    {
+        var btn = new UIIconButton(texture, L(locKey), initialState: false)
+        {
+            IsRadio = false,
+        };
+        btn.Width.Set(WandPanelBuilder.IconBtnSize, 0f);
+        btn.Height.Set(WandPanelBuilder.IconBtnSize, 0f);
+        btn.Left.Set(left, 0f);
+        btn.Top.Set(top, 0f);
+        return btn;
+    }
 }

@@ -50,4 +50,13 @@ public sealed class ReplacementTargetSource : IInventoryViewSource
 
     public void SetSelectedItemType(WandPlayer wp, int? itemType)
         => wp.ReplacementSettings.SetChosenTargetItemType(wp.ReplacementSettings.NewObject, itemType);
+
+    public IEnumerable<int> GetPinnedItemTypes(WandPlayer wp)
+        => wp.ReplacementSettings.GetPinnedTargetItemTypes(wp.ReplacementSettings.NewObject);
+
+    public bool IsPinned(WandPlayer wp, int itemType)
+        => wp.ReplacementSettings.GetPinnedTargetItemTypes(wp.ReplacementSettings.NewObject).Contains(itemType);
+
+    public void TogglePin(WandPlayer wp, int itemType)
+        => wp.ReplacementSettings.TogglePinnedTargetItemType(wp.ReplacementSettings.NewObject, itemType);
 }

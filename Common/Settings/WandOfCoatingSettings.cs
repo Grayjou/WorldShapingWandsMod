@@ -69,6 +69,33 @@ public class WandOfCoatingSettings
     /// </summary>
     public bool Repaint { get; set; } = true;
 
+    // ── Color Replace action (S8 2026-04-28; ColorReplacePlan.md §3.1) ──
+    // Operates on the active channel (determined by Mode — PaintTile or PaintWall).
+    // Both default to 255 (Ignore) so a freshly-spawned wand silently no-ops the
+    // action until the player picks both colours via the SubUI (right-click).
+
+    /// <summary>
+    /// Source paint colour for the Color Replace action: only tiles/walls whose
+    /// current paint matches this value are repainted. Range: 0 (NoPaint), 1…230
+    /// (vanilla colours), 255 (Ignore — silent no-op). Per ColorReplacePlan.md §0.4.
+    /// </summary>
+    public byte ColorReplaceSource { get; set; } = 255;
+
+    /// <summary>
+    /// Target paint colour for the Color Replace action: matched tiles/walls are
+    /// repainted to this value. Same encoding as <see cref="ColorReplaceSource"/>.
+    /// Either side = 255 (Ignore) silently no-ops the action.
+    /// </summary>
+    public byte ColorReplaceTarget { get; set; } = 255;
+
+    /// <summary>
+    /// Which paint channel the Color Replace action targets (Tile or Wall).
+    /// Independent from <see cref="Mode"/> per ColorReplacePlan.md §3.4 (S9
+    /// 2026-04-28 reinstatement) — the player can replace wall paint while the
+    /// wand is on Paint Tile mode, and vice versa.
+    /// </summary>
+    public ColorReplaceChannel ColorReplaceChannel { get; set; } = ColorReplaceChannel.Tile;
+
     /// <summary>The shape configuration.</summary>
     public ShapeInfo Shape { get; set; } = ShapeInfo.Default;
 
@@ -90,6 +117,9 @@ public class WandOfCoatingSettings
             Illuminant = Illuminant,
             Echo = Echo,
             Repaint = Repaint,
+            ColorReplaceSource = ColorReplaceSource,
+            ColorReplaceTarget = ColorReplaceTarget,
+            ColorReplaceChannel = ColorReplaceChannel,
             Shape = Shape,
             StartPoint = StartPoint,
             EndPoint = EndPoint
@@ -106,6 +136,9 @@ public class WandOfCoatingSettings
         Illuminant = TriStateValue.Ignore;
         Echo = TriStateValue.Ignore;
         Repaint = true;
+        ColorReplaceSource = 255;
+        ColorReplaceTarget = 255;
+        ColorReplaceChannel = ColorReplaceChannel.Tile;
         Shape = ShapeInfo.Default;
         StartPoint = Point.Zero;
         EndPoint = Point.Zero;
@@ -143,6 +176,11 @@ public class WandOfCoatingSettings
         // 255 is IgnorePaintColor (don't change existing paint)
         if (PaintColor > 30 && PaintColor != 255)
             PaintColor = 30;
+        // ColorReplace source/target: same encoding as PaintColor.
+        if (ColorReplaceSource > 30 && ColorReplaceSource != 255)
+            ColorReplaceSource = 255;
+        if (ColorReplaceTarget > 30 && ColorReplaceTarget != 255)
+            ColorReplaceTarget = 255;
         // ScrapePaint (2) has been removed from the UI. Migrate any saved value to ScrapeMoss.
 #pragma warning disable CS0618
         if (Mode == CoatingMode.ScrapePaint) Mode = CoatingMode.ScrapeMoss;

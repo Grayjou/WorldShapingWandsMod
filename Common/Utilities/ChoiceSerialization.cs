@@ -18,7 +18,7 @@ namespace WorldShapingWandsMod.Common.Utilities;
 ///
 /// <para>
 /// Per <c>dev_notes/inbox/Response_2026-04-22 Letter #5.md</c> §8 (Cavendish),
-/// pins are persisted as a <c>(ModName, ItemName)</c> tuple inside a nested
+/// choices are persisted as a <c>(ModName, ItemName)</c> tuple inside a nested
 /// <see cref="TagCompound"/>:
 /// </para>
 ///
@@ -46,7 +46,7 @@ public static class ChoiceSerialization
     /// <c>null</c> if the choice is unset / invalid.
     /// </summary>
     /// <param name="itemType">The chosen item type (raw int as stored on
-    /// settings), or <c>null</c> for "no pin".</param>
+    /// settings), or <c>null</c> for "no choice".</param>
     /// <returns>A tag compound holding <c>(ModName, ItemName)</c>, or
     /// <c>null</c> if there is nothing to save.</returns>
     public static TagCompound SaveChoice(int? itemType)

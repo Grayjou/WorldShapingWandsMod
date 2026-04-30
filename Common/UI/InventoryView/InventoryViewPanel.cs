@@ -8,6 +8,7 @@ using Terraria.GameContent.UI.Elements;
 using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.UI;
+using WorldShapingWandsMod.Common.Configs;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.UI.Elements;
 
@@ -146,16 +147,41 @@ public sealed class InventoryViewPanel : UIState
         container.Append(header);
 
         int? chosenType = source.GetSelectedItemType(wp);
-        List<int> candidates = source.GetCandidateItemTypes(player).Distinct().ToList();
+        var inventoryCandidates = source.GetCandidateItemTypes(player).Distinct().ToList();
 
-        bool chosenIsGhost = chosenType.HasValue && !candidates.Contains(chosenType.Value);
-        if (chosenIsGhost)
+        // (S16 2026-04-28; GrayJou Pin/Carefree clarification) Pins are a
+        // Carefree-Mode-only construct. Per S16 verbatim:
+        //   Regular Mode → "No pins visible, no pinning allowed"
+        //   Carefree Mode → "Pins are visible, and can be added/removed"
+        // Storage on WandPlayer is preserved across mode toggles — leaving
+        // Carefree only HIDES the pins; re-entering restores them. Whence
+        // we gate the pinnedSet at read time here rather than wiping data.
+        bool carefreeEnabled = WandConfigs.Carefree?.EnableCarefreeMode == true;
+        var pinnedSet = carefreeEnabled
+            ? new HashSet<int>(source.GetPinnedItemTypes(wp))
+            : new HashSet<int>();
+
+        // (S15 PersistentPin) Merge pinned items into the candidate list so that
+        // pinned items the player no longer carries still render as ghost-pinned
+        // slots (one-click handle to unpin). Order: chosen > pinned > rest.
+        // (S16 Carefree gate) `pinnedSet` is empty in Regular mode, so this
+        // merge collapses to a no-op and ghost-pinned slots are not drawn.
+        var candidates = new List<int>(inventoryCandidates);
+        var inventorySet = new HashSet<int>(inventoryCandidates);
+        foreach (int pin in pinnedSet)
+            if (!inventorySet.Contains(pin)) candidates.Add(pin);
+
+        bool chosenIsGhost = chosenType.HasValue && !inventorySet.Contains(chosenType.Value);
+        if (chosenIsGhost && !candidates.Contains(chosenType.Value))
             candidates.Insert(0, chosenType.Value);
 
         candidates.Sort((a, b) =>
         {
-            bool ap = chosenType.HasValue && a == chosenType.Value;
-            bool bp = chosenType.HasValue && b == chosenType.Value;
+            bool ac = chosenType.HasValue && a == chosenType.Value;
+            bool bc = chosenType.HasValue && b == chosenType.Value;
+            if (ac != bc) return ac ? -1 : 1;
+            bool ap = pinnedSet.Contains(a);
+            bool bp = pinnedSet.Contains(b);
             if (ap != bp) return ap ? -1 : 1;
             return a.CompareTo(b);
         });
@@ -167,10 +193,11 @@ public sealed class InventoryViewPanel : UIState
             int stack = CountStack(player, itemType);
             string hoverName = ResolveItemDisplayName(itemType);
             bool isChosen = chosenType.HasValue && itemType == chosenType.Value;
-            bool isGhost = isChosen && chosenIsGhost;
+            bool isPinned = pinnedSet.Contains(itemType);
+            bool isGhost = !inventorySet.Contains(itemType); // ghost = stale-reference (chosen OR pinned)
 
             var slot = new UIInventoryViewSlot();
-            slot.Configure(itemType, stack, isChosen, hoverName, isGhost);
+            slot.Configure(itemType, stack, isChosen, hoverName, isGhost, isPinned);
             slot.Left.Set(s * (UIInventoryViewSlot.SlotSize + SlotGap), 0f);
             slot.Top.Set(20f, 0f);
             slot.OnChoiceClick = (clicked, wasChosen) =>
@@ -180,6 +207,13 @@ public sealed class InventoryViewPanel : UIState
                 else
                     source.SetSelectedItemType(wp, clicked.ItemType);
             };
+            // (S15 PersistentPin) Right-click toggles pin state for this item.
+            // (S16 Carefree gate) Only wire the pin handler in Carefree mode —
+            // in Regular mode right-click is a no-op (no pinning allowed).
+            // The slot's RightClick override safely no-ops when OnPinClick is
+            // null, so simply skipping the assignment is sufficient.
+            if (carefreeEnabled)
+                slot.OnPinClick = (clicked, _) => source.TogglePin(wp, clicked.ItemType);
             container.Append(slot);
         }
 

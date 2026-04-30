@@ -25,6 +25,48 @@ namespace WorldShapingWandsMod.Common.Geometry;
 public static class SliceHelper
 {
     /// <summary>
+    /// (S12 2026-04-29; <c>HalfShapeQuickSlice.md</c> §4) Pre-expansion pass
+    /// for the Quick Slice variants of <see cref="SliceMode"/>. Runs once
+    /// at the top of <c>ShapeRegistry.GetShapeTiles</c> BEFORE the provider
+    /// rasterizes anything. When <see cref="ShapeContext.Slice"/> is
+    /// <see cref="SliceMode.QuickHalfHorizontal"/> or
+    /// <see cref="SliceMode.QuickHalfVertical"/>, mirrors
+    /// <see cref="ShapeContext.End"/> across <see cref="ShapeContext.Start"/>
+    /// along the slice axis (so the underlying full shape is twice the
+    /// user's drag size) and downgrades <see cref="ShapeContext.Slice"/>
+    /// to the corresponding plain <see cref="SliceMode.HalfHorizontal"/> /
+    /// <see cref="SliceMode.HalfVertical"/>. The legacy slicing pipeline
+    /// then runs unchanged on the rewritten context.
+    ///
+    /// <para>Mirror formula (works for both drag directions because it
+    /// folds the smaller bound across the larger one along the slice
+    /// axis):</para>
+    /// <list type="bullet">
+    /// <item><c>HalfHorizontal: newEnd.Y = 2 * End.Y - Start.Y</c></item>
+    /// <item><c>HalfVertical:   newEnd.X = 2 * End.X - Start.X</c></item>
+    /// </list>
+    ///
+    /// <para>For <see cref="SliceMode.Full"/> and the non-quick half modes
+    /// the input context is returned unmodified.</para>
+    /// </summary>
+    public static ShapeContext PreExpandForQuickSlice(ShapeContext context)
+    {
+        if (context.Slice == SliceMode.QuickHalfHorizontal)
+        {
+            int newEndY = 2 * context.End.Y - context.Start.Y;
+            context.End = new Point(context.End.X, newEndY);
+            context.Slice = SliceMode.HalfHorizontal;
+        }
+        else if (context.Slice == SliceMode.QuickHalfVertical)
+        {
+            int newEndX = 2 * context.End.X - context.Start.X;
+            context.End = new Point(newEndX, context.End.Y);
+            context.Slice = SliceMode.HalfVertical;
+        }
+        return context;
+    }
+
+    /// <summary>
     /// Determines whether a horizontal slice keeps the top or bottom half
     /// based on drag direction.
     /// </summary>

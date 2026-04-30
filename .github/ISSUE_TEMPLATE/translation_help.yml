@@ -1,0 +1,52 @@
+name: 🌐 Translation Help
+description: Offer or improve a translation (the mod has 9 locale files; en-US is complete, the rest are mostly structural placeholders).
+title: "[Locale] "
+labels: ["localization"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        WorldShapingWandsMod ships 9 locale files in `Localization/`. en-US
+        is complete; the others are structural placeholders awaiting native
+        speakers. Whether you can do a full pass or just spot-check a few
+        keys, every contribution helps.
+  - type: dropdown
+    id: locale
+    attributes:
+      label: Locale
+      options:
+        - de-DE (German)
+        - es-ES (Spanish)
+        - fr-FR (French)
+        - it-IT (Italian)
+        - pl-PL (Polish)
+        - pt-BR (Portuguese - Brazil)
+        - ru-RU (Russian)
+        - zh-Hans (Simplified Chinese)
+        - Other (please specify in body)
+    validations:
+      required: true
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope of contribution
+      options:
+        - Full pass (all keys)
+        - Partial pass (specific section / wand family)
+        - Single key correction
+        - Question about an existing translation
+    validations:
+      required: true
+  - type: textarea
+    id: body
+    attributes:
+      label: Translation contribution / question
+      placeholder: |
+        For corrections: paste the key, the current value, and the suggested value.
+        For full passes: feel free to attach a `.hjson` file or open a PR directly.
+    validations:
+      required: true
+  - type: input
+    id: contact
+    attributes:
+      label: How would you like to be credited? (optional)

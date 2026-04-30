@@ -193,7 +193,7 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
             var baseTgtCondition = ItemTypeHelper.GetConditions(settings.NewObject);
             // Exclude items that would place the same tile as source
             targetCondition = item => baseTgtCondition(item) && (ushort)item.createTile != sourceType;
-            // SameTypeMode pins target to source choice (target tracks source).
+            // SameTypeMode choices target to source choice (target tracks source).
             // S8 2026-04-22 (Cavendish Response #5 §9.1): track *resolved* sourceItem.type
             // not the choice field, so target stays coherent when source choice ghosts.
             int? targetChoice = settings.SameTypeMode
@@ -550,7 +550,7 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
 
             var baseTgtCondition = ItemTypeHelper.GetConditions(ObjectType.Wall);
             targetCondition = item => baseTgtCondition(item) && (ushort)item.createWall != sourceWallType;
-            // SameTypeMode pins target to source choice (target tracks source).
+            // SameTypeMode choices target to source choice (target tracks source).
             // S8 2026-04-22 (Cavendish Response #5 §9.1): track *resolved* sourceItem.type
             // not the choice field, so target stays coherent when source choice ghosts.
             int? targetChoice = settings.SameTypeMode

@@ -92,6 +92,42 @@ public class WandOfBuildingSettings
     /// </summary>
     public int? ChosenWallItemType { get; set; }
 
+    // ── PersistentPin storage (S15 2026-04-28) ───────────────────────────────
+    // Parallel to the Chosen* layer above; see IInventoryViewSource for the
+    // full contract. Stale-reference (item type may not be in inventory).
+    // Right-click in the IV slot toggles. Saved/loaded by WandPlayer.
+
+    /// <summary>Per-<see cref="PlaceType"/> set of pinned tile-mode item types.</summary>
+    public Dictionary<PlaceType, HashSet<int>> PinnedTileItemTypesByObjectType { get; set; } = new();
+
+    /// <summary>Pinned wall-mode item types.</summary>
+    public HashSet<int> PinnedWallItemTypes { get; set; } = new();
+
+    /// <summary>Get the pinned tile set for the given sub-mode (lazily allocated).</summary>
+    public HashSet<int> GetPinnedTileItemTypes(PlaceType objectType)
+    {
+        if (objectType == PlaceType.Wall) return PinnedWallItemTypes;
+        if (!PinnedTileItemTypesByObjectType.TryGetValue(objectType, out var set))
+        {
+            set = new HashSet<int>();
+            PinnedTileItemTypesByObjectType[objectType] = set;
+        }
+        return set;
+    }
+
+    /// <summary>Toggle pin for a tile-mode item under the given sub-mode.</summary>
+    public void TogglePinnedTileItemType(PlaceType objectType, int itemType)
+    {
+        var set = GetPinnedTileItemTypes(objectType);
+        if (!set.Add(itemType)) set.Remove(itemType);
+    }
+
+    /// <summary>Toggle pin for a wall-mode item.</summary>
+    public void TogglePinnedWallItemType(int itemType)
+    {
+        if (!PinnedWallItemTypes.Add(itemType)) PinnedWallItemTypes.Remove(itemType);
+    }
+
     /// <summary>The starting point of the selection.</summary>
     public Point StartPoint { get; set; }
 
@@ -114,9 +150,18 @@ public class WandOfBuildingSettings
             Actuation = Actuation,
             ChosenTileItemTypeByObjectType = new Dictionary<PlaceType, int?>(ChosenTileItemTypeByObjectType),
             ChosenWallItemType = ChosenWallItemType,
+            PinnedTileItemTypesByObjectType = ClonePinDict(PinnedTileItemTypesByObjectType),
+            PinnedWallItemTypes = new HashSet<int>(PinnedWallItemTypes),
             StartPoint = StartPoint,
             EndPoint = EndPoint
         };
+    }
+
+    private static Dictionary<PlaceType, HashSet<int>> ClonePinDict(Dictionary<PlaceType, HashSet<int>> src)
+    {
+        var dst = new Dictionary<PlaceType, HashSet<int>>(src.Count);
+        foreach (var kv in src) dst[kv.Key] = new HashSet<int>(kv.Value);
+        return dst;
     }
 
     /// <summary>
@@ -133,6 +178,8 @@ public class WandOfBuildingSettings
         Actuation = null;
         ChosenTileItemTypeByObjectType = new Dictionary<PlaceType, int?>();
         ChosenWallItemType = null;
+        PinnedTileItemTypesByObjectType = new Dictionary<PlaceType, HashSet<int>>();
+        PinnedWallItemTypes = new HashSet<int>();
         StartPoint = Point.Zero;
         EndPoint = Point.Zero;
     }

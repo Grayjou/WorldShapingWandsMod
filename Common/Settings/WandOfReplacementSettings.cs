@@ -89,6 +89,42 @@ public class WandOfReplacementSettings
             ChosenTargetItemTypeByObjectType.Remove(objectType);
     }
 
+    // ── PersistentPin storage (S15 2026-04-28) ───────────────────────────────
+    public Dictionary<ObjectType, HashSet<int>> PinnedSourceItemTypesByObjectType { get; set; } = new();
+    public Dictionary<ObjectType, HashSet<int>> PinnedTargetItemTypesByObjectType { get; set; } = new();
+
+    public HashSet<int> GetPinnedSourceItemTypes(ObjectType objectType)
+    {
+        if (!PinnedSourceItemTypesByObjectType.TryGetValue(objectType, out var set))
+        {
+            set = new HashSet<int>();
+            PinnedSourceItemTypesByObjectType[objectType] = set;
+        }
+        return set;
+    }
+
+    public HashSet<int> GetPinnedTargetItemTypes(ObjectType objectType)
+    {
+        if (!PinnedTargetItemTypesByObjectType.TryGetValue(objectType, out var set))
+        {
+            set = new HashSet<int>();
+            PinnedTargetItemTypesByObjectType[objectType] = set;
+        }
+        return set;
+    }
+
+    public void TogglePinnedSourceItemType(ObjectType objectType, int itemType)
+    {
+        var set = GetPinnedSourceItemTypes(objectType);
+        if (!set.Add(itemType)) set.Remove(itemType);
+    }
+
+    public void TogglePinnedTargetItemType(ObjectType objectType, int itemType)
+    {
+        var set = GetPinnedTargetItemTypes(objectType);
+        if (!set.Add(itemType)) set.Remove(itemType);
+    }
+
     /// <summary>The starting point of the selection.</summary>
     public Point StartPoint { get; set; }
 
@@ -111,9 +147,18 @@ public class WandOfReplacementSettings
             SameTypeMode = SameTypeMode,
             ChosenSourceItemTypeByObjectType = new Dictionary<ObjectType, int?>(ChosenSourceItemTypeByObjectType),
             ChosenTargetItemTypeByObjectType = new Dictionary<ObjectType, int?>(ChosenTargetItemTypeByObjectType),
+            PinnedSourceItemTypesByObjectType = ClonePinDict(PinnedSourceItemTypesByObjectType),
+            PinnedTargetItemTypesByObjectType = ClonePinDict(PinnedTargetItemTypesByObjectType),
             StartPoint = StartPoint,
             EndPoint = EndPoint
         };
+    }
+
+    private static Dictionary<ObjectType, HashSet<int>> ClonePinDict(Dictionary<ObjectType, HashSet<int>> src)
+    {
+        var dst = new Dictionary<ObjectType, HashSet<int>>(src.Count);
+        foreach (var kv in src) dst[kv.Key] = new HashSet<int>(kv.Value);
+        return dst;
     }
 
     /// <summary>
@@ -130,6 +175,8 @@ public class WandOfReplacementSettings
         SameTypeMode = false;
         ChosenSourceItemTypeByObjectType = new Dictionary<ObjectType, int?>();
         ChosenTargetItemTypeByObjectType = new Dictionary<ObjectType, int?>();
+        PinnedSourceItemTypesByObjectType = new Dictionary<ObjectType, HashSet<int>>();
+        PinnedTargetItemTypesByObjectType = new Dictionary<ObjectType, HashSet<int>>();
         StartPoint = Point.Zero;
         EndPoint = Point.Zero;
     }

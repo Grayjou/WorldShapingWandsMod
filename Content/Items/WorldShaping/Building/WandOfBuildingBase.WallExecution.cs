@@ -34,7 +34,7 @@ namespace WorldShapingWandsMod.Content.Items
             var condition = ItemTypeHelper.GetConditions(PlaceType.Wall);
 
             // InventoryView v1 (S6 2026-04-22): honor the wall choice if the player
-            // set one via the panel. Stale pins fall back to the broad scan.
+            // set one via the panel. Stale choices fall back to the broad scan.
             int sourceIndex = ItemTypeHelper.FindFirstItemIndex(player, condition, settings.ChosenWallItemType);
             if (sourceIndex < 0)
             {
@@ -48,16 +48,16 @@ namespace WorldShapingWandsMod.Content.Items
             // Two narrowing triggers:
             //   (a) ExhaustMode != NextBlock — user disabled substitution.
             //   (b) Choice was honored — user chosen a wall via the InventoryView panel.
-            // See TileExecution.cs for the full rationale; the same authoritative-pin
+            // See TileExecution.cs for the full rationale; the same authoritative-choice
             // semantics apply here so the WoB Wall mode also stops silently substituting
             // a scan-order-first wall in place of the user's chosen wall.
             var exhaustModeWall = WandConfigs.Preferences?.BlockExhaustion ?? BlockExhaustionMode.NextBlock;
             Item initialWallItem = player.inventory[sourceIndex];
-            bool pinHonoredWall = settings.ChosenWallItemType.HasValue
+            bool choiceHonoredWall = settings.ChosenWallItemType.HasValue
                                   && initialWallItem.type == settings.ChosenWallItemType.Value;
 
             // 2026-04-23 Session 1 (Letter #10 §6 bug): Interrupt + stale-choice hard-stop.
-            // Mirror of the TileExecution guard. Interrupt must refuse when the wall pin
+            // Mirror of the TileExecution guard. Interrupt must refuse when the wall choice
             // is set but missing, instead of silently substituting the scan-order-first wall.
             //
             // 2026-04-23 Session 2 (Letter #11 ack): extend to Cancel per GrayJou's
@@ -66,13 +66,13 @@ namespace WorldShapingWandsMod.Content.Items
             if ((exhaustModeWall == BlockExhaustionMode.Interrupt
                     || exhaustModeWall == BlockExhaustionMode.Cancel)
                 && settings.ChosenWallItemType.HasValue
-                && !pinHonoredWall)
+                && !choiceHonoredWall)
             {
                 Main.NewText(Get("ChosenMissingUnderInterrupt"), Color.Red);
                 return;
             }
 
-            if (exhaustModeWall != BlockExhaustionMode.NextBlock || pinHonoredWall)
+            if (exhaustModeWall != BlockExhaustionMode.NextBlock || choiceHonoredWall)
             {
                 int ChosenWallItemType = initialWallItem.type;
                 condition = i => !i.IsAir && i.type == ChosenWallItemType;
@@ -81,7 +81,7 @@ namespace WorldShapingWandsMod.Content.Items
             // S10 (Letter #10 polish — ghost-choice toast, mirror of TileExecution
             // hookpoint): rate-limited chat hint when the wall choice was bypassed
             // because it wasn't in inventory. See GhostChoiceToast for throttling
-            // semantics (~2 s per (pin, fallback) pair).
+            // semantics (~2 s per (choice, fallback) pair).
             Common.UI.InventoryView.GhostChoiceToast.TryEmit(
                 settings.ChosenWallItemType, initialWallItem.type);
 

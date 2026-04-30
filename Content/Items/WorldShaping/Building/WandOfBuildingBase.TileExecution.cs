@@ -93,7 +93,7 @@ namespace WorldShapingWandsMod.Content.Items
             // Two reasons to narrow (post-S8 GrayJou Letter #9 fix):
             //   (a) ExhaustMode != NextBlock — the user explicitly disabled substitution
             //       so the broad category condition ("any solid block") would defeat that.
-            //   (b) `pinHonored` — the user chosen a specific item via the InventoryView panel
+            //   (b) `choiceHonored` — the user chosen a specific item via the InventoryView panel
             //       AND that choice is currently in inventory (FindFirstItemIndex above returned
             //       the chosen item). Choices are AUTHORITATIVE: the user clicked a slot saying
             //       "place this exact item", so NextBlock substitution must be suppressed for
@@ -104,7 +104,7 @@ namespace WorldShapingWandsMod.Content.Items
             //       Adamantite Ore would be a worse outcome).
             //
             // If the choice was stale (item gone), FindFirstItemIndex fell through to the broad
-            // scan and `initialSourceItem` is something else; pinHonored stays false and
+            // scan and `initialSourceItem` is something else; choiceHonored stays false and
             // we retain pre-choice substitution behaviour for that operation.
             //
             // This single narrowing point is what makes the fix surgical: the narrowed
@@ -113,20 +113,20 @@ namespace WorldShapingWandsMod.Content.Items
             // path) AND to ProgressiveTileProcessor via the BuildCondition field, so we
             // don't have to thread the choice through ~8 separate call sites.
             var exhaustMode = WandConfigs.Preferences?.BlockExhaustion ?? BlockExhaustionMode.NextBlock;
-            bool pinHonored = chosenTileItemType.HasValue
+            bool choiceHonored = chosenTileItemType.HasValue
                               && initialSourceItem.type == chosenTileItemType.Value;
 
             // 2026-04-23 Session 1 (Letter #10 §6 bug): Interrupt + stale-choice hard-stop.
             // GrayJou intent: "Using Exhaust Mode Interrupt, and I have the view open
             // with a chosen item that I currently don't have in my inventory, it uses
             // the next available item. This isn't intuitive at all, it should not proceed."
-            // Interpretation: Interrupt = "use ONLY my pin; stop the moment it runs out".
+            // Interpretation: Interrupt = "use ONLY my choice; stop the moment it runs out".
             // If the choice isn't even present at execute time, that's "already out", so we
             // refuse before any placement runs. NextBlock keeps silent substitution
             // (that's its whole point — the ghost-choice toast still fires as a hint).
             //
             // 2026-04-23 Session 2 (Letter #11 ack): Cavendish's S1 patch left an open
-            // question — should Cancel ALSO hard-refuse on stale pin? GrayJou: "Yes."
+            // question — should Cancel ALSO hard-refuse on stale choice? GrayJou: "Yes."
             // Both Interrupt and Cancel treat the choice as authoritative intent; the only
             // mode that may silently substitute is NextBlock. So the guard now covers
             // both. The pre-existing broad stock pre-check downstream is now a strict
@@ -135,13 +135,13 @@ namespace WorldShapingWandsMod.Content.Items
             if ((exhaustMode == BlockExhaustionMode.Interrupt
                     || exhaustMode == BlockExhaustionMode.Cancel)
                 && chosenTileItemType.HasValue
-                && !pinHonored)
+                && !choiceHonored)
             {
                 Main.NewText(Get("ChosenMissingUnderInterrupt"), Color.Red);
                 return;
             }
 
-            if (exhaustMode != BlockExhaustionMode.NextBlock || pinHonored)
+            if (exhaustMode != BlockExhaustionMode.NextBlock || choiceHonored)
             {
                 // Narrow placement lookup to the exact chosen placement item.
                 // IMPORTANT: for tile wands this must stay the wand item type (not ammo type),

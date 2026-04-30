@@ -109,6 +109,8 @@ public class DismantlingSettingsPanel : UIState
         _cardinalBtn      = shapes.Cardinal;
         _straightLineBtn  = shapes.StraightLine;
         _moldBtn          = shapes.Mold;
+        // (S11 2026-04-29 — Bug 3 fix; StencilEditVsActOn.md §3)
+        Common.UI.Elements.MoldCellWiring.WireActOnPicker(_moldBtn);
 
         // === SLICE ===
         _builder.AddSliceSection(out _sliceGrid, OnSliceChanged);

@@ -47,4 +47,13 @@ public sealed class BuildingWallSource : IInventoryViewSource
 
     public void SetSelectedItemType(WandPlayer wp, int? itemType)
         => wp.BuildingSettings.ChosenWallItemType = itemType;
+
+    public IEnumerable<int> GetPinnedItemTypes(WandPlayer wp)
+        => wp.BuildingSettings.PinnedWallItemTypes;
+
+    public bool IsPinned(WandPlayer wp, int itemType)
+        => wp.BuildingSettings.PinnedWallItemTypes.Contains(itemType);
+
+    public void TogglePin(WandPlayer wp, int itemType)
+        => wp.BuildingSettings.TogglePinnedWallItemType(itemType);
 }

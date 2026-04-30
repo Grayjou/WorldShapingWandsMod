@@ -543,7 +543,7 @@ public static class TorchPlacementHelper
     /// <para>InventoryView v1 (S6 2026-04-22): when <paramref name="chosenItemType"/>
     /// is non-null and the chosen torch type is still in inventory, that type is
     /// preferred (so its stack is summed and its tile type / place style returned).
-    /// Stale pins fall back to the natural scan order.</para>
+    /// Stale choices fall back to the natural scan order.</para>
     /// </summary>
     public static (int itemType, int totalStack, int tileType, int placeStyle)
         FindTorchInInventory(Player player, int? chosenItemType = null)
@@ -561,10 +561,10 @@ public static class TorchPlacementHelper
             {
                 var it = player.inventory[i];
                 if (it.IsAir || it.type != choice) continue;
-                if (!IsTorchItem(it, out int pinTileType, out int pinPlaceStyle)) continue;
+                if (!IsTorchItem(it, out int choiceTileType, out int choicePlaceStyle)) continue;
                 bestType = choice;
-                bestTileType = pinTileType;
-                bestPlaceStyle = pinPlaceStyle;
+                bestTileType = choiceTileType;
+                bestPlaceStyle = choicePlaceStyle;
                 break;
             }
         }

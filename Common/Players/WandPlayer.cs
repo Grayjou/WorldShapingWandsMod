@@ -834,13 +834,13 @@ public class WandPlayer : ModPlayer
     //  Persistence — InventoryView choice fields (per-character, per Cavendish
     //  Response_2026-04-22 Letter #5 §8). Choices serialize as (ModName, ItemName)
     //  tuples via ChoiceSerialization so cross-mod-version item-ID renumbering
-    //  doesn't silently re-choice players to the wrong items. Unresolvable pins
+    //  doesn't silently re-choice players to the wrong items. Unresolvable choices
     //  on Load silently fall back to null (legacy behaviour).
     //
-    //  We deliberately persist ONLY the pins right now, NOT the full settings
+    //  We deliberately persist ONLY the choices right now, NOT the full settings
     //  surface (Object/Shape/SelectionMode/etc. already round-trip via the
     //  per-instance UI state and per-session ResetToDefaults() in OnEnterWorld).
-    //  Expanding the persistence scope is a separate decision; pins are the
+    //  Expanding the persistence scope is a separate decision; choices are the
     //  one setting whose semantic value is "I committed to this choice"
     //  (Response #5 §8 ¶3).
     // ──────────────────────────────────────────────────────────────────────
@@ -857,6 +857,19 @@ public class WandPlayer : ModPlayer
     private const string TagChoiceReplacementTargetKeys = "ChoiceReplacementTargetKeys"; // S1 2026-04-26 per-ObjectType dict
     private const string TagChoiceReplacementTargetVals = "ChoiceReplacementTargetVals";
 
+    // PersistentPin tags (S15 2026-04-28). Each pin set is serialized as a
+    // parallel (key-list, vals-list) pair where each "val" is a List<TagCompound>
+    // of ChoiceSerialization payloads (mod-name + item-name stable across reload).
+    // Flat sets (Wall, Torch) write a single List<TagCompound>.
+    private const string TagPinBuildingTileKeys = "PinBuildingTileKeys";
+    private const string TagPinBuildingTileVals = "PinBuildingTileVals"; // List<List<TagCompound>>
+    private const string TagPinBuildingWall    = "PinBuildingWall";    // List<TagCompound>
+    private const string TagPinTorch           = "PinTorch";           // List<TagCompound>
+    private const string TagPinReplacementSourceKeys = "PinReplacementSourceKeys";
+    private const string TagPinReplacementSourceVals = "PinReplacementSourceVals";
+    private const string TagPinReplacementTargetKeys = "PinReplacementTargetKeys";
+    private const string TagPinReplacementTargetVals = "PinReplacementTargetVals";
+
     // ── Collapsible-section persistence (2026-04-23 S4 framework) ───
     // Cavendish DesignDoc_CollapsablePanelSystem.md §2.4 named a SettingsPlayer
     // class for these dicts; no such class exists in WSW. Adapted onto WandPlayer
@@ -871,6 +884,32 @@ public class WandPlayer : ModPlayer
 
     /// <summary>Per-section popout-host position (screen-pixel top-left), keyed identically.</summary>
     public Dictionary<string, Vector2> PopoutPositions { get; set; } = new();
+
+    // ── Magic Wand state (S10 2026-04-29; StencilMagicWandSelectionPlan.md §6.0 + §7) ──
+    /// <summary>
+    /// Per-player Magic Wand (Read) configuration — one shared config
+    /// across every stencil wand the player owns. Persists with the
+    /// player save through <see cref="SaveData"/> /
+    /// <see cref="LoadData"/> as a 2-byte payload
+    /// (<c>"MagicWand_Object"</c> + <c>"MagicWand_Cont"</c>).
+    /// Defaults to (SameTile, FourNeighbour) — the canonical, safest,
+    /// most-recognisable Magic-Wand behaviour.
+    /// </summary>
+    public MagicWandReadConfig MagicWandReadConfig { get; set; }
+        = MagicWandReadConfig.Default;
+
+    /// <summary>
+    /// The most recent Magic Wand (Read) capture, replayed by
+    /// <c>MagicWandApplyShape</c> on any wand. <c>null</c> means
+    /// *“nothing has been Read yet this session”* — Apply on null
+    /// shows the chat warning *“Magic Wand: no captured shape. Use
+    /// Magic Wand Read on a stencil wand first.”* and is a no-op.
+    /// In-memory only per <c>MultipleStencilsPlan.md</c> §8 / Cavendish
+    /// C-S1 §C2 (only configs persist; canvases and captures don't);
+    /// cleared on world-exit / disconnect via <c>OnEnterWorld</c>'s
+    /// reset-to-null below.
+    /// </summary>
+    public StoredMagicWandShape LastMagicWandShape { get; set; }
 
     public override void SaveData(TagCompound tag)
     {
@@ -915,6 +954,18 @@ public class WandPlayer : ModPlayer
             if (tgtKeys.Count > 0) { tag[TagChoiceReplacementTargetKeys] = tgtKeys; tag[TagChoiceReplacementTargetVals] = tgtVals; }
         }
 
+        // PersistentPin save (S15 2026-04-28). Per-axis sets serialized as
+        // List<TagCompound> of ChoiceSerialization payloads. Empty sets emit
+        // no tag (LoadData treats absent tags as empty).
+        SavePinDictByPlaceType(tag, TagPinBuildingTileKeys, TagPinBuildingTileVals,
+            BuildingSettings.PinnedTileItemTypesByObjectType);
+        SavePinFlatSet(tag, TagPinBuildingWall, BuildingSettings.PinnedWallItemTypes);
+        SavePinFlatSet(tag, TagPinTorch, TorchSettings.PinnedTorchItemTypes);
+        SavePinDictByObjectType(tag, TagPinReplacementSourceKeys, TagPinReplacementSourceVals,
+            ReplacementSettings.PinnedSourceItemTypesByObjectType);
+        SavePinDictByObjectType(tag, TagPinReplacementTargetKeys, TagPinReplacementTargetVals,
+            ReplacementSettings.PinnedTargetItemTypesByObjectType);
+
         // Collapsible-section state: serialized as parallel string-list payloads
         // (TagCompound's Dictionary support is lossy across versions; parallel
         // lists round-trip cleanly). Empty dict → no tag written.
@@ -936,6 +987,11 @@ public class WandPlayer : ModPlayer
             tag[TagPopoutPositions + "_X"] = xs;
             tag[TagPopoutPositions + "_Y"] = ys;
         }
+
+        // (S10 2026-04-29) Magic Wand Read config — 2-byte tag pair.
+        // The captured shape (LastMagicWandShape) is in-memory only and
+        // intentionally NOT persisted per the plan §6.0 lifecycle.
+        MagicWandReadConfig.Save(tag);
     }
 
     public override void LoadData(TagCompound tag)
@@ -990,6 +1046,16 @@ public class WandPlayer : ModPlayer
             if (legacy.HasValue) ReplacementSettings.ChosenTargetItemTypeByObjectType[ObjectType.Tile] = legacy;
         }
 
+        // PersistentPin load (S15 2026-04-28).
+        BuildingSettings.PinnedTileItemTypesByObjectType =
+            LoadPinDictByPlaceType(tag, TagPinBuildingTileKeys, TagPinBuildingTileVals);
+        BuildingSettings.PinnedWallItemTypes = LoadPinFlatSet(tag, TagPinBuildingWall);
+        TorchSettings.PinnedTorchItemTypes = LoadPinFlatSet(tag, TagPinTorch);
+        ReplacementSettings.PinnedSourceItemTypesByObjectType =
+            LoadPinDictByObjectType(tag, TagPinReplacementSourceKeys, TagPinReplacementSourceVals);
+        ReplacementSettings.PinnedTargetItemTypesByObjectType =
+            LoadPinDictByObjectType(tag, TagPinReplacementTargetKeys, TagPinReplacementTargetVals);
+
         CollapsedSections = new Dictionary<string, bool>();
         if (tag.ContainsKey(TagCollapsedSections + "_K") && tag.ContainsKey(TagCollapsedSections + "_V"))
         {
@@ -1008,6 +1074,13 @@ public class WandPlayer : ModPlayer
             int n = System.Math.Min(keys.Count, System.Math.Min(xs.Count, ys.Count));
             for (int i = 0; i < n; i++) PopoutPositions[keys[i]] = new Vector2(xs[i], ys[i]);
         }
+
+        // (S10 2026-04-29) Magic Wand Read config — absent tags read as
+        // (SameTile, FourNeighbour) defaults; out-of-range bytes also
+        // fall back to defaults to keep loads non-fatal across enum drift.
+        MagicWandReadConfig = global::WorldShapingWandsMod.Common.Settings.MagicWandReadConfig.Load(tag);
+        // LastMagicWandShape is in-memory only — never loaded from save.
+        LastMagicWandShape = null;
     }
 
     private static void TrySetTag(TagCompound tag, string key, int? itemType)
@@ -1024,6 +1097,163 @@ public class WandPlayer : ModPlayer
         return ChoiceSerialization.LoadChoice(tag.GetCompound(key));
     }
 
+    // ── PersistentPin (S15 2026-04-28) serialization helpers ─────────────────────────
+    // Pins are stale-reference: a pinned item type may be from an unloaded mod
+    // when LoadData runs. ChoiceSerialization handles this gracefully by
+    // returning null for unresolvable tuples; we silently drop those entries.
+
+    private static void SavePinFlatSet(TagCompound tag, string key, System.Collections.Generic.HashSet<int> set)
+    {
+        if (set == null || set.Count == 0) return;
+        var payloads = new List<TagCompound>(set.Count);
+        foreach (int t in set)
+        {
+            var p = ChoiceSerialization.SaveChoice(t);
+            if (p != null) payloads.Add(p);
+        }
+        if (payloads.Count > 0) tag[key] = payloads;
+    }
+
+    private static System.Collections.Generic.HashSet<int> LoadPinFlatSet(TagCompound tag, string key)
+    {
+        var set = new System.Collections.Generic.HashSet<int>();
+        if (tag == null || !tag.ContainsKey(key)) return set;
+        var payloads = tag.GetList<TagCompound>(key);
+        foreach (var p in payloads)
+        {
+            int? loaded = ChoiceSerialization.LoadChoice(p);
+            if (loaded.HasValue) set.Add(loaded.Value);
+        }
+        return set;
+    }
+
+    private static void SavePinDictByPlaceType(TagCompound tag, string keysKey, string valsKey,
+        System.Collections.Generic.Dictionary<PlaceType, System.Collections.Generic.HashSet<int>> dict)
+    {
+        if (dict == null || dict.Count == 0) return;
+        var keys = new List<byte>();
+        var vals = new List<List<TagCompound>>();
+        foreach (var kv in dict)
+        {
+            if (kv.Value == null || kv.Value.Count == 0) continue;
+            var inner = new List<TagCompound>(kv.Value.Count);
+            foreach (int t in kv.Value)
+            {
+                var p = ChoiceSerialization.SaveChoice(t);
+                if (p != null) inner.Add(p);
+            }
+            if (inner.Count > 0)
+            {
+                keys.Add((byte)kv.Key);
+                vals.Add(inner);
+            }
+        }
+        if (keys.Count > 0)
+        {
+            tag[keysKey] = keys;
+            // tModLoader's TagCompound serializer handles nested list-of-list-of-tag, but it's
+            // safer (round-trips reliably across versions) to flatten each inner list into a
+            // single TagCompound carrying its payloads under the indexed key "i".
+            var wrapped = new List<TagCompound>(vals.Count);
+            foreach (var inner in vals)
+            {
+                var w = new TagCompound { ["items"] = inner };
+                wrapped.Add(w);
+            }
+            tag[valsKey] = wrapped;
+        }
+    }
+
+    private static System.Collections.Generic.Dictionary<PlaceType, System.Collections.Generic.HashSet<int>>
+        LoadPinDictByPlaceType(TagCompound tag, string keysKey, string valsKey)
+    {
+        var dict = new System.Collections.Generic.Dictionary<PlaceType, System.Collections.Generic.HashSet<int>>();
+        if (tag == null || !tag.ContainsKey(keysKey) || !tag.ContainsKey(valsKey)) return dict;
+        var keys = tag.GetList<byte>(keysKey);
+        var wrapped = tag.GetList<TagCompound>(valsKey);
+        int n = System.Math.Min(keys.Count, wrapped.Count);
+        for (int i = 0; i < n; i++)
+        {
+            var inner = wrapped[i].GetList<TagCompound>("items");
+            var set = new System.Collections.Generic.HashSet<int>();
+            foreach (var p in inner)
+            {
+                int? loaded = ChoiceSerialization.LoadChoice(p);
+                if (loaded.HasValue) set.Add(loaded.Value);
+            }
+            if (set.Count > 0) dict[(PlaceType)keys[i]] = set;
+        }
+        return dict;
+    }
+
+    private static void SavePinDictByObjectType(TagCompound tag, string keysKey, string valsKey,
+        System.Collections.Generic.Dictionary<ObjectType, System.Collections.Generic.HashSet<int>> dict)
+    {
+        if (dict == null || dict.Count == 0) return;
+        var keys = new List<byte>();
+        var wrapped = new List<TagCompound>();
+        foreach (var kv in dict)
+        {
+            if (kv.Value == null || kv.Value.Count == 0) continue;
+            var inner = new List<TagCompound>(kv.Value.Count);
+            foreach (int t in kv.Value)
+            {
+                var p = ChoiceSerialization.SaveChoice(t);
+                if (p != null) inner.Add(p);
+            }
+            if (inner.Count > 0)
+            {
+                keys.Add((byte)kv.Key);
+                wrapped.Add(new TagCompound { ["items"] = inner });
+            }
+        }
+        if (keys.Count > 0)
+        {
+            tag[keysKey] = keys;
+            tag[valsKey] = wrapped;
+        }
+    }
+
+    private static System.Collections.Generic.Dictionary<ObjectType, System.Collections.Generic.HashSet<int>>
+        LoadPinDictByObjectType(TagCompound tag, string keysKey, string valsKey)
+    {
+        var dict = new System.Collections.Generic.Dictionary<ObjectType, System.Collections.Generic.HashSet<int>>();
+        if (tag == null || !tag.ContainsKey(keysKey) || !tag.ContainsKey(valsKey)) return dict;
+        var keys = tag.GetList<byte>(keysKey);
+        var wrapped = tag.GetList<TagCompound>(valsKey);
+        int n = System.Math.Min(keys.Count, wrapped.Count);
+        for (int i = 0; i < n; i++)
+        {
+            var inner = wrapped[i].GetList<TagCompound>("items");
+            var set = new System.Collections.Generic.HashSet<int>();
+            foreach (var p in inner)
+            {
+                int? loaded = ChoiceSerialization.LoadChoice(p);
+                if (loaded.HasValue) set.Add(loaded.Value);
+            }
+            if (set.Count > 0) dict[(ObjectType)keys[i]] = set;
+        }
+        return dict;
+    }
+
+    // OnEnterWorld snapshot helpers (S15 PersistentPin) — deep-copy pin dicts so the
+    // post-ResetToDefaults restore doesn't share refs with the now-cleared settings.
+    private static System.Collections.Generic.Dictionary<PlaceType, System.Collections.Generic.HashSet<int>>
+        ClonePinDictPlace(System.Collections.Generic.Dictionary<PlaceType, System.Collections.Generic.HashSet<int>> src)
+    {
+        var dst = new System.Collections.Generic.Dictionary<PlaceType, System.Collections.Generic.HashSet<int>>(src.Count);
+        foreach (var kv in src) dst[kv.Key] = new System.Collections.Generic.HashSet<int>(kv.Value);
+        return dst;
+    }
+
+    private static System.Collections.Generic.Dictionary<ObjectType, System.Collections.Generic.HashSet<int>>
+        ClonePinDictObject(System.Collections.Generic.Dictionary<ObjectType, System.Collections.Generic.HashSet<int>> src)
+    {
+        var dst = new System.Collections.Generic.Dictionary<ObjectType, System.Collections.Generic.HashSet<int>>(src.Count);
+        foreach (var kv in src) dst[kv.Key] = new System.Collections.Generic.HashSet<int>(kv.Value);
+        return dst;
+    }
+
     /// <summary>
     /// Reconciles the Wand of Replacement's per-side <see cref="ObjectType"/> field
     /// (<see cref="WandOfReplacementSettings.OldObject"/> when <paramref name="isSource"/>
@@ -1033,12 +1263,12 @@ public class WandPlayer : ModPlayer
     /// freshly-defaulted "Tile" object section. See block-comment in OnEnterWorld for
     /// full rationale (Letter #11 fix, 2026-04-23 S2).
     /// </summary>
-    private void ReconcileReplacementObjectTypeToChoice(int? pinItemType, bool isSource)
+    private void ReconcileReplacementObjectTypeToChoice(int? choiceItemType, bool isSource)
     {
-        if (!pinItemType.HasValue)
+        if (!choiceItemType.HasValue)
             return;
         Item probe = new();
-        probe.SetDefaults(pinItemType.Value);
+        probe.SetDefaults(choiceItemType.Value);
         if (probe.IsAir)
             return;
         ObjectType inferred;
@@ -1083,10 +1313,17 @@ public class WandPlayer : ModPlayer
         // (S1 2026-04-26) tile choices are now a per-PlaceType dictionary; copy it.
         var savedTileChoices = new System.Collections.Generic.Dictionary<PlaceType, int?>(
             BuildingSettings.ChosenTileItemTypeByObjectType);
-        int? pinWall = BuildingSettings.ChosenWallItemType;
-        int? pinTorch = TorchSettings.ChosenTorchItemType;
+        int? choiceWall = BuildingSettings.ChosenWallItemType;
+        int? choiceTorch = TorchSettings.ChosenTorchItemType;
         var savedReplaceSrc = new System.Collections.Generic.Dictionary<ObjectType, int?>(ReplacementSettings.ChosenSourceItemTypeByObjectType);
         var savedReplaceTgt = new System.Collections.Generic.Dictionary<ObjectType, int?>(ReplacementSettings.ChosenTargetItemTypeByObjectType);
+        // (S15 PersistentPin) Snapshot pin collections too — same per-character-persistent
+        // contract as Chosen, must survive the per-world ResetToDefaults wipe.
+        var savedPinTile = ClonePinDictPlace(BuildingSettings.PinnedTileItemTypesByObjectType);
+        var savedPinWall = new System.Collections.Generic.HashSet<int>(BuildingSettings.PinnedWallItemTypes);
+        var savedPinTorch = new System.Collections.Generic.HashSet<int>(TorchSettings.PinnedTorchItemTypes);
+        var savedPinReplaceSrc = ClonePinDictObject(ReplacementSettings.PinnedSourceItemTypesByObjectType);
+        var savedPinReplaceTgt = ClonePinDictObject(ReplacementSettings.PinnedTargetItemTypesByObjectType);
 
         Settings.ResetToDefaults();
         BuildingSettings.ResetToDefaults();
@@ -1098,35 +1335,40 @@ public class WandPlayer : ModPlayer
 
         // Restore choices after the reset.
         BuildingSettings.ChosenTileItemTypeByObjectType = savedTileChoices;
-        BuildingSettings.ChosenWallItemType = pinWall;
-        TorchSettings.ChosenTorchItemType = pinTorch;
+        BuildingSettings.ChosenWallItemType = choiceWall;
+        TorchSettings.ChosenTorchItemType = choiceTorch;
         ReplacementSettings.ChosenSourceItemTypeByObjectType = savedReplaceSrc;
         ReplacementSettings.ChosenTargetItemTypeByObjectType = savedReplaceTgt;
+        BuildingSettings.PinnedTileItemTypesByObjectType = savedPinTile;
+        BuildingSettings.PinnedWallItemTypes = savedPinWall;
+        TorchSettings.PinnedTorchItemTypes = savedPinTorch;
+        ReplacementSettings.PinnedSourceItemTypesByObjectType = savedPinReplaceSrc;
+        ReplacementSettings.PinnedTargetItemTypesByObjectType = savedPinReplaceTgt;
 
-        // 2026-04-23 Session 2 (Letter #11 — WoR pin/object-type save-load mismatch).
+        // 2026-04-23 Session 2 (Letter #11 — WoR choice/object-type save-load mismatch).
         // Bug GrayJou reported: "I was using the Inventory View to replace walls
-        // and I had pins, when I logged back in, it still had the wall pins
-        // although the object type reset back to solid blocks." Root cause: pins
+        // and I had choices, when I logged back in, it still had the wall choices
+        // although the object type reset back to solid blocks." Root cause: choices
         // are persistent (per Cavendish Response #5 §8) but ObjectType (OldObject /
-        // NewObject) is wiped by ResetToDefaults() above. After restore the pin
+        // NewObject) is wiped by ResetToDefaults() above. After restore the choice
         // resolves to a wall item but the panel still says Tile, so the IV shows
         // a wall slot under a "Tile" section header — visual mismatch. Behaviour
         // was correct because the choice overrides the broad ObjectType category at
         // execute time, but the UX read as broken.
         //
         // Fix: choice = authoritative intent; reconcile the per-side ObjectType to
-        // match the pin's actual createWall/createTile/torch nature on world
-        // entry. This costs nothing when pins are null (default branch), and is
+        // match the choice's actual createWall/createTile/torch nature on world
+        // entry. This costs nothing when choices are null (default branch), and is
         // a single-shot reconciliation that doesn't fight further user changes.
         // S1 2026-04-26: Replacement choices are now per-ObjectType dicts, so each
         // choice IS already keyed to its correct ObjectType. The former
-        // ReconcileReplacementObjectTypeToChoice(pinReplaceSrc/Tgt) calls that patched
+        // ReconcileReplacementObjectTypeToChoice(choiceReplaceSrc/Tgt) calls that patched
         // the wall-vs-tile mismatch (Letter #11 fix, 2026-04-23 S2) are no longer
         // needed — the dict key IS the authoritative ObjectType. No reconciliation required.
 
         // Same reconciliation for WoB (tile vs wall choice vs OperationType — though
         // WoB's tile/wall switch is not in scope of the bug report, the same
-        // principle applies trivially: building's two pins live on independent
+        // principle applies trivially: building's two choices live on independent
         // settings fields tied to the WoB:Tile vs WoB:Wall mode that the user
         // explicitly toggled with the wand-mode button, so no panel/choice mismatch
         // arises there. Left as a comment so future audits remember.)

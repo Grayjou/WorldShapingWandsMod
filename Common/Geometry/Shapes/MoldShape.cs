@@ -81,10 +81,18 @@ public class MoldShape : IShapeProvider
     }
 
     /// <summary>
-    /// Retrieves the active mold shape from the local player.
-    /// Checks <see cref="MoldingWandPlayer.MoldedShape"/> first (authoritative),
-    /// then falls back to <see cref="DelimitationWandPlayer.ActiveCustomShape"/>.
-    /// Returns <c>null</c> if no mold has been defined.
+    /// (S11 2026-04-29 \u2014 Bug 2/3 fix; <c>StencilEditVsActOn.md</c> \u00a73)
+    /// Retrieves the active mold shape from the local player's ACT-ON
+    /// stencil slot \u2014 NOT the EDIT slot. This is what makes EDIT vs
+    /// ACT-ON observable across wands: every wand stamps the slot the user
+    /// has selected via the ACT-ON Stencil Picker (right-click on the Mold
+    /// cell), independently of which slot the Wand of Molding is currently
+    /// editing.
+    ///
+    /// <para>Returns <c>null</c> when no slot has a committed mold yet \u2014
+    /// the wand simply stamps nothing (intentional, per the deferred Q3 in
+    /// <c>StencilEditVsActOn.md</c> \u00a76; we do not silently fall back to
+    /// slot 1).</para>
     /// </summary>
     private static CustomShape GetActiveMold()
     {
@@ -92,14 +100,18 @@ public class MoldShape : IShapeProvider
         if (player?.active != true)
             return null;
 
-        // Primary: MoldingWandPlayer (the canonical source)
+        // Primary: ACT-ON slot on MoldingWandPlayer (the canonical source
+        // post-S11). The slot's MoldedShape was committed by
+        // PromoteMoldToCustomShape while THAT slot was the EDIT slot.
         var mwp = player.GetModPlayer<MoldingWandPlayer>();
-        if (mwp?.MoldedShape != null)
-            return mwp.MoldedShape;
+        var slotShape = mwp?.ActOnStencil?.MoldedShape;
+        if (slotShape != null)
+            return slotShape;
 
-        // Fallback: DelimitationWandPlayer.ActiveCustomShape
-        // (kept in sync by PromoteMoldToCustomShape, but also set
-        // by the Delimitation Wand's own promote action)
+        // Fallback: DelimitationWandPlayer.ActiveCustomShape \u2014 set by the
+        // Delimitation Wand's own promote action. Only consulted when the
+        // ACT-ON slot is empty AND the user has Delimitation-promoted a
+        // custom shape; preserves pre-S9 behaviour for that workflow.
         var dwp = player.GetModPlayer<DelimitationWandPlayer>();
         return dwp?.ActiveCustomShape;
     }

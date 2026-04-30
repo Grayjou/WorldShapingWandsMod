@@ -1,0 +1,95 @@
+name: 🐛 Bug Report
+description: Something doesn't work as expected.
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report! The more concrete the
+        repro, the faster the fix. Logs from `tModLoader/Logs/client.log` are
+        gold.
+  - type: input
+    id: version
+    attributes:
+      label: WorldShapingWandsMod version
+      placeholder: e.g. 1.0.0
+    validations:
+      required: true
+  - type: input
+    id: tml-version
+    attributes:
+      label: tModLoader version
+      placeholder: e.g. 2026.02.x.x
+  - type: dropdown
+    id: wand
+    attributes:
+      label: Which wand family is involved?
+      options:
+        - Building
+        - Dismantling
+        - Replacement
+        - Wiring
+        - Safekeeping
+        - Coating
+        - Fluids
+        - Torches
+        - Delimitation
+        - Molding
+        - Torch Wheel
+        - UI / Settings panel (any wand)
+        - Multiple / Not sure
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Selection mode (if applicable)
+      options:
+        - Instant
+        - Select
+        - Confirm
+        - Stamp
+        - Not applicable
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - Single-player
+        - Multiplayer (host)
+        - Multiplayer (client)
+        - Both
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Equip Wand of X in Y mode
+        2. Click on Z with shape set to ...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / screenshots
+      placeholder: |
+        Paste the relevant block from `tModLoader/Logs/client.log` (or
+        `server.log` for MP), or attach a screenshot/clip.
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional context

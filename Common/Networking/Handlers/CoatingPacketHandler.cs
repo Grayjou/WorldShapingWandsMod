@@ -320,4 +320,118 @@ public static class CoatingPacketHandler
 
         return true;
     }
+
+    // ════════════════════════════════════════════════════════════════════
+    //  Color Replace operation (S10 2026-04-28; ColorReplacePlan.md §3 +
+    //  §3.4 channel reinstatement)
+    // ════════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Sends a Color Replace packet from client to server.
+    /// Packet body: common header (23 bytes) + source(1) + target(1) + channel(1)
+    /// = 26 bytes total. Channel encoding: 0 = Tile, 1 = Wall (matches
+    /// <see cref="Common.Enums.ColorReplaceChannel"/>).
+    /// </summary>
+    public static void SendColorReplaceOperation(
+        Point start, Point end,
+        ShapeType shape, ShapeMode fillMode,
+        int thickness, bool equalDimensions,
+        bool verticalFirst, int playerWhoAmI,
+        byte sourcePaint, byte targetPaint,
+        ColorReplaceChannel channel,
+        SliceMode slice = SliceMode.Full, bool connectDiameter = true,
+        bool invertSelection = false)
+    {
+        if (Main.netMode != NetmodeID.MultiplayerClient)
+            return;
+
+        ModPacket packet = WorldShapingWandsMod.Instance.GetPacket();
+        packet.Write((byte)WandPacketType.ColorReplaceOperation);
+
+        var header = new WandPacketHeader(
+            start, end, shape, fillMode,
+            thickness, equalDimensions,
+            verticalFirst, playerWhoAmI,
+            slice, connectDiameter, invertSelection);
+        WandPacketHeaderIO.WriteCommonHeader(packet, header);
+
+        packet.Write(sourcePaint);
+        packet.Write(targetPaint);
+        packet.Write((byte)channel);
+        packet.Send();
+    }
+
+    /// <summary>
+    /// Server-side handler. Validates, computes the shape's tile set, then runs
+    /// <see cref="ServerExecuteColorReplace"/> with re-validation against the
+    /// authoritative tile data.
+    /// </summary>
+    internal static void HandleColorReplaceOperation(BinaryReader reader, int whoAmI)
+    {
+        var header = WandPacketHeaderIO.ReadCommonHeader(reader);
+        byte source = reader.ReadByte();
+        byte target = reader.ReadByte();
+        var channel = (ColorReplaceChannel)reader.ReadByte();
+
+        if (!PacketUtilities.ValidatePlayer(header.PlayerWhoAmI))
+            return;
+
+        if (Main.netMode == NetmodeID.Server)
+        {
+            header = PacketUtilities.EnforceDistanceCap(header);
+            var tileSet = PacketUtilities.ComputeShapeTiles(header);
+            ServerExecuteColorReplace(tileSet.Tiles, header.PlayerWhoAmI,
+                source, target, channel);
+        }
+    }
+
+    /// <summary>
+    /// Server-side execution. For each tile in the selection, if the
+    /// channel-appropriate paint matches <paramref name="source"/>, repaint to
+    /// <paramref name="target"/>. Honors the existing
+    /// <see cref="SafekeepingSystem"/> protection rules (per channel).
+    /// </summary>
+    private static void ServerExecuteColorReplace(
+        IEnumerable<Point> tiles, int playerWhoAmI,
+        byte source, byte target, ColorReplaceChannel channel)
+    {
+        // §0.4 silent fallthrough: Ignore-side or no-op tuple → empty broadcast.
+        if (source == 255 || target == 255 || source == target)
+        {
+            WandPacketHandler.SendOperationResult(playerWhoAmI,
+                WandPacketType.ColorReplaceOperation, 0, true);
+            return;
+        }
+
+        int changed = 0;
+        foreach (Point p in tiles)
+        {
+            int x = p.X, y = p.Y;
+            if (!WorldGen.InWorld(x, y, 1)) continue;
+
+            if (channel == ColorReplaceChannel.Wall)
+            {
+                if (SafekeepingSystem.IsWallProtected(x, y)) continue;
+                var tile = Main.tile[x, y];
+                if (tile.WallType == WallID.None) continue;
+                if (tile.WallColor != source) continue;
+                WorldGen.paintWall(x, y, target, true);
+                changed++;
+            }
+            else
+            {
+                if (SafekeepingSystem.IsTileProtected(x, y)) continue;
+                var tile = Main.tile[x, y];
+                if (!tile.HasTile) continue;
+                if (tile.TileColor != source) continue;
+                WorldGen.paintTile(x, y, target, true);
+                changed++;
+            }
+
+            NetMessage.SendTileSquare(-1, x, y, 1);
+        }
+
+        WandPacketHandler.SendOperationResult(playerWhoAmI,
+            WandPacketType.ColorReplaceOperation, changed, true);
+    }
 }

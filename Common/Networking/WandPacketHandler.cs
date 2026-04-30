@@ -48,6 +48,15 @@ public enum WandPacketType : byte
     VoidEverythingOperation = 8,
 
     /// <summary>
+    /// (S10 2026-04-28) Color Replace operation: scan the selection and swap
+    /// every tile/wall whose paint matches <c>ColorReplaceSource</c> to
+    /// <c>ColorReplaceTarget</c>. Channel (Tile vs Wall) is encoded in the
+    /// packet body, NOT derived from <see cref="CoatingMode"/> — see
+    /// ColorReplacePlan.md §3.4 (S9 channel reinstatement).
+    /// </summary>
+    ColorReplaceOperation = 9,
+
+    /// <summary>
     /// Server→Client feedback packet reporting operation outcome.
     /// Sent after any operation completes (or fails) on the server.
     /// </summary>
@@ -137,6 +146,12 @@ public static class WandPacketHandler
                         SoundEngine.PlaySound(SoundID.Item109 with { Volume = 0.6f }, player.Center);
                     break;
 
+                case WandPacketType.ColorReplaceOperation:
+                    Main.NewText($"Replaced paint on {tilesAffected} tile(s)", WandColors.MsgCoating);
+                    if (clientCfg?.EnableWandSounds == true)
+                        SoundEngine.PlaySound(SoundID.Item109 with { Volume = 0.6f }, player.Center);
+                    break;
+
                 case WandPacketType.SafekeepingOperation:
                     Main.NewText($"Protected {tilesAffected} tile(s)", WandColors.MsgSafekeeping);
                     if (clientCfg?.EnableWandSounds == true)
@@ -178,7 +193,8 @@ public static class WandPacketHandler
                 or WandPacketType.ReplacementOperation
                 or WandPacketType.SafekeepingOperation
                 or WandPacketType.CoatingOperation
-                or WandPacketType.VoidEverythingOperation;
+                or WandPacketType.VoidEverythingOperation
+                or WandPacketType.ColorReplaceOperation;
 
             if (isOperation && PacketUtilities.IsOnCooldown(whoAmI, packetType))
                 return; // Silently drop — client will re-send on next valid window
@@ -206,6 +222,9 @@ public static class WandPacketHandler
                 break;
             case WandPacketType.CoatingOperation:
                 CoatingPacketHandler.HandleCoatingOperation(reader, whoAmI);
+                break;
+            case WandPacketType.ColorReplaceOperation:
+                CoatingPacketHandler.HandleColorReplaceOperation(reader, whoAmI);
                 break;
             case WandPacketType.VoidEverythingOperation:
                 VoidEverythingPacketHandler.HandleVoidEverythingOperation(reader, whoAmI);

@@ -1,0 +1,33 @@
+name: 💬 General Feedback
+description: Share thoughts, "is this intended?" questions, or first-impressions.
+title: "[Feedback] "
+labels: ["feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Not a bug, not a feature request — just feedback. Anything from "X
+        feels great" to "I expected Y to do Z" lives here.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind of feedback
+      options:
+        - First-impression / general vibe
+        - "Is this intended?" question
+        - UI / readability nitpick
+        - Documentation gap
+        - Praise / shoutout
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: body
+    attributes:
+      label: Your feedback
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: WorldShapingWandsMod version (optional)

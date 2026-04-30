@@ -27,6 +27,16 @@ public static class ShapeRegistry
         Register(new StraightLineShape());
         Register(new MoldShape());
 
+        // (S10 2026-04-29; StencilMagicWandSelectionPlan.md §7) Magic Wand
+        // Read + Apply. Both register unconditionally; per-wand availability
+        // (Read on stencil-only, Apply on every wand) is enforced by the
+        // panel-side shape grid builders — the registry registers everything
+        // and consumers decide what to render. UI rendering itself is
+        // scheduled for S11+ once shape-cell artwork (`MagicWandRead.png` /
+        // `MagicWandApply.png`) lands.
+        Register(new MagicWandReadShape());
+        Register(new MagicWandApplyShape());
+
         _initialized = true;
     }
 
@@ -64,6 +74,12 @@ public static class ShapeRegistry
         /// </summary>
         public static ShapeTileSet GetShapeTiles(ShapeType shapeType, ShapeContext context)
         {
+            // (S12 2026-04-29; HalfShapeQuickSlice.md §4) Single point of
+            // expansion for SliceMode.QuickHalfHorizontal/QuickHalfVertical.
+            // No-op for SliceMode.Full and the non-quick half modes.
+            // Providers see only plain HalfH/HalfV after this call, so the
+            // legacy SliceHelper.SliceFilledTiles pipeline runs unchanged.
+            context = SliceHelper.PreExpandForQuickSlice(context);
             var provider = GetProvider(shapeType);
             return provider.GetTiles(context);
         }
@@ -94,6 +110,12 @@ public static class ShapeRegistry
         ShapeType.Elbow => 2,
         ShapeType.CardinalLine => 2,
         ShapeType.StraightLine => 2,
+        // Magic Wand shapes are single-point stamps like Mold:
+        // Start == End == cursor. The shape-cycle UI treats them as
+        // 2-point inputs to keep the existing pipeline; semantically
+        // only the Start position matters.
+        ShapeType.MagicWandRead => 2,
+        ShapeType.MagicWandApply => 2,
         // Future multi-point shapes will be added here:
         // ShapeType.Arc => 3,
         // ShapeType.ArcDonut => 4,

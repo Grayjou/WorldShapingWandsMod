@@ -4,6 +4,8 @@ using Terraria;
 using Terraria.GameInput;
 using Terraria.ModLoader;
 using Terraria.UI;
+using WorldShapingWandsMod.Common.Enums;
+using WorldShapingWandsMod.Common.Items;
 using WorldShapingWandsMod.Common.UI.Elements;
 using WorldShapingWandsMod.Common.UI.InventoryView;
 using WorldShapingWandsMod.Content.Items;
@@ -29,13 +31,29 @@ public class WandUISystem : ModSystem
     private UserInterface _userInterface;
     private UserInterface _inventoryViewInterface;
 
-    internal CollapsedPopoutHost ActivePopoutHost;
-    private UserInterface _popoutInterface;
+    // (S4 2026-04-28; renamed S6 2026-04-29 Phase D) WandSubPanel primitive infrastructure.
+    // See `WSWSubUIPrimitivePlan.md`. The host owns a stack of currently-open
+    // WandSubPanels (top-level + nested children).
+    internal Elements.WandSubPanelHost WandSubPanelHost;
+    private UserInterface _wandSubPanelInterface;
+    private bool _escWasDown;
+
+    /// <summary>
+    /// (S1 2026-04-29 — SubUI Architecture Phase A) Cached held-wand family
+    /// recomputed once per <see cref="UpdateUI"/> tick. Read by SubPanels
+    /// whose <see cref="Elements.WandSubPanel.OwnerFamilies"/> mask drives a
+    /// synthesised visibility lambda (see
+    /// <see cref="Elements.WandSubPanel.UpdateOwnerFamilyVisibility"/>).
+    /// Cached so each SubPanel doesn't re-derive it from
+    /// <c>BaseCyclingWand.GetHeldFamily</c> independently. Reads
+    /// <see cref="WandFamily.Unknown"/> when no wand is held — every
+    /// non-empty <see cref="WandFamilyMask"/> naturally fails the predicate
+    /// in that case (Unknown maps to <see cref="WandFamilyMask.None"/>).
+    /// </summary>
+    public WandFamily LastSeenHeldFamily { get; private set; } = WandFamily.Unknown;
 
     [System.Obsolete("v1.3 hide/show model makes this irrelevant; will be removed in v1.4. See DesignDoc_PopoutFrameworkV1_3 §B.2.")]
     public static int HotbarCycleGracePeriod = 10;
-
-    public static bool AllowFoldStyle = false;
 
     public bool IsAnyUIOpen =>
         (BuildingUI?.IsVisible ?? false) ||
@@ -75,7 +93,7 @@ public class WandUISystem : ModSystem
     {
         _userInterface = new UserInterface();
         _inventoryViewInterface = new UserInterface();
-        _popoutInterface = new UserInterface();
+        _wandSubPanelInterface = new UserInterface();
     }
 
     public override void PostSetupContent()
@@ -113,8 +131,8 @@ public class WandUISystem : ModSystem
         InventoryViewUI = new InventoryViewPanel();
         InventoryViewUI.Activate();
 
-        ActivePopoutHost = new CollapsedPopoutHost();
-        ActivePopoutHost.Activate();
+        WandSubPanelHost = new Elements.WandSubPanelHost();
+        WandSubPanelHost.Activate();
     }
 
     public override void Unload()
@@ -130,10 +148,10 @@ public class WandUISystem : ModSystem
         SelectionUI = null;
         MoldingUI = null;
         InventoryViewUI = null;
-        ActivePopoutHost = null;
+        WandSubPanelHost = null;
         _userInterface = null;
         _inventoryViewInterface = null;
-        _popoutInterface = null;
+        _wandSubPanelInterface = null;
     }
 
     public void OpenUIForCurrentWand()
@@ -283,18 +301,12 @@ public class WandUISystem : ModSystem
         if (SelectionUI != null) SelectionUI.IsVisible = false;
         if (MoldingUI != null) MoldingUI.IsVisible = false;
         _userInterface?.SetState(null);
+        CloseAllWandSubPanels();
     }
 
     public override void UpdateUI(GameTime gameTime)
     {
         UpdateInventoryViewVisibility();
-
-        if (ActivePopoutHost != null && ActivePopoutHost.IsActive)
-        {
-            var owner = ActivePopoutHost.ActiveSection;
-            bool ownerAvailable = owner?.OwnerVisibilityCheck?.Invoke() ?? true;
-            ActivePopoutHost.SetVisibilityFromPredicate(ownerAvailable);
-        }
 
         // (S6 §2/§3 fix) Always update active interfaces when any UI is open.
         // Previous version only updated when cursor was over panel, which
@@ -310,14 +322,64 @@ public class WandUISystem : ModSystem
                 PlayerInput.ScrollWheelDelta = 0;
         }
 
-        // (S6 §3 fix) Popout needs Update ticks even while fading out/in,
-        // otherwise the alpha easing in its Update never runs and a fully-
-        // faded popout can never revive. Use IsFadingOrVisible, not
-        // IsCurrentlyVisible, for the Update gate.
-        if (ActivePopoutHost != null && ActivePopoutHost.IsActive
-            && ActivePopoutHost.IsFadingOrVisible)
+        // (S4 2026-04-28) Drive the SubPanel layer + handle Esc / click-outside.
+        if (IsAnyWandSubPanelOpen)
         {
-            _popoutInterface?.Update(gameTime);
+            _wandSubPanelInterface?.Update(gameTime);
+
+            // (S1 2026-04-29 — SubUI Architecture Phase A) Per-frame
+            // OwnerFamilies visibility poll. Recompute the held-family once
+            // per tick and let every SubPanel that declared an
+            // OwnerFamilies mask synthesise / re-evaluate its visibility
+            // predicate. SubPanels that did NOT declare a mask
+            // (OwnerFamilies == None) are unaffected — their legacy
+            // OwnerVisibilityCheck lambda (if any) keeps driving visibility
+            // exactly as before.
+            LastSeenHeldFamily = BaseCyclingWand.GetCurrentFamily(Main.LocalPlayer);
+            foreach (var p in WandSubPanelHost.Panels)
+                p.UpdateOwnerFamilyVisibility(LastSeenHeldFamily);
+
+            // Esc → close topmost ONLY when topmost is unlocked.
+            // (S14 2026-04-28; GrayJou worried-client review.) S4 ship
+            // closed locked panels on Esc “as an emergency exit”, but the
+            // lock chrome's promise to the player is *“only the X button
+            // dismisses me”* — anything else surprises them. Parent panel
+            // Esc handlers route through CloseAllPanels → CloseAllWandSubPanels
+            // (respectLock=true) so the parent still closes cleanly while
+            // the locked subpanel survives. Net behaviour: pressing Esc
+            // with a locked Color Replace open + parent CoatingPanel open
+            // closes the parent and leaves the locked picker floating;
+            // pressing Esc again is a no-op (locked picker has no parent
+            // panel listening for Esc, only the X button dismisses).
+            bool escDown = Main.keyState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.Escape);
+            if (escDown && !_escWasDown)
+            {
+                var top = WandSubPanelHost.Topmost;
+                if (top != null && !top.IsLocked) CloseWandSubPanel(top);
+            }
+            _escWasDown = escDown;
+
+            // Click-outside → close topmost only when topmost is UNLOCKED.
+            // (Locked panels can be dismissed only via the close button or Esc.)
+            if (Main.mouseLeft && Main.mouseLeftRelease)
+            {
+                var pos = Main.MouseScreen;
+                var top = WandSubPanelHost.Topmost;
+                if (top != null && !top.IsLocked
+                    && !top.ContainsScreenPoint(pos)
+                    && !top.HostContainsScreenPoint(pos))
+                {
+                    CloseWandSubPanel(top);
+                }
+            }
+
+            // Suppress scroll-wheel when over a subpanel.
+            if (IsCursorOverWandSubPanel() && PlayerInput.ScrollWheelDelta != 0)
+                PlayerInput.ScrollWheelDelta = 0;
+        }
+        else
+        {
+            _escWasDown = false;
         }
     }
 
@@ -338,15 +400,9 @@ public class WandUISystem : ModSystem
                             _inventoryViewInterface?.Draw(Main.spriteBatch, Main._drawInterfaceGameTime);
                     }
 
-                    // (S6 §3) Draw during fade — IsFadingOrVisible keeps it
-                    // drawing while fading out. ApplyFadeAlpha sets DrawAlpha
-                    // on the panel; the panel's Draw override skips at α=0.
-                    if (ActivePopoutHost != null && ActivePopoutHost.IsActive
-                        && ActivePopoutHost.IsFadingOrVisible)
-                    {
-                        ActivePopoutHost.ApplyFadeAlpha();
-                        _popoutInterface?.Draw(Main.spriteBatch, Main._drawInterfaceGameTime);
-                    }
+                    // (S4 2026-04-28) Draw the SubPanel stack on top of everything else.
+                    if (IsAnyWandSubPanelOpen)
+                        _wandSubPanelInterface?.Draw(Main.spriteBatch, Main._drawInterfaceGameTime);
                     return true;
                 },
                 InterfaceScaleType.UI
@@ -354,24 +410,86 @@ public class WandUISystem : ModSystem
         }
     }
 
-    public void OpenPopout(Elements.CollapsibleSection section, UIElement body)
+    // ── WandSubPanel primitive lifecycle (S4 2026-04-28; renamed S6 2026-04-29 Phase D) ──
+
+    /// <summary>
+    /// Opens a top-level <see cref="Elements.WandSubPanel"/> (or, if
+    /// <paramref name="parent"/> is non-null, a nested child of an already-open
+    /// SubPanel). The host attaches the panel, anchors it to its host element,
+    /// and starts driving it through the WandSubPanel UserInterface layer.
+    /// </summary>
+    public void OpenWandSubPanel(Elements.WandSubPanel panel, Elements.WandSubPanel parent = null)
     {
-        if (ActivePopoutHost == null || section == null || body == null) return;
-
-        if (ActivePopoutHost.IsActive)
-            ClosePopout();
-
-        ActivePopoutHost.OpenWith(section, body);
-        _popoutInterface?.SetState(ActivePopoutHost);
-        ActivePopoutHost.SetVisibilityFromPredicate(true);
+        if (WandSubPanelHost == null || panel == null) return;
+        if (WandSubPanelHost.Count == 0)
+            _wandSubPanelInterface?.SetState(WandSubPanelHost);
+        WandSubPanelHost.Push(panel, parent);
     }
 
-    public void ClosePopout()
+    /// <summary>
+    /// Closes a SubPanel (and every descendant child of it). Fires
+    /// <c>OnClose</c> on each removed panel, deepest-first.
+    /// </summary>
+    public void CloseWandSubPanel(Elements.WandSubPanel panel)
     {
-        if (ActivePopoutHost == null || !ActivePopoutHost.IsActive) return;
-        var section = ActivePopoutHost.ActiveSection;
-        UIElement body = ActivePopoutHost.ReleaseBody();
-        _popoutInterface?.SetState(null);
-        section?.NotifyPopoutClosed();
+        if (WandSubPanelHost == null || panel == null) return;
+        var removed = WandSubPanelHost.Pop(panel);
+        foreach (var p in removed)
+            p.RaiseClose();
+        if (WandSubPanelHost.Count == 0)
+            _wandSubPanelInterface?.SetState(null);
+    }
+
+    /// <summary>
+    /// Closes every SubPanel (used when the host wand panel closes / wand swap).
+    /// (S12 2026-04-28; GrayJou worried-client review) When
+    /// <paramref name="respectLock"/> is true (the default for the
+    /// parent-panel-close path), <see cref="Elements.WandSubPanel.IsLocked"/>
+    /// panels SURVIVE the close — the whole point of the lock chrome is to
+    /// keep the SubUI visible across other actions. Per S12 verbatim:
+    /// *“it always closes when CoatingPanel does”*. Pass <c>false</c> to
+    /// force-close every SubPanel (used by hard wand swap / mod unload).
+    ///
+    /// (S15 2026-04-28 audit; P 2*3) Caller survey:
+    ///   • <see cref="CloseAllPanels"/> (line ≈298) — the ONLY in-tree caller.
+    ///     Routes through the default soft path (<c>respectLock=true</c>),
+    ///     which is the right contract for every parent-panel-close trigger
+    ///     (Esc, X-button, click-outside, wand swap to a different wand).
+    ///   • <c>respectLock=false</c> overload — currently has ZERO callers.
+    ///     Preserved for hypothetical hard-teardown paths (mod unload,
+    ///     world transition, future "panic-clear" debug command). Do NOT
+    ///     wire it into any user-driven dismiss path; locked panels promise
+    ///     the player *“only the X button dismisses me.”*
+    /// </summary>
+    public void CloseAllWandSubPanels(bool respectLock = true)
+    {
+        if (WandSubPanelHost == null) return;
+        if (!respectLock)
+        {
+            var allRemoved = WandSubPanelHost.Clear();
+            foreach (var p in allRemoved)
+                p.RaiseClose();
+            _wandSubPanelInterface?.SetState(null);
+            return;
+        }
+
+        // Soft variant — close only the unlocked panels. Snapshot the live set
+        // first because CloseWandSubPanel mutates WandSubPanelHost.
+        var snapshot = new List<Elements.WandSubPanel>();
+        foreach (var p in WandSubPanelHost.Panels)
+        {
+            if (!p.IsLocked) snapshot.Add(p);
+        }
+        foreach (var p in snapshot)
+            CloseWandSubPanel(p);
+    }
+
+    /// <summary>True iff at least one SubPanel is currently open.</summary>
+    public bool IsAnyWandSubPanelOpen => WandSubPanelHost != null && WandSubPanelHost.Count > 0;
+
+    /// <summary>True iff the cursor is over any open SubPanel.</summary>
+    public bool IsCursorOverWandSubPanel()
+    {
+        return WandSubPanelHost != null && WandSubPanelHost.ContainsScreenPoint(Main.MouseScreen);
     }
 }

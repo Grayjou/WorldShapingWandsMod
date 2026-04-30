@@ -14,8 +14,8 @@ namespace WorldShapingWandsMod.Common.UI.Elements;
 /// <remarks>
 /// Extracted from <c>CoatingSettingsPanel.OnInitialize</c> in S6 2026-04-24
 /// (W-S6-3, S+2 prep step 1) per the SessionPlan_WSW_Next3Sessions §S+2 Task 1.
-/// The S+2 migration to <c>CollapsibleSection { Style = Popout }</c> requires
-/// the grid to be re-parentable into a <c>CollapsedPopoutHost</c> at runtime;
+/// The Phase C migration to <c>PaintColorSection</c> requires
+/// the grid to be re-parentable into a <c>WandSubPanel</c> at runtime;
 /// extraction makes that re-parenting a one-line operation in the host's
 /// <c>SetBody</c> call.
 ///

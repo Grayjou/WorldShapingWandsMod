@@ -23,7 +23,7 @@ namespace WorldShapingWandsMod.Common.UI.InventoryView;
 /// Wand of Replacement and Wand of Torches use the same choice infrastructure
 /// and the same hookpoint pattern but are intentionally left as a deferred
 /// item for the follow-up session — they need their own per-side semantics
-/// reviewed (target-choice vs source-choice in WoR; torch-pair pins in WoT).</para>
+/// reviewed (target-choice vs source-choice in WoR; torch-pair choices in WoT).</para>
 /// </summary>
 public static class GhostChoiceToast
 {

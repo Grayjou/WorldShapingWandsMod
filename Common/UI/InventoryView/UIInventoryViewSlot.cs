@@ -40,6 +40,11 @@ public sealed class UIInventoryViewSlot : UIElement
     private static readonly Color BorderChosenHi = new(255, 210, 80, 255);
     private static readonly Color BorderGhost = new(150, 130, 60, 200);
     private static readonly Color BorderHover = new(180, 200, 255, 255);
+    // (S15 2026-04-28 PersistentPin) Pinned-not-chosen border. Slightly desaturated
+    // green so it reads as "sticky reference" without competing with the chosen-gold
+    // accent. Per GrayJou S15 spec: chosen overrides pinned visually (NOT additive)
+    // — if a slot is both, the gold ring wins.
+    private static readonly Color BorderPinned = new(110, 200, 110, 255);
     private static readonly Color GhostIconTint = new(255, 255, 255, 110); // ~43% opacity
 
     public int ItemType { get; private set; }
@@ -54,7 +59,17 @@ public sealed class UIInventoryViewSlot : UIElement
     /// re-ranked Phase 2 polish list.)
     /// </summary>
     public bool IsGhost { get; private set; }
+    /// <summary>
+    /// True when the slot is pinned (PersistentPin layer; S15). Pinned slots
+    /// always render in the panel even when the item is no longer in inventory
+    /// (in which case <see cref="IsGhost"/> is also true). Visual: green border
+    /// when pinned-not-chosen; gold border (chosen) overrides green per
+    /// GrayJou's S15 spec. Right-click toggles via <see cref="OnPinClick"/>.
+    /// </summary>
+    public bool IsPinned { get; private set; }
     public Action<UIInventoryViewSlot, bool /* wasChosenAtClick */> OnChoiceClick;
+    /// <summary>Right-click handler for toggling pin state. (S15 PersistentPin.)</summary>
+    public Action<UIInventoryViewSlot, bool /* wasPinnedAtClick */> OnPinClick;
 
     private string _hoverName;
 
@@ -68,12 +83,13 @@ public sealed class UIInventoryViewSlot : UIElement
     /// Called by the panel each frame to push the latest state in. Cheap;
     /// no allocations on the steady path.
     /// </summary>
-    public void Configure(int itemType, int stackCount, bool chosen, string hoverName, bool isGhost = false)
+    public void Configure(int itemType, int stackCount, bool chosen, string hoverName, bool isGhost = false, bool isPinned = false)
     {
         ItemType = itemType;
         StackCount = stackCount;
         IsChosen = chosen;
         IsGhost = isGhost;
+        IsPinned = isPinned;
         _hoverName = hoverName;
     }
 
@@ -81,6 +97,13 @@ public sealed class UIInventoryViewSlot : UIElement
     {
         base.LeftClick(evt);
         OnChoiceClick?.Invoke(this, IsChosen);
+    }
+
+    /// <summary>(S15 PersistentPin) Right-click toggles pin state.</summary>
+    public override void RightClick(UIMouseEvent evt)
+    {
+        base.RightClick(evt);
+        OnPinClick?.Invoke(this, IsPinned);
     }
 
     protected override void DrawSelf(SpriteBatch spriteBatch)
@@ -93,18 +116,35 @@ public sealed class UIInventoryViewSlot : UIElement
         Color fill = IsGhost ? FillGhost : (IsChosen ? FillChosen : FillNormal);
         spriteBatch.Draw(TextureAssets.MagicPixel.Value, rect, fill);
 
-        // Border (thicker when chosen, accent on hover, muted when ghost).
+        // Border (thicker when chosen, accent on hover, muted when ghost,
+        // green when pinned-not-chosen — chosen-gold overrides per GrayJou S15).
         Color border;
         int borderThickness;
         if (IsGhost)
         {
-            border = hovered ? BorderHover : BorderGhost;
+            // Ghost variant: gold-ish if chosen, green-ish if pinned-only, muted otherwise.
+            // Hover always wins for affordance.
+            border = hovered ? BorderHover
+                : IsChosen ? BorderGhost
+                : IsPinned ? new Color(80, 140, 80, 200)
+                : BorderGhost;
+            borderThickness = 2;
+        }
+        else if (IsChosen)
+        {
+            // Chosen ALWAYS wins the visual (S15 spec: NOT additive with pinned).
+            border = hovered ? BorderHover : BorderChosenHi;
+            borderThickness = 2;
+        }
+        else if (IsPinned)
+        {
+            border = hovered ? BorderHover : BorderPinned;
             borderThickness = 2;
         }
         else
         {
-            border = IsChosen ? BorderChosenHi : (hovered ? BorderHover : BorderNormal);
-            borderThickness = IsChosen ? 2 : 1;
+            border = hovered ? BorderHover : BorderNormal;
+            borderThickness = 1;
         }
         DrawBorder(spriteBatch, rect, border, borderThickness);
 
@@ -159,13 +199,21 @@ public sealed class UIInventoryViewSlot : UIElement
             if (IsGhost)
             {
                 string suffix = Terraria.Localization.Language.GetTextValue(
-                    "Mods.WorldShapingWandsMod.UI.Common.ChosenNotInInventory");
+                    IsChosen
+                        ? "Mods.WorldShapingWandsMod.UI.Common.ChosenNotInInventory"
+                        : "Mods.WorldShapingWandsMod.UI.Common.PinnedNotInInventory");
                 text = _hoverName + "\n" + suffix;
             }
             else if (IsChosen)
             {
                 string suffix = Terraria.Localization.Language.GetTextValue(
                     "Mods.WorldShapingWandsMod.UI.Common.ChosenClickToFree");
+                text = _hoverName + "\n" + suffix;
+            }
+            else if (IsPinned)
+            {
+                string suffix = Terraria.Localization.Language.GetTextValue(
+                    "Mods.WorldShapingWandsMod.UI.Common.PinnedRightClickToUnpin");
                 text = _hoverName + "\n" + suffix;
             }
             Main.instance.MouseText(text);
