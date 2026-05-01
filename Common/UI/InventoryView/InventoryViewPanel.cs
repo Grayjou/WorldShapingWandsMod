@@ -32,10 +32,13 @@ public sealed class InventoryViewPanel : UIState
     /// <summary>Main draggable panel element (for hit-testing by UI system).</summary>
     public UIElement PanelElement => _mainPanel;
 
-    private const float PanelWidth = 380f;
+    // Width formula for a full 9-slot row:
+    // 9 * 36 + 8 * 4 + 32 = 392
+    // (slot content width + horizontal chrome/padding allowance)
+    private const int MaxSlotsPerSource = 9;
+    private const float PanelWidth = MaxSlotsPerSource * UIInventoryViewSlot.SlotSize + (MaxSlotsPerSource - 1) * SlotGap + 32f;
     private const float Padding = 6f;
     private const float SlotGap = 4f;
-    private const int MaxSlotsPerSource = 9;
     private const string UIPrefix = "Mods.WorldShapingWandsMod.UI.InventoryView";
 
     private UIDraggablePanel _mainPanel;

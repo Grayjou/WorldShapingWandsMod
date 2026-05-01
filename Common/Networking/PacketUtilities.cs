@@ -138,7 +138,8 @@ public static class PacketUtilities
             header.FillMode, header.Thickness,
             HorizontalBias.None, VerticalBias.None,
             header.VerticalFirst, header.EqualDimensions,
-            header.Slice, header.ConnectDiameter
+            header.Slice, header.ConnectDiameter,
+            header.InvertHalfOrientation
         );
         var tileSet = ShapeRegistry.GetShapeTiles(header.Shape, context);
 
@@ -148,7 +149,8 @@ public static class PacketUtilities
         // Apply inversion: bounding rect minus original shape tiles
         var shapeInfo = new ShapeInfo(header.Shape, header.FillMode,
             header.Thickness, header.EqualDimensions,
-            header.Slice, header.ConnectDiameter, header.InvertSelection);
+            header.Slice, header.ConnectDiameter, header.InvertSelection,
+            header.InvertHalfOrientation);
         var invertedTiles = shapeInfo.ApplyInversion(tileSet.Tiles.ToArray(), context);
         return new ShapeTileSet(invertedTiles);
     }

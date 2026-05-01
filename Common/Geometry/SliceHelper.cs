@@ -96,6 +96,8 @@ public static class SliceHelper
         if (context.Slice == SliceMode.HalfHorizontal)
         {
             bool keepTop = IsStartAbove(context);
+            // (S2 2026-04-30 — InvertHalfOrientation #IOP) flip the kept half if requested.
+            if (context.InvertHalfOrientation) keepTop = !keepTop;
             float centerY = bounds.Top + (bounds.Height - 1) / 2f;
 
             return keepTop
@@ -105,6 +107,8 @@ public static class SliceHelper
         else // HalfVertical
         {
             bool keepLeft = IsStartLeft(context);
+            // (S2 2026-04-30 — InvertHalfOrientation #IOP) flip the kept half if requested.
+            if (context.InvertHalfOrientation) keepLeft = !keepLeft;
             float centerX = bounds.Left + (bounds.Width - 1) / 2f;
 
             return keepLeft
@@ -143,6 +147,9 @@ public static class SliceHelper
         if (context.Slice == SliceMode.HalfHorizontal)
         {
             bool keepTop = IsStartAbove(context);
+            // (S2 2026-04-30 — InvertHalfOrientation #IOP) match SliceFilledTiles flip
+            // so the band lands on the discarded half, not the kept half.
+            if (context.InvertHalfOrientation) keepTop = !keepTop;
             float centerY = bounds.Top + (bounds.Height - 1) / 2f;
 
             int diameterY = keepTop
@@ -160,6 +167,8 @@ public static class SliceHelper
         else // HalfVertical
         {
             bool keepLeft = IsStartLeft(context);
+            // (S2 2026-04-30 — InvertHalfOrientation #IOP) match SliceFilledTiles flip.
+            if (context.InvertHalfOrientation) keepLeft = !keepLeft;
             float centerX = bounds.Left + (bounds.Width - 1) / 2f;
 
             int diameterX = keepLeft

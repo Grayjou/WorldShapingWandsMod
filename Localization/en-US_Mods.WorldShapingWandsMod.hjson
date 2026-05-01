@@ -53,6 +53,11 @@ UI: {
 		ConnectDiameter: Connect Diameter
 		ConnectDiameterTooltip: Connect Diameter (hollow half-shapes only; does not clear pre-existing tiles on the open side)
 		InvertSelection: Invert Selection
+		FlipHalfOrientation:
+			'''
+			Flip half orientation
+			Inverts which side of the half-shape is kept relative to your drag direction.
+			'''
 
 		PaintSprayer: {
 			$parentVal: Paint Sprayer
@@ -2194,6 +2199,12 @@ Messages: {
 	NoTilesInSelection: No tiles in selection area.
 	// ── Delimitation Warning ──────────────────────────────
 	DelimitationFilterActive: No action executed. Delimitation Area is active and does not overlap with the selection.
+	// ── Molding ─────────────────────────────────────────────
+	// Shown when the player casts the Mold shape but the active ACT-ON
+	// stencil slot has no committed mold yet. Gated by Preferences.WandVerbosity
+	// (S15 2026-04-30 closes G-36 Q3 — verbose ⇒ chat warning, quiet ⇒
+	// silent fail). Throttled in MoldShape.GetTiles to at most once per ~1s.
+	MoldEmpty: Current stencil is empty. Sculpt or load a mold with the Wand of Molding.
 	FluidsNoTiles: No tiles in selection.
 	FluidsInvalidRegion: Invalid region.
 	FluidsNoSeeds: No valid seed positions — all top tiles are solid.

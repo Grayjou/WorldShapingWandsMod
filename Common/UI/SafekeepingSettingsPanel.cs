@@ -38,7 +38,7 @@ public class SafekeepingSettingsPanel : UIState
     private UIIconButton _moldBtn;
 
     private UIText _thicknessValue;
-    private UIIconButton _equalDimensionsBtn, _connectDiameterBtn, _invertSelectionBtn;
+    private UIIconButton _equalDimensionsBtn, _connectDiameterBtn, _invertSelectionBtn, _flipHalfOrientationBtn;
     private UISliceGrid _sliceGrid;
 
     // Clear All
@@ -102,16 +102,21 @@ public class SafekeepingSettingsPanel : UIState
         var texEqualDim    = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleEqualDim", AssetRequestMode.ImmediateLoad);
         var texConnectDiam = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleConnectDiam", AssetRequestMode.ImmediateLoad);
         var texInvertSel   = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleInvertSel", AssetRequestMode.ImmediateLoad);
+        // (S2 2026-04-30 — InvertHalfOrientation #IOP) placeholder reuses ToggleInvertSel.
+        // TODO: pending ToggleFlipHalfOrientation dedicated asset (placeholder = ToggleInvertSel byte-copy; tracked in dev_notes/dev_tasks/pending_assets.md §3b)
+        var texFlipHalf    = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleFlipHalfOrientation", AssetRequestMode.ImmediateLoad);
 
         _builder.AddShapeOptionsSection(new WandPanelBuilder.IconDef[]
         {
             new(texEqualDim,    "Common.EqualDimensions",      isToggle: true),
             new(texConnectDiam, "Common.ConnectDiameterTooltip", isToggle: true, initialState: true),
             new(texInvertSel,   "Common.InvertSelection",      isToggle: true),
+            new(texFlipHalf,    "Common.FlipHalfOrientation",  isToggle: true),
         }, out var optBtns);
         _equalDimensionsBtn = optBtns[0];
         _connectDiameterBtn = optBtns[1];
         _invertSelectionBtn = optBtns[2];
+        _flipHalfOrientationBtn = optBtns[3];
 
         // === CLEAR ALL ===
         _builder.AddCenteredButton("Safekeeping.ClearAll", 120f, 30f, out _clearBtn);
@@ -168,6 +173,7 @@ public class SafekeepingSettingsPanel : UIState
         _equalDimensionsBtn.OnToggled += (_, _) => ToggleEqualDimensions();
         _connectDiameterBtn.OnToggled += (_, _) => ToggleConnectDiameter();
         _invertSelectionBtn.OnToggled += (_, _) => ToggleInvertSelection();
+        _flipHalfOrientationBtn.OnToggled += (_, _) => ToggleFlipHalfOrientation();
     }
 
     private WandOfSafekeepingSettings GetSettings() =>
@@ -177,7 +183,7 @@ public class SafekeepingSettingsPanel : UIState
     {
         var settings = GetSettings();
         if (settings == null) return;
-        settings.Shape = new ShapeInfo(type, mode, settings.Shape.Thickness, settings.Shape.EqualDimensions, settings.Shape.Slice, settings.Shape.ConnectDiameter, settings.Shape.InvertSelection);
+        settings.Shape = new ShapeInfo(type, mode, settings.Shape.Thickness, settings.Shape.EqualDimensions, settings.Shape.Slice, settings.Shape.ConnectDiameter, settings.Shape.InvertSelection, settings.Shape.InvertHalfOrientation);
         UpdateShapeButtons();
     }
 
@@ -195,6 +201,7 @@ public class SafekeepingSettingsPanel : UIState
     private void ToggleEqualDimensions() { var s = GetSettings(); if (s == null) return; var sh = s.Shape; sh.EqualDimensions = _equalDimensionsBtn.Toggled; s.Shape = sh; }
     private void ToggleConnectDiameter() { var s = GetSettings(); if (s == null) return; var sh = s.Shape; sh.ConnectDiameter = _connectDiameterBtn.Toggled; s.Shape = sh; }
     private void ToggleInvertSelection() { var s = GetSettings(); if (s == null) return; var sh = s.Shape; sh.InvertSelection = _invertSelectionBtn.Toggled; s.Shape = sh; }
+    private void ToggleFlipHalfOrientation() { var s = GetSettings(); if (s == null) return; var sh = s.Shape; sh.InvertHalfOrientation = _flipHalfOrientationBtn.Toggled; s.Shape = sh; }
     private void OnSliceChanged(SliceMode slice) { var s = GetSettings(); if (s == null) return; var sh = s.Shape; sh.Slice = slice; s.Shape = sh; }
 
     private void UpdateModeButtons()
@@ -236,6 +243,7 @@ public class SafekeepingSettingsPanel : UIState
     private void UpdateEqualDimensionsButton() { var s = GetSettings(); if (s == null) return; _equalDimensionsBtn.Toggled = s.Shape.EqualDimensions; }
     private void UpdateConnectDiameterButton() { var s = GetSettings(); if (s == null || _connectDiameterBtn == null) return; _connectDiameterBtn.Toggled = s.Shape.ConnectDiameter; }
     private void UpdateInvertSelectionButton() { var s = GetSettings(); if (s == null || _invertSelectionBtn == null) return; _invertSelectionBtn.Toggled = s.Shape.InvertSelection; _invertSelectionBtn.Disabled = !s.Shape.SupportsInversion; }
+    private void UpdateFlipHalfOrientationButton() { var s = GetSettings(); if (s == null || _flipHalfOrientationBtn == null) return; _flipHalfOrientationBtn.Toggled = s.Shape.InvertHalfOrientation; _flipHalfOrientationBtn.Disabled = s.Shape.Slice == SliceMode.Full; }
     private void UpdateSliceGrid() { var s = GetSettings(); if (s == null || _sliceGrid == null) return; _sliceGrid.SetValue(s.Shape.Slice); }
 
     private void SyncFromSettings()
@@ -248,6 +256,7 @@ public class SafekeepingSettingsPanel : UIState
         UpdateSliceGrid();
         UpdateConnectDiameterButton();
         UpdateInvertSelectionButton();
+        UpdateFlipHalfOrientationButton();
     }
 
     public override void Update(GameTime gameTime)

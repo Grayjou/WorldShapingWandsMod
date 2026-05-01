@@ -473,11 +473,31 @@ public class WandPanelBuilder
     /// <summary>
     /// Adds an Outline Thickness section with label, minus button, value display, and plus button.
     /// </summary>
+    /// <remarks>
+    /// (S2 2026-04-30 — Notes_WandPanelScrollNotConsumedBug.md #ROI; Fix B)
+    /// Each <c>OnScrollWheel</c> handler now actively CONSUMES the scroll delta by zeroing
+    /// <c>Terraria.GameInput.PlayerInput.ScrollWheelDelta</c> after applying the thickness
+    /// adjustment. Without this, the vanilla hotbar selection logic in <c>Player.cs</c>
+    /// (decompiled @ line 31225: <c>num += PlayerInput.ScrollWheelDelta / -120;</c>) reads
+    /// the same delta later in the same frame and leaks scroll input into the held-item
+    /// selector. Setting <c>Main.LocalPlayer.mouseInterface = true</c> in each panel's
+    /// <c>Update()</c> ("Fix A", already in tree across all 10 settings panels) does NOT
+    /// gate this code path — the hotbar reads <c>ScrollWheelDelta</c> directly, not via
+    /// <c>mouseInterface</c>. Direct consumption is the only reliable fix.
+    /// </remarks>
     public WandPanelBuilder AddThicknessSection(out UIText thicknessValue, Action<int> onAdjust)
     {
         MarkSection();
 
         float col1 = _padding;
+
+        // Local helper: apply adjustment, then consume the vanilla scroll delta so the
+        // hotbar selector doesn't also act on this scroll event.
+        void ScrollAdjust(Terraria.UI.UIScrollWheelEvent evt)
+        {
+            onAdjust(evt.ScrollWheelValue > 0 ? 1 : -1);
+            Terraria.GameInput.PlayerInput.ScrollWheelDelta = 0;
+        }
 
         var label = new UIText(L("Common.OutlineThickness"), 0.85f);
         label.Left.Set(col1, 0f);
@@ -490,13 +510,13 @@ public class WandPanelBuilder
         minusBtn.Left.Set(col1 + 130f, 0f);
         minusBtn.Top.Set(CurrentY - 2f, 0f);
         minusBtn.OnLeftClick += (_, _) => onAdjust(-1);
-        minusBtn.OnScrollWheel += (evt, _) => onAdjust(evt.ScrollWheelValue > 0 ? 1 : -1);
+        minusBtn.OnScrollWheel += (evt, _) => ScrollAdjust(evt);
         _panel.Append(minusBtn);
 
         thicknessValue = new UIText("1", 0.9f);
         thicknessValue.Left.Set(col1 + 170f, 0f);
         thicknessValue.Top.Set(CurrentY, 0f);
-        thicknessValue.OnScrollWheel += (evt, _) => onAdjust(evt.ScrollWheelValue > 0 ? 1 : -1);
+        thicknessValue.OnScrollWheel += (evt, _) => ScrollAdjust(evt);
         _panel.Append(thicknessValue);
 
         var plusBtn = new UITextPanel<string>("+", 0.8f, false);
@@ -505,7 +525,7 @@ public class WandPanelBuilder
         plusBtn.Left.Set(col1 + 200f, 0f);
         plusBtn.Top.Set(CurrentY - 2f, 0f);
         plusBtn.OnLeftClick += (_, _) => onAdjust(1);
-        plusBtn.OnScrollWheel += (evt, _) => onAdjust(evt.ScrollWheelValue > 0 ? 1 : -1);
+        plusBtn.OnScrollWheel += (evt, _) => ScrollAdjust(evt);
         _panel.Append(plusBtn);
 
         CurrentY += AfterThicknessSpacing;

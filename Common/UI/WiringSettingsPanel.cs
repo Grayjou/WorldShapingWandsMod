@@ -39,6 +39,7 @@ public class WiringSettingsPanel : UIState
     private UIIconButton _equalDimensionsBtn;
     private UIIconButton _connectDiameterBtn;
     private UIIconButton _invertSelectionBtn;
+    private UIIconButton _flipHalfOrientationBtn;
 
     // Slice grid
     private UISliceGrid _sliceGrid;
@@ -105,16 +106,21 @@ public class WiringSettingsPanel : UIState
         var texEqualDim    = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleEqualDim", AssetRequestMode.ImmediateLoad);
         var texConnectDiam = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleConnectDiam", AssetRequestMode.ImmediateLoad);
         var texInvertSel   = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleInvertSel", AssetRequestMode.ImmediateLoad);
+        // (S2 2026-04-30 — InvertHalfOrientation #IOP) placeholder reuses ToggleInvertSel.
+        // TODO: pending ToggleFlipHalfOrientation dedicated asset (placeholder = ToggleInvertSel byte-copy; tracked in dev_notes/dev_tasks/pending_assets.md §3b)
+        var texFlipHalf    = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleFlipHalfOrientation", AssetRequestMode.ImmediateLoad);
 
         _builder.AddShapeOptionsSection(new WandPanelBuilder.IconDef[]
         {
             new(texEqualDim,    "Common.EqualDimensions",      isToggle: true),
             new(texConnectDiam, "Common.ConnectDiameterTooltip", isToggle: true, initialState: true),
             new(texInvertSel,   "Common.InvertSelection",      isToggle: true),
+            new(texFlipHalf,    "Common.FlipHalfOrientation",  isToggle: true),
         }, out var optBtns);
         _equalDimensionsBtn = optBtns[0];
         _connectDiameterBtn = optBtns[1];
         _invertSelectionBtn = optBtns[2];
+        _flipHalfOrientationBtn = optBtns[3];
 
         // === CLOSE ===
         _builder.AddCloseButton();
@@ -140,6 +146,7 @@ public class WiringSettingsPanel : UIState
         _equalDimensionsBtn.OnToggled += (_, _) => ToggleEqualDimensions();
         _connectDiameterBtn.OnToggled += (_, _) => ToggleConnectDiameter();
         _invertSelectionBtn.OnToggled += (_, _) => ToggleInvertSelection();
+        _flipHalfOrientationBtn.OnToggled += (_, _) => ToggleFlipHalfOrientation();
     }
 
     private WandOfWiringSettings GetSettings() =>
@@ -149,7 +156,7 @@ public class WiringSettingsPanel : UIState
     {
         var settings = GetSettings();
         if (settings == null) return;
-        settings.Shape = new ShapeInfo(type, mode, settings.Shape.Thickness, settings.Shape.EqualDimensions, settings.Shape.Slice, settings.Shape.ConnectDiameter, settings.Shape.InvertSelection);
+        settings.Shape = new ShapeInfo(type, mode, settings.Shape.Thickness, settings.Shape.EqualDimensions, settings.Shape.Slice, settings.Shape.ConnectDiameter, settings.Shape.InvertSelection, settings.Shape.InvertHalfOrientation);
         UpdateShapeButtons();
     }
 
@@ -188,6 +195,15 @@ public class WiringSettingsPanel : UIState
         if (settings == null) return;
         var shape = settings.Shape;
         shape.InvertSelection = _invertSelectionBtn.Toggled;
+        settings.Shape = shape;
+    }
+
+    private void ToggleFlipHalfOrientation()
+    {
+        var settings = GetSettings();
+        if (settings == null) return;
+        var shape = settings.Shape;
+        shape.InvertHalfOrientation = _flipHalfOrientationBtn.Toggled;
         settings.Shape = shape;
     }
 
@@ -260,6 +276,14 @@ public class WiringSettingsPanel : UIState
         _invertSelectionBtn.Disabled = !settings.Shape.SupportsInversion;
     }
 
+    private void UpdateFlipHalfOrientationButton()
+    {
+        var settings = GetSettings();
+        if (settings == null || _flipHalfOrientationBtn == null) return;
+        _flipHalfOrientationBtn.Toggled = settings.Shape.InvertHalfOrientation;
+        _flipHalfOrientationBtn.Disabled = settings.Shape.Slice == SliceMode.Full;
+    }
+
     private void UpdateSliceGrid()
     {
         var settings = GetSettings();
@@ -277,6 +301,7 @@ public class WiringSettingsPanel : UIState
         UpdateSliceGrid();
         UpdateConnectDiameterButton();
         UpdateInvertSelectionButton();
+        UpdateFlipHalfOrientationButton();
     }
 
     public override void Update(GameTime gameTime)

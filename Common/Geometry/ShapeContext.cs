@@ -43,6 +43,19 @@ public struct ShapeContext
     public bool ConnectDiameter { get; set; }
 
     /// <summary>
+    /// (S2 2026-04-30 — DesignDoc_HalfShapeOrientationFlipToggle.md #IOP)
+    /// When true, inverts which half of a sliced shape is kept relative to the
+    /// drag direction. Normally <see cref="SliceHelper.IsStartAbove"/> /
+    /// <see cref="SliceHelper.IsStartLeft"/> select the kept half from
+    /// Start/End; with this flag set the opposite half is kept instead.
+    /// Only meaningful when <see cref="Slice"/> != <see cref="SliceMode.Full"/>.
+    /// Applied symmetrically inside <see cref="SliceHelper.SliceFilledTiles"/>
+    /// AND <see cref="SliceHelper.RemoveDiameterEdge"/> so the diameter band
+    /// stays on the discarded side.
+    /// </summary>
+    public bool InvertHalfOrientation { get; set; }
+
+    /// <summary>
     /// Additional input points beyond Start and End for multi-point shapes.
     /// Null for all current 2-point shapes (zero allocation overhead).
     /// Future shapes (Arc=1 extra, ArcDonut=2 extra, Polygon=N-2 extra) populate this.
@@ -67,12 +80,14 @@ public struct ShapeContext
         EqualDimensions = false;
         Slice = SliceMode.Full;
         ConnectDiameter = true;
+        InvertHalfOrientation = false;
         ExtraPoints = null;
     }
 
     public ShapeContext(Point start, Point end, ShapeMode mode, int thickness, 
         HorizontalBias hBias, VerticalBias vBias, bool verticalFirst, bool equalDimensions = false,
-        SliceMode slice = SliceMode.Full, bool connectDiameter = true)
+        SliceMode slice = SliceMode.Full, bool connectDiameter = true,
+        bool invertHalfOrientation = false)
     {
         Start = start;
         End = end;
@@ -84,6 +99,7 @@ public struct ShapeContext
         EqualDimensions = equalDimensions;
         Slice = slice;
         ConnectDiameter = connectDiameter;
+        InvertHalfOrientation = invertHalfOrientation;
         ExtraPoints = null;
     }
 
@@ -158,6 +174,7 @@ public struct ShapeContext
         bool? equalDimensions = null,
         SliceMode? slice = null,
         bool? connectDiameter = null,
+        bool? invertHalfOrientation = null,
         Point[]? extraPoints = null)
     {
         return new ShapeContext(
@@ -169,7 +186,8 @@ public struct ShapeContext
             verticalFirst ?? VerticalFirst,
             equalDimensions ?? EqualDimensions,
             slice ?? Slice,
-            connectDiameter ?? ConnectDiameter
+            connectDiameter ?? ConnectDiameter,
+            invertHalfOrientation ?? InvertHalfOrientation
         )
         {
             ExtraPoints = extraPoints ?? ExtraPoints

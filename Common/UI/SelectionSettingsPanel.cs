@@ -46,7 +46,7 @@ public class SelectionSettingsPanel : UIState
     private UIIconButton _moldBtn;
 
     // Shape options
-    private UIIconButton _equalDimensionsBtn, _connectDiameterBtn, _invertSelectionBtn;
+    private UIIconButton _equalDimensionsBtn, _connectDiameterBtn, _invertSelectionBtn, _flipHalfOrientationBtn;
 
     // Thickness
     private UIText _thicknessValue;
@@ -94,9 +94,9 @@ public class SelectionSettingsPanel : UIState
 
         // Delimitation shares the same Mode icons as Molding (Selection / Canvas Edit)
         var texModeSelection = mod.Assets.Request<Texture2D>(
-            "Assets_Build/Icons/MoldingModeSelection", AssetRequestMode.ImmediateLoad);
+            "Assets_Build/Icons/Stencils/ModeSelection", AssetRequestMode.ImmediateLoad);
         var texModeCanvasEdit = mod.Assets.Request<Texture2D>(
-            "Assets_Build/Icons/MoldingModeCanvasEdit", AssetRequestMode.ImmediateLoad);
+            "Assets_Build/Icons/Stencils/ModeCanvasEdit", AssetRequestMode.ImmediateLoad);
 
         _builder.AddIconGrid(new WandPanelBuilder.IconDef[]
         {
@@ -113,13 +113,13 @@ public class SelectionSettingsPanel : UIState
         _builder.AddSectionHeader("Selection.Operation");
 
         var texOpAdd = mod.Assets.Request<Texture2D>(
-            "Assets_Build/Icons/OpAdd", AssetRequestMode.ImmediateLoad);
+            "Assets_Build/Icons/Stencils/OpAdd", AssetRequestMode.ImmediateLoad);
         var texOpRemove = mod.Assets.Request<Texture2D>(
-            "Assets_Build/Icons/OpRemove", AssetRequestMode.ImmediateLoad);
+            "Assets_Build/Icons/Stencils/OpRemove", AssetRequestMode.ImmediateLoad);
         var texOpIntersect = mod.Assets.Request<Texture2D>(
-            "Assets_Build/Icons/OpIntersect", AssetRequestMode.ImmediateLoad);
+            "Assets_Build/Icons/Stencils/OpIntersect", AssetRequestMode.ImmediateLoad);
         var texOpXor = mod.Assets.Request<Texture2D>(
-            "Assets_Build/Icons/OpXOR", AssetRequestMode.ImmediateLoad);
+            "Assets_Build/Icons/Stencils/OpXOR", AssetRequestMode.ImmediateLoad);
 
         _builder.AddIconGrid(new WandPanelBuilder.IconDef[]
         {
@@ -169,16 +169,22 @@ public class SelectionSettingsPanel : UIState
             "Assets_Build/Icons/Toggles/ToggleConnectDiam", AssetRequestMode.ImmediateLoad);
         var texInvertSel = mod.Assets.Request<Texture2D>(
             "Assets_Build/Icons/Toggles/ToggleInvertSel", AssetRequestMode.ImmediateLoad);
+        // (S2 2026-04-30 — InvertHalfOrientation #IOP) placeholder reuses ToggleInvertSel.
+        var texFlipHalf = mod.Assets.Request<Texture2D>(
+            // TODO: pending ToggleFlipHalfOrientation dedicated asset (placeholder = ToggleInvertSel byte-copy; tracked in dev_notes/dev_tasks/pending_assets.md §3b)
+            "Assets_Build/Icons/Toggles/ToggleFlipHalfOrientation", AssetRequestMode.ImmediateLoad);
 
         _builder.AddShapeOptionsSection(new WandPanelBuilder.IconDef[]
         {
             new(texEqualDim, "Common.EqualDimensions", isToggle: true),
             new(texConnectDiam, "Common.ConnectDiameterTooltip", isToggle: true, initialState: true),
             new(texInvertSel, "Common.InvertSelection", isToggle: true),
+            new(texFlipHalf, "Common.FlipHalfOrientation", isToggle: true),
         }, out var optBtns);
         _equalDimensionsBtn = optBtns[0];
         _connectDiameterBtn = optBtns[1];
         _invertSelectionBtn = optBtns[2];
+        _flipHalfOrientationBtn = optBtns[3];
 
         // ═══════════════════════════════════════════════════════════════
         //  Auto-Create Canvas Toggle
@@ -274,6 +280,7 @@ public class SelectionSettingsPanel : UIState
         _equalDimensionsBtn.OnToggled += (_, _) => ToggleEqualDimensions();
         _connectDiameterBtn.OnToggled += (_, _) => ToggleConnectDiameter();
         _invertSelectionBtn.OnToggled += (_, _) => ToggleInvertSelection();
+        _flipHalfOrientationBtn.OnToggled += (_, _) => ToggleFlipHalfOrientation();
 
         // Auto-create canvas
         _autoCreateCanvasBtn.OnToggled += (_, _) =>
@@ -328,7 +335,7 @@ public class SelectionSettingsPanel : UIState
         var s = GetSettings();
         if (s == null) return;
         s.Shape = new ShapeInfo(type, mode, s.Shape.Thickness, s.Shape.EqualDimensions,
-            s.Shape.Slice, s.Shape.ConnectDiameter, s.Shape.InvertSelection);
+            s.Shape.Slice, s.Shape.ConnectDiameter, s.Shape.InvertSelection, s.Shape.InvertHalfOrientation);
         UpdateShapeButtons();
     }
 
@@ -367,6 +374,15 @@ public class SelectionSettingsPanel : UIState
         if (s == null) return;
         var sh = s.Shape;
         sh.InvertSelection = _invertSelectionBtn.Toggled;
+        s.Shape = sh;
+    }
+
+    private void ToggleFlipHalfOrientation()
+    {
+        var s = GetSettings();
+        if (s == null) return;
+        var sh = s.Shape;
+        sh.InvertHalfOrientation = _flipHalfOrientationBtn.Toggled;
         s.Shape = sh;
     }
 
@@ -510,6 +526,12 @@ public class SelectionSettingsPanel : UIState
         {
             _invertSelectionBtn.Toggled = s.Shape.InvertSelection;
             _invertSelectionBtn.Disabled = !s.Shape.SupportsInversion;
+        }
+        // (S2 2026-04-30 — InvertHalfOrientation #IOP)
+        if (_flipHalfOrientationBtn != null)
+        {
+            _flipHalfOrientationBtn.Toggled = s.Shape.InvertHalfOrientation;
+            _flipHalfOrientationBtn.Disabled = s.Shape.Slice == SliceMode.Full;
         }
     }
 

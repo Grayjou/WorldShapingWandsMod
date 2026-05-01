@@ -58,7 +58,7 @@ public class TorchesSettingsPanel : UIState
     private UIIconButton _moldBtn;
 
     private UIText _thicknessValue;
-    private UIIconButton _equalDimensionsBtn, _connectDiameterBtn, _invertSelectionBtn;
+    private UIIconButton _equalDimensionsBtn, _connectDiameterBtn, _invertSelectionBtn, _flipHalfOrientationBtn;
     private UISliceGrid _sliceGrid;
 
     private WandPanelBuilder _builder;
@@ -200,16 +200,21 @@ public class TorchesSettingsPanel : UIState
         var texEqualDim    = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleEqualDim",    AssetRequestMode.ImmediateLoad);
         var texConnectDiam = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleConnectDiam", AssetRequestMode.ImmediateLoad);
         var texInvertSel   = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleInvertSel",   AssetRequestMode.ImmediateLoad);
+        // (S2 2026-04-30 — InvertHalfOrientation #IOP) placeholder reuses ToggleInvertSel.
+        // TODO: pending ToggleFlipHalfOrientation dedicated asset (placeholder = ToggleInvertSel byte-copy; tracked in dev_notes/dev_tasks/pending_assets.md §3b)
+        var texFlipHalf    = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleFlipHalfOrientation", AssetRequestMode.ImmediateLoad);
 
         _builder.AddShapeOptionsSection(new WandPanelBuilder.IconDef[]
         {
             new(texEqualDim,    "Common.EqualDimensions",        isToggle: true),
             new(texConnectDiam, "Common.ConnectDiameterTooltip", isToggle: true, initialState: true),
             new(texInvertSel,   "Common.InvertSelection",        isToggle: true),
+            new(texFlipHalf,    "Common.FlipHalfOrientation",    isToggle: true),
         }, out var commonOptBtns);
         _equalDimensionsBtn = commonOptBtns[0];
         _connectDiameterBtn = commonOptBtns[1];
         _invertSelectionBtn = commonOptBtns[2];
+        _flipHalfOrientationBtn = commonOptBtns[3];
 
         // === CLOSE ===
         _builder.AddCloseButton();
@@ -265,6 +270,7 @@ public class TorchesSettingsPanel : UIState
         _equalDimensionsBtn.OnToggled += (_, _) => ToggleEqualDimensions();
         _connectDiameterBtn.OnToggled += (_, _) => ToggleConnectDiameter();
         _invertSelectionBtn.OnToggled += (_, _) => ToggleInvertSelection();
+        _flipHalfOrientationBtn.OnToggled += (_, _) => ToggleFlipHalfOrientation();
     }
 
     // ================================================================
@@ -280,19 +286,27 @@ public class TorchesSettingsPanel : UIState
         label.Top.Set(_builder.CurrentY, 0f);
         _mainPanel.Append(label);
 
+        // (S2 2026-04-30 #ROI Fix B) Consume scroll delta to prevent hotbar leakage.
+        // See WandPanelBuilder.AddThicknessSection remarks for full rationale.
+        void ScrollAdjust(Terraria.UI.UIScrollWheelEvent evt)
+        {
+            onAdjust(evt.ScrollWheelValue > 0 ? 1 : -1);
+            Terraria.GameInput.PlayerInput.ScrollWheelDelta = 0;
+        }
+
         var minusBtn = new UITextPanel<string>("-", 0.8f, false);
         minusBtn.Width.Set(30f, 0f);
         minusBtn.Height.Set(26f, 0f);
         minusBtn.Left.Set(col1 + 130f, 0f);
         minusBtn.Top.Set(_builder.CurrentY - 2f, 0f);
         minusBtn.OnLeftClick += (_, _) => onAdjust(-1);
-        minusBtn.OnScrollWheel += (evt, _) => onAdjust(evt.ScrollWheelValue > 0 ? 1 : -1);
+        minusBtn.OnScrollWheel += (evt, _) => ScrollAdjust(evt);
         _mainPanel.Append(minusBtn);
 
         valueText = new UIText("5", 0.9f);
         valueText.Left.Set(col1 + 170f, 0f);
         valueText.Top.Set(_builder.CurrentY, 0f);
-        valueText.OnScrollWheel += (evt, _) => onAdjust(evt.ScrollWheelValue > 0 ? 1 : -1);
+        valueText.OnScrollWheel += (evt, _) => ScrollAdjust(evt);
         _mainPanel.Append(valueText);
 
         var plusBtn = new UITextPanel<string>("+", 0.8f, false);
@@ -301,7 +315,7 @@ public class TorchesSettingsPanel : UIState
         plusBtn.Left.Set(col1 + 200f, 0f);
         plusBtn.Top.Set(_builder.CurrentY - 2f, 0f);
         plusBtn.OnLeftClick += (_, _) => onAdjust(1);
-        plusBtn.OnScrollWheel += (evt, _) => onAdjust(evt.ScrollWheelValue > 0 ? 1 : -1);
+        plusBtn.OnScrollWheel += (evt, _) => ScrollAdjust(evt);
         _mainPanel.Append(plusBtn);
 
         _builder.AdvanceY(WandPanelBuilder.AfterThicknessSpacing);
@@ -517,7 +531,7 @@ public class TorchesSettingsPanel : UIState
         if (settings == null) return;
         settings.Shape = new ShapeInfo(type, mode, settings.Shape.Thickness,
             settings.Shape.EqualDimensions, settings.Shape.Slice,
-            settings.Shape.ConnectDiameter, settings.Shape.InvertSelection);
+            settings.Shape.ConnectDiameter, settings.Shape.InvertSelection, settings.Shape.InvertHalfOrientation);
         UpdateShapeButtons();
     }
 
@@ -559,12 +573,14 @@ public class TorchesSettingsPanel : UIState
     private void ToggleEqualDimensions() { var s = GetSettings(); if (s == null) return; var sh = s.Shape; sh.EqualDimensions = _equalDimensionsBtn.Toggled; s.Shape = sh; }
     private void ToggleConnectDiameter() { var s = GetSettings(); if (s == null) return; var sh = s.Shape; sh.ConnectDiameter = _connectDiameterBtn.Toggled; s.Shape = sh; }
     private void ToggleInvertSelection() { var s = GetSettings(); if (s == null) return; var sh = s.Shape; sh.InvertSelection = _invertSelectionBtn.Toggled; s.Shape = sh; }
+    private void ToggleFlipHalfOrientation() { var s = GetSettings(); if (s == null) return; var sh = s.Shape; sh.InvertHalfOrientation = _flipHalfOrientationBtn.Toggled; s.Shape = sh; }
     private void OnSliceChanged(SliceMode slice) { var s = GetSettings(); if (s == null) return; var sh = s.Shape; sh.Slice = slice; s.Shape = sh; }
 
     private void UpdateThicknessDisplay() { _thicknessValue?.SetText(GetSettings()?.Shape.Thickness.ToString() ?? "1"); }
     private void UpdateEqualDimensionsButton() { var s = GetSettings(); if (s == null) return; _equalDimensionsBtn.Toggled = s.Shape.EqualDimensions; }
     private void UpdateConnectDiameterButton() { var s = GetSettings(); if (s == null || _connectDiameterBtn == null) return; _connectDiameterBtn.Toggled = s.Shape.ConnectDiameter; }
     private void UpdateInvertSelectionButton() { var s = GetSettings(); if (s == null || _invertSelectionBtn == null) return; _invertSelectionBtn.Toggled = s.Shape.InvertSelection; _invertSelectionBtn.Disabled = !s.Shape.SupportsInversion; }
+    private void UpdateFlipHalfOrientationButton() { var s = GetSettings(); if (s == null || _flipHalfOrientationBtn == null) return; _flipHalfOrientationBtn.Toggled = s.Shape.InvertHalfOrientation; _flipHalfOrientationBtn.Disabled = s.Shape.Slice == SliceMode.Full; }
     private void UpdateSliceGrid() { var s = GetSettings(); if (s == null || _sliceGrid == null) return; _sliceGrid.SetValue(s.Shape.Slice); }
 
     // ================================================================
@@ -586,6 +602,7 @@ public class TorchesSettingsPanel : UIState
         UpdateSliceGrid();
         UpdateConnectDiameterButton();
         UpdateInvertSelectionButton();
+        UpdateFlipHalfOrientationButton();
     }
 
     public override void Update(GameTime gameTime)

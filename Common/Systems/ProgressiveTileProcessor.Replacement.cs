@@ -149,7 +149,7 @@ public partial class ProgressiveTileProcessor
                     if (info.PreservePaint && oldPaintColor > 0)
                         placed.TileColor = oldPaintColor;
                     else
-                        WandOfBuildingBase.ApplyPaintSprayerTile(op.Player, info.Position.X, info.Position.Y, op.ShouldConsume);
+                        WandOfBuildingBase.ApplyPaintSprayerTile(op.Player, info.Position.X, info.Position.Y, op.ShouldConsume, info.PaintSprayer);
                 }
                 else if (info.PreservePaint && oldPaintColor > 0 && placed.HasTile)
                 {

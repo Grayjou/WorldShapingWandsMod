@@ -57,6 +57,11 @@ UI: {
 		ConnectDiameter: Conectar DiÃ¡metro
 		ConnectDiameterTooltip: Conectar DÃ­ametro (SÃ³lo formas a la mitad)
 		InvertSelection: Invertir SelecciÃ³n
+		/* FlipHalfOrientation:
+			'''
+			Flip half orientation
+			Inverts which side of the half-shape is kept relative to your drag direction.
+			''' */
 
 		PaintSprayer: {
 			// $parentVal: Paint Sprayer
@@ -2182,6 +2187,12 @@ Messages: {
 	NoTilesInSelection: No hay bloques en el Ã¡rea de selecciÃ³n.
 	// ── Delimitation Warning ──────────────────────────────
 	DelimitationFilterActive: No se ejecutÃ³ ninguna acciÃ³n. El Ãrea de DelimitaciÃ³n estÃ¡ activa y no se superpone con la selecciÃ³n.
+	// ── Molding ─────────────────────────────────────────────
+	// Shown when the player casts the Mold shape but the active ACT-ON
+	// stencil slot has no committed mold yet. Gated by Preferences.WandVerbosity
+	// (S15 2026-04-30 closes G-36 Q3 — verbose ⇒ chat warning, quiet ⇒
+	// silent fail). Throttled in MoldShape.GetTiles to at most once per ~1s.
+	// MoldEmpty: Current stencil is empty. Sculpt or load a mold with the Wand of Molding.
 	FluidsNoTiles: No hay bloques en la selecciÃ³n.
 	FluidsInvalidRegion: RegiÃ³n no vÃ¡lida.
 	FluidsNoSeeds: No hay posiciones vÃ¡lidas de semilla â€” todos los bloques superiores son sÃ³lidos.

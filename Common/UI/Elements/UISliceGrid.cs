@@ -1,10 +1,12 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using ReLogic.Content;
 using System;
 using Terraria;
 using Terraria.Audio;
 using Terraria.GameContent;
 using Terraria.ID;
+using Terraria.ModLoader;
 using Terraria.UI;
 using WorldShapingWandsMod.Common.Enums;
 
@@ -69,11 +71,11 @@ public class UISliceGrid : UIElement
     // texture-asset rendering once the 5 PNGs land.
     private static readonly string[] CellLabels =
     {
-        "Fl", // Full
-        "H",  // Half-Horizontal
-        "V",  // Half-Vertical
-        "qH", // Quick-Half-Horizontal
-        "qV", // Quick-Half-Vertical
+        "Assets_Build/Icons/Slices/SliceFull",
+        "Assets_Build/Icons/Slices/SliceHalfHorizontal",
+        "Assets_Build/Icons/Slices/SliceHalfVertical",
+        "Assets_Build/Icons/Slices/SliceQuickHalfHorizontal",
+        "Assets_Build/Icons/Slices/SliceQuickHalfVertical",
     };
 
     private static readonly string[] CellTooltips =
@@ -91,15 +93,17 @@ public class UISliceGrid : UIElement
         Width.Set(totalWidth, 0f);
         Height.Set(CellHeight, 0f);
 
+        var mod = ModContent.GetInstance<WorldShapingWandsMod>();
+
         for (int i = 0; i < CellCount; i++)
         {
-            var mode = Modes[i];
-            var cell = new UISliceCell(CellLabels[i], CellTooltips[i]);
+            Asset<Texture2D> icon = mod.Assets.Request<Texture2D>(CellLabels[i], AssetRequestMode.ImmediateLoad);
+            var cell = new UISliceCell(icon, CellTooltips[i]);
             cell.Width.Set(CellWidth, 0f);
             cell.Height.Set(CellHeight, 0f);
             cell.Left.Set(i * (CellWidth + Gap), 0f);
             cell.Top.Set(0f, 0f);
-            cell.Toggled = (mode == SliceMode.Full); // default: Full selected
+            cell.Toggled = (Modes[i] == SliceMode.Full);
 
             int capturedIndex = i;
             cell.OnLeftClick += (_, _) => SelectCell(capturedIndex);

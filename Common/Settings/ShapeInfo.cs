@@ -47,11 +47,22 @@ public struct ShapeInfo
     public bool InvertSelection { get; set; }
 
     /// <summary>
+    /// (S2 2026-04-30 — DesignDoc_HalfShapeOrientationFlipToggle.md #IOP)
+    /// When true, the kept half of a sliced shape is flipped relative to the
+    /// drag direction (i.e. opposite of <see cref="SliceHelper.IsStartAbove"/> /
+    /// <see cref="SliceHelper.IsStartLeft"/>). Default false. Only meaningful
+    /// when <see cref="Slice"/> is a half mode. Propagated to
+    /// <see cref="ShapeContext.InvertHalfOrientation"/> via <see cref="ToShapeContext"/>.
+    /// </summary>
+    public bool InvertHalfOrientation { get; set; }
+
+    /// <summary>
     /// Creates a new ShapeInfo with the specified parameters.
     /// </summary>
     public ShapeInfo(ShapeType shape, ShapeMode fillMode, int thickness = 1,
         bool equalDimensions = false, SliceMode slice = SliceMode.Full,
-        bool connectDiameter = true, bool invertSelection = false)
+        bool connectDiameter = true, bool invertSelection = false,
+        bool invertHalfOrientation = false)
     {
         Shape = shape;
         FillMode = fillMode;
@@ -60,6 +71,7 @@ public struct ShapeInfo
         Slice = slice;
         ConnectDiameter = connectDiameter;
         InvertSelection = invertSelection;
+        InvertHalfOrientation = invertHalfOrientation;
     }
 
     /// <summary>
@@ -72,8 +84,8 @@ public struct ShapeInfo
         {
             var config = ModContent.GetInstance<PreferencesConfig>();
             if (config != null)
-                return new(config.DefaultShapeType, config.DefaultShapeMode, 1, false, SliceMode.Full, true, false);
-            return new(ShapeType.Rectangle, ShapeMode.Filled, 1, false, SliceMode.Full, true, false);
+                return new(config.DefaultShapeType, config.DefaultShapeMode, 1, false, SliceMode.Full, true, false, false);
+            return new(ShapeType.Rectangle, ShapeMode.Filled, 1, false, SliceMode.Full, true, false, false);
         }
     }
 
@@ -138,7 +150,8 @@ public struct ShapeInfo
         // Pass thickness for all modes. CardinalLine uses thickness in Filled mode
         // for its circular brush. Other shapes ignore thickness in Filled mode.
         return new ShapeContext(start, end, FillMode, Thickness,
-            HorizontalBias.None, VerticalBias.None, verticalFirst, EqualDimensions, Slice, ConnectDiameter);
+            HorizontalBias.None, VerticalBias.None, verticalFirst, EqualDimensions, Slice, ConnectDiameter,
+            InvertHalfOrientation);
     }
 
     /// <summary>
