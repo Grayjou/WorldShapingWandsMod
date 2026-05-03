@@ -122,21 +122,14 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
         bool isWallMode = settings.OldObject == ObjectType.Wall;
 
         // Find target item, but skip items that would place the same tile/wall as source.
-        // SameTypeMode: target tracks the source choice (the wand is placing the same
-        // type it just removed). Otherwise: honor ChosenTargetItemType.
-        // S8 2026-04-22 (Cavendish Response #5 §9.1): when SameTypeMode is ON, track
-        // the *resolved* sourceItem.type — NOT settings.ChosenSourceItemType. If the
-        // source choice ghosted (item exhausted) and the pre-pass fell back to a different
-        // type, the original choice field is stale; using it would have the wand remove B
-        // and try to place A. Coherence violation. Tracking sourceItem.type means
-        // "Same Type" always genuinely matches what we're actually picking up.
+            // SameTypeMode: honor the IV-target choice as the authoritative target source
+            // for matching/replacement behavior (S3 regression fix). Otherwise: honor the
+            // regular ChosenTargetItemType path.
         Item targetItem = null;
         if (settings.NewObject != ObjectType.Air)
         {
             var tgtCondition = ItemTypeHelper.GetConditions(settings.NewObject);
-            int? targetChoice = settings.SameTypeMode
-                ? sourceItem?.type
-                : settings.GetChosenTargetItemType(settings.NewObject);
+                int? targetChoice = settings.GetChosenTargetItemType(settings.NewObject);
 
             if (isWallMode)
             {
@@ -193,12 +186,9 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
             var baseTgtCondition = ItemTypeHelper.GetConditions(settings.NewObject);
             // Exclude items that would place the same tile as source
             targetCondition = item => baseTgtCondition(item) && (ushort)item.createTile != sourceType;
-            // SameTypeMode choices target to source choice (target tracks source).
-            // S8 2026-04-22 (Cavendish Response #5 §9.1): track *resolved* sourceItem.type
-            // not the choice field, so target stays coherent when source choice ghosts.
-            int? targetChoice = settings.SameTypeMode
-                ? sourceItem?.type
-                : settings.GetChosenTargetItemType(settings.NewObject);
+            // SameTypeMode honors the IV-target choice as the authoritative target source
+            // for matching/replacement behavior (S3 regression fix).
+            int? targetChoice = settings.GetChosenTargetItemType(settings.NewObject);
             targetItem = ItemTypeHelper.FindFirstItem(player, targetCondition, targetChoice);
 
             if (targetItem == null)
@@ -550,12 +540,9 @@ public abstract class WandOfReplacementBase : BaseCyclingWand
 
             var baseTgtCondition = ItemTypeHelper.GetConditions(ObjectType.Wall);
             targetCondition = item => baseTgtCondition(item) && (ushort)item.createWall != sourceWallType;
-            // SameTypeMode choices target to source choice (target tracks source).
-            // S8 2026-04-22 (Cavendish Response #5 §9.1): track *resolved* sourceItem.type
-            // not the choice field, so target stays coherent when source choice ghosts.
-            int? targetChoice = settings.SameTypeMode
-                ? sourceItem?.type
-                : settings.GetChosenTargetItemType(ObjectType.Wall);
+            // SameTypeMode honors the IV-target choice as the authoritative target source
+            // for matching/replacement behavior (S3 regression fix).
+            int? targetChoice = settings.GetChosenTargetItemType(ObjectType.Wall);
             targetItem = ItemTypeHelper.FindFirstItem(player, targetCondition, targetChoice);
 
             if (targetItem == null)

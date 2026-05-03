@@ -8,6 +8,7 @@ using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Selection;
 using WorldShapingWandsMod.Common.Drawing;
+using WorldShapingWandsMod.Common.Items;
 using WorldShapingWandsMod.Common.Utilities;
 
 namespace WorldShapingWandsMod.Common.Geometry.Shapes;
@@ -59,6 +60,17 @@ public class MagicWandReadShape : IShapeProvider
     private const int ReadStatusChatCooldownTicks = 30;
     private static readonly Dictionary<int, (MagicWandReadFn.ReadStatus Status, ulong Tick)> _lastStatusByPlayer = new();
     private static readonly Dictionary<int, bool> _processedReadThisMousePressByPlayer = new();
+    private static readonly Dictionary<int, bool> _blockedReadThisMousePressByPlayer = new();
+    // (C-S1.b 2026-05-03) Tracks Main.mouseLeft per player from the previous
+    // GetTiles call. The processed/blocked dicts above must reset on the
+    // mouse-up edge of every physical press; previously the reset was buried
+    // inside ShouldProcessReadForCommit which only ran on commit frames, so
+    // an instant-mode release would set processed=true and the next hover
+    // frame would short-circuit BEFORE reaching the reset path — leaving
+    // processed=true forever and Read silently no-op'ing on every subsequent
+    // press. Symptom: "Magic Wand only works once or twice, then never again
+    // until the mod is rebuilt" (rebuild reinitialises the static dicts).
+    private static readonly Dictionary<int, bool> _mouseLeftPrevFrameByPlayer = new();
 
     public ShapeType ShapeType => ShapeType.MagicWandRead;
 
@@ -66,7 +78,6 @@ public class MagicWandReadShape : IShapeProvider
     {
         var emptySet = new HashSet<Point>();
         var emptyResult = new ShapeTileSet(emptySet, emptySet);
-        bool isCommit = context.Start == context.End;
 
         // Resolve the local player's stencil-wand state. Magic Wand Read
         // is stencil-only, so we always look at MoldingWandPlayer's
@@ -77,6 +88,17 @@ public class MagicWandReadShape : IShapeProvider
         var wp = player.GetModPlayer<WandPlayer>();
         if (mwp == null || wp == null) return emptyResult;
 
+        // (C-S1.b 2026-05-03) Always run the mouse-up edge maintenance BEFORE
+        // any short-circuit return below. This is the single robust trigger
+        // that clears the once-per-press flags; if it lives inside the
+        // commit branch instead, instant-mode releases never get cleaned up
+        // and Read locks to a permanent no-op (see field comment above).
+        MaintainMousePressState(player.whoAmI);
+
+        bool isInstantReleaseCommit = IsInstantReleaseCommit(wp);
+        bool isSelectionClickCommit = IsSelectionClickCommit(wp);
+        bool isCommit = context.Start == context.End || isInstantReleaseCommit || isSelectionClickCommit;
+
         // Hover / movement path: never rerun Read flood-fill. Return the most
         // recent committed capture so camera/player movement cannot trigger
         // per-frame flood recomputation.
@@ -86,15 +108,29 @@ public class MagicWandReadShape : IShapeProvider
         // Commit path: process at most once per physical left-mouse press.
         // Subsequent GetTiles evaluations while the button remains down reuse
         // the previously captured shape.
-        bool shouldProcessCommit = ShouldProcessReadForCommit(player.whoAmI);
+        bool shouldProcessCommit = ShouldProcessReadForCommit(player.whoAmI, isInstantReleaseCommit);
         if (!shouldProcessCommit)
+        {
+            if (WasReadBlockedThisMousePress(player.whoAmI))
+                return emptyResult;
             return BuildStoredShapeResult(wp.LastMagicWandShape, emptyResult);
+        }
+
+        var safetyCfg = WandConfigs.MagicWandReadSafety;
+        bool allowReadInInstantMode = safetyCfg?.AllowReadInInstantMode ?? false;
+        bool allowReadInSelectMode = safetyCfg?.AllowReadInSelectMode ?? false;
+        bool allowReadWithoutCanvas = safetyCfg?.AllowReadWithoutCanvas ?? false;
+
+        SelectionMode heldMode = ResolveHeldSelectionMode(player);
+        bool applyBlockedByMode = IsApplyBlockedByMode(heldMode, allowReadInInstantMode, allowReadInSelectMode);
 
         var canvas = mwp.Canvas;
+        bool isUsingFallbackDomain = canvas == null || canvas.Count == 0;
+        bool applyBlockedByCanvasGuard = isUsingFallbackDomain && !allowReadWithoutCanvas;
 
         // Fallback domain resolution (G-38/G-40): if no canvas or empty canvas,
         // create a cursor-centered 168×125 rectangle as the domain.
-        if (canvas == null || canvas.Count == 0)
+        if (isUsingFallbackDomain)
         {
             canvas = ResolveFallbackDomain();
             if (canvas == null || canvas.Count == 0)
@@ -108,6 +144,22 @@ public class MagicWandReadShape : IShapeProvider
         // LimitsConfig. Magic Wand Read has its own area-semantics cap
         // (MagicWandReadMaxArea), independent from Molding dimension caps.
         int cap = ResolveCap();
+
+        // (C-S1 2026-05-03) Safety gate runs BEFORE flood-fill capture.
+        // Previously the capture into wp.LastMagicWandShape happened first,
+        // which meant a Read blocked by config still poisoned the stored
+        // shape — the next MagicWandApply (or anything reading
+        // LastMagicWandShape) replayed the blocked tile set, making the
+        // safety configs feel like they did nothing. Now: blocked → no
+        // flood-fill, no capture, explicit chat. Defence-in-depth on the
+        // Apply side (MagicWandApplyShape) covers any pre-existing
+        // capture from before the user flipped the config restrictive.
+        if (applyBlockedByMode || applyBlockedByCanvasGuard)
+        {
+            EmitBlockedChat(player.whoAmI, applyBlockedByMode, applyBlockedByCanvasGuard, heldMode);
+            MarkReadBlockedForMousePress(player.whoAmI);
+            return emptyResult;
+        }
 
         var origin = context.Start;
         var (tiles, status) = MagicWandReadFn.Read(origin, wp.MagicWandReadConfig, canvas, cap);
@@ -132,6 +184,34 @@ public class MagicWandReadShape : IShapeProvider
         // already proved itself for stencil rendering.
         var boundary = GeometryHelper.GetBoundaryTiles4(tiles);
         return new ShapeTileSet(tiles, boundary);
+    }
+
+    /// <summary>
+    /// (C-S1 2026-05-03) When the safety config blocks a Read, tell the
+    /// player WHY the click did nothing. Without this, a user who has
+    /// kept the defaults sees "I clicked Read and nothing happened" and
+    /// concludes the wand is broken — exactly what was reported.
+    /// </summary>
+    private static void EmitBlockedChat(int playerId, bool blockedByMode, bool blockedByCanvas, SelectionMode mode)
+    {
+        // Cooldown ride-along: reuse the Read status throttle so a
+        // hold-down doesn't spam chat. Status.Empty is the closest
+        // semantic neighbour (no tiles delivered).
+        if (!ShouldEmitStatus(playerId, MagicWandReadFn.ReadStatus.Empty)) return;
+
+        if (blockedByMode)
+        {
+            string key = mode == SelectionMode.OneClick
+                ? "MagicWandReadBlockedInstantMode"
+                : "MagicWandReadBlockedSelectMode";
+            Main.NewText(Msg.Get(key), WandColors.MsgWarning);
+            return;
+        }
+
+        if (blockedByCanvas)
+        {
+            Main.NewText(Msg.Get("MagicWandReadBlockedNoCanvas"), WandColors.MsgWarning);
+        }
     }
 
     public bool ContainsPoint(Point point, ShapeContext context)
@@ -296,7 +376,7 @@ public class MagicWandReadShape : IShapeProvider
         return true;
     }
 
-    private static bool ShouldProcessReadForCommit(int playerId)
+    private static bool ShouldProcessReadForCommit(int playerId, bool isInstantReleaseCommit)
     {
         if (playerId < 0) return false;
 
@@ -306,7 +386,17 @@ public class MagicWandReadShape : IShapeProvider
         // stay silent after the first emission.
         if (!Main.mouseLeft)
         {
+            if (isInstantReleaseCommit)
+            {
+                if (_processedReadThisMousePressByPlayer.TryGetValue(playerId, out bool alreadyProcessedRelease) && alreadyProcessedRelease)
+                    return false;
+
+                _processedReadThisMousePressByPlayer[playerId] = true;
+                return true;
+            }
+
             _processedReadThisMousePressByPlayer[playerId] = false;
+            _blockedReadThisMousePressByPlayer[playerId] = false;
             return false;
         }
 
@@ -315,5 +405,76 @@ public class MagicWandReadShape : IShapeProvider
 
         _processedReadThisMousePressByPlayer[playerId] = true;
         return true;
+    }
+
+    private static void MarkReadBlockedForMousePress(int playerId)
+    {
+        if (playerId < 0) return;
+        _blockedReadThisMousePressByPlayer[playerId] = true;
+    }
+
+    private static bool WasReadBlockedThisMousePress(int playerId)
+    {
+        if (playerId < 0) return false;
+        return _blockedReadThisMousePressByPlayer.TryGetValue(playerId, out bool blocked) && blocked;
+    }
+
+    /// <summary>
+    /// (C-S1.b 2026-05-03) Detects the mouse-up edge per player and clears
+    /// the once-per-press flags on that transition. Must be called every
+    /// time <see cref="GetTiles"/> runs (BEFORE any short-circuit return)
+    /// so it observes every frame, not just commit frames.
+    /// <para>The transition we care about is <c>true → false</c>: that is
+    /// the moment a physical left-mouse press has just ended. Resetting on
+    /// that edge means the next press starts with clean flags. This frame
+    /// is also the same frame an instant-release commit fires, but the
+    /// commit logic runs AFTER this reset and re-sets processed=true — so
+    /// no commit is lost.</para>
+    /// </summary>
+    private static void MaintainMousePressState(int playerId)
+    {
+        if (playerId < 0) return;
+
+        bool prev = _mouseLeftPrevFrameByPlayer.TryGetValue(playerId, out bool p) && p;
+        bool now = Main.mouseLeft;
+
+        if (prev && !now)
+        {
+            _processedReadThisMousePressByPlayer[playerId] = false;
+            _blockedReadThisMousePressByPlayer[playerId] = false;
+        }
+
+        _mouseLeftPrevFrameByPlayer[playerId] = now;
+    }
+
+    private static SelectionMode ResolveHeldSelectionMode(Player player)
+    {
+        var wand = player?.HeldItem?.ModItem as BaseCyclingWand;
+        return wand?.WandSelectionMode ?? SelectionMode.OneClick;
+    }
+
+    private static bool IsInstantReleaseCommit(WandPlayer wp)
+    {
+        if (wp == null) return false;
+        return !Main.mouseLeft
+            && wp.InstantSelection.IsActive
+            && wp.IsInstantSelectionOwnedByCurrentItem();
+    }
+
+    private static bool IsSelectionClickCommit(WandPlayer wp)
+    {
+        if (wp == null) return false;
+        return Main.mouseLeft
+            && !wp.InstantSelection.IsActive
+            && wp.Selection.IsActive;
+    }
+
+    private static bool IsApplyBlockedByMode(SelectionMode mode, bool allowReadInInstantMode, bool allowReadInSelectMode)
+    {
+        if (mode == SelectionMode.OneClick && !allowReadInInstantMode)
+            return true;
+        if (mode == SelectionMode.TwoClick && !allowReadInSelectMode)
+            return true;
+        return false;
     }
 }

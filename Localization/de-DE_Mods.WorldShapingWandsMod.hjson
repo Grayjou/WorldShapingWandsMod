@@ -1290,6 +1290,26 @@ Configs: {
 		}
 	}
 
+	MagicWandReadSafetyConfig: {
+		// DisplayName: Magic Wand Read Safety
+		// Safety.Header: Safety
+
+		AllowReadInInstantMode: {
+			// Label: Allow Read in Instant Mode
+			// Tooltip: ""
+		}
+
+		AllowReadInSelectMode: {
+			// Label: Allow Read in Select Mode
+			// Tooltip: ""
+		}
+
+		AllowReadWithoutCanvas: {
+			// Label: Allow Read Without Canvas
+			// Tooltip: ""
+		}
+	}
+
 	OverlayConfig: {
 		DisplayName: Overlay
 		// Overlay.Header: Overlay
@@ -2473,6 +2493,9 @@ Messages: {
 	// MagicWandReadEmpty: Magic Wand Read found no matching tiles in the active canvas.
 	// MagicWandReadCapped: Magic Wand Read capped at {0} tiles.
 	// MagicWandReadUnpaintedOrigin: Magic Wand Read origin is unpainted for the selected paint mode.
+	// MagicWandReadBlockedInstantMode: Magic Wand Read is disabled in Instant mode. Enable 'Allow Read In Instant Mode' in the mod config to use it here.
+	// MagicWandReadBlockedSelectMode: Magic Wand Read is disabled in Select mode. Enable 'Allow Read In Select Mode' in the mod config to use it here.
+	// MagicWandReadBlockedNoCanvas: Magic Wand Read is disabled without an active molding canvas. Set up a canvas with the Wand of Molding, or enable 'Allow Read Without Canvas' in the mod config.
 	// ── Delimitation multi-slot ─────────────────────────────
 	// NoActiveSlot: No active delimitation slot. Pick a slot from the panel first.
 	// NullSlotHover: No active delimitation. Pick a slot to resume; data in other slots is preserved.

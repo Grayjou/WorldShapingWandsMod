@@ -457,6 +457,7 @@ public class WandPlayer : ModPlayer
 
         _instantSelection = SelectionState.Empty;
         _instantSelectionOwner = 0;
+        LastMagicWandShape = null;
         _justCancelled = true;
     }
 
@@ -491,7 +492,21 @@ public class WandPlayer : ModPlayer
         StampAnchorOffset = Point.Zero;
         SmoothAnchorInitialised = false; // W-S4-1: v3 smoothing reset on cancel
         ResetStampChanneling();
+        LastMagicWandShape = null;
         _justCancelled = true; // Set flag to prevent immediate restart
+    }
+
+    /// <summary>
+    /// Clears the in-memory Magic Wand Read capture, if present.
+    /// Returns true when a capture existed and was cleared.
+    /// </summary>
+    public bool ClearMagicWandReadCapture()
+    {
+        if (LastMagicWandShape == null)
+            return false;
+
+        LastMagicWandShape = null;
+        return true;
     }
 
     /// <summary>

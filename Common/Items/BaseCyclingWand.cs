@@ -317,11 +317,30 @@ public abstract class BaseCyclingWand : ModItem
         if (player.altFunctionUse == 2)
         {
             var wandPlayer = player.GetModPlayer<WandPlayer>();
+
+            // (C-S1 2026-05-03) Cumulative clear: a single right-click now
+            // clears BOTH the active selection AND the captured Magic Wand
+            // shape, instead of cascading (selection first, then on a
+            // SECOND right-click the capture). User report: "It doesn't
+            // reset on right click, once it was used once, it gets bound
+            // to that same tile forever" — the cascade was the cause when
+            // a wand had a stale Magic Wand capture sitting under an
+            // active selection.
+            bool didSomething = false;
+
             if (wandPlayer.Selection.IsActive)
             {
                 CancelActiveSelection(player, wandPlayer);
+                didSomething = true;
             }
-            else if (Main.myPlayer == player.whoAmI)
+
+            if (wandPlayer.ClearMagicWandReadCapture())
+            {
+                Main.NewText("Magic Wand capture cleared.", WandColors.MsgInfo);
+                didSomething = true;
+            }
+
+            if (!didSomething && Main.myPlayer == player.whoAmI)
             {
                 ModContent.GetInstance<WandUISystem>().ToggleUIForCurrentWand();
             }

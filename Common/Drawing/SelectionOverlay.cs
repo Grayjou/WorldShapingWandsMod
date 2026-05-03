@@ -174,8 +174,62 @@ public class SelectionOverlay : ModSystem
         else if (isHoldingWand && !wandPlayer.IsSelectionVisuallyActive())
         {
             var shapeSettings = GetCurrentShapeSettings(player, wandPlayer);
-            DrawCursorHighlight(shapeSettings);
+            if (!DrawStoredMagicReadPreviewIfAvailable(wandPlayer, shapeSettings))
+                DrawCursorHighlight(shapeSettings);
         }
+    }
+
+    private bool DrawStoredMagicReadPreviewIfAvailable(WandPlayer wandPlayer, ShapeInfo shapeSettings)
+    {
+        if (shapeSettings.Shape != ShapeType.MagicWandRead)
+            return false;
+
+        var stored = wandPlayer.LastMagicWandShape;
+        if (stored?.Tiles == null || stored.Tiles.Count == 0)
+            return false;
+
+        var tiles = stored.Tiles;
+        Color cursorBaseColor = ResolveOverlayBaseColor(Main.LocalPlayer);
+        Color fillColor = cursorBaseColor * 0.14f;
+        Color outlineColor = cursorBaseColor * 0.32f;
+
+        Main.spriteBatch.Begin(
+            SpriteSortMode.Deferred,
+            BlendState.AlphaBlend,
+            SamplerState.PointClamp,
+            DepthStencilState.None,
+            RasterizerState.CullCounterClockwise,
+            null,
+            Main.GameViewMatrix.TransformationMatrix
+        );
+
+        var pixel = TextureAssets.MagicPixel.Value;
+        int ow = WandColors.OverlayOutlineWidth;
+
+        foreach (var tile in tiles)
+        {
+            Vector2 screenPos = new Vector2(tile.X * 16, tile.Y * 16) - Main.screenPosition;
+            if (screenPos.X < -16 || screenPos.X > Main.screenWidth + 16 ||
+                screenPos.Y < -16 || screenPos.Y > Main.screenHeight + 16)
+                continue;
+
+            int sx = (int)screenPos.X;
+            int sy = (int)screenPos.Y;
+
+            Main.spriteBatch.Draw(pixel, new Rectangle(sx, sy, 16, 16), fillColor);
+
+            if (!tiles.Contains(new Point(tile.X, tile.Y - 1)))
+                Main.spriteBatch.Draw(pixel, new Rectangle(sx, sy, 16, ow), outlineColor);
+            if (!tiles.Contains(new Point(tile.X, tile.Y + 1)))
+                Main.spriteBatch.Draw(pixel, new Rectangle(sx, sy + 16 - ow, 16, ow), outlineColor);
+            if (!tiles.Contains(new Point(tile.X - 1, tile.Y)))
+                Main.spriteBatch.Draw(pixel, new Rectangle(sx, sy, ow, 16), outlineColor);
+            if (!tiles.Contains(new Point(tile.X + 1, tile.Y)))
+                Main.spriteBatch.Draw(pixel, new Rectangle(sx + 16 - ow, sy, ow, 16), outlineColor);
+        }
+
+        Main.spriteBatch.End();
+        return true;
     }
 
     /// <summary>
@@ -485,7 +539,17 @@ public class SelectionOverlay : ModSystem
         int visEndY = Math.Min(bounds.Bottom, screenCullMaxY);
 
         int visibleArea = Math.Max(0, visEndX - visStartX) * Math.Max(0, visEndY - visStartY);
-        bool useViewportWindow = visibleArea > 0 && visibleArea < tiles.Count;
+        // (C-S1.c 2026-05-03) Disable viewport-window optimisation for Magic Wand
+        // shapes. For MagicWandApply and MagicWandRead, context.GetBounds() is the
+        // cursor click bbox (1×1), not the bounding box of the translated/captured
+        // tile set. This means visibleArea ≈ 1 << tiles.Count, so useViewportWindow
+        // is always true, the walk covers only the 5×5 area around the cursor, and
+        // the entire shape is invisible unless the cursor is placed exactly on a
+        // captured tile. The screen-cull inside the fallback foreach passes handles
+        // performance adequately for these shapes.
+        bool isMagicWandShape = shapeSettings.Shape == ShapeType.MagicWandApply
+                             || shapeSettings.Shape == ShapeType.MagicWandRead;
+        bool useViewportWindow = !isMagicWandShape && visibleArea > 0 && visibleArea < tiles.Count;
 
         if (useViewportWindow)
         {

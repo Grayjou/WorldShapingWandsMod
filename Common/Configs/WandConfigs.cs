@@ -21,6 +21,7 @@ namespace WorldShapingWandsMod.Common.Configs
         public static StampConfig Stamp => ModContent.GetInstance<StampConfig>();
         public static TorchWheelConfig TorchWheel => ModContent.GetInstance<TorchWheelConfig>();
         public static CarefreeConfig Carefree => ModContent.GetInstance<CarefreeConfig>();
+        public static MagicWandReadSafetyConfig MagicWandReadSafety => ModContent.GetInstance<MagicWandReadSafetyConfig>();
 
         // ═════════════════════════════════════════════
         //  Client-side configs
