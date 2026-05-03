@@ -91,24 +91,17 @@ public class MagicWandReadShape : IShapeProvider
             return BuildStoredShapeResult(wp.LastMagicWandShape, emptyResult);
 
         var canvas = mwp.Canvas;
-        bool previewOnlyNoCanvas = false;
 
         // Fallback domain resolution (G-38/G-40): if no canvas or empty canvas,
         // create a cursor-centered 168×125 rectangle as the domain.
         if (canvas == null || canvas.Count == 0)
         {
-            if (!wp.MagicWandReadConfig.AllowReadWithoutCanvas)
-                previewOnlyNoCanvas = true;
-
             canvas = ResolveFallbackDomain();
             if (canvas == null || canvas.Count == 0)
             {
                 EmitNoCanvasChat(player.whoAmI);
                 return emptyResult;
             }
-
-            if (previewOnlyNoCanvas)
-                EmitReadWithoutCanvasBlockedChat(player.whoAmI);
         }
 
         // Cap: pick the stencil-wand cap from the server-authoritative
@@ -125,7 +118,7 @@ public class MagicWandReadShape : IShapeProvider
         // every preview frame to overwrite the last successful capture.
         EmitReadStatusChat(player.whoAmI, status, cap);
 
-        if (!previewOnlyNoCanvas && status != MagicWandReadFn.ReadStatus.Empty)
+        if (status != MagicWandReadFn.ReadStatus.Empty)
         {
             wp.LastMagicWandShape = new StoredMagicWandShape(
                 tiles: new HashSet<Point>(tiles),
@@ -268,12 +261,6 @@ public class MagicWandReadShape : IShapeProvider
     {
         if (!ShouldEmitStatus(playerId, MagicWandReadFn.ReadStatus.Empty)) return;
         Main.NewText(Msg.Get("MagicWandReadNoCanvas"), WandColors.MsgWarning);
-    }
-
-    private static void EmitReadWithoutCanvasBlockedChat(int playerId)
-    {
-        if (!ShouldEmitStatus(playerId, MagicWandReadFn.ReadStatus.Empty)) return;
-        Main.NewText("Read without canvas is blocked by safety settings. Showing preview only.", WandColors.MsgWarning);
     }
 
     private static void EmitReadStatusChat(int playerId, MagicWandReadFn.ReadStatus status, int cap)

@@ -457,7 +457,6 @@ public class WandPlayer : ModPlayer
 
         _instantSelection = SelectionState.Empty;
         _instantSelectionOwner = 0;
-        LastMagicWandShape = null;
         _justCancelled = true;
     }
 
@@ -491,7 +490,6 @@ public class WandPlayer : ModPlayer
         StampDelta = Point.Zero;
         StampAnchorOffset = Point.Zero;
         SmoothAnchorInitialised = false; // W-S4-1: v3 smoothing reset on cancel
-        LastMagicWandShape = null;
         ResetStampChanneling();
         _justCancelled = true; // Set flag to prevent immediate restart
     }

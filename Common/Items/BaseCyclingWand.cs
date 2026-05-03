@@ -382,37 +382,7 @@ public abstract class BaseCyclingWand : ModItem
     /// Optional pre-execution guard. Return false to block the operation
     /// (e.g., Building checks HasTilesInInventory). Default: always execute.
     /// </summary>
-    protected virtual bool CanExecute(Player player, WandPlayer wandPlayer)
-    {
-        var shape = GetWandShape(wandPlayer);
-        if (shape.Shape != ShapeType.MagicWandRead)
-            return true;
-
-        var cfg = wandPlayer.MagicWandReadConfig;
-        if (WandSelectionMode == SelectionMode.OneClick && !cfg.AllowReadInInstantMode)
-        {
-            Main.NewText("Magic Wand Read is blocked in Instant Mode. Enable it in Read Safety settings.", WandColors.MsgWarning);
-            return false;
-        }
-
-        if (WandSelectionMode == SelectionMode.TwoClick && !cfg.AllowReadInSelectMode)
-        {
-            Main.NewText("Magic Wand Read is blocked in Select Mode. Enable it in Read Safety settings.", WandColors.MsgWarning);
-            return false;
-        }
-
-        if (!cfg.AllowReadWithoutCanvas)
-        {
-            var mwp = player.GetModPlayer<MoldingWandPlayer>();
-            if (mwp?.Canvas == null || mwp.Canvas.Count == 0)
-            {
-                Main.NewText("Magic Wand Read without a canvas is blocked. Create a canvas or enable no-canvas Read.", WandColors.MsgWarning);
-                return false;
-            }
-        }
-
-        return true;
-    }
+    protected virtual bool CanExecute(Player player, WandPlayer wandPlayer) => true;
 
     /// <summary>
     /// Whether this family base uses the template method pattern for mode dispatch.

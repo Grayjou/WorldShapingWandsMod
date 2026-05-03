@@ -9,6 +9,7 @@ LettersSent
 LetterDrafts/
 *.cache
 NoiseRnD/
+
 # Visual Studio
 .vs/
 *.user
@@ -32,6 +33,9 @@ recipe_draft.txt
 dev_notes/
 Cloned*/
 ModReferences/
+/Archive
+Archive/
+ImportedSummaries/
 # Session logs
 Sessions/
 Session*.txt
@@ -48,6 +52,9 @@ Scripts\all_sessions_header.txt
 .session_state.json
 
 *__pycache__/
+
+
+
 
 # Root-level docs that are personal/project-management (not shipped)
 CurrentStateAndStatus.md

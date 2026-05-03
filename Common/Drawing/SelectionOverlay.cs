@@ -174,62 +174,8 @@ public class SelectionOverlay : ModSystem
         else if (isHoldingWand && !wandPlayer.IsSelectionVisuallyActive())
         {
             var shapeSettings = GetCurrentShapeSettings(player, wandPlayer);
-            if (!DrawStoredMagicReadPreviewIfAvailable(wandPlayer, shapeSettings))
-                DrawCursorHighlight(shapeSettings);
+            DrawCursorHighlight(shapeSettings);
         }
-    }
-
-    private bool DrawStoredMagicReadPreviewIfAvailable(WandPlayer wandPlayer, ShapeInfo shapeSettings)
-    {
-        if (shapeSettings.Shape != ShapeType.MagicWandRead)
-            return false;
-
-        var stored = wandPlayer.LastMagicWandShape;
-        if (stored?.Tiles == null || stored.Tiles.Count == 0)
-            return false;
-
-        var tiles = stored.Tiles;
-        Color cursorBaseColor = ResolveOverlayBaseColor(Main.LocalPlayer);
-        Color fillColor = cursorBaseColor * 0.14f;
-        Color outlineColor = cursorBaseColor * 0.32f;
-
-        Main.spriteBatch.Begin(
-            SpriteSortMode.Deferred,
-            BlendState.AlphaBlend,
-            SamplerState.PointClamp,
-            DepthStencilState.None,
-            RasterizerState.CullCounterClockwise,
-            null,
-            Main.GameViewMatrix.TransformationMatrix
-        );
-
-        var pixel = TextureAssets.MagicPixel.Value;
-        int ow = WandColors.OverlayOutlineWidth;
-
-        foreach (var tile in tiles)
-        {
-            Vector2 screenPos = new Vector2(tile.X * 16, tile.Y * 16) - Main.screenPosition;
-            if (screenPos.X < -16 || screenPos.X > Main.screenWidth + 16 ||
-                screenPos.Y < -16 || screenPos.Y > Main.screenHeight + 16)
-                continue;
-
-            int sx = (int)screenPos.X;
-            int sy = (int)screenPos.Y;
-
-            Main.spriteBatch.Draw(pixel, new Rectangle(sx, sy, 16, 16), fillColor);
-
-            if (!tiles.Contains(new Point(tile.X, tile.Y - 1)))
-                Main.spriteBatch.Draw(pixel, new Rectangle(sx, sy, 16, ow), outlineColor);
-            if (!tiles.Contains(new Point(tile.X, tile.Y + 1)))
-                Main.spriteBatch.Draw(pixel, new Rectangle(sx, sy + 16 - ow, 16, ow), outlineColor);
-            if (!tiles.Contains(new Point(tile.X - 1, tile.Y)))
-                Main.spriteBatch.Draw(pixel, new Rectangle(sx, sy, ow, 16), outlineColor);
-            if (!tiles.Contains(new Point(tile.X + 1, tile.Y)))
-                Main.spriteBatch.Draw(pixel, new Rectangle(sx + 16 - ow, sy, ow, 16), outlineColor);
-        }
-
-        Main.spriteBatch.End();
-        return true;
     }
 
     /// <summary>
@@ -830,36 +776,30 @@ public class SelectionOverlay : ModSystem
 
         // Determine highlight tiles
         List<Point> highlightTiles;
-        bool usingShapePreview = false;
 
-        bool showCursorShapePreview = WandConfigs.Overlay?.ShowCursorShapePreview ?? true;
-        if (showCursorShapePreview && TryGetCursorShapePreviewTiles(shapeSettings, mouseTile, out var previewTiles))
+        if ((shapeSettings.Shape == ShapeType.CardinalLine || shapeSettings.Shape == ShapeType.StraightLine) && shapeSettings.Thickness > 1)
         {
-            highlightTiles = previewTiles;
-            usingShapePreview = true;
+            // Show circle brush preview for thick cardinal lines.
+            // Uses EllipseShape's IncrementalFast algorithm for Ã¢â€°Â¥ 4 diameter,
+            // matching the actual brush shape used by CardinalLineShape.
+            int thickness = Math.Max(1, shapeSettings.Thickness);
+            var offsets = EllipseShape.GetCircleBrushOffsets(thickness);
+
+            highlightTiles = new List<Point>(offsets.Count);
+            foreach (var offset in offsets)
+                highlightTiles.Add(new Point(mouseTile.X + offset.X, mouseTile.Y + offset.Y));
         }
         else
         {
-            if ((shapeSettings.Shape == ShapeType.CardinalLine || shapeSettings.Shape == ShapeType.StraightLine) && shapeSettings.Thickness > 1)
-            {
-                int thickness = Math.Max(1, shapeSettings.Thickness);
-                var offsets = EllipseShape.GetCircleBrushOffsets(thickness);
-
-                highlightTiles = new List<Point>(offsets.Count);
-                foreach (var offset in offsets)
-                    highlightTiles.Add(new Point(mouseTile.X + offset.X, mouseTile.Y + offset.Y));
-            }
-            else
-            {
-                highlightTiles = new List<Point> { mouseTile };
-            }
+            // Single tile highlight for all other shapes
+            highlightTiles = new List<Point> { mouseTile };
         }
 
         // Draw with a subtle pulse effect
         float pulse = 0.5f + 0.2f * (float)Math.Sin(Main.GameUpdateCount * 0.08);
         Color cursorBaseColor = ResolveOverlayBaseColor(Main.LocalPlayer);
-        Color highlightFill = cursorBaseColor * ((usingShapePreview ? 0.40f : 0.15f) * pulse);
-        Color highlightOutline = cursorBaseColor * ((usingShapePreview ? 0.72f : 0.5f) * pulse);
+        Color highlightFill = cursorBaseColor * (0.15f * pulse);
+        Color highlightOutline = cursorBaseColor * (0.5f * pulse);
 
         Main.spriteBatch.Begin(
             SpriteSortMode.Deferred,
@@ -879,10 +819,6 @@ public class SelectionOverlay : ModSystem
         foreach (var tile in highlightTiles)
         {
             Vector2 screenPos = new Vector2(tile.X * 16, tile.Y * 16) - Main.screenPosition;
-            if (screenPos.X < -16 || screenPos.X > Main.screenWidth + 16 ||
-                screenPos.Y < -16 || screenPos.Y > Main.screenHeight + 16)
-                continue;
-
             Main.spriteBatch.Draw(pixel,
                 new Rectangle((int)screenPos.X, (int)screenPos.Y, 16, 16),
                 highlightFill);
@@ -906,42 +842,6 @@ public class SelectionOverlay : ModSystem
         }
 
         Main.spriteBatch.End();
-    }
-
-    private bool TryGetCursorShapePreviewTiles(ShapeInfo shapeSettings, Point mouseTile, out List<Point> previewTiles)
-    {
-        previewTiles = null;
-
-        if (shapeSettings.Shape == ShapeType.MagicWandRead || shapeSettings.Shape == ShapeType.MagicWandApply)
-            return false;
-
-        int width = _lastAreaDimensions.W > 1 ? _lastAreaDimensions.W : 8;
-        int height = _lastAreaDimensions.H > 1 ? _lastAreaDimensions.H : 6;
-        width = Math.Clamp(width, 2, 64);
-        height = Math.Clamp(height, 2, 64);
-
-        Point end = shapeSettings.Shape switch
-        {
-            ShapeType.CardinalLine => new Point(mouseTile.X + Math.Max(width, height) - 1, mouseTile.Y),
-            ShapeType.StraightLine => new Point(mouseTile.X + Math.Max(width, height) - 1, mouseTile.Y),
-            _ => new Point(mouseTile.X + width - 1, mouseTile.Y + height - 1)
-        };
-
-        try
-        {
-            var context = shapeSettings.ToShapeContext(mouseTile, end, verticalFirst: false);
-            var tileSet = ShapeRegistry.GetShapeTiles(shapeSettings.Shape, context);
-            var tiles = shapeSettings.ApplyInversion(tileSet.Tiles.ToArray(), context);
-            if (tiles == null || tiles.Length == 0)
-                return false;
-
-            previewTiles = new List<Point>(tiles);
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
     }
 
     /// <summary>

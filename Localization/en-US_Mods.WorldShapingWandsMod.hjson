@@ -1376,15 +1376,6 @@ Configs: {
 				'''
 		}
 
-		ShowCursorShapePreview: {
-			Label: Show Cursor Shape Preview
-			Tooltip:
-				'''
-				When enabled, shows a ghosted shape preview near the cursor
-				for non-stamp workflows before the first click.
-				'''
-		}
-
 		StampRenderMode: {
 			Label: Stamp Smoothing
 			Tooltip:

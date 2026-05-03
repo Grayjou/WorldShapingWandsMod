@@ -124,8 +124,7 @@ internal static class MagicWandReadConfigBuilder
         float sampleSectionH = SectionHeaderHeight
             + 3 * SampleCellH + 2 * RowGap;
         float contigSectionH = SectionHeaderHeight + ContigCellH;
-        float safetySectionH = SectionHeaderHeight + 3 * 22f + 2 * RowGap;
-        float bodyH = sampleSectionH + SectionGap + contigSectionH + SectionGap + safetySectionH + BottomPad;
+        float bodyH = sampleSectionH + SectionGap + contigSectionH + BottomPad;
 
         var body = new UIElement();
         body.Width.Set(bodyW, 0f);
@@ -240,106 +239,11 @@ internal static class MagicWandReadConfigBuilder
             body.Append(cell);
         }
 
-        yCursor = LayoutSpacing.AddVerticalSpace(
-            currentSize: yCursor,
-            elementSize: ContigCellH,
-            bottomPadding: SectionGap);
-
-        // ── Section 3: Safety toggles ──
-        var safetyHeader = new UIText("Read Safety", 0.85f)
-        {
-            HAlign = 0.5f,
-            IgnoresMouseInteraction = true,
-        };
-        safetyHeader.Top.Set(yCursor, 0f);
-        body.Append(safetyHeader);
-        yCursor = LayoutSpacing.AddVerticalSpace(
-            currentSize: yCursor,
-            elementSize: SectionHeaderHeight,
-            bottomPadding: 0f);
-
-        float safetyWidth = bodyW - HorizontalPad * 2f;
-        const float safetyHeight = 22f;
-        const string instantLabel = "Allow Read in Instant Mode";
-        const string selectLabel = "Allow Read in Select Mode";
-        const string noCanvasLabel = "Allow Read without Canvas";
-
-        string BuildSafetyText(string label, bool enabled)
-            => $"{label}: {(enabled ? "ON" : "OFF")}";
-
-        UITextPanel<string> safetyInstant = null;
-        UITextPanel<string> safetySelect = null;
-        UITextPanel<string> safetyNoCanvas = null;
-
-        void RefreshSafetyPanels(MagicWandReadConfig cfg)
-        {
-            if (safetyInstant != null) safetyInstant.SetText(BuildSafetyText(instantLabel, cfg.AllowReadInInstantMode));
-            if (safetySelect != null) safetySelect.SetText(BuildSafetyText(selectLabel, cfg.AllowReadInSelectMode));
-            if (safetyNoCanvas != null) safetyNoCanvas.SetText(BuildSafetyText(noCanvasLabel, cfg.AllowReadWithoutCanvas));
-        }
-
-        safetyInstant = new UITextPanel<string>(BuildSafetyText(instantLabel, initial.AllowReadInInstantMode), 0.72f, false);
-        safetyInstant.SetPadding(4f);
-        safetyInstant.Width.Set(safetyWidth, 0f);
-        safetyInstant.Height.Set(safetyHeight, 0f);
-        safetyInstant.Left.Set(HorizontalPad, 0f);
-        safetyInstant.Top.Set(yCursor, 0f);
-        safetyInstant.OnLeftClick += (_, _) =>
-        {
-            var p = Main.LocalPlayer?.GetModPlayer<WandPlayer>();
-            if (p == null) return;
-            var cfg = p.MagicWandReadConfig;
-            cfg.AllowReadInInstantMode = !cfg.AllowReadInInstantMode;
-            p.MagicWandReadConfig = cfg;
-            RefreshSafetyPanels(cfg);
-            onChanged?.Invoke(cfg);
-        };
-        body.Append(safetyInstant);
-        yCursor = LayoutSpacing.AddVerticalSpace(yCursor, safetyHeight, RowGap);
-
-        safetySelect = new UITextPanel<string>(BuildSafetyText(selectLabel, initial.AllowReadInSelectMode), 0.72f, false);
-        safetySelect.SetPadding(4f);
-        safetySelect.Width.Set(safetyWidth, 0f);
-        safetySelect.Height.Set(safetyHeight, 0f);
-        safetySelect.Left.Set(HorizontalPad, 0f);
-        safetySelect.Top.Set(yCursor, 0f);
-        safetySelect.OnLeftClick += (_, _) =>
-        {
-            var p = Main.LocalPlayer?.GetModPlayer<WandPlayer>();
-            if (p == null) return;
-            var cfg = p.MagicWandReadConfig;
-            cfg.AllowReadInSelectMode = !cfg.AllowReadInSelectMode;
-            p.MagicWandReadConfig = cfg;
-            RefreshSafetyPanels(cfg);
-            onChanged?.Invoke(cfg);
-        };
-        body.Append(safetySelect);
-        yCursor = LayoutSpacing.AddVerticalSpace(yCursor, safetyHeight, RowGap);
-
-        safetyNoCanvas = new UITextPanel<string>(BuildSafetyText(noCanvasLabel, initial.AllowReadWithoutCanvas), 0.72f, false);
-        safetyNoCanvas.SetPadding(4f);
-        safetyNoCanvas.Width.Set(safetyWidth, 0f);
-        safetyNoCanvas.Height.Set(safetyHeight, 0f);
-        safetyNoCanvas.Left.Set(HorizontalPad, 0f);
-        safetyNoCanvas.Top.Set(yCursor, 0f);
-        safetyNoCanvas.OnLeftClick += (_, _) =>
-        {
-            var p = Main.LocalPlayer?.GetModPlayer<WandPlayer>();
-            if (p == null) return;
-            var cfg = p.MagicWandReadConfig;
-            cfg.AllowReadWithoutCanvas = !cfg.AllowReadWithoutCanvas;
-            p.MagicWandReadConfig = cfg;
-            RefreshSafetyPanels(cfg);
-            onChanged?.Invoke(cfg);
-        };
-        body.Append(safetyNoCanvas);
-
         // Initial visual sync (cells were constructed with their own
         // initial bit; this guarantees the row-wide invariant if the
         // config flips between Build() and the first Draw).
         applySampleVisual();
         applyContigVisual();
-        RefreshSafetyPanels(initial);
 
         return body;
     }

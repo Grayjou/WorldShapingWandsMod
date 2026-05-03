@@ -36,39 +36,15 @@ public struct MagicWandReadConfig
     /// <summary>The 3-option contiguity radio pick. Default: <see cref="MagicWandContinuity.FourNeighbour"/>.</summary>
     public MagicWandContinuity Continuity { get; set; }
 
-    /// <summary>
-    /// Safety guard for Instant mode (OneClick): when false, Magic Wand Read
-    /// can still preview but will not execute the wand operation.
-    /// </summary>
-    public bool AllowReadInInstantMode { get; set; }
-
-    /// <summary>
-    /// Safety guard for Select mode (TwoClick): when false, Magic Wand Read
-    /// can still preview but will not execute the wand operation.
-    /// </summary>
-    public bool AllowReadInSelectMode { get; set; }
-
-    /// <summary>
-    /// Safety guard for domain source: when false, Magic Wand Read requires an
-    /// active canvas and will not execute against the centered fallback domain.
-    /// </summary>
-    public bool AllowReadWithoutCanvas { get; set; }
-
     /// <summary>Default ctor produces (SameTile, FourNeighbour) — the safest, most-recognisable Magic-Wand behaviour.</summary>
     public static MagicWandReadConfig Default => new()
     {
         ObjectType = MagicWandObjectType.SameTile,
         Continuity = MagicWandContinuity.FourNeighbour,
-        AllowReadInInstantMode = false,
-        AllowReadInSelectMode = false,
-        AllowReadWithoutCanvas = false,
     };
 
     private const string TagObject = "MagicWand_Object";
     private const string TagCont   = "MagicWand_Cont";
-    private const string TagAllowInstant = "MagicWand_AllowInstant";
-    private const string TagAllowSelect = "MagicWand_AllowSelect";
-    private const string TagAllowNoCanvas = "MagicWand_AllowNoCanvas";
 
     /// <summary>
     /// Writes this config into the given save tag. Both fields use the
@@ -80,9 +56,6 @@ public struct MagicWandReadConfig
     {
         tag[TagObject] = (byte)ObjectType;
         tag[TagCont]   = (byte)Continuity;
-        tag[TagAllowInstant] = AllowReadInInstantMode;
-        tag[TagAllowSelect] = AllowReadInSelectMode;
-        tag[TagAllowNoCanvas] = AllowReadWithoutCanvas;
     }
 
     /// <summary>
@@ -104,14 +77,6 @@ public struct MagicWandReadConfig
             byte v = tag.GetByte(TagCont);
             if (v <= (byte)MagicWandContinuity.NonContiguous) cfg.Continuity = (MagicWandContinuity)v;
         }
-
-        if (tag.ContainsKey(TagAllowInstant))
-            cfg.AllowReadInInstantMode = tag.GetBool(TagAllowInstant);
-        if (tag.ContainsKey(TagAllowSelect))
-            cfg.AllowReadInSelectMode = tag.GetBool(TagAllowSelect);
-        if (tag.ContainsKey(TagAllowNoCanvas))
-            cfg.AllowReadWithoutCanvas = tag.GetBool(TagAllowNoCanvas);
-
         return cfg;
     }
 }
