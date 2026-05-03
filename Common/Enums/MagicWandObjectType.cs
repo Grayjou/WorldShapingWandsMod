@@ -15,7 +15,7 @@ namespace WorldShapingWandsMod.Common.Enums;
 ///   <see cref="Solid"/>, <see cref="Wall"/>, <see cref="Rope"/>,
 ///   <see cref="Platform"/>, <see cref="Rail"/>, <see cref="PlanterBox"/>.</item>
 ///   <item><b>Sub-row B-2</b> — Domain extras + paint channels (4 cells):
-///   <see cref="Air"/>, <see cref="Liquid"/>, <see cref="PaintTile"/>,
+///   <see cref="Empty"/>, <see cref="Liquid"/>, <see cref="PaintTile"/>,
 ///   <see cref="PaintWall"/>.</item>
 /// </list>
 ///
@@ -59,7 +59,7 @@ public enum MagicWandObjectType : byte
     PlanterBox = 7,
 
     /// <summary>Sub-row B-2. Predicate: <c>!HasTile &amp;&amp; WallType == 0</c>.</summary>
-    Air = 8,
+    Empty = 8,
 
     /// <summary>Sub-row B-2. Predicate: <c>LiquidAmount &gt; 0 &amp;&amp; LiquidType == origin.LiquidType</c>.</summary>
     Liquid = 9,

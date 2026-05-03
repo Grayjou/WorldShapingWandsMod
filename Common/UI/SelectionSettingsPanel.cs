@@ -34,6 +34,10 @@ public class SelectionSettingsPanel : UIState
     // Mode toggle (Selection / Canvas Edit)
     private UIIconButton _modeSelectionBtn, _modeCanvasEditBtn;
 
+    // Delimitation slot selector (null + slots 1..N)
+    private UIIconButton _nullSlotBtn;
+    private UIIconButton[] _delimSlotBtns;
+
     // Operation buttons (Add, Remove, Intersect, XOR)
     private UIIconButton _opAddBtn, _opRemoveBtn, _opIntersectBtn, _opXorBtn;
 
@@ -44,6 +48,7 @@ public class SelectionSettingsPanel : UIState
     private UIIconButton _triangleFilledBtn, _triangleHollowBtn;
     private UIIconButton _edgeBtn, _cardinalBtn, _straightLineBtn;
     private UIIconButton _moldBtn;
+    private UIIconButton _magicWandReadBtn, _magicWandApplyBtn;
 
     // Shape options
     private UIIconButton _equalDimensionsBtn, _connectDiameterBtn, _invertSelectionBtn, _flipHalfOrientationBtn;
@@ -60,8 +65,8 @@ public class SelectionSettingsPanel : UIState
     // Status displays
     private UIText _canvasCountText, _selectionCountText, _customShapeText;
 
-    // Auto-create canvas toggle
-    private UIToggleButton _autoCreateCanvasBtn;
+    // Delimitation options (icon toggles)
+    private UIIconButton _autoCreateCanvasBtn;
 
     private WandPanelBuilder _builder;
 
@@ -94,9 +99,9 @@ public class SelectionSettingsPanel : UIState
 
         // Delimitation shares the same Mode icons as Molding (Selection / Canvas Edit)
         var texModeSelection = mod.Assets.Request<Texture2D>(
-            "Assets_Build/Icons/Stencils/ModeSelection", AssetRequestMode.ImmediateLoad);
+            "Assets_Build/Icons/Stencil/ModeSelection", AssetRequestMode.ImmediateLoad);
         var texModeCanvasEdit = mod.Assets.Request<Texture2D>(
-            "Assets_Build/Icons/Stencils/ModeCanvasEdit", AssetRequestMode.ImmediateLoad);
+            "Assets_Build/Icons/Stencil/ModeCanvasEdit", AssetRequestMode.ImmediateLoad);
 
         _builder.AddIconGrid(new WandPanelBuilder.IconDef[]
         {
@@ -107,19 +112,53 @@ public class SelectionSettingsPanel : UIState
         _modeCanvasEditBtn = modeBtns[1];
 
         // ═══════════════════════════════════════════════════════════════
+        //  Delimitation Slot Selector (No Slot + Slot 1..N)
+        // ═══════════════════════════════════════════════════════════════
+
+        _builder.AddSectionHeader("Stencil.ActOnPickerTitle");
+
+        var slotIconDefs = new WandPanelBuilder.IconDef[DelimitationWandPlayer.SlotCount + 1];
+
+        Asset<Texture2D> noSlotTex;
+            noSlotTex = mod.Assets.Request<Texture2D>(
+                "Assets_Build/Icons/Misc/WhiteX",
+                AssetRequestMode.ImmediateLoad);
+
+        slotIconDefs[0] = WandPanelBuilder.IconDef.WithText(
+            noSlotTex,
+            Language.GetTextValue("Mods.WorldShapingWandsMod.Messages.NullButtonHover"));
+
+        for (int i = 0; i < DelimitationWandPlayer.SlotCount; i++)
+        {
+            var tex = mod.Assets.Request<Texture2D>(
+                $"Assets_Build/Icons/Shapes/Stencil/StencilChoice{i + 1}",
+                AssetRequestMode.ImmediateLoad);
+            string hover = Language.GetTextValue(
+                "Mods.WorldShapingWandsMod.Messages.DelimitationSlotHover",
+                i + 1);
+            slotIconDefs[i + 1] = WandPanelBuilder.IconDef.WithText(tex, hover);
+        }
+
+        _builder.AddSmallIconGrid(slotIconDefs, iconsPerRow: DelimitationWandPlayer.SlotCount + 1, out var slotBtns);
+        _nullSlotBtn = slotBtns[0];
+        _delimSlotBtns = new UIIconButton[DelimitationWandPlayer.SlotCount];
+        for (int i = 0; i < DelimitationWandPlayer.SlotCount; i++)
+            _delimSlotBtns[i] = slotBtns[i + 1];
+
+        // ═══════════════════════════════════════════════════════════════
         //  Operation Selector (Add, Remove, Intersect, XOR)
         // ═══════════════════════════════════════════════════════════════
 
         _builder.AddSectionHeader("Selection.Operation");
 
         var texOpAdd = mod.Assets.Request<Texture2D>(
-            "Assets_Build/Icons/Stencils/OpAdd", AssetRequestMode.ImmediateLoad);
+            "Assets_Build/Icons/Stencil/OpAdd", AssetRequestMode.ImmediateLoad);
         var texOpRemove = mod.Assets.Request<Texture2D>(
-            "Assets_Build/Icons/Stencils/OpRemove", AssetRequestMode.ImmediateLoad);
+            "Assets_Build/Icons/Stencil/OpRemove", AssetRequestMode.ImmediateLoad);
         var texOpIntersect = mod.Assets.Request<Texture2D>(
-            "Assets_Build/Icons/Stencils/OpIntersect", AssetRequestMode.ImmediateLoad);
+            "Assets_Build/Icons/Stencil/OpIntersect", AssetRequestMode.ImmediateLoad);
         var texOpXor = mod.Assets.Request<Texture2D>(
-            "Assets_Build/Icons/Stencils/OpXOR", AssetRequestMode.ImmediateLoad);
+            "Assets_Build/Icons/Stencil/OpXOR", AssetRequestMode.ImmediateLoad);
 
         _builder.AddIconGrid(new WandPanelBuilder.IconDef[]
         {
@@ -144,6 +183,15 @@ public class SelectionSettingsPanel : UIState
         _triangleFilledBtn = shapes.TriangleFilled; _triangleHollowBtn = shapes.TriangleHollow;
         _edgeBtn = shapes.Elbow; _cardinalBtn = shapes.Cardinal; _straightLineBtn = shapes.StraightLine;
         _moldBtn = shapes.Mold;
+        _magicWandReadBtn = shapes.MagicWandRead;
+        _magicWandApplyBtn = shapes.MagicWandApply;
+
+        // (S4 2026-05-01 � StencilMagicWandSelectionPlan.md �4.1) Right-click on
+        // the Magic Wand Read shape cell opens the Read configuration SubUI.
+        // The SubUI's underlying state (MagicWandReadConfig) is a player-scoped
+        // preference shared across every wand, so the wiring is centralised in
+        // MagicWandReadCellWiring (mirrors the MoldCellWiring singleton model).
+        Common.UI.Elements.MagicWandReadCellWiring.WireConfigSubUI(_magicWandReadBtn);
         // (S11 2026-04-29 — Bug 3 fix; StencilEditVsActOn.md §3)
         Common.UI.Elements.MoldCellWiring.WireActOnPicker(_moldBtn);
 
@@ -187,10 +235,16 @@ public class SelectionSettingsPanel : UIState
         _flipHalfOrientationBtn = optBtns[3];
 
         // ═══════════════════════════════════════════════════════════════
-        //  Auto-Create Canvas Toggle
+        //  Delimitation Options (icon toggles)
         // ═══════════════════════════════════════════════════════════════
 
-        _builder.AddCenteredToggle("Selection.AutoCreateCanvas", true, out _autoCreateCanvasBtn, spacing: 38f);
+        var texAutoCreateCanvas = mod.Assets.Request<Texture2D>(
+            "Assets_Build/Icons/Stencil/AutoCreateCanvas", AssetRequestMode.ImmediateLoad);
+        _builder.AddIconToggleRow("Selection.Options", new WandPanelBuilder.IconDef[]
+        {
+            new(texAutoCreateCanvas, "Selection.AutoCreateCanvas", isToggle: true),
+        }, out var selectionOptionBtns);
+        _autoCreateCanvasBtn = selectionOptionBtns[0];
 
         // ═══════════════════════════════════════════════════════════════
         //  Action Buttons (icon-based: Clear Selection, Invert, Clear All, Teleport)
@@ -256,6 +310,32 @@ public class SelectionSettingsPanel : UIState
         _modeSelectionBtn.OnToggled += (_, _) => SetMode(DelimitationWandMode.Selection);
         _modeCanvasEditBtn.OnToggled += (_, _) => SetMode(DelimitationWandMode.CanvasEdit);
 
+        _nullSlotBtn.OnLeftClick += (_, _) =>
+        {
+            var swp = GetDelimitationWandPlayer();
+            if (swp == null) return;
+            swp.DeactivateSlot();
+            UpdateSlotButtons();
+        };
+        for (int i = 0; i < _delimSlotBtns.Length; i++)
+        {
+            int slotIdx = i;
+            _delimSlotBtns[i].OnLeftClick += (_, _) =>
+            {
+                var swp = GetDelimitationWandPlayer();
+                if (swp == null) return;
+
+                bool clearRequested = Main.keyState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift)
+                    || Main.keyState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.RightShift);
+
+                swp.SetActiveSlot((sbyte)slotIdx);
+                if (clearRequested)
+                    swp.ClearActiveSlot();
+
+                UpdateSlotButtons();
+            };
+        }
+
         // Operation selector (radio behavior)
         _opAddBtn.OnToggled += (_, _) => SetOperation(SelectionOperation.Add);
         _opRemoveBtn.OnToggled += (_, _) => SetOperation(SelectionOperation.Remove);
@@ -275,6 +355,8 @@ public class SelectionSettingsPanel : UIState
         _triangleFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.Triangle, ShapeMode.Filled);
         _triangleHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.Triangle, ShapeMode.Hollow);
         _moldBtn.OnToggled += (_, _) => SetShape(ShapeType.Mold, ShapeMode.Filled);
+        _magicWandReadBtn.OnToggled += (_, _) => SetShape(ShapeType.MagicWandRead, ShapeMode.Filled);
+        _magicWandApplyBtn.OnToggled += (_, _) => SetShape(ShapeType.MagicWandApply, ShapeMode.Filled);
 
         // Shape options
         _equalDimensionsBtn.OnToggled += (_, _) => ToggleEqualDimensions();
@@ -482,6 +564,18 @@ public class SelectionSettingsPanel : UIState
         _modeCanvasEditBtn.Toggled = s.Mode == DelimitationWandMode.CanvasEdit;
     }
 
+    private void UpdateSlotButtons()
+    {
+        var swp = GetDelimitationWandPlayer();
+        if (swp == null) return;
+        if (_nullSlotBtn != null)
+            _nullSlotBtn.Toggled = !swp.IsActive;
+
+        if (_delimSlotBtns == null) return;
+        for (int i = 0; i < _delimSlotBtns.Length; i++)
+            _delimSlotBtns[i].Toggled = swp.IsActive && swp.ActiveSlot == i;
+    }
+
     private void UpdateOperationButtons()
     {
         var s = GetSettings();
@@ -509,6 +603,8 @@ public class SelectionSettingsPanel : UIState
         _triangleFilledBtn.Toggled = shape.Shape == ShapeType.Triangle && shape.FillMode == ShapeMode.Filled;
         _triangleHollowBtn.Toggled = shape.Shape == ShapeType.Triangle && shape.FillMode == ShapeMode.Hollow;
         _moldBtn.Toggled = shape.Shape == ShapeType.Mold;
+        _magicWandReadBtn.Toggled = shape.Shape == ShapeType.MagicWandRead;
+        _magicWandApplyBtn.Toggled = shape.Shape == ShapeType.MagicWandApply;
     }
 
     private void UpdateThicknessDisplay()
@@ -569,6 +665,7 @@ public class SelectionSettingsPanel : UIState
     private void SyncFromSettings()
     {
         UpdateModeButtons();
+        UpdateSlotButtons();
         UpdateOperationButtons();
         UpdateShapeButtons();
         UpdateThicknessDisplay();

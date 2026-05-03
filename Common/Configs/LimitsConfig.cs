@@ -63,6 +63,16 @@ namespace WorldShapingWandsMod.Common.Configs
         [TooltipKey("$Mods.WorldShapingWandsMod.Configs.LimitsConfig.DelimitationSelectionCap.Tooltip")]
         public int DelimitationSelectionCap { get; set; } = 1000;
 
+        // Magic Wand Read uses an area-semantics cap (total tiles matched in the flood)
+        // rather than a dimension cap. Default 5000 — generous for typical builds,
+        // tunable independently from shape-selection caps.
+        [DefaultValue(5000)]
+        [Range(100, 50000)]
+        [Increment(500)]
+        [LabelKey("$Mods.WorldShapingWandsMod.Configs.LimitsConfig.MagicWandReadMaxArea.Label")]
+        [TooltipKey("$Mods.WorldShapingWandsMod.Configs.LimitsConfig.MagicWandReadMaxArea.Tooltip")]
+        public int MagicWandReadMaxArea { get; set; } = 5000;
+
         // ═════════════════════════════════════════════
         //  Operation Limits
         // ═════════════════════════════════════════════

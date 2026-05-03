@@ -98,7 +98,13 @@ public static class BuildingPacketHandler
             var tileSet = PacketUtilities.ComputeShapeTiles(header);
 
             bool isWall = (placeType == PlaceType.Wall);
-            if (isWall)
+            if (placeType == PlaceType.None)
+            {
+                ServerExecuteTileAttributeOnly(
+                    tileSet.Tiles, header.PlayerWhoAmI,
+                    slopeType, overwriteSlope, actuation);
+            }
+            else if (isWall)
             {
                 ServerExecuteWallBuilding(
                     tileSet.Tiles, header.PlayerWhoAmI,
@@ -120,6 +126,69 @@ public static class BuildingPacketHandler
         }
         // Clients don't need to handle the broadcast — SendTileSquare
         // from the server already updated their tile state.
+    }
+
+    private static bool NeedsSlopeChange(Tile tile, SlopeType slope)
+    {
+        if (!tile.HasTile) return false;
+
+        return slope switch
+        {
+            SlopeType.Default => tile.IsHalfBlock || tile.Slope != Terraria.ID.SlopeType.Solid,
+            SlopeType.VerticalHalf => !tile.IsHalfBlock || tile.Slope != Terraria.ID.SlopeType.Solid,
+            SlopeType.BottomRight => tile.IsHalfBlock || tile.Slope != Terraria.ID.SlopeType.SlopeDownLeft,
+            SlopeType.BottomLeft => tile.IsHalfBlock || tile.Slope != Terraria.ID.SlopeType.SlopeDownRight,
+            SlopeType.TopRight => tile.IsHalfBlock || tile.Slope != Terraria.ID.SlopeType.SlopeUpLeft,
+            SlopeType.TopLeft => tile.IsHalfBlock || tile.Slope != Terraria.ID.SlopeType.SlopeUpRight,
+            _ => false,
+        };
+    }
+
+    /// <summary>
+    /// Server-side attribute-only tile pass for <see cref="PlaceType.None"/>.
+    /// Applies slope and/or actuation to existing tiles only; no placement or item consumption.
+    /// </summary>
+    private static void ServerExecuteTileAttributeOnly(
+        IEnumerable<Point> tiles,
+        int playerWhoAmI,
+        SlopeType slopeType,
+        bool overwriteSlope,
+        bool? actuation)
+    {
+        int changed = 0;
+
+        foreach (Point tilePos in tiles)
+        {
+            int x = tilePos.X;
+            int y = tilePos.Y;
+            if (!WorldGen.InWorld(x, y, 1)) continue;
+            if (SafekeepingSystem.IsTileProtected(x, y)) continue;
+
+            Tile tile = Main.tile[x, y];
+            if (!tile.HasTile) continue;
+
+            bool didChange = false;
+
+            if (overwriteSlope && NeedsSlopeChange(tile, slopeType))
+            {
+                PacketUtilities.ApplySlopeServer(x, y, slopeType);
+                didChange = true;
+            }
+
+            if (actuation != null && tile.IsActuated != actuation.Value)
+            {
+                WandOfBuildingBase.ApplyActuation(x, y, actuation);
+                didChange = true;
+            }
+
+            if (!didChange) continue;
+
+            changed++;
+            NetMessage.SendTileSquare(-1, x, y, 1);
+        }
+
+        WandPacketHandler.SendOperationResult(playerWhoAmI, WandPacketType.BuildingOperation, changed, true,
+            changed == 0 ? "No editable tiles in selection." : null);
     }
 
     /// <summary>

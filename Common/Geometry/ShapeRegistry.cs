@@ -28,12 +28,8 @@ public static class ShapeRegistry
         Register(new MoldShape());
 
         // (S10 2026-04-29; StencilMagicWandSelectionPlan.md §7) Magic Wand
-        // Read + Apply. Both register unconditionally; per-wand availability
-        // (Read on stencil-only, Apply on every wand) is enforced by the
-        // panel-side shape grid builders — the registry registers everything
-        // and consumers decide what to render. UI rendering itself is
-        // scheduled for S11+ once shape-cell artwork (`MagicWandRead.png` /
-        // `MagicWandApply.png`) lands.
+        // Read + Apply. Both register unconditionally; panel-side shape
+        // grids decide what to render per wand family.
         Register(new MagicWandReadShape());
         Register(new MagicWandApplyShape());
 
@@ -74,6 +70,12 @@ public static class ShapeRegistry
         /// </summary>
         public static ShapeTileSet GetShapeTiles(ShapeType shapeType, ShapeContext context)
         {
+            bool quickHalfHorizontal = context.Slice == SliceMode.QuickHalfHorizontal;
+            bool quickHalfVertical = context.Slice == SliceMode.QuickHalfVertical;
+            bool needsQuickFlipAnchorFix = context.InvertHalfOrientation && (quickHalfHorizontal || quickHalfVertical);
+            int shiftX = quickHalfVertical ? context.Start.X - context.End.X : 0;
+            int shiftY = quickHalfHorizontal ? context.Start.Y - context.End.Y : 0;
+
             // (S12 2026-04-29; HalfShapeQuickSlice.md §4) Single point of
             // expansion for SliceMode.QuickHalfHorizontal/QuickHalfVertical.
             // No-op for SliceMode.Full and the non-quick half modes.
@@ -81,7 +83,15 @@ public static class ShapeRegistry
             // legacy SliceHelper.SliceFilledTiles pipeline runs unchanged.
             context = SliceHelper.PreExpandForQuickSlice(context);
             var provider = GetProvider(shapeType);
-            return provider.GetTiles(context);
+            var tileSet = provider.GetTiles(context);
+
+            if (!needsQuickFlipAnchorFix || (shiftX == 0 && shiftY == 0))
+                return tileSet;
+
+            return new ShapeTileSet(
+                tileSet.Tiles.Select(p => new Point(p.X + shiftX, p.Y + shiftY)),
+                tileSet.BoundaryTiles.Select(p => new Point(p.X + shiftX, p.Y + shiftY))
+            );
         }
 
         /// <summary>

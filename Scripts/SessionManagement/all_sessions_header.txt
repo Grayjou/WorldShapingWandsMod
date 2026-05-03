@@ -128,3 +128,8 @@ There is a script at `Scripts\restructure_scripts.py`. It hasn't been run in
 prod-mode because GrayJou isn't sure how the imports are going to break.
 Please make sure that every script that is moved won't have broken imports
 before applying.
+
+There is a SessionManagement helper script to rotate inbox files from
+`dev_notes/inbox/unaddressed/` to `dev_notes/inbox/addressed/`:
+  `Scripts\SessionManagement\clear_unadressed.py`
+Use `--dry-run` to preview and `--verbose` for per-item logs.

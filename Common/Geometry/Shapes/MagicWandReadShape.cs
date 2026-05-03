@@ -7,6 +7,7 @@ using WorldShapingWandsMod.Common.Configs;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Selection;
+using WorldShapingWandsMod.Common.Drawing;
 using WorldShapingWandsMod.Common.Utilities;
 
 namespace WorldShapingWandsMod.Common.Geometry.Shapes;
@@ -55,12 +56,17 @@ namespace WorldShapingWandsMod.Common.Geometry.Shapes;
 /// </remarks>
 public class MagicWandReadShape : IShapeProvider
 {
+    private const int ReadStatusChatCooldownTicks = 30;
+    private static readonly Dictionary<int, (MagicWandReadFn.ReadStatus Status, ulong Tick)> _lastStatusByPlayer = new();
+    private static readonly Dictionary<int, bool> _processedReadThisMousePressByPlayer = new();
+
     public ShapeType ShapeType => ShapeType.MagicWandRead;
 
     public ShapeTileSet GetTiles(ShapeContext context)
     {
         var emptySet = new HashSet<Point>();
         var emptyResult = new ShapeTileSet(emptySet, emptySet);
+        bool isCommit = context.Start == context.End;
 
         // Resolve the local player's stencil-wand state. Magic Wand Read
         // is stencil-only, so we always look at MoldingWandPlayer's
@@ -70,12 +76,44 @@ public class MagicWandReadShape : IShapeProvider
         var mwp = player.GetModPlayer<MoldingWandPlayer>();
         var wp = player.GetModPlayer<WandPlayer>();
         if (mwp == null || wp == null) return emptyResult;
+
+        // Hover / movement path: never rerun Read flood-fill. Return the most
+        // recent committed capture so camera/player movement cannot trigger
+        // per-frame flood recomputation.
+        if (!isCommit)
+            return BuildStoredShapeResult(wp.LastMagicWandShape, emptyResult);
+
+        // Commit path: process at most once per physical left-mouse press.
+        // Subsequent GetTiles evaluations while the button remains down reuse
+        // the previously captured shape.
+        bool shouldProcessCommit = ShouldProcessReadForCommit(player.whoAmI);
+        if (!shouldProcessCommit)
+            return BuildStoredShapeResult(wp.LastMagicWandShape, emptyResult);
+
         var canvas = mwp.Canvas;
-        if (canvas == null || canvas.Count == 0) return emptyResult;
+        bool previewOnlyNoCanvas = false;
+
+        // Fallback domain resolution (G-38/G-40): if no canvas or empty canvas,
+        // create a cursor-centered 168×125 rectangle as the domain.
+        if (canvas == null || canvas.Count == 0)
+        {
+            if (!wp.MagicWandReadConfig.AllowReadWithoutCanvas)
+                previewOnlyNoCanvas = true;
+
+            canvas = ResolveFallbackDomain();
+            if (canvas == null || canvas.Count == 0)
+            {
+                EmitNoCanvasChat(player.whoAmI);
+                return emptyResult;
+            }
+
+            if (previewOnlyNoCanvas)
+                EmitReadWithoutCanvasBlockedChat(player.whoAmI);
+        }
 
         // Cap: pick the stencil-wand cap from the server-authoritative
-        // LimitsConfig. The stencil-wand cap (MoldingSelectionCap)
-        // governs every Read since Read is stencil-only.
+        // LimitsConfig. Magic Wand Read has its own area-semantics cap
+        // (MagicWandReadMaxArea), independent from Molding dimension caps.
         int cap = ResolveCap();
 
         var origin = context.Start;
@@ -85,11 +123,9 @@ public class MagicWandReadShape : IShapeProvider
         // signature (single-point stamp; Start == End). Hover previews
         // pass distinct Start/End or repeat-Start frames; we don't want
         // every preview frame to overwrite the last successful capture.
-        // S11+ TODO: emit chat warnings for status ∈ {Empty,
-        // UnpaintedOrigin, Capped} from the cast site (here once a
-        // distinct "is this a commit vs a preview" gate lands; for now
-        // the gate is Start == End which is correct for stamp semantics).
-        if (context.Start == context.End && status != MagicWandReadFn.ReadStatus.Empty)
+        EmitReadStatusChat(player.whoAmI, status, cap);
+
+        if (!previewOnlyNoCanvas && status != MagicWandReadFn.ReadStatus.Empty)
         {
             wp.LastMagicWandShape = new StoredMagicWandShape(
                 tiles: new HashSet<Point>(tiles),
@@ -113,7 +149,8 @@ public class MagicWandReadShape : IShapeProvider
         // recent freshly-computed Read?" — which is what GetTiles
         // provides. ShapeTileSet returns IEnumerable; HashSet-cast (or
         // materialise) for an O(1) Contains.
-        var set = GetTiles(context).Tiles as HashSet<Point> ?? new HashSet<Point>(GetTiles(context).Tiles);
+        var tileSet = GetTiles(context);
+        var set = tileSet.Tiles as HashSet<Point> ?? new HashSet<Point>(tileSet.Tiles);
         return set.Contains(point);
     }
 
@@ -121,7 +158,8 @@ public class MagicWandReadShape : IShapeProvider
     {
         // Display dims for HUD / cursor — bounding-box of the matching
         // set. Cheap because the canvas is already capped.
-        var set = GetTiles(context).Tiles as HashSet<Point> ?? new HashSet<Point>(GetTiles(context).Tiles);
+        var tileSet = GetTiles(context);
+        var set = tileSet.Tiles as HashSet<Point> ?? new HashSet<Point>(tileSet.Tiles);
         if (set.Count == 0) return (0, 0);
         int minX = int.MaxValue, minY = int.MaxValue, maxX = int.MinValue, maxY = int.MinValue;
         foreach (var p in set)
@@ -134,10 +172,21 @@ public class MagicWandReadShape : IShapeProvider
         return (maxX - minX + 1, maxY - minY + 1);
     }
 
+    private static ShapeTileSet BuildStoredShapeResult(StoredMagicWandShape stored, ShapeTileSet emptyResult)
+    {
+        if (stored?.Tiles == null || stored.Tiles.Count == 0)
+            return emptyResult;
+
+        var tiles = new HashSet<Point>(stored.Tiles);
+        var boundary = GeometryHelper.GetBoundaryTiles4(tiles);
+        return new ShapeTileSet(tiles, boundary);
+    }
+
     /// <summary>
     /// Resolves the cap from server-authoritative <c>LimitsConfig</c>.
-    /// Magic Wand Read is stencil-only so we use the molding cap.
-    /// Defensive default of 1000 if config is unavailable (matches the
+    /// Uses <c>MagicWandReadMaxArea</c> — an area-semantics cap tunable
+    /// independently from the Molding dimension cap.
+    /// Defensive default of 5000 if config is unavailable (matches the
     /// shipped default value in <c>LimitsConfig</c>).
     /// </summary>
     private static int ResolveCap()
@@ -145,11 +194,139 @@ public class MagicWandReadShape : IShapeProvider
         try
         {
             var cfg = ModContent.GetInstance<LimitsConfig>();
-            return cfg?.MoldingSelectionCap ?? 1000;
+            return cfg?.MagicWandReadMaxArea ?? 5000;
         }
         catch
         {
-            return 1000;
+            return 5000;
         }
+    }
+
+    /// <summary>
+    /// (G-38/G-40, S4 2026-05-02)
+    /// Resolves the fallback domain for Magic Wand Read when no explicit
+    /// stencil canvas exists or the canvas is empty.
+    /// 
+    /// Creates a rectangular domain centered on the cursor with dimensions
+    /// 168×125 (width × height in tile units), clamped to world bounds
+    /// (0 ≤ x < Main.maxTilesX, 0 ≤ y < Main.maxTilesY).
+    /// 
+    /// Returns null if the fallback rectangle would be entirely out-of-bounds
+    /// or if cursor position cannot be determined.
+    /// </summary>
+    private static SelectionCanvas ResolveFallbackDomain()
+    {
+        const int FallbackWidth = 168;
+        const int FallbackHeight = 125;
+
+        try
+        {
+            // Cursor position in world tile coordinates.
+            // Main.mouseX/Y are screen pixels; convert to world coords.
+            int cursorTileX = (Main.mouseX + (int)Main.screenPosition.X) / 16;
+            int cursorTileY = (Main.mouseY + (int)Main.screenPosition.Y) / 16;
+
+            // Center the rectangle on the cursor.
+            int rectLeft   = cursorTileX - FallbackWidth / 2;
+            int rectTop    = cursorTileY - FallbackHeight / 2;
+            int rectRight  = rectLeft + FallbackWidth - 1;  // Inclusive
+            int rectBottom = rectTop + FallbackHeight - 1;  // Inclusive
+
+            // Clamp to world bounds.
+            int minX = Math.Max(0, rectLeft);
+            int minY = Math.Max(0, rectTop);
+            int maxX = Math.Min(Main.maxTilesX - 1, rectRight);
+            int maxY = Math.Min(Main.maxTilesY - 1, rectBottom);
+
+            // If clamped rectangle is invalid (entirely out-of-bounds), return null.
+            if (minX > maxX || minY > maxY)
+                return null;
+
+            // Build the canvas from all tiles in the clamped rectangle.
+            var canvas = new SelectionCanvas();
+            var tilesToAdd = new HashSet<Point>();
+            for (int x = minX; x <= maxX; x++)
+            {
+                for (int y = minY; y <= maxY; y++)
+                {
+                    tilesToAdd.Add(new Point(x, y));
+                }
+            }
+
+            canvas.ApplyOperation(tilesToAdd, CanvasOperation.Add);
+            return canvas;
+        }
+        catch
+        {
+            // Defensive: if cursor conversion or rectangle calculation fails, return null.
+            return null;
+        }
+    }
+
+
+    private static void EmitNoCanvasChat(int playerId)
+    {
+        if (!ShouldEmitStatus(playerId, MagicWandReadFn.ReadStatus.Empty)) return;
+        Main.NewText(Msg.Get("MagicWandReadNoCanvas"), WandColors.MsgWarning);
+    }
+
+    private static void EmitReadWithoutCanvasBlockedChat(int playerId)
+    {
+        if (!ShouldEmitStatus(playerId, MagicWandReadFn.ReadStatus.Empty)) return;
+        Main.NewText("Read without canvas is blocked by safety settings. Showing preview only.", WandColors.MsgWarning);
+    }
+
+    private static void EmitReadStatusChat(int playerId, MagicWandReadFn.ReadStatus status, int cap)
+    {
+        if (status == MagicWandReadFn.ReadStatus.Success) return;
+        if (!ShouldEmitStatus(playerId, status)) return;
+
+        switch (status)
+        {
+            case MagicWandReadFn.ReadStatus.Empty:
+                Main.NewText(Msg.Get("MagicWandReadEmpty"), WandColors.MsgHint);
+                break;
+            case MagicWandReadFn.ReadStatus.Capped:
+                Main.NewText(Msg.Get("MagicWandReadCapped", cap), WandColors.MsgWarning);
+                break;
+            case MagicWandReadFn.ReadStatus.UnpaintedOrigin:
+                Main.NewText(Msg.Get("MagicWandReadUnpaintedOrigin"), WandColors.MsgWarning);
+                break;
+        }
+    }
+
+    private static bool ShouldEmitStatus(int playerId, MagicWandReadFn.ReadStatus status)
+    {
+        ulong now = Main.GameUpdateCount;
+        if (_lastStatusByPlayer.TryGetValue(playerId, out var last)
+            && last.Status == status
+            && now - last.Tick < ReadStatusChatCooldownTicks)
+        {
+            return false;
+        }
+
+        _lastStatusByPlayer[playerId] = (status, now);
+        return true;
+    }
+
+    private static bool ShouldProcessReadForCommit(int playerId)
+    {
+        if (playerId < 0) return false;
+
+        // One chat emission per physical left-mouse press operation.
+        // GetTiles can be evaluated multiple times while the button is still
+        // down (especially near domain borders); those re-evaluations should
+        // stay silent after the first emission.
+        if (!Main.mouseLeft)
+        {
+            _processedReadThisMousePressByPlayer[playerId] = false;
+            return false;
+        }
+
+        if (_processedReadThisMousePressByPlayer.TryGetValue(playerId, out bool alreadyProcessed) && alreadyProcessed)
+            return false;
+
+        _processedReadThisMousePressByPlayer[playerId] = true;
+        return true;
     }
 }

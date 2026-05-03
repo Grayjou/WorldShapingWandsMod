@@ -51,6 +51,7 @@ namespace WorldShapingWandsMod.Content.Items
                 PlaceType.GrassSeed => WandAction.BuildingGrassSeeds,
                 PlaceType.Rail      => WandAction.BuildingTracks,
                 PlaceType.PlantPot  => WandAction.BuildingPlanterBox,
+                PlaceType.None      => WandAction.BuildingSolid,
                 PlaceType.Torch     => WandAction.BuildingSolid,
                 _                   => WandAction.BuildingSolid,
             };
@@ -90,6 +91,12 @@ namespace WorldShapingWandsMod.Content.Items
             // mode-keyed pickup in TileExecution.cs / WallExecution.cs. Stale-choice fallback
             // is handled inside FindFirstItem.
             var settings = wandPlayer.BuildingSettings;
+            if (settings.Object == PlaceType.None)
+            {
+                player.cursorItemIconEnabled = false;
+                return;
+            }
+
             var condition = ItemTypeHelper.GetConditions(settings.Object);
             int? choice = settings.Object == PlaceType.Wall
                 ? settings.ChosenWallItemType

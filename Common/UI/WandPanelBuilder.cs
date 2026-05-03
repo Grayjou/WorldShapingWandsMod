@@ -42,6 +42,7 @@ public class WandPanelBuilder
     private readonly UIDraggablePanel _panel;
     private readonly float _panelWidth;
     private readonly float _padding;
+    private bool _panelChromeAdded;
 
     /// <summary>Current Y offset � automatically advanced by each Add method.</summary>
     public float CurrentY { get; private set; }
@@ -111,6 +112,9 @@ public class WandPanelBuilder
     public const float InitialY = 8f;   
 
     public const float AfterCloseButtonSpacing = 50f;
+    public const float ChromeIconSize = 22f;
+    public const float ChromeIconGap = 4f;
+    public const float ChromeBottomMargin = 8f;
 
     // Helper for localization
     private const string UIPrefix = "Mods.WorldShapingWandsMod.UI";
@@ -146,7 +150,10 @@ public class WandPanelBuilder
         title.Height.Set(TitleHeight, 0f);
         title.Top.Set(CurrentY, 0f);
         _panel.Append(title);
-        CurrentY += TitleSpacing;
+        CurrentY = LayoutSpacing.AddVerticalSpace(
+            currentSize: CurrentY,
+            elementSize: 0f,
+            bottomPadding: TitleSpacing);
         return this;
     }
 
@@ -163,7 +170,10 @@ public class WandPanelBuilder
         header.Height.Set(SectionHeaderHeight, 0f);
         header.Top.Set(CurrentY, 0f);
         _panel.Append(header);
-        CurrentY += SectionHeaderSpacing;
+        CurrentY = LayoutSpacing.AddVerticalSpace(
+            currentSize: CurrentY,
+            elementSize: 0f,
+            bottomPadding: SectionHeaderSpacing);
         return this;
     }
 
@@ -232,7 +242,11 @@ public class WandPanelBuilder
 
             // Row spacing: icon gap between rows, extra spacing after last row
             bool isLastRow = (row == rowCount - 1);
-            CurrentY += IconBtnSize + (isLastRow ? AfterIconGridSpacing : IconGap);
+            float rowBottomPadding = isLastRow ? AfterIconGridSpacing : IconGap;
+            CurrentY = LayoutSpacing.AddVerticalSpace(
+                currentSize: CurrentY,
+                elementSize: IconBtnSize,
+                bottomPadding: rowBottomPadding);
         }
 
         return this;
@@ -278,7 +292,11 @@ public class WandPanelBuilder
             }
 
             bool isLastRow = (row == rowCount - 1);
-            CurrentY += SmallIconBtnSize + (isLastRow ? AfterIconGridSpacing : SmallIconGap);
+            float rowBottomPadding = isLastRow ? AfterIconGridSpacing : SmallIconGap;
+            CurrentY = LayoutSpacing.AddVerticalSpace(
+                currentSize: CurrentY,
+                elementSize: SmallIconBtnSize,
+                bottomPadding: rowBottomPadding);
         }
 
         return this;
@@ -299,6 +317,7 @@ public class WandPanelBuilder
         public UIIconButton TriangleFilled, TriangleHollow;
         public UIIconButton Elbow, Cardinal, StraightLine;
         public UIIconButton Mold;
+        public UIIconButton MagicWandRead, MagicWandApply;
     }
 
     /// <summary>
@@ -310,6 +329,8 @@ public class WandPanelBuilder
         AddSectionHeader("Common.Shape");
 
         var mod = ModContent.GetInstance<WorldShapingWandsMod>();
+        var mwReadHover = Language.GetTextValue("Mods.WorldShapingWandsMod.Shape.MagicWandRead.Label");
+        var mwApplyHover = Language.GetTextValue("Mods.WorldShapingWandsMod.Shape.MagicWandApply.Label");
         var icons = new IconDef[]
         {
             // Row 1
@@ -327,6 +348,8 @@ public class WandPanelBuilder
             // Row 3
             new(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/ShapeStraightLine",   AssetRequestMode.ImmediateLoad), "Common.ShapeStraightLine"),
             new(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/ShapeMold",           AssetRequestMode.ImmediateLoad), "Common.ShapeMold"),
+            IconDef.WithText(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/MagicWandRead", AssetRequestMode.ImmediateLoad), mwReadHover),
+            IconDef.WithText(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/MagicWandApply", AssetRequestMode.ImmediateLoad), mwApplyHover),
         };
 
         AddIconGrid(icons, 5, out var btns);
@@ -341,6 +364,8 @@ public class WandPanelBuilder
             Cardinal      = btns[9],
             StraightLine  = btns[10],
             Mold          = btns[11],
+            MagicWandRead = btns[12],
+            MagicWandApply = btns[13],
         };
 
         return this;
@@ -407,6 +432,7 @@ public class WandPanelBuilder
         public UIIconButton RectFilled;
         public UIIconButton DiamondFilled, TriangleFilled;
         public UIIconButton Elbow, Cardinal, StraightLine;
+        public UIIconButton MagicWandRead, MagicWandApply;
     }
 
     /// <summary>
@@ -418,6 +444,8 @@ public class WandPanelBuilder
         AddSectionHeader("Common.Shape");
 
         var mod = ModContent.GetInstance<WorldShapingWandsMod>();
+        var mwReadHover = Language.GetTextValue("Mods.WorldShapingWandsMod.Shape.MagicWandRead.Label");
+        var mwApplyHover = Language.GetTextValue("Mods.WorldShapingWandsMod.Shape.MagicWandApply.Label");
         var icons = new IconDef[]
         {
             // Row 1: 5 icons
@@ -428,6 +456,8 @@ public class WandPanelBuilder
             new(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/ShapeTriangleFilled", AssetRequestMode.ImmediateLoad), "Common.ShapeTriangleFilled"),
             // Row 2: 1 icon
             new(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/ShapeStraightLine",   AssetRequestMode.ImmediateLoad), "Common.ShapeStraightLine"),
+            IconDef.WithText(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/MagicWandRead", AssetRequestMode.ImmediateLoad), mwReadHover),
+            IconDef.WithText(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/MagicWandApply", AssetRequestMode.ImmediateLoad), mwApplyHover),
         };
 
         AddIconGrid(icons, 5, out var btns);
@@ -440,6 +470,8 @@ public class WandPanelBuilder
             DiamondFilled = btns[3],
             TriangleFilled = btns[4],
             StraightLine  = btns[5],
+            MagicWandRead = btns[6],
+            MagicWandApply = btns[7],
         };
 
         return this;
@@ -461,7 +493,10 @@ public class WandPanelBuilder
         sliceGrid.Top.Set(CurrentY, 0f);
         sliceGrid.OnChanged += onChanged;
         _panel.Append(sliceGrid);
-        CurrentY += sliceGrid.Height.Pixels + AfterIconGridSpacing;
+        CurrentY = LayoutSpacing.AddVerticalSpace(
+            currentSize: CurrentY,
+            elementSize: sliceGrid.Height.Pixels,
+            bottomPadding: AfterIconGridSpacing);
 
         return this;
     }
@@ -495,8 +530,17 @@ public class WandPanelBuilder
         // hotbar selector doesn't also act on this scroll event.
         void ScrollAdjust(Terraria.UI.UIScrollWheelEvent evt)
         {
-            onAdjust(evt.ScrollWheelValue > 0 ? 1 : -1);
+            int delta = Terraria.GameInput.PlayerInput.ScrollWheelDeltaForUI;
+            if (delta == 0)
+                delta = Terraria.GameInput.PlayerInput.ScrollWheelDelta;
+            if (delta == 0)
+                return;
+
+            onAdjust(delta > 0 ? 1 : -1);
+            if (Main.LocalPlayer != null)
+                Main.LocalPlayer.mouseInterface = true;
             Terraria.GameInput.PlayerInput.ScrollWheelDelta = 0;
+            Terraria.GameInput.PlayerInput.ScrollWheelDeltaForUI = 0;
         }
 
         var label = new UIText(L("Common.OutlineThickness"), 0.85f);
@@ -528,7 +572,10 @@ public class WandPanelBuilder
         plusBtn.OnScrollWheel += (evt, _) => ScrollAdjust(evt);
         _panel.Append(plusBtn);
 
-        CurrentY += AfterThicknessSpacing;
+        CurrentY = LayoutSpacing.AddVerticalSpace(
+            currentSize: CurrentY,
+            elementSize: 0f,
+            bottomPadding: AfterThicknessSpacing);
         return this;
     }
 
@@ -567,7 +614,10 @@ public class WandPanelBuilder
             buttons[i] = btn;
         }
 
-        CurrentY += IconBtnSize + AfterOptionsSpacing;
+        CurrentY = LayoutSpacing.AddVerticalSpace(
+            currentSize: CurrentY,
+            elementSize: IconBtnSize,
+            bottomPadding: AfterOptionsSpacing);
         return this;
     }
 
@@ -592,7 +642,11 @@ public class WandPanelBuilder
         _panel.Append(leftBtn);
         _panel.Append(rightBtn);
 
-        CurrentY += spacing > 0 ? spacing : AfterToggleGroupSpacing;
+        float bottomPadding = spacing > 0 ? spacing : AfterToggleGroupSpacing;
+        CurrentY = LayoutSpacing.AddVerticalSpace(
+            currentSize: CurrentY,
+            elementSize: 0f,
+            bottomPadding: bottomPadding);
         return this;
     }
 
@@ -617,7 +671,11 @@ public class WandPanelBuilder
         _panel.Append(leftBtn);
         _panel.Append(rightBtn);
 
-        CurrentY += spacing > 0 ? spacing : AfterToggleRowSpacing;
+        float bottomPadding = spacing > 0 ? spacing : AfterToggleRowSpacing;
+        CurrentY = LayoutSpacing.AddVerticalSpace(
+            currentSize: CurrentY,
+            elementSize: 0f,
+            bottomPadding: bottomPadding);
         return this;
     }
 
@@ -630,7 +688,11 @@ public class WandPanelBuilder
         float col1 = _padding;
         btn = MakeToggle(L(locKey), col1, CurrentY, tint);
         _panel.Append(btn);
-        CurrentY += spacing > 0 ? spacing : AfterToggleGroupSpacing;
+        float bottomPadding = spacing > 0 ? spacing : AfterToggleGroupSpacing;
+        CurrentY = LayoutSpacing.AddVerticalSpace(
+            currentSize: CurrentY,
+            elementSize: 0f,
+            bottomPadding: bottomPadding);
         return this;
     }
 
@@ -650,7 +712,10 @@ public class WandPanelBuilder
         btn.HAlign = 0.5f;
         btn.Top.Set(CurrentY, 0f);
         _panel.Append(btn);
-        CurrentY += spacing;
+        CurrentY = LayoutSpacing.AddVerticalSpace(
+            currentSize: CurrentY,
+            elementSize: 0f,
+            bottomPadding: spacing);
         return this;
     }
 
@@ -661,6 +726,8 @@ public class WandPanelBuilder
     /// <summary>Adds a centered Close button.</summary>
     public WandPanelBuilder AddCloseButton()
     {
+        EnsurePanelChromeButtons();
+
         MarkSection();
         var closeBtn = new UITextPanel<string>(L("Common.Close"), 0.9f, false);
         closeBtn.Width.Set(80f, 0f);
@@ -674,8 +741,83 @@ public class WandPanelBuilder
         // (button on Building/Replacement panel, or the keybind) flips its intent.
         closeBtn.OnLeftClick += (_, _) => ModContent.GetInstance<WandUISystem>().CloseAllPanels();
         _panel.Append(closeBtn);
-        CurrentY += AfterCloseButtonSpacing;
+        CurrentY = LayoutSpacing.AddVerticalSpace(
+            currentSize: CurrentY,
+            elementSize: 0f,
+            bottomPadding: AfterCloseButtonSpacing);
         return this;
+    }
+
+    /// <summary>
+    /// Adds bottom-right WandPanel chrome action buttons: (?) Help and (i) Info.
+    /// Help button dispatches verbosity-aware tooltip text to chat.
+    /// Info button is intentionally inert placeholder (pending G-43/G-44 payload design).
+    /// </summary>
+    private void EnsurePanelChromeButtons()
+    {
+        if (_panelChromeAdded)
+            return;
+
+        var mod = ModContent.GetInstance<WorldShapingWandsMod>();
+        var texHelp = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Chromes/QuestionMark", AssetRequestMode.ImmediateLoad);
+        var texInfo = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Chromes/Info", AssetRequestMode.ImmediateLoad);
+
+        var helpBtn = new UIIconButton(texHelp, L("Chrome.Help"))
+        {
+            IsRadio = false,
+            IsAction = true,
+        };
+        helpBtn.Width.Set(ChromeIconSize, 0f);
+        helpBtn.Height.Set(ChromeIconSize, 0f);
+        helpBtn.HAlign = 1f;
+        helpBtn.VAlign = 1f;
+        helpBtn.Left.Set(-_padding, 0f);
+        helpBtn.Top.Set(-ChromeBottomMargin, 0f);
+        
+        // (G-42 Session 4 2026-05-02) Wire Help button to dispatch tooltip to chat
+        // using per-player verbosity preference. Shows both variants as examples.
+        helpBtn.OnLeftClick += (evt, elem) =>
+        {
+            var player = Main.LocalPlayer;
+            if (player != null)
+            {
+                var wandPlayer = player.GetModPlayer<Common.Players.WandPlayer>();
+                if (wandPlayer != null)
+                {
+                    var longText = Language.GetTextValue("Mods.WorldShapingWandsMod.UI.Chrome.Help");
+                    var shortText = Common.UI.Resolvers.TooltipVerbosityResolver.ResolveTooltip(
+                        "Mods.WorldShapingWandsMod.UI.Chrome.Help", player);
+                    
+                    bool isVerbose = wandPlayer.TooltipVerbosityEnabled;
+                    var verbosityStatus = isVerbose ? "Verbose (Long)" : "Concise (Short)";
+                    
+                    Main.NewText("[Wand Help - Current Mode: " + verbosityStatus + "]", Color.Cyan);
+                    Main.NewText(shortText, Color.White);
+                    
+                    // Show both variants if on long form to demonstrate options
+                    if (isVerbose)
+                    {
+                        Main.NewText("(Long form above; click again or use verbosity toggle to see short form)", Color.Gray);
+                    }
+                }
+            }
+        };
+
+        var infoBtn = new UIIconButton(texInfo, L("Chrome.Info"))
+        {
+            IsRadio = false,
+            IsAction = true,
+        };
+        infoBtn.Width.Set(ChromeIconSize, 0f);
+        infoBtn.Height.Set(ChromeIconSize, 0f);
+        infoBtn.HAlign = 1f;
+        infoBtn.VAlign = 1f;
+        infoBtn.Left.Set(-_padding - ChromeIconSize - ChromeIconGap, 0f);
+        infoBtn.Top.Set(-ChromeBottomMargin, 0f);
+
+        _panel.Append(helpBtn);
+        _panel.Append(infoBtn);
+        _panelChromeAdded = true;
     }
 
     // -------------------------------------------------------------------
@@ -706,7 +848,10 @@ public class WandPanelBuilder
             buttons[i] = btn;
         }
 
-        CurrentY += IconBtnSize + AfterOptionsSpacing;
+        CurrentY = LayoutSpacing.AddVerticalSpace(
+            currentSize: CurrentY,
+            elementSize: IconBtnSize,
+            bottomPadding: AfterOptionsSpacing);
         return this;
     }
 
@@ -728,7 +873,10 @@ public class WandPanelBuilder
             buttons[i] = btn;
         }
 
-        CurrentY += IconBtnSize + AfterOptionsSpacing;
+        CurrentY = LayoutSpacing.AddVerticalSpace(
+            currentSize: CurrentY,
+            elementSize: IconBtnSize,
+            bottomPadding: AfterOptionsSpacing);
         return this;
     }
 
@@ -742,7 +890,10 @@ public class WandPanelBuilder
         button.HAlign = 0.5f;
         button.Top.Set(CurrentY, 0f);
         _panel.Append(button);
-        CurrentY += spacing;
+        CurrentY = LayoutSpacing.AddVerticalSpace(
+            currentSize: CurrentY,
+            elementSize: 0f,
+            bottomPadding: spacing);
         return this;
     }
 
@@ -753,7 +904,10 @@ public class WandPanelBuilder
     /// <summary>Advances the Y cursor by a custom amount.</summary>
     public WandPanelBuilder AdvanceY(float amount)
     {
-        CurrentY += amount;
+        CurrentY = LayoutSpacing.AddVerticalSpace(
+            currentSize: CurrentY,
+            elementSize: 0f,
+            bottomPadding: amount);
         return this;
     }
 

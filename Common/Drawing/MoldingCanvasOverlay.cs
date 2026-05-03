@@ -85,11 +85,19 @@ internal sealed class MoldingCanvasOverlay : IComposableOverlay
 
     public void Draw(SpriteBatch spriteBatch, OverlayContext context)
     {
-        // Only render the molding canvas overlay when holding the Molding Wand
-        if (context.Player?.HeldItem?.ModItem is not WandOfMoldingBase)
+        var player = context.Player;
+        if (player == null) return;
+
+        bool heldIsMolding    = player.HeldItem?.ModItem is WandOfMoldingBase;
+        bool readShapeActive  = player.GetModPlayer<WandPlayer>()
+                                      ?.IsActiveShape(ShapeType.MagicWandRead) ?? false;
+
+        // Show the canvas overlay when holding the Molding Wand OR when any wand
+        // has MagicWandRead selected (cross-family stencil-read preview).
+        if (!heldIsMolding && !readShapeActive)
             return;
 
-        var mwp = context.Player?.GetModPlayer<MoldingWandPlayer>();
+        var mwp = player.GetModPlayer<MoldingWandPlayer>();
         if (mwp == null)
             return;
 
@@ -131,9 +139,11 @@ internal sealed class MoldingCanvasOverlay : IComposableOverlay
         if (canvasActive)
             DrawOutsideFill(spriteBatch, mwp.Canvas.Tiles, screenBounds, outsideColor);
 
-        // Layer 3 (top): TileSelection — highlight selected tiles
-        // Hidden during Canvas Edit mode to reduce visual noise
-        if (selectionActive && settings.Mode != MoldingWandMode.CanvasEdit)
+        // Layer 3 (top): TileSelection — highlight selected tiles.
+        // Hidden during Canvas Edit mode to reduce visual noise.
+        // Also suppressed for cross-family Read view (non-Molding wand) — the player
+        // is viewing the canvas as a reference, not editing a mold selection.
+        if (selectionActive && settings.Mode != MoldingWandMode.CanvasEdit && heldIsMolding)
             DrawTileFill(spriteBatch, mwp.Selection.Tiles, screenBounds, tileSelColor);
 
         // Border: Canvas edge segments on top of everything (teal border)

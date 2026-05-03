@@ -96,6 +96,15 @@ namespace WorldShapingWandsMod.Common.Configs
         public bool ShowTilingPreview { get; set; } = true;
 
         /// <summary>
+        /// When true, shows a ghosted cursor-shape preview for non-stamp workflows
+        /// even when no active selection exists yet.
+        /// </summary>
+        [DefaultValue(true)]
+        [LabelKey("$Mods.WorldShapingWandsMod.Configs.OverlayConfig.ShowCursorShapePreview.Label")]
+        [TooltipKey("$Mods.WorldShapingWandsMod.Configs.OverlayConfig.ShowCursorShapePreview.Tooltip")]
+        public bool ShowCursorShapePreview { get; set; } = true;
+
+        /// <summary>
         /// Controls how the stamp overlay is positioned when dragging.
         /// <b>Precise</b>: Snaps to tile grid (no sub-pixel offset).
         /// <b>Smooth</b>: Applies sub-pixel offset for smooth mouse-following.

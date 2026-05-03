@@ -107,6 +107,21 @@ UI: {
 		// Slice: Shape Slice
 	}
 
+	Chrome: {
+		/* Help:
+			'''
+			Wand Guide (Coming Soon)
+			Reserved chrome button. No action yet.
+			''' */
+		/* Info:
+			'''
+			Wand Info (Coming Soon)
+			Reserved chrome button. No action yet.
+			''' */
+		// Help_Short: Wand Guide (Soon)
+		// Info_Short: Wand Info (Soon)
+	}
+
 	// (S4 2026-04-28) Strings for the shared SubPanel primitive (UISubPanel).
 	SubPanel: {
 		// (S13 2026-04-28) Tooltip key names describe the *action a click would
@@ -177,6 +192,170 @@ UI: {
 			''' */
 	}
 
+	# (S4 2026-05-01 — StencilMagicWandSelectionPlan.md §0.2 + §4.1.) Strings
+	# for the Magic Wand (Read) configuration SubPanel. Two top-level
+	# sections: SampleMode (12 cells in three sub-rows) + Contiguity (3-cell
+	# radio). Cell labels are kept short so they fit the compact 44-px
+	# SampleMode cells; full descriptions live in the per-cell Tooltip
+	# strings shown on hover. v0 ships text-cell radios; the plan §7 calls
+	# for 12 dedicated icons + 3 contiguity icons which are tracked in
+	# dev_notes/dev_tasks/pending_assets.md and will land as a pure visual
+	# swap (cell layout + identity stay the same).
+	MagicWandRead: {
+		// SubPanelTitle: Magic Wand
+
+		SampleMode: {
+			// Header: Sample Mode
+
+			SameTile: {
+				// Label: Same Tile
+				/* Tooltip:
+					'''
+					Same Tile
+					Selects every tile of the same TYPE as the origin (the tile under your cursor).
+					"All bricks of THIS kind." The base Magic Wand semantic.
+					''' */
+			}
+
+			SameWall: {
+				// Label: Same Wall
+				/* Tooltip:
+					'''
+					Same Wall
+					Selects every wall of the same TYPE as the origin.
+					"All walls of THIS kind."
+					''' */
+			}
+
+			Solid: {
+				// Label: Solid
+				/* Tooltip:
+					'''
+					Solid
+					Type-agnostic flood across every solid tile (any block type).
+					''' */
+			}
+
+			Wall: {
+				// Label: Wall
+				/* Tooltip:
+					'''
+					Wall
+					Type-agnostic flood across every wall (any wall type).
+					''' */
+			}
+
+			Rope: {
+				// Label: Rope
+				/* Tooltip:
+					'''
+					Rope
+					Same rope type as origin.
+					Includes chain-like rope-family tiles when supported.
+					''' */
+			}
+
+			Platform: {
+				// Label: Platform
+				/* Tooltip:
+					'''
+					Platform
+					Same platform type as origin.
+					''' */
+			}
+
+			Rail: {
+				// Label: Rail
+				/* Tooltip:
+					'''
+					Rail
+					Same rail type as origin.
+					''' */
+			}
+
+			PlanterBox: {
+				// Label: Planter
+				/* Tooltip:
+					'''
+					Planter Box
+					Same planter box type as origin.
+					''' */
+			}
+
+			Empty: {
+				// Label: Empty
+				/* Tooltip:
+					'''
+					Empty
+					Empty space — no tile and no wall.
+					''' */
+			}
+
+			Liquid: {
+				// Label: Liquid
+				/* Tooltip:
+					'''
+					Liquid
+					All liquid of the same type as the origin (water, lava, honey, shimmer).
+					''' */
+			}
+
+			PaintTile: {
+				// Label: Paint (T)
+				/* Tooltip:
+					'''
+					Paint (Tile)
+					All tiles painted the same colour as the origin tile's paint.
+					Origin must be painted; otherwise selection is empty + chat warning.
+					''' */
+			}
+
+			PaintWall: {
+				// Label: Paint (W)
+				/* Tooltip:
+					'''
+					Paint (Wall)
+					All walls painted the same colour as the origin wall's paint.
+					Origin wall must be painted; otherwise selection is empty + chat warning.
+					''' */
+			}
+		}
+
+		Contiguity: {
+			// Header: Contiguity
+
+			FourNeighbour: {
+				// Label: 4-Neighbour
+				/* Tooltip:
+					'''
+					4-Neighbour
+					Standard orthogonal flood (N / S / E / W).
+					Default. Fastest and most predictable.
+					''' */
+			}
+
+			EightNeighbour: {
+				// Label: 8-Neighbour
+				/* Tooltip:
+					'''
+					8-Neighbour
+					Orthogonal + diagonal flood (N / NE / E / SE / S / SW / W / NW).
+					Catches diagonally-touching matches the 4-neighbour mode skips.
+					''' */
+			}
+
+			NonContiguous: {
+				// Label: All Matches
+				/* Tooltip:
+					'''
+					Non-Contiguous
+					No flood — selects EVERY matching cell across the entire canvas,
+					regardless of connectivity. Capped at Magic Wand max area.
+					''' */
+			}
+		}
+	}
+
 	Building: {
 		Title: Baguette de construction
 		ObjectType: Type d'objet
@@ -187,6 +366,7 @@ UI: {
 		GrassSeed: Graine d'herbe
 		PlanterBox: Bac Ã  plantation
 		Wall: Mur
+		// NoObject: No Object (Edit Attributes)
 		Slope: Pente
 		SlopeDefault: Bloc complet
 		SlopeHalf: Demi-bloc
@@ -224,6 +404,12 @@ UI: {
 		Wall: Mur
 		// Options: Replacement Options
 		SameType: MÃªme Type
+		/* SwapSourceTarget:
+			'''
+			Swap Source / Target
+			Swaps Replace… and …with object types, along with their chosen and pinned inventory picks.
+			Disabled while Same Type mode is active or target is Air.
+			''' */
 	}
 
 	Wiring: {
@@ -378,6 +564,7 @@ UI: {
 		// ClearCanvas: Clear Canvas
 		// ClearAll: Clear All
 		// TeleportToPlayer: Teleport to Player
+		// Options: Delimitation Options
 		// AutoCreateCanvas: Auto-Create Canvas
 		// Status: Status
 	}
@@ -395,10 +582,23 @@ UI: {
 		// Actions: Actions
 		// ClearSelection: Clear Selection
 		// InvertSelection: Invert Selection
+		/* PromoteToCustomShape:
+			'''
+			Promote to Custom Shape
+			Converts the active mold selection into the current custom shape.
+			Disabled when there is no active mold selection.
+			''' */
 		// ClearCanvas: Clear Canvas
 		// ClearAll: Clear All
 		// TeleportToPlayer: Teleport to Player
+		// Options: Molding Options
 		// AutoCreateCanvas: Auto-Create Canvas
+		/* AutoPromote:
+			'''
+			Auto-Promote Mold
+			When ON, edit operations immediately refresh the molded shape for stamping.
+			When OFF, edits do not auto-promote until an explicit promote action occurs.
+			''' */
 		// Status: Status
 	}
 
@@ -705,6 +905,17 @@ Configs: {
 				Maximum dimension (width or height) for Wand of Delimitation selections.
 				Delimitation operations only update a filter region (not world tiles), so a larger cap is safe.
 				Default: 1000.
+				''' */
+		}
+
+		MagicWandReadMaxArea: {
+			// Label: Magic Wand Read Area Cap
+			/* Tooltip:
+				'''
+				Maximum number of tiles matched by a Magic Wand Read flood-fill.
+				This is an area cap (total tiles), not a dimension cap.
+				Increase for large or complex stencil canvases; reduce to keep reads snappy.
+				Default: 5000.
 				''' */
 		}
 
@@ -1833,6 +2044,18 @@ Configs: {
 		}
 	}
 
+	Shape: {
+		MagicWandRead: {
+			// Label: Magic Wand Read
+			// Tooltip: ""
+		}
+
+		MagicWandApply: {
+			// Label: Magic Wand Apply
+			// Tooltip: ""
+		}
+	}
+
 	LavaRainStyle: {
 		Embers: {
 			// Label: Embers
@@ -1905,17 +2128,29 @@ Items: {
 
 	WandOfReplacementInstant: {
 		DisplayName: Baguette de remplacement (InstantanÃ©e)
-		Tooltip: Remplace tous les blocs du type source par le type cible dans une zone sÃ©lectionnÃ©e\nLa source et la cible peuvent Ãªtre Ã©pinglÃ©es depuis la Vue d'inventaire
+		Tooltip:
+			'''
+			Remplace tous les blocs du type source par le type cible dans une zone sÃ©lectionnÃ©e
+			La source et la cible peuvent Ãªtre Ã©pinglÃ©es depuis la Vue d'inventaire
+			'''
 	}
 
 	WandOfReplacementSelect: {
 		DisplayName: Baguette de remplacement (SÃ©lection)
-		Tooltip: Remplace tous les blocs du type source par le type cible dans une zone sÃ©lectionnÃ©e\nLa source et la cible peuvent Ãªtre Ã©pinglÃ©es depuis la Vue d'inventaire
+		Tooltip:
+			'''
+			Remplace tous les blocs du type source par le type cible dans une zone sÃ©lectionnÃ©e
+			La source et la cible peuvent Ãªtre Ã©pinglÃ©es depuis la Vue d'inventaire
+			'''
 	}
 
 	WandOfReplacementConfirm: {
 		DisplayName: Baguette de remplacement (Confirmation)
-		Tooltip: Remplace tous les blocs du type source par le type cible dans une zone sÃ©lectionnÃ©e\nLa source et la cible peuvent Ãªtre Ã©pinglÃ©es depuis la Vue d'inventaire
+		Tooltip:
+			'''
+			Remplace tous les blocs du type source par le type cible dans une zone sÃ©lectionnÃ©e
+			La source et la cible peuvent Ãªtre Ã©pinglÃ©es depuis la Vue d'inventaire
+			'''
 	}
 
 	WandOfWiringInstant: {
@@ -1945,7 +2180,11 @@ Items: {
 
 	WandOfReplacementStamp: {
 		DisplayName: Baguette de remplacement (Tampon)
-		Tooltip: Définissez une zone de remplacement une fois, puis reproduisez-la avec le tampon\nLa source et la cible peuvent être épinglées depuis la Vue d'inventaire
+		Tooltip:
+			'''
+			Définissez une zone de remplacement une fois, puis reproduisez-la avec le tampon
+			La source et la cible peuvent être épinglées depuis la Vue d'inventaire
+			'''
 	}
 
 	WandOfWiringStamp: {
@@ -2230,6 +2469,15 @@ Messages: {
 	// SelectClickEnd: Selection: click to set end point.
 	// SelectClickConfirm: Selection: click to confirm and apply.
 	// NoTilesInShape: No tiles in shape.
+	// MagicWandReadNoCanvas: Magic Wand Read needs an active molding canvas. Set one up with the Wand of Molding first.
+	// MagicWandReadEmpty: Magic Wand Read found no matching tiles in the active canvas.
+	// MagicWandReadCapped: Magic Wand Read capped at {0} tiles.
+	// MagicWandReadUnpaintedOrigin: Magic Wand Read origin is unpainted for the selected paint mode.
+	// ── Delimitation multi-slot ─────────────────────────────
+	// NoActiveSlot: No active delimitation slot. Pick a slot from the panel first.
+	// NullSlotHover: No active delimitation. Pick a slot to resume; data in other slots is preserved.
+	// DelimitationSlotHover: Delimitation slot {0}. Left-click to activate; shift+left-click to clear.
+	// NullButtonHover: Disable delimitation (data preserved in all slots).
 	// MoldingHintTooFar: No cells added — canvas is far away. Use 'Teleport to Player' in the Molding panel to bring it closer.
 	// MoldingHintExpandCanvas: No cells added — shape is outside the canvas. Switch to Canvas Edit mode to expand the canvas first.
 	// MoldingNoChange: Mold: no change (tiles already match the current selection).

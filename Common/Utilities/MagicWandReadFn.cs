@@ -36,13 +36,12 @@ namespace WorldShapingWandsMod.Common.Utilities;
 /// origin's properties don't change mid-flood, so a single read is
 /// both correct and faster than re-reading per candidate.</para>
 ///
-/// <para><b>Set-name verification (S11+ TODO)</b>: <c>Rope</c>,
-/// <c>Rail</c>, <c>PlanterBox</c> use defensive vanilla-ID lists rather
-/// than the plan's <c>TileID.Sets.*</c> names because those set names
-/// could not be confirmed at S10 implementation time without crashing
-/// the build. The lists cover the canonical vanilla cases; modded ropes
-/// /rails/planter-boxes will fall through to *"no match"* until the
-/// sets are verified. Promote to set-based checks once verified.</para>
+/// <para><b>Same-type refinements (S6 2026-05-01)</b>: Rope / Platform /
+/// Rail / PlanterBox now sample <i>the same specific tile type as origin</i>
+/// (if origin belongs to that category) instead of category-wide matching.
+/// This matches the worried-client expectation for precision workflows.
+/// Rope uses a rope-like helper that includes <c>Main.tileRope</c> and
+/// explicit chain fallback for better vanilla coverage.</para>
 /// </remarks>
 public static class MagicWandReadFn
 {
@@ -159,35 +158,34 @@ public static class MagicWandReadFn
         MagicWandObjectType.SameWall   => t.WallType != WallID.None && origin.WallType != WallID.None && t.WallType == origin.WallType,
         MagicWandObjectType.Solid      => t.HasTile && Main.tileSolid[t.TileType],
         MagicWandObjectType.Wall       => t.WallType != WallID.None,
-        MagicWandObjectType.Rope       => t.HasTile && IsVanillaRope(t.TileType),
-        MagicWandObjectType.Platform   => t.HasTile && TileID.Sets.Platforms[t.TileType],
-        MagicWandObjectType.Rail       => t.HasTile && IsVanillaRail(t.TileType),
-        MagicWandObjectType.PlanterBox => t.HasTile && IsVanillaPlanterBox(t.TileType),
-        MagicWandObjectType.Air        => !t.HasTile && t.WallType == WallID.None,
+        MagicWandObjectType.Rope       => t.HasTile && origin.HasTile && IsRopeLike(t.TileType) && IsRopeLike(origin.TileType) && t.TileType == origin.TileType,
+        MagicWandObjectType.Platform   => t.HasTile && origin.HasTile && TileID.Sets.Platforms[t.TileType] && TileID.Sets.Platforms[origin.TileType] && t.TileType == origin.TileType,
+        MagicWandObjectType.Rail       => t.HasTile && origin.HasTile && IsRailLike(t.TileType) && IsRailLike(origin.TileType) && t.TileType == origin.TileType,
+        MagicWandObjectType.PlanterBox => t.HasTile && origin.HasTile && IsPlanterLike(t.TileType) && IsPlanterLike(origin.TileType) && t.TileType == origin.TileType,
+        MagicWandObjectType.Empty      => !t.HasTile && t.WallType == WallID.None,
         MagicWandObjectType.Liquid     => t.LiquidAmount > 0 && origin.LiquidAmount > 0 && t.LiquidType == origin.LiquidType,
         MagicWandObjectType.PaintTile  => t.HasTile && origin.HasTile && t.TileColor == origin.TileColor && origin.TileColor != PaintID.None,
         MagicWandObjectType.PaintWall  => t.WallType != WallID.None && origin.WallType != WallID.None && t.WallColor == origin.WallColor && origin.WallColor != PaintID.None,
         _ => false,
     };
 
-    // --- Defensive vanilla-ID lists (S10; S11+ TODO: promote to TileID.Sets.* once verified) ---
-
-    private static bool IsVanillaRope(int t)
+    private static bool IsRopeLike(int tileType)
     {
-        // Vanilla ropes — defensive enumeration, no Sets dependency.
-        return t == TileID.Rope || t == TileID.SilkRope || t == TileID.VineRope || t == TileID.WebRope;
+        return Main.tileRope[tileType]
+            || tileType == TileID.Chain
+            || tileType == TileID.Rope
+            || tileType == TileID.SilkRope
+            || tileType == TileID.VineRope
+            || tileType == TileID.WebRope;
     }
 
-    private static bool IsVanillaRail(int t)
+    private static bool IsRailLike(int tileType)
     {
-        // Minecart track is the only vanilla "rail" type.
-        return t == TileID.MinecartTrack;
+        return tileType == TileID.MinecartTrack;
     }
 
-    private static bool IsVanillaPlanterBox(int t)
+    private static bool IsPlanterLike(int tileType)
     {
-        // Vanilla planter box. PlanterBox is the only vanilla planter-type
-        // tile; modded planters need a Sets check (S11+).
-        return t == TileID.PlanterBox;
+        return tileType == TileID.PlanterBox;
     }
 }

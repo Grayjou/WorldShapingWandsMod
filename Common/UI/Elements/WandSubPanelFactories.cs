@@ -310,4 +310,64 @@ public static class WandSubPanelFactories
         panel.OwnerVisibilityCheck = ownerVisibility;
         return panel;
     }
+
+    /// <summary>
+    /// (S4 2026-05-01 — <c>StencilMagicWandSelectionPlan.md</c> §0.2 + §4.1.)
+    /// Builds (but does NOT open) the Magic Wand (Read) configuration
+    /// SubPanel anchored to the given host element (typically the
+    /// <c>_magicWandReadBtn</c> shape cell on any WSW wand panel).
+    ///
+    /// <para>Lifecycle metadata: <c>Type=Panel</c>,
+    /// <c>OwnerFamilies=None</c> (every WSW wand can summon this picker
+    /// — the Read shape itself is stencil-only at click-time, but the
+    /// CONFIG is a player-scoped preference shared across every stencil
+    /// wand the player owns; mirrors the ACT-ON Stencil picker model
+    /// from <see cref="CreateStencilActOnPicker"/>),
+    /// <c>LockBehaviourDecl=DefaultLocked</c> (≥2 sections per
+    /// <c>WSWSubUIPrimitivePlan.md</c> §0),
+    /// <c>OnChoice=NeverCloses</c> (player typically wants to set Sample
+    /// Mode AND Contiguity in one open — never auto-dismiss on first
+    /// pick), <c>OnParentClose=StaysUpIfLocked</c>.</para>
+    ///
+    /// <para><b>Held-item visibility gate</b>: the per-frame predicate
+    /// parks the SubUI when the player swaps off any WSW wand (matches
+    /// the ACT-ON picker's <c>HeldItem is BaseCyclingWand</c> gate). The
+    /// SubUI resurfaces in place when a WSW wand is re-equipped, with
+    /// every pick + lock state intact.</para>
+    /// </summary>
+    /// <param name="host">The <c>_magicWandReadBtn</c> shape cell this
+    /// picker anchors to.</param>
+    /// <param name="onChanged">Optional callback fired after each pick
+    /// so the host can refresh its tooltip (currently a no-op for every
+    /// known consumer; the SubUI writes
+    /// <c>WandPlayer.MagicWandReadConfig</c> directly so callers don't
+    /// need to subscribe unless they cache derived state).</param>
+    public static WandSubPanel CreateMagicWandReadConfig(
+        UIElement host,
+        Action<Settings.MagicWandReadConfig> onChanged = null)
+    {
+        var body = MagicWandReadConfigBuilder.BuildBody(onChanged);
+
+        var panel = new WandSubPanel(
+            body: body,
+            titleKey: MagicWandReadConfigBuilder.TitleKey,
+            defaultLocked: true, // ≥2 sections → ON
+            host: host,
+            identityKey: MagicWandReadConfigBuilder.IdentityKey)
+        {
+            Type              = SubPanelType.Panel,
+            // OwnerFamilies stays None: every WSW wand panel hosts a
+            // Magic Wand Read shape cell, so the SubUI is summonable
+            // everywhere. The held-item lambda below parks it when the
+            // player swaps to a non-WSW item.
+            OwnerFamilies     = WandFamilyMask.None,
+            LockBehaviourDecl = LockBehaviour.DefaultLocked,
+            OnChoice          = ChoiceBehaviour.NeverCloses,
+            OnParentClose     = ParentCloseBehaviour.StaysUpIfLocked,
+            OwnerVisibilityCheck = static () =>
+                Main.LocalPlayer?.HeldItem?.ModItem is BaseCyclingWand,
+        };
+
+        return panel;
+    }
 }

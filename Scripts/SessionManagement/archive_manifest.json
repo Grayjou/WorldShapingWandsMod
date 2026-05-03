@@ -10,19 +10,5 @@
       "icon_audit.md at repo root (live inventory referenced by current sessions)"
     ]
   },
-  "paths": [
-    "dev_notes/planning/PortfolioPlan.md",
-    "dev_notes/planning/MultiPointShapePhase1Plan.md",
-    "dev_notes/planning/DelimitationWandPhase2Plan.md",
-    "dev_notes/planning/DebugPipelinePlan.md",
-    "dev_notes/planning/SummaryDocumentsDesign.md",
-    "dev_notes/planning/TorchWheelProjectileSplitPlan.md",
-    "dev_notes/planning/TorchWheelPlatformFixPlan.md",
-    "dev_notes/planning/TorchWheelUnderwaterPlan.md",
-    "dev_notes/planning/v2.0.0_ReleasePlan.md",
-    "dev_notes/reference/TorchWheelPlatformFixPlan_Verification.md",
-    "dev_notes/reference/TorchWheelUnderwaterPlan_Verification.md",
-    "dev_notes/reference/PortfolioPlan_NewEntries.md",
-    "dev_notes/status/FluidsBubbleBarrierFix.md"
-  ]
+  "paths": []
 }

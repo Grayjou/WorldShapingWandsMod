@@ -95,6 +95,10 @@ internal sealed class SelectionCanvasOverlay : IComposableOverlay
         if (swp == null)
             return;
 
+        // No active slot → nothing to render (null-slot = delimitation disabled).
+        if (!swp.IsActive)
+            return;
+
         // Determine if we're holding the Delimitation wand (full detail) or another wand (reduced alpha)
         bool isDelimitationWand = context.Player?.HeldItem?.ModItem is WandOfDelimitationBase;
         bool isAnyWand = context.Player?.HeldItem?.ModItem is BaseCyclingWand;

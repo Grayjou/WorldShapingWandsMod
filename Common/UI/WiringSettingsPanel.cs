@@ -32,6 +32,7 @@ public class WiringSettingsPanel : UIState
     // Shape buttons (icon-based)
     private UIIconButton _rectFilledBtn, _edgeBtn, _cardinalBtn, _straightLineBtn;
     private UIIconButton _diamondFilledBtn, _triangleFilledBtn;
+    private UIIconButton _magicWandReadBtn, _magicWandApplyBtn;
 
     private UIText _thicknessValue;
 
@@ -95,6 +96,15 @@ public class WiringSettingsPanel : UIState
         _diamondFilledBtn = shapes.DiamondFilled;
         _triangleFilledBtn = shapes.TriangleFilled;
         _straightLineBtn  = shapes.StraightLine;
+        _magicWandReadBtn = shapes.MagicWandRead;
+        _magicWandApplyBtn = shapes.MagicWandApply;
+
+        // (S4 2026-05-01 — StencilMagicWandSelectionPlan.md §4.1) Right-click on
+        // the Magic Wand Read shape cell opens the Read configuration SubUI.
+        // The SubUI's underlying state (MagicWandReadConfig) is a player-scoped
+        // preference shared across every wand, so the wiring is centralised in
+        // MagicWandReadCellWiring (mirrors the MoldCellWiring singleton model).
+        Common.UI.Elements.MagicWandReadCellWiring.WireConfigSubUI(_magicWandReadBtn);
 
         // === SLICE ===
         _builder.AddSliceSection(out _sliceGrid, OnSliceChanged);
@@ -142,6 +152,8 @@ public class WiringSettingsPanel : UIState
         _straightLineBtn.OnToggled += (_, _) => SetShape(ShapeType.StraightLine, ShapeMode.Filled);
         _diamondFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.Diamond, ShapeMode.Filled);
         _triangleFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.Triangle, ShapeMode.Filled);
+        _magicWandReadBtn.OnToggled += (_, _) => SetShape(ShapeType.MagicWandRead, ShapeMode.Filled);
+        _magicWandApplyBtn.OnToggled += (_, _) => SetShape(ShapeType.MagicWandApply, ShapeMode.Filled);
 
         _equalDimensionsBtn.OnToggled += (_, _) => ToggleEqualDimensions();
         _connectDiameterBtn.OnToggled += (_, _) => ToggleConnectDiameter();
@@ -246,6 +258,8 @@ public class WiringSettingsPanel : UIState
         _straightLineBtn.Toggled = shape.Shape == ShapeType.StraightLine;
         _diamondFilledBtn.Toggled = shape.Shape == ShapeType.Diamond && shape.FillMode == ShapeMode.Filled;
         _triangleFilledBtn.Toggled = shape.Shape == ShapeType.Triangle && shape.FillMode == ShapeMode.Filled;
+        _magicWandReadBtn.Toggled = shape.Shape == ShapeType.MagicWandRead;
+        _magicWandApplyBtn.Toggled = shape.Shape == ShapeType.MagicWandApply;
     }
 
     private void UpdateThicknessDisplay()

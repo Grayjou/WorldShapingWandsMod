@@ -157,12 +157,18 @@ internal static class ColorReplaceConfigBuilder
         srcLabel.Top.Set(yCursor, 0f);
         srcLabel.HAlign = 0.5f;
         body.Append(srcLabel);
-        yCursor += RowLabelHeight;
+        yCursor = LayoutSpacing.AddVerticalSpace(
+            currentSize: yCursor,
+            elementSize: RowLabelHeight,
+            bottomPadding: 0f);
 
         sourceGrid.Top.Set(yCursor, 0f);
         sourceGrid.HAlign = 0.5f;
         body.Append(sourceGrid);
-        yCursor += gridIntrinsicH + SectionGap;
+        yCursor = LayoutSpacing.AddVerticalSpace(
+            currentSize: yCursor,
+            elementSize: gridIntrinsicH,
+            bottomPadding: SectionGap);
 
         var tgtLabel = new UIText(
             Language.GetTextValue("Mods.WorldShapingWandsMod.UI.Coating.ColorReplace.TargetLabel"),
@@ -170,7 +176,10 @@ internal static class ColorReplaceConfigBuilder
         tgtLabel.Top.Set(yCursor, 0f);
         tgtLabel.HAlign = 0.5f;
         body.Append(tgtLabel);
-        yCursor += RowLabelHeight;
+        yCursor = LayoutSpacing.AddVerticalSpace(
+            currentSize: yCursor,
+            elementSize: RowLabelHeight,
+            bottomPadding: 0f);
 
         targetGrid.Top.Set(yCursor, 0f);
         targetGrid.HAlign = 0.5f;

@@ -22,7 +22,7 @@ public class BuildingSettingsPanel : UIState
     private UIDraggablePanel _mainPanel;
 
     // Object type buttons
-    private UIIconButton _solidBtn, _platformBtn, _ropeBtn, _railBtn, _grassSeedBtn, _planterBtn, _wallBtn;
+    private UIIconButton _solidBtn, _platformBtn, _ropeBtn, _railBtn, _grassSeedBtn, _planterBtn, _wallBtn, _noneBtn;
 
     // Shape buttons
     private UIIconButton _rectFilledBtn, _rectHollowBtn;
@@ -31,6 +31,7 @@ public class BuildingSettingsPanel : UIState
     private UIIconButton _triangleFilledBtn, _triangleHollowBtn;
     private UIIconButton _edgeBtn, _cardinalBtn, _straightLineBtn;
     private UIIconButton _moldBtn;
+    private UIIconButton _magicWandReadBtn, _magicWandApplyBtn;
 
     private UIText _thicknessValue;
 
@@ -86,6 +87,7 @@ public class BuildingSettingsPanel : UIState
         var texGrassSeed = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Objects/ObjGrassSeed", AssetRequestMode.ImmediateLoad);
         var texPlanter   = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Objects/ObjPlanter", AssetRequestMode.ImmediateLoad);
         var texWall      = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Objects/ObjWall", AssetRequestMode.ImmediateLoad);
+        var texNone      = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Misc/WhiteX", AssetRequestMode.ImmediateLoad);
 
         _builder.AddSectionHeader("Building.ObjectType");
         _builder.AddIconGrid(new WandPanelBuilder.IconDef[]
@@ -97,6 +99,7 @@ public class BuildingSettingsPanel : UIState
             new(texRail,      "Building.Rail"),
             new(texGrassSeed, "Building.GrassSeed"),
             new(texPlanter,   "Building.PlanterBox"),
+            new(texNone,      "Building.NoObject"),
         }, iconsPerRow: 4, out var objBtns);
         _solidBtn     = objBtns[0];
         _platformBtn  = objBtns[1];
@@ -105,6 +108,7 @@ public class BuildingSettingsPanel : UIState
         _railBtn      = objBtns[4];
         _grassSeedBtn = objBtns[5];
         _planterBtn   = objBtns[6];
+        _noneBtn      = objBtns[7];
 
         // === SHAPE ===
         _builder.AddFullShapeSection(out var shapes);
@@ -114,6 +118,15 @@ public class BuildingSettingsPanel : UIState
         _triangleFilledBtn = shapes.TriangleFilled; _triangleHollowBtn = shapes.TriangleHollow;
         _edgeBtn = shapes.Elbow; _cardinalBtn = shapes.Cardinal; _straightLineBtn = shapes.StraightLine;
         _moldBtn = shapes.Mold;
+        _magicWandReadBtn = shapes.MagicWandRead;
+        _magicWandApplyBtn = shapes.MagicWandApply;
+
+        // (S4 2026-05-01 � StencilMagicWandSelectionPlan.md �4.1) Right-click on
+        // the Magic Wand Read shape cell opens the Read configuration SubUI.
+        // The SubUI's underlying state (MagicWandReadConfig) is a player-scoped
+        // preference shared across every wand, so the wiring is centralised in
+        // MagicWandReadCellWiring (mirrors the MoldCellWiring singleton model).
+        Common.UI.Elements.MagicWandReadCellWiring.WireConfigSubUI(_magicWandReadBtn);
         // (S11 2026-04-29 — Bug 3 fix; StencilEditVsActOn.md §3)
         // Wire ACT-ON Stencil Picker on Mold cell (right-click) + hover-icon swap.
         Common.UI.Elements.MoldCellWiring.WireActOnPicker(_moldBtn);
@@ -215,6 +228,7 @@ public class BuildingSettingsPanel : UIState
         _railBtn.OnToggled += (_, _) => SetObjectType(PlaceType.Rail);
         _grassSeedBtn.OnToggled += (_, _) => SetObjectType(PlaceType.GrassSeed);
         _planterBtn.OnToggled += (_, _) => SetObjectType(PlaceType.PlantPot);
+        _noneBtn.OnToggled += (_, _) => SetObjectType(PlaceType.None);
 
         _rectFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.Rectangle, ShapeMode.Filled);
         _rectHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.Rectangle, ShapeMode.Hollow);
@@ -228,6 +242,8 @@ public class BuildingSettingsPanel : UIState
         _triangleFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.Triangle, ShapeMode.Filled);
         _triangleHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.Triangle, ShapeMode.Hollow);
         _moldBtn.OnToggled += (_, _) => SetShape(ShapeType.Mold, ShapeMode.Filled);
+        _magicWandReadBtn.OnToggled += (_, _) => SetShape(ShapeType.MagicWandRead, ShapeMode.Filled);
+        _magicWandApplyBtn.OnToggled += (_, _) => SetShape(ShapeType.MagicWandApply, ShapeMode.Filled);
 
         _slopeDefaultBtn.OnToggled += (_, _) => SetSlope(SlopeType.Default);
         _slopeHalfBtn.OnToggled += (_, _) => SetSlope(SlopeType.VerticalHalf);
@@ -329,6 +345,7 @@ public class BuildingSettingsPanel : UIState
         _railBtn.Toggled = settings.Object == PlaceType.Rail;
         _grassSeedBtn.Toggled = settings.Object == PlaceType.GrassSeed;
         _planterBtn.Toggled = settings.Object == PlaceType.PlantPot;
+        _noneBtn.Toggled = settings.Object == PlaceType.None;
     }
 
     private void UpdateShapeButtons()
@@ -348,6 +365,8 @@ public class BuildingSettingsPanel : UIState
         _triangleFilledBtn.Toggled = shape.Shape == ShapeType.Triangle && shape.FillMode == ShapeMode.Filled;
         _triangleHollowBtn.Toggled = shape.Shape == ShapeType.Triangle && shape.FillMode == ShapeMode.Hollow;
         _moldBtn.Toggled = shape.Shape == ShapeType.Mold;
+        _magicWandReadBtn.Toggled = shape.Shape == ShapeType.MagicWandRead;
+        _magicWandApplyBtn.Toggled = shape.Shape == ShapeType.MagicWandApply;
     }
 
     private void UpdateThicknessDisplay() { _thicknessValue?.SetText(GetSettings()?.Shape.Thickness.ToString() ?? "1"); }

@@ -39,6 +39,38 @@ namespace WorldShapingWandsMod.Content.Items
                 return;
             }
 
+            // Empty object mode: edit existing tiles' attributes only (slope/actuation),
+            // without placing/replacing tiles or consuming resources.
+            if (settings.Object == PlaceType.None)
+            {
+                bool canApplySlope = settings.OverwriteSlope;
+                bool canApplyActuation = settings.Actuation != null;
+                if (!canApplySlope && !canApplyActuation)
+                {
+                    Main.NewText("Nothing to apply — set Slope or Actuation first.", Color.Gray);
+                    return;
+                }
+
+                if (Main.netMode == NetmodeID.MultiplayerClient)
+                {
+                    BuildingPacketHandler.SendBuildingOperation(
+                        selection.StartTile, selection.EndTile,
+                        settings.Shape.Shape, settings.Shape.FillMode,
+                        settings.Shape.Thickness, settings.Shape.EqualDimensions,
+                        selection.VerticalFirst, player.whoAmI,
+                        settings.Object, settings.Slope, settings.OverwriteSlope,
+                        WandConfigs.Preferences?.BlockExhaustion ?? BlockExhaustionMode.NextBlock, false,
+                        0, 0,
+                        settings.Shape.Slice, settings.Shape.ConnectDiameter,
+                        settings.Shape.InvertSelection,
+                        paintSprayer: false, actuation: settings.Actuation);
+                    return;
+                }
+
+                ExecuteTileAttributeOnlyInstant(player, wandPlayer, settings, selection, clientCfg);
+                return;
+            }
+
             // ── Multiplayer: send packet to server instead of executing locally ──
             if (Main.netMode == NetmodeID.MultiplayerClient)
             {
@@ -241,6 +273,68 @@ namespace WorldShapingWandsMod.Content.Items
             ExecuteTileBuildingInstant(
                 player, settings, config, sandbox, perfConfig, clientCfg, condition, tilesToProcess,
                 shouldConsume, replaceMode, undoMgr, action);
+        }
+
+        private void ExecuteTileAttributeOnlyInstant(
+            Player player,
+            WandPlayer wandPlayer,
+            WandOfBuildingSettings settings,
+            SelectionState selection,
+            PreferencesConfig clientCfg)
+        {
+            var context = settings.Shape.ToShapeContext(
+                selection.StartTile, selection.EndTile, selection.VerticalFirst);
+
+            var tileSet = ShapeRegistry.GetShapeTiles(settings.Shape.Shape, context);
+            var tilesToProcess = settings.Shape.ApplyInversion(tileSet.Tiles.ToArray(), context);
+
+            var swp = player.GetModPlayer<DelimitationWandPlayer>();
+            tilesToProcess = swp.FilterBySelection(tilesToProcess);
+
+            var undoMgr = player.GetModPlayer<UndoManager>();
+            var action = undoMgr.BeginAction("Building");
+            var affectedPositions = new List<Point>();
+
+            foreach (Point tile in tilesToProcess)
+            {
+                if (!WorldGen.InWorld(tile.X, tile.Y, 1))
+                    continue;
+                if (SafekeepingSystem.IsTileProtected(tile.X, tile.Y))
+                    continue;
+
+                var existingTile = Main.tile[tile.X, tile.Y];
+                if (!existingTile.HasTile)
+                    continue;
+
+                bool needsSlope = settings.OverwriteSlope && NeedsSlopeChange(tile.X, tile.Y, settings.Slope);
+                bool needsActuation = settings.Actuation != null && existingTile.IsActuated != settings.Actuation.Value;
+
+                if (!needsSlope && !needsActuation)
+                    continue;
+
+                action.AddSnapshot(tile);
+                if (needsSlope)
+                    ApplySlope(tile.X, tile.Y, settings.Slope);
+                if (needsActuation)
+                    ApplyActuation(tile.X, tile.Y, settings.Actuation);
+
+                affectedPositions.Add(tile);
+            }
+
+            if (affectedPositions.Count > 0)
+            {
+                undoMgr.CommitAction(action);
+                BulkTileOperations.BatchNetworkSync(BulkTileOperations.ComputeBounds(affectedPositions));
+
+                if (clientCfg?.EnableWandSounds == true)
+                    Terraria.Audio.SoundEngine.PlaySound(SoundID.Item168 with { Volume = 0.5f }, player.Center);
+
+                Main.NewText($"Updated {affectedPositions.Count} tile attribute(s).", Color.Cyan);
+            }
+            else
+            {
+                ShowNullResult(wandPlayer, "NoTilesPlaced", Color.Gray);
+            }
         }
 
         /// <summary>

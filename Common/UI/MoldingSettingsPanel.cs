@@ -44,6 +44,7 @@ public class MoldingSettingsPanel : UIState
     private UIIconButton _triangleFilledBtn, _triangleHollowBtn;
     private UIIconButton _edgeBtn, _cardinalBtn, _straightLineBtn;
     private UIIconButton _moldBtn;
+    private UIIconButton _magicWandReadBtn, _magicWandApplyBtn;
 
     // Stencil-slot row (per MultipleStencilsPlan.md §0.1, S6 2026-04-28)
     private UIIconButton[] _stencilSlotBtns;
@@ -59,13 +60,11 @@ public class MoldingSettingsPanel : UIState
     private UISliceGrid _sliceGrid;
 
     // Action buttons (icon-based)
-    private UIIconButton _clearSelectionBtn, _invertBtn, _clearAllBtn, _teleportToPlayerBtn;
+    private UIIconButton _clearSelectionBtn, _invertBtn, _promoteMoldBtn, _clearAllBtn, _teleportToPlayerBtn;
 
-    // Status displays
-    private UIText _canvasCountText, _selectionCountText, _moldedShapeText;
-
-    // Auto-create canvas toggle
-    private UIToggleButton _autoCreateCanvasBtn;
+    // Molding options (icon toggles)
+    private UIIconButton _autoCreateCanvasBtn;
+    private UIIconButton _autoPromoteBtn;
 
     private WandPanelBuilder _builder;
 
@@ -97,9 +96,9 @@ public class MoldingSettingsPanel : UIState
         _builder.AddSectionHeader("Molding.Mode");
 
         var texModeSelection = mod.Assets.Request<Texture2D>(
-            "Assets_Build/Icons/Stencils/ModeSelection", AssetRequestMode.ImmediateLoad);
+            "Assets_Build/Icons/Stencil/ModeSelection", AssetRequestMode.ImmediateLoad);
         var texModeCanvasEdit = mod.Assets.Request<Texture2D>(
-            "Assets_Build/Icons/Stencils/ModeCanvasEdit", AssetRequestMode.ImmediateLoad);
+            "Assets_Build/Icons/Stencil/ModeCanvasEdit", AssetRequestMode.ImmediateLoad);
 
         _builder.AddIconGrid(new WandPanelBuilder.IconDef[]
         {
@@ -116,13 +115,13 @@ public class MoldingSettingsPanel : UIState
         _builder.AddSectionHeader("Molding.Operation");
 
         var texOpAdd = mod.Assets.Request<Texture2D>(
-            "Assets_Build/Icons/Stencils/OpAdd", AssetRequestMode.ImmediateLoad);
+            "Assets_Build/Icons/Stencil/OpAdd", AssetRequestMode.ImmediateLoad);
         var texOpRemove = mod.Assets.Request<Texture2D>(
-            "Assets_Build/Icons/Stencils/OpRemove", AssetRequestMode.ImmediateLoad);
+            "Assets_Build/Icons/Stencil/OpRemove", AssetRequestMode.ImmediateLoad);
         var texOpIntersect = mod.Assets.Request<Texture2D>(
-            "Assets_Build/Icons/Stencils/OpIntersect", AssetRequestMode.ImmediateLoad);
+            "Assets_Build/Icons/Stencil/OpIntersect", AssetRequestMode.ImmediateLoad);
         var texOpXor = mod.Assets.Request<Texture2D>(
-            "Assets_Build/Icons/Stencils/OpXOR", AssetRequestMode.ImmediateLoad);
+            "Assets_Build/Icons/Stencil/OpXOR", AssetRequestMode.ImmediateLoad);
 
         _builder.AddIconGrid(new WandPanelBuilder.IconDef[]
         {
@@ -155,6 +154,15 @@ public class MoldingSettingsPanel : UIState
         _triangleFilledBtn = shapes.TriangleFilled; _triangleHollowBtn = shapes.TriangleHollow;
         _edgeBtn = shapes.Elbow; _cardinalBtn = shapes.Cardinal; _straightLineBtn = shapes.StraightLine;
         _moldBtn = shapes.Mold;
+        _magicWandReadBtn = shapes.MagicWandRead;
+        _magicWandApplyBtn = shapes.MagicWandApply;
+
+        // (S4 2026-05-01 � StencilMagicWandSelectionPlan.md �4.1) Right-click on
+        // the Magic Wand Read shape cell opens the Read configuration SubUI.
+        // The SubUI's underlying state (MagicWandReadConfig) is a player-scoped
+        // preference shared across every wand, so the wiring is centralised in
+        // MagicWandReadCellWiring (mirrors the MoldCellWiring singleton model).
+        Common.UI.Elements.MagicWandReadCellWiring.WireConfigSubUI(_magicWandReadBtn);
         _stencilSlotBtns = stencilGrid.StencilSlots;
 
         // Cache stencil icon assets so the Mold-cell HoverTextureProvider lambda
@@ -218,10 +226,21 @@ public class MoldingSettingsPanel : UIState
         _flipHalfOrientationBtn = optBtns[3];
 
         // ═══════════════════════════════════════════════════════════════
-        //  Auto-Create Canvas Toggle
+        //  Molding Options (icon toggles)
         // ═══════════════════════════════════════════════════════════════
 
-        _builder.AddCenteredToggle("Molding.AutoCreateCanvas", true, out _autoCreateCanvasBtn, spacing: 38f);
+        var texAutoCreateCanvas = mod.Assets.Request<Texture2D>(
+            "Assets_Build/Icons/Stencil/AutoCreateCanvas", AssetRequestMode.ImmediateLoad);
+        var texAutoPromoteMold = mod.Assets.Request<Texture2D>(
+            "Assets_Build/Icons/Molding/AutoPromoteMold", AssetRequestMode.ImmediateLoad);
+
+        _builder.AddIconToggleRow("Molding.Options", new WandPanelBuilder.IconDef[]
+        {
+            new(texAutoCreateCanvas, "Molding.AutoCreateCanvas", isToggle: true),
+            new(texAutoPromoteMold, "Molding.AutoPromote", isToggle: true),
+        }, out var moldingOptionsBtns);
+        _autoCreateCanvasBtn = moldingOptionsBtns[0];
+        _autoPromoteBtn = moldingOptionsBtns[1];
 
         // ═══════════════════════════════════════════════════════════════
         //  Action Buttons (icon-based: Clear Selection, Invert, Clear Canvas, Clear All, Teleport)
@@ -231,6 +250,8 @@ public class MoldingSettingsPanel : UIState
             "Assets_Build/Icons/Actions/ActionClearSelection", AssetRequestMode.ImmediateLoad);
         var texActionInvert = mod.Assets.Request<Texture2D>(
             "Assets_Build/Icons/Actions/ActionInvert", AssetRequestMode.ImmediateLoad);
+        var texActionPromoteMold = mod.Assets.Request<Texture2D>(
+            "Assets_Build/Icons/Molding/PromoteMold", AssetRequestMode.ImmediateLoad);
         var texActionClearAll = mod.Assets.Request<Texture2D>(
             "Assets_Build/Icons/Actions/ActionClearAll", AssetRequestMode.ImmediateLoad);
         var texActionTeleport = mod.Assets.Request<Texture2D>(
@@ -240,37 +261,15 @@ public class MoldingSettingsPanel : UIState
         {
             WandPanelBuilder.IconDef.WithText(texActionClearSel, L("Molding.ClearSelection")),
             WandPanelBuilder.IconDef.WithText(texActionInvert, L("Molding.InvertSelection")),
+            WandPanelBuilder.IconDef.WithText(texActionPromoteMold, L("Molding.PromoteToCustomShape")),
             WandPanelBuilder.IconDef.WithText(texActionClearAll, L("Molding.ClearAll")),
             WandPanelBuilder.IconDef.WithText(texActionTeleport, L("Molding.TeleportToPlayer")),
         }, out var actionBtns);
         _clearSelectionBtn = actionBtns[0];
         _invertBtn = actionBtns[1];
-        _clearAllBtn = actionBtns[2];
-        _teleportToPlayerBtn = actionBtns[3];
-
-        // ═══════════════════════════════════════════════════════════════
-        //  Status Display (tile counts)
-        // ═══════════════════════════════════════════════════════════════
-
-        _builder.AddSectionHeader("Molding.Status");
-
-        _canvasCountText = new UIText("Canvas: 0 tiles", 0.8f);
-        _canvasCountText.Left.Set(Padding, 0f);
-        _canvasCountText.Top.Set(_builder.CurrentY, 0f);
-        _mainPanel.Append(_canvasCountText);
-        _builder.AdvanceY(20f);
-
-        _selectionCountText = new UIText("Selection: 0 tiles", 0.8f);
-        _selectionCountText.Left.Set(Padding, 0f);
-        _selectionCountText.Top.Set(_builder.CurrentY, 0f);
-        _mainPanel.Append(_selectionCountText);
-        _builder.AdvanceY(20f);
-
-        _moldedShapeText = new UIText("Molded Shape: none", 0.8f);
-        _moldedShapeText.Left.Set(Padding, 0f);
-        _moldedShapeText.Top.Set(_builder.CurrentY, 0f);
-        _mainPanel.Append(_moldedShapeText);
-        _builder.AdvanceY(24f);
+        _promoteMoldBtn = actionBtns[2];
+        _clearAllBtn = actionBtns[3];
+        _teleportToPlayerBtn = actionBtns[4];
 
         // ═══════════════════════════════════════════════════════════════
         //  Close Button
@@ -306,6 +305,8 @@ public class MoldingSettingsPanel : UIState
         _triangleFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.Triangle, ShapeMode.Filled);
         _triangleHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.Triangle, ShapeMode.Hollow);
         _moldBtn.OnToggled += (_, _) => SetShape(ShapeType.Mold, ShapeMode.Filled);
+        _magicWandReadBtn.OnToggled += (_, _) => SetShape(ShapeType.MagicWandRead, ShapeMode.Filled);
+        _magicWandApplyBtn.OnToggled += (_, _) => SetShape(ShapeType.MagicWandApply, ShapeMode.Filled);
 
         // Stencil-slot row — left-click sets ActiveStencilSlot to N (0-indexed).
         // Per plan §0.1: "Each cell is a direct-select for that slot." Toggled
@@ -333,9 +334,19 @@ public class MoldingSettingsPanel : UIState
             if (s != null) s.AutoCreateCanvas = _autoCreateCanvasBtn.Toggled;
         };
 
+        _autoPromoteBtn.OnToggled += (_, _) =>
+        {
+            var mwp = GetMoldingWandPlayer();
+            if (mwp == null) return;
+            mwp.AutoPromote = _autoPromoteBtn.Toggled;
+            if (mwp.AutoPromote && mwp.Selection.IsActive)
+                mwp.PromoteMoldToCustomShape();
+        };
+
         // Action buttons
         _clearSelectionBtn.OnLeftClick += (_, _) => OnClearSelection();
         _invertBtn.OnLeftClick += (_, _) => OnInvertSelection();
+        _promoteMoldBtn.OnLeftClick += (_, _) => OnPromoteToCustomShape();
         _clearAllBtn.OnLeftClick += (_, _) => OnClearAll();
         _teleportToPlayerBtn.OnLeftClick += (_, _) => OnTeleportToPlayer();
     }
@@ -489,6 +500,28 @@ public class MoldingSettingsPanel : UIState
         Main.NewText("All molding state cleared.", WandColors.MsgMolding);
     }
 
+    private static void OnPromoteToCustomShape()
+    {
+        var mwp = GetMoldingWandPlayer();
+        if (mwp == null) return;
+
+        if (!mwp.Selection.IsActive)
+        {
+            Main.NewText("No active mold selection to promote.", Color.OrangeRed);
+            return;
+        }
+
+        bool promoted = mwp.PromoteMoldToCustomShape();
+        if (!promoted)
+        {
+            Main.NewText("Promote skipped — mold selection is empty.", Color.OrangeRed);
+            return;
+        }
+
+        SoundEngine.PlaySound(SoundID.MenuTick with { Volume = 0.5f });
+        Main.NewText($"Mold promoted to custom shape ({mwp.MoldedShape?.Count ?? 0:N0} tiles).", WandColors.MsgMolding);
+    }
+
     private static void OnTeleportToPlayer()
     {
         var mwp = GetMoldingWandPlayer();
@@ -563,6 +596,8 @@ public class MoldingSettingsPanel : UIState
         _triangleFilledBtn.Toggled = shape.Shape == ShapeType.Triangle && shape.FillMode == ShapeMode.Filled;
         _triangleHollowBtn.Toggled = shape.Shape == ShapeType.Triangle && shape.FillMode == ShapeMode.Hollow;
         _moldBtn.Toggled = shape.Shape == ShapeType.Mold;
+        _magicWandReadBtn.Toggled = shape.Shape == ShapeType.MagicWandRead;
+        _magicWandApplyBtn.Toggled = shape.Shape == ShapeType.MagicWandApply;
     }
 
     private void UpdateThicknessDisplay()
@@ -597,27 +632,26 @@ public class MoldingSettingsPanel : UIState
             _autoCreateCanvasBtn.Toggled = s.AutoCreateCanvas;
     }
 
+    private void UpdateAutoPromote()
+    {
+        var mwp = GetMoldingWandPlayer();
+        if (mwp == null) return;
+        if (_autoPromoteBtn != null && _autoPromoteBtn.Toggled != mwp.AutoPromote)
+            _autoPromoteBtn.Toggled = mwp.AutoPromote;
+    }
+
+    private void UpdatePromoteActionButton()
+    {
+        if (_promoteMoldBtn == null) return;
+        var mwp = GetMoldingWandPlayer();
+        _promoteMoldBtn.Disabled = mwp == null || !mwp.Selection.IsActive;
+    }
+
     private void UpdateSliceGrid()
     {
         var s = GetSettings();
         if (s == null || _sliceGrid == null) return;
         _sliceGrid.SetValue(s.Shape.Slice);
-    }
-
-    private void UpdateStatusDisplay()
-    {
-        var mwp = GetMoldingWandPlayer();
-        if (mwp == null) return;
-
-        int canvasCount = mwp.Canvas.Count;
-        int selCount = mwp.Selection.Count;
-        bool hasMolded = mwp.MoldedShape != null;
-
-        _canvasCountText?.SetText($"Canvas: {canvasCount:N0} tiles");
-        _selectionCountText?.SetText($"Selection: {selCount:N0} tiles");
-        _moldedShapeText?.SetText(hasMolded
-            ? $"Molded Shape: {mwp.MoldedShape.Count:N0} tiles"
-            : "Molded Shape: none");
     }
 
     private void SyncFromSettings()
@@ -629,8 +663,9 @@ public class MoldingSettingsPanel : UIState
         UpdateThicknessDisplay();
         UpdateShapeOptions();
         UpdateAutoCreateCanvas();
+        UpdateAutoPromote();
+        UpdatePromoteActionButton();
         UpdateSliceGrid();
-        UpdateStatusDisplay();
     }
 
     private void UpdateStencilSlotButtons()

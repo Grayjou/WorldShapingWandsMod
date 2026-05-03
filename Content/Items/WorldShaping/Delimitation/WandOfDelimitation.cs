@@ -119,6 +119,15 @@ public abstract class WandOfDelimitationBase : BaseCyclingWand
     protected void ExecuteSelectionOperation(Player player, WandPlayer wandPlayer)
     {
         var swp = player.GetModPlayer<DelimitationWandPlayer>();
+
+        // Null-slot guard: no active slot means delimitation is disabled.
+        // Show a hint and abort rather than silently no-oping.
+        if (!swp.IsActive)
+        {
+            Main.NewText(Get("NoActiveSlot"), Color.Gray);
+            return;
+        }
+
         var settings = swp.Settings;
 
         // Generate shape tiles from the wand's selection state

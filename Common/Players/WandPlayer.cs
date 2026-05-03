@@ -152,6 +152,15 @@ public class WandPlayer : ModPlayer
     /// </summary>
     public CancelledSelectionState CancelledSelection { get; private set; }
 
+    // ── Tooltip verbosity preference (Session 4, 2026-05-02 G-42) ────────────────────────
+    // Per-player toggle: true = verbose (long tooltip keys), false = concise (short keys).
+    // Defaults to true (verbose ON, per G-42 design). Persisted in SaveData/LoadData.
+    /// <summary>
+    /// (G-42) Whether tooltip verbosity is enabled (true = long-form, false = short-form).
+    /// Defaults to true (verbose).
+    /// </summary>
+    public bool TooltipVerbosityEnabled { get; set; } = true;
+
     // Per-wand settings
     public WandOfBuildingSettings BuildingSettings { get; private set; } = new();
     public WandOfDismantlingSettings DismantlingSettings { get; private set; } = new();
@@ -274,6 +283,15 @@ public class WandPlayer : ModPlayer
         }
         return Settings.ShapeType;
     }
+
+    /// <summary>
+    /// Returns <c>true</c> when the current wand's active shape type equals
+    /// <paramref name="shape"/>. Used by overlays for cross-family visibility
+    /// (e.g., showing the Molding canvas while a non-Molding wand has
+    /// MagicWandRead selected).
+    /// </summary>
+    internal bool IsActiveShape(ShapeType shape)
+        => GetCurrentShapeType() == shape;
 
     /// <summary>
     /// Determines which ShapeMode (Filled/Hollow) is currently active based on the held wand.
@@ -439,6 +457,7 @@ public class WandPlayer : ModPlayer
 
         _instantSelection = SelectionState.Empty;
         _instantSelectionOwner = 0;
+        LastMagicWandShape = null;
         _justCancelled = true;
     }
 
@@ -472,6 +491,7 @@ public class WandPlayer : ModPlayer
         StampDelta = Point.Zero;
         StampAnchorOffset = Point.Zero;
         SmoothAnchorInitialised = false; // W-S4-1: v3 smoothing reset on cancel
+        LastMagicWandShape = null;
         ResetStampChanneling();
         _justCancelled = true; // Set flag to prevent immediate restart
     }
@@ -879,6 +899,10 @@ public class WandPlayer : ModPlayer
     private const string TagCollapsedSections = "CollapsedSections";
     private const string TagPopoutPositions   = "PopoutPositions";
 
+    // ── Tooltip verbosity preference (Session 4, 2026-05-02 G-42) ────────────────────────
+    // Per-player toggle persisted as a single bool flag in SaveData/LoadData.
+    private const string TagTooltipVerbosityEnabled = "TooltipVerbosityEnabled";
+
     /// <summary>Per-section collapsed bit, keyed by <c>CollapsibleSection.PreferenceKey</c>.</summary>
     public Dictionary<string, bool> CollapsedSections { get; set; } = new();
 
@@ -988,6 +1012,10 @@ public class WandPlayer : ModPlayer
             tag[TagPopoutPositions + "_Y"] = ys;
         }
 
+        // (G-42 Session 4 2026-05-02) Tooltip verbosity preference (true = verbose, false = concise).
+        // Persisted as a bool; defaults to true if not present.
+        tag[TagTooltipVerbosityEnabled] = TooltipVerbosityEnabled;
+
         // (S10 2026-04-29) Magic Wand Read config — 2-byte tag pair.
         // The captured shape (LastMagicWandShape) is in-memory only and
         // intentionally NOT persisted per the plan §6.0 lifecycle.
@@ -1074,6 +1102,10 @@ public class WandPlayer : ModPlayer
             int n = System.Math.Min(keys.Count, System.Math.Min(xs.Count, ys.Count));
             for (int i = 0; i < n; i++) PopoutPositions[keys[i]] = new Vector2(xs[i], ys[i]);
         }
+
+        // (G-42 Session 4 2026-05-02) Tooltip verbosity preference.
+        // Defaults to true (verbose) if not present in save.
+        TooltipVerbosityEnabled = tag.ContainsKey(TagTooltipVerbosityEnabled) ? tag.GetBool(TagTooltipVerbosityEnabled) : true;
 
         // (S10 2026-04-29) Magic Wand Read config — absent tags read as
         // (SameTile, FourNeighbour) defaults; out-of-range bytes also

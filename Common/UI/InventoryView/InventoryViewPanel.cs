@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using ReLogic.Content;
 using System.Collections.Generic;
 using System.Linq;
 using Terraria;
@@ -9,6 +10,8 @@ using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.UI;
 using WorldShapingWandsMod.Common.Configs;
+using WorldShapingWandsMod.Common.Enums;
+using WorldShapingWandsMod.Common.Items;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.UI.Elements;
 
@@ -43,6 +46,7 @@ public sealed class InventoryViewPanel : UIState
 
     private UIDraggablePanel _mainPanel;
     private UIDragHandle _dragHandle;
+    private UIIconButton _swapSourceTargetBtn;
     // _titleText removed v1.3.x per GrayJou S6 prompt — subtitles per source
     // (tiles/walls for WoB, Replace…/With… for WoR) are sufficient.
     private readonly List<SourceSection> _sections = new();
@@ -64,9 +68,28 @@ public sealed class InventoryViewPanel : UIState
         _dragHandle = new UIDragHandle(16);
         _dragHandle.HAlign = 1f;
         //_dragHandle.Top.Set(Padding + 4f, 0f);
-        _dragHandle.Top.Set(Padding, 0f);
+        _dragHandle.Top.Set(Padding - 4f, 0f);
         _dragHandle.Left.Set(-Padding, 0f);
         _mainPanel.Append(_dragHandle);
+
+        // Session 1 2026-05-02: replacement-only Swap Source/Target affordance in
+        // InventoryView (requested by GrayJou). Button is always mounted in panel
+        // chrome but only enabled while holding Wand of Replacement.
+        var mod = ModContent.GetInstance<WorldShapingWandsMod>();
+        Asset<Texture2D> texSwap = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Chromes/SwapItems", AssetRequestMode.ImmediateLoad);
+        _swapSourceTargetBtn = new UIIconButton(texSwap, Language.GetTextValue("Mods.WorldShapingWandsMod.UI.Replacement.SwapSourceTarget"))
+        {
+            IsRadio = false,
+            IsAction = true,
+            Disabled = true,
+        };
+        _swapSourceTargetBtn.Width.Set(16f, 0f);
+        _swapSourceTargetBtn.Height.Set(16f, 0f);
+        _swapSourceTargetBtn.HAlign = 1f;
+        _swapSourceTargetBtn.Top.Set(Padding - 4f, 0f);
+        _swapSourceTargetBtn.Left.Set(-Padding - 16f - 4f - 16f, 0f);
+        _swapSourceTargetBtn.OnLeftClick += (_, _) => SwapReplacementSourceAndTarget();
+        _mainPanel.Append(_swapSourceTargetBtn);
     }
 
     public override void Update(GameTime gameTime)
@@ -80,6 +103,8 @@ public sealed class InventoryViewPanel : UIState
         IInventoryViewProvider provider = InventoryViewRegistry.GetProvider(player);
         if (provider == null)
             return;
+
+        UpdateReplacementSwapButton(player);
 
         Rebuild(player, provider);
 
@@ -136,7 +161,76 @@ public sealed class InventoryViewPanel : UIState
         _mainPanel.Height.Set(cursorY, 0f);
         _mainPanel.RemoveChild(_dragHandle);
         _mainPanel.Append(_dragHandle);
+        if (_swapSourceTargetBtn != null)
+        {
+            _mainPanel.RemoveChild(_swapSourceTargetBtn);
+            _mainPanel.Append(_swapSourceTargetBtn);
+        }
         _mainPanel.Recalculate();
+    }
+
+    private void UpdateReplacementSwapButton(Player player)
+    {
+        if (_swapSourceTargetBtn == null)
+            return;
+
+        bool isReplacement = BaseCyclingWand.GetCurrentFamily(player) == WandFamily.Replacement;
+        if (!isReplacement)
+        {
+            _swapSourceTargetBtn.Disabled = true;
+            return;
+        }
+
+        var settings = player.GetModPlayer<WandPlayer>()?.ReplacementSettings;
+        if (settings == null)
+        {
+            _swapSourceTargetBtn.Disabled = true;
+            return;
+        }
+
+        _swapSourceTargetBtn.Disabled = settings.NewObject == ObjectType.Air;
+    }
+
+    private static void SwapReplacementSourceAndTarget()
+    {
+        Player player = Main.LocalPlayer;
+        if (player == null || !player.active)
+            return;
+
+        var settings = player.GetModPlayer<WandPlayer>()?.ReplacementSettings;
+        if (settings == null)
+            return;
+
+        if (settings.NewObject == ObjectType.Air)
+        {
+            Main.NewText("Swap Source/Target is disabled when target is Air (remove mode).", Color.OrangeRed);
+            return;
+        }
+
+        ObjectType oldSourceObject = settings.OldObject;
+        ObjectType oldTargetObject = settings.NewObject;
+
+        int? oldSourceChoice = settings.GetChosenSourceItemType(oldSourceObject);
+        int? oldTargetChoice = settings.GetChosenTargetItemType(oldTargetObject);
+
+        var oldSourcePins = new HashSet<int>(settings.GetPinnedSourceItemTypes(oldSourceObject));
+        var oldTargetPins = new HashSet<int>(settings.GetPinnedTargetItemTypes(oldTargetObject));
+
+        settings.OldObject = oldTargetObject;
+        settings.NewObject = oldSourceObject;
+
+        settings.SetChosenSourceItemType(settings.OldObject, oldTargetChoice);
+        settings.SetChosenTargetItemType(settings.NewObject, oldSourceChoice);
+
+        var newSourcePins = settings.GetPinnedSourceItemTypes(settings.OldObject);
+        newSourcePins.Clear();
+        newSourcePins.UnionWith(oldTargetPins);
+
+        var newTargetPins = settings.GetPinnedTargetItemTypes(settings.NewObject);
+        newTargetPins.Clear();
+        newTargetPins.UnionWith(oldSourcePins);
+
+        Main.NewText("Replacement source/target swapped.", Color.LightGreen);
     }
 
     private SourceSection BuildSection(IInventoryViewSource source, WandPlayer wp, Player player)
