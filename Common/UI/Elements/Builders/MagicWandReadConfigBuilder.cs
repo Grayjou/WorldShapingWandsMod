@@ -300,7 +300,8 @@ internal static class MagicWandReadConfigBuilder
             stateColorForValue: f => ResolveActuationFilterColor(f));
         actuationBtn.Width.Set(ContigCellW, 0f);
         actuationBtn.Height.Set(ContigCellH, 0f);
-        actuationBtn.Left.Set(bodyW-64f, 0f); //((bodyW - ContigCellW) * 0.5f, 0f); Until I determine where the 12f extra pixels are coming from
+        actuationBtn.Left.Set(bodyW-64f, 0f); // was 38; had to add 22 por the icon size and the extra 4? Who knows lol
+        // now there are 38 blocks between the end of it and the right edge, same as between the left border and 8-contiguity (second btn)
         actuationBtn.Top.Set(yCursor, 0f);
         body.Append(actuationBtn);
 
