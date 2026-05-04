@@ -52,6 +52,20 @@ public class WandPanelBuilder
 
     private readonly List<float> _sectionBoundaries = new();
 
+    private static float ComputeRowWidth(int elementCount, float elementWidth, float elementGap)
+    {
+        if (elementCount <= 0)
+            return 0f;
+
+        float rowWidth = 0f;
+        for (int i = 0; i < elementCount; i++)
+            rowWidth = LayoutSpacing.AddHorizontalSpace(rowWidth, elementWidth, i == 0 ? 0f : elementGap);
+        return rowWidth;
+    }
+
+    private float ComputeCenteredRowStartX(float rowWidth)
+        => (_panelWidth - rowWidth) * 0.5f - _padding;
+
     // -------------------------------------------------------------------
     // Layout constants � single source of truth for all panels
     // -------------------------------------------------------------------
@@ -222,8 +236,8 @@ public class WandPanelBuilder
             int startIdx = row * iconsPerRow;
             int iconsInThisRow = Math.Min(iconsPerRow, totalIcons - startIdx);
 
-            float totalWidth = IconBtnSize * iconsInThisRow + IconGap * (iconsInThisRow - 1);
-            float startX = (_panelWidth - totalWidth) / 2f - _padding;
+            float totalWidth = ComputeRowWidth(iconsInThisRow, IconBtnSize, IconGap);
+            float startX = ComputeCenteredRowStartX(totalWidth);
 
             for (int col = 0; col < iconsInThisRow; col++)
             {
@@ -272,8 +286,8 @@ public class WandPanelBuilder
             int startIdx = row * iconsPerRow;
             int iconsInThisRow = Math.Min(iconsPerRow, totalIcons - startIdx);
 
-            float totalWidth = SmallIconBtnSize * iconsInThisRow + SmallIconGap * (iconsInThisRow - 1);
-            float startX = (_panelWidth - totalWidth) / 2f - _padding;
+            float totalWidth = ComputeRowWidth(iconsInThisRow, SmallIconBtnSize, SmallIconGap);
+            float startX = ComputeCenteredRowStartX(totalWidth);
 
             for (int col = 0; col < iconsInThisRow; col++)
             {
@@ -603,8 +617,8 @@ public class WandPanelBuilder
         int count = icons.Length;
         buttons = new UIIconButton[count];
 
-        float totalWidth = IconBtnSize * count + IconGap * (count - 1);
-        float startX = (_panelWidth - totalWidth) / 2f - _padding;
+        float totalWidth = ComputeRowWidth(count, IconBtnSize, IconGap);
+        float startX = ComputeCenteredRowStartX(totalWidth);
 
         for (int i = 0; i < count; i++)
         {
@@ -837,8 +851,8 @@ public class WandPanelBuilder
         int count = icons.Length;
         buttons = new UIIconButton[count];
 
-        float totalWidth = IconBtnSize * count + IconGap * (count - 1);
-        float startX = (_panelWidth - totalWidth) / 2f - _padding;
+        float totalWidth = ComputeRowWidth(count, IconBtnSize, IconGap);
+        float startX = ComputeCenteredRowStartX(totalWidth);
 
         for (int i = 0; i < count; i++)
         {
@@ -862,8 +876,8 @@ public class WandPanelBuilder
         int count = icons.Length;
         buttons = new UIIconButton[count];
 
-        float totalWidth = IconBtnSize * count + IconGap * (count - 1);
-        float startX = (_panelWidth - totalWidth) / 2f - _padding;
+        float totalWidth = ComputeRowWidth(count, IconBtnSize, IconGap);
+        float startX = ComputeCenteredRowStartX(totalWidth);
 
         for (int i = 0; i < count; i++)
         {

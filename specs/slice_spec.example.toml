@@ -1,0 +1,20 @@
+[meta]
+name    = "WSW.SelectionOverlay.lifecycle"
+budget  = 65000
+created = "2026-05-03"
+purpose = "BRWC overlay-persistence diagnosis"
+
+[[slice]]
+path   = "Common/Drawing/SelectionOverlay.cs"
+ranges = ["1-200", "700-900", "1100-1183"]
+
+[[slice]]
+path   = "Common/Players/WandPlayer.cs"
+ranges = ["390-560", "700-810"]
+
+[[slice]]
+path   = "Common/Drawing/OverlayManagerSystem.cs"
+ranges = ["full"]
+
+[[exclude]]
+pattern = "\\.Designer\\.cs$"

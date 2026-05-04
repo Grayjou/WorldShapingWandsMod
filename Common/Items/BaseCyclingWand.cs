@@ -697,8 +697,10 @@ public abstract class BaseCyclingWand : ModItem
             if (IsOnLocalCooldown()) return false;
             wandPlayer.UpdateSelection(mouseTile);
             if (CanExecute(player, wandPlayer))
+            {
                 ExecuteWandOperation(player, wandPlayer);
-            wandPlayer.ClearSelection();
+                wandPlayer.ClearSelectionAfterCommit();
+            }
             return false;
         }
     }
@@ -726,8 +728,10 @@ public abstract class BaseCyclingWand : ModItem
             if (IsTooFarToConfirm(wandPlayer.Selection, mouseTile)) return false;
             if (IsOnLocalCooldown()) return false;
             if (CanExecute(player, wandPlayer))
+            {
                 ExecuteWandOperation(player, wandPlayer);
-            wandPlayer.ClearSelection();
+                wandPlayer.ClearSelectionAfterCommit();
+            }
             return false;
         }
     }

@@ -30,6 +30,9 @@ public class WswCommand : ModCommand
         "  paintdemo (pd)   — Place a demo strip of all 31 paint colors\n" +
         "    [r|c] [t|w]    — r=row (default), c=column; t=tile (default), w=wall\n" +
         "  inventoryview (iv) — List candidate item types + choice for the held wand\n" +
+#if DEBUG
+        "  overlay          — [DEBUG] Print current selection/overlay state snapshot\n" +
+#endif
         "  help             — Show this help text";
 
     private const int PaintCount = 31; // Colors 0–30
@@ -69,6 +72,12 @@ public class WswCommand : ModCommand
             case "iv":
                 RunInventoryView(caller);
                 break;
+
+#if DEBUG
+            case "overlay":
+                RunOverlaySnapshot(caller);
+                break;
+#endif
 
             case "help":
                 caller.Reply(Usage, Color.Yellow);
@@ -333,8 +342,23 @@ public class WswCommand : ModCommand
         }
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────
+    // ── overlay (DEBUG) ───────────────────────────────────────────────
+#if DEBUG
+    /// <summary>
+    /// Prints the current overlay/selection state snapshot to chat on demand.
+    /// Design: C-S4 2026-05-03 (DesignDoc_OverlayDebugSnapshot_OnDemand.md §4).
+    /// </summary>
+    private static void RunOverlaySnapshot(CommandCaller caller)
+    {
+        var player = caller.Player;
+        var wp = player.GetModPlayer<global::WorldShapingWandsMod.Common.Players.WandPlayer>();
+        var overlay = ModContent.GetInstance<global::WorldShapingWandsMod.Common.Drawing.SelectionOverlay>();
+        var snap = global::WorldShapingWandsMod.Common.Debug.OverlaySnapshot.Capture(player, wp, overlay);
+        Main.NewText("[OVL on demand] " + snap.ToChatLine(), Color.Magenta);
+    }
+#endif
 
+    // ── Helpers ───────────────────────────────────────────────────────
     private static int CountItem(Player player, int itemType)
     {
         int count = 0;

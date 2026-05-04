@@ -39,10 +39,23 @@ public sealed class InventoryViewPanel : UIState
     // 9 * 36 + 8 * 4 + 32 = 392
     // (slot content width + horizontal chrome/padding allowance)
     private const int MaxSlotsPerSource = 9;
-    private const float PanelWidth = MaxSlotsPerSource * UIInventoryViewSlot.SlotSize + (MaxSlotsPerSource - 1) * SlotGap + 32f;
     private const float Padding = 6f;
     private const float SlotGap = 4f;
+    private static readonly float PanelWidth = ComputePanelWidth();
     private const string UIPrefix = "Mods.WorldShapingWandsMod.UI.InventoryView";
+
+    private static float ComputePanelWidth()
+    {
+        float rowWidth = 0f;
+        for (int i = 0; i < MaxSlotsPerSource; i++)
+            rowWidth = LayoutSpacing.AddHorizontalSpace(
+                rowWidth,
+                UIInventoryViewSlot.SlotSize,
+                i == 0 ? 0f : SlotGap);
+
+        // Preserve existing horizontal chrome/padding allowance.
+        return rowWidth + 32f;
+    }
 
     private UIDraggablePanel _mainPanel;
     private UIDragHandle _dragHandle;

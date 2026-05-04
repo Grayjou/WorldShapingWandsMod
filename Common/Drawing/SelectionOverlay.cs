@@ -30,6 +30,10 @@ public class SelectionOverlay : ModSystem
     private Point _cacheStart, _cacheEnd;
     private ShapeInfo _cacheShape;
     private bool _cacheValid;
+    // (C-S3 2026-05-03) Cache the LastMagicWandShape reference so that a new Read commit
+    // at the same world position (same start/end/shape key) still invalidates the cache
+    // and redraws the new capture instead of reusing the previous tile set.
+    private StoredMagicWandShape _cacheLastMagicWandShape;
 
     // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
     //  Area Calculation Cache Ã¢â‚¬â€ debounced to avoid per-frame cost.
@@ -80,6 +84,7 @@ public class SelectionOverlay : ModSystem
     {
         _cacheValid = false;
         _cachedTiles = null;
+        _cacheLastMagicWandShape = null;
     }
 
     private bool _cacheVerticalFirst;
@@ -95,7 +100,13 @@ public class SelectionOverlay : ModSystem
             && _cacheShape.EqualDimensions == shapeSettings.EqualDimensions
             && _cacheShape.Slice == shapeSettings.Slice
             && _cacheShape.ConnectDiameter == shapeSettings.ConnectDiameter
-            && _cacheShape.InvertSelection == shapeSettings.InvertSelection)
+            && _cacheShape.InvertSelection == shapeSettings.InvertSelection
+            // (C-S3 2026-05-03) For Magic Wand shapes the tile set lives in
+            // LastMagicWandShape, not in start/end. Two commits at the same world
+            // position would hit cache and reuse the previous capture without this.
+            && (shapeSettings.Shape != ShapeType.MagicWandRead
+                || ReferenceEquals(_cacheLastMagicWandShape,
+                    Main.LocalPlayer?.GetModPlayer<WandPlayer>()?.LastMagicWandShape)))
         {
             return _cachedTiles;
         }
@@ -128,6 +139,9 @@ public class SelectionOverlay : ModSystem
         _cacheVerticalFirst = verticalFirst;
         _cacheShape = shapeSettings;
         _cacheValid = true;
+        _cacheLastMagicWandShape = shapeSettings.Shape == ShapeType.MagicWandRead
+            ? Main.LocalPlayer?.GetModPlayer<WandPlayer>()?.LastMagicWandShape
+            : null;
         return _cachedTiles;
     }
 
@@ -156,6 +170,10 @@ public class SelectionOverlay : ModSystem
         var wandPlayer = player.GetModPlayer<WandPlayer>();
         bool isHoldingWand = IsHoldingWandItem(player);
 
+#if DEBUG
+        TickDebugSnapshot(player, wandPlayer);
+#endif
+
         // Draw the cancelled selection overlay (fading out) if present
         if (wandPlayer.CancelledSelection != null && !wandPlayer.CancelledSelection.IsExpired)
         {
@@ -178,6 +196,24 @@ public class SelectionOverlay : ModSystem
                 DrawCursorHighlight(shapeSettings);
         }
     }
+
+#if DEBUG
+    /// <summary>
+    /// Emits a magenta chat snapshot whenever the overlay state changes.
+    /// Edge-triggered: fires at most once per state transition, never spams.
+    /// Design: C-S4 2026-05-03 (DesignDoc_OverlayDebugSnapshot_OnDemand.md §3).
+    /// </summary>
+    private void TickDebugSnapshot(Player player, WandPlayer wp)
+    {
+        var snap = global::WorldShapingWandsMod.Common.Debug.OverlaySnapshot.Capture(player, wp, this);
+        if (!_hasLastSnapshot || !snap.Equals(_lastSnapshot))
+        {
+            _hasLastSnapshot = true;
+            _lastSnapshot = snap;
+            Main.NewText(snap.ToChatLine(), Color.Magenta);
+        }
+    }
+#endif
 
     private bool DrawStoredMagicReadPreviewIfAvailable(WandPlayer wandPlayer, ShapeInfo shapeSettings)
     {
@@ -237,6 +273,13 @@ public class SelectionOverlay : ModSystem
     /// Set by <see cref="SelectionOverlayAdapter"/> during initialization.
     /// </summary>
     internal bool _managedByOverlaySystem;
+
+#if DEBUG
+    // Edge-triggered snapshot state (C-S4 2026-05-03).
+    internal int DebugCachedTilesCount => _cachedTiles?.Count ?? 0;
+    private global::WorldShapingWandsMod.Common.Debug.OverlaySnapshot _lastSnapshot;
+    private bool _hasLastSnapshot;
+#endif
 
     private ShapeInfo GetCurrentShapeSettings(Player player, WandPlayer wandPlayer)
     {

@@ -355,7 +355,31 @@ public class WandPlayer : ModPlayer
         StampAnchorOffset = Point.Zero;
         SmoothAnchorInitialised = false; // W-S4-1: v3 smoothing reset on clear
         SelectionClickStep = 0;
+        LastMagicWandShape = null; // (C-S3 2026-05-03) prevent overlay ghost after commit
         ResetStampChanneling();
+    }
+
+    /// <summary>
+    /// (C-S3 2026-05-03) Clears the active Select Mode selection AFTER a successful
+    /// action commit. Unlike <see cref="CancelSelection(Color, ShapeInfo)"/>, this does
+    /// NOT play the cancel animation — the overlay just stops rendering because the
+    /// operation completed normally. Also clears the Magic Wand capture: the captured
+    /// tiles represent a state of the world that no longer exists after an action commit.
+    /// <para>Note: <c>_justCancelled</c> is NOT set — this is a clean commit, not a
+    /// cancellation, so input handling resumes normally next frame.</para>
+    /// </summary>
+    public void ClearSelectionAfterCommit()
+    {
+        Selection = SelectionState.Empty;
+        SelectionOwnerItemType = 0;
+        SelectionClickStep = 0;
+        IsStampLocked = false;
+        StampDelta = Point.Zero;
+        StampAnchorOffset = Point.Zero;
+        SmoothAnchorInitialised = false;
+        ResetStampChanneling();
+        LastMagicWandShape = null;
+        // _justCancelled intentionally NOT set — clean commit, not cancellation.
     }
 
     /// <summary>

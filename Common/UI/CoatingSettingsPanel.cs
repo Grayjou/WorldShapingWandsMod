@@ -120,8 +120,14 @@ public class CoatingSettingsPanel : UIState
 
         _builder.AddSectionHeader("Coating.Mode");
         const int modeCellCount = 5;
-        float modeRowTotalWidth = WandPanelBuilder.IconBtnSize * modeCellCount
-                                + WandPanelBuilder.IconGap * (modeCellCount - 1);
+        float modeRowTotalWidth = 0f;
+        for (int i = 0; i < modeCellCount; i++)
+        {
+            modeRowTotalWidth = LayoutSpacing.AddHorizontalSpace(
+                modeRowTotalWidth,
+                WandPanelBuilder.IconBtnSize,
+                i == 0 ? 0f : WandPanelBuilder.IconGap);
+        }
         float modeRowStartX = (PanelWidth - modeRowTotalWidth) / 2f - Padding;
         float modeRowY = _builder.CurrentY;
         float ModeCellLeft(int i) => modeRowStartX
@@ -230,7 +236,7 @@ public class CoatingSettingsPanel : UIState
         _magicWandReadBtn = shapes.MagicWandRead;
         _magicWandApplyBtn = shapes.MagicWandApply;
 
-        // (S4 2026-05-01 — StencilMagicWandSelectionPlan.md §4.1) Right-click on
+        // (S4 2026-05-01 ï¿½ StencilMagicWandSelectionPlan.md ï¿½4.1) Right-click on
         // the Magic Wand Read shape cell opens the Read configuration SubUI.
         // The SubUI's underlying state (MagicWandReadConfig) is a player-scoped
         // preference shared across every wand, so the wiring is centralised in

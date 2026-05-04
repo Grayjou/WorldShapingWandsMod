@@ -87,7 +87,9 @@ internal static class StencilPickerBuilder
         var mod = ModContent.GetInstance<WorldShapingWandsMod>();
 
         const int slotCount = MoldingWandPlayer.StencilSlotCount;
-        float bodyW = CellSize * slotCount + CellGap * (slotCount - 1);
+        float bodyW = 0f;
+        for (int i = 0; i < slotCount; i++)
+            bodyW = LayoutSpacing.AddHorizontalSpace(bodyW, CellSize, i == 0 ? 0f : CellGap);
         float bodyH = CellSize;
 
         var body = new UIElement();

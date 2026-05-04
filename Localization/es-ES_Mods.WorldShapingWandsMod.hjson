@@ -358,6 +358,28 @@ UI: {
 					''' */
 			}
 		}
+
+		ActuationFilter: {
+			// Header: Act. Filter
+			/* Both.Tooltip:
+				'''
+				Both (default)
+				Admits actuated and non-actuated tiles.
+				Click to cycle to Non-Actuated Only.
+				''' */
+			/* NonActuatedOnly.Tooltip:
+				'''
+				Non-Actuated Only
+				Admits only tiles that are NOT currently actuated.
+				Click to cycle to Actuated Only.
+				''' */
+			/* ActuatedOnly.Tooltip:
+				'''
+				Actuated Only
+				Admits only tiles that ARE currently actuated (ghosted).
+				Click to cycle back to Both.
+				''' */
+		}
 	}
 
 	Building: {

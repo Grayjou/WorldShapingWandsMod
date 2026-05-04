@@ -1,5 +1,6 @@
 using Terraria.ModLoader.IO;
 using WorldShapingWandsMod.Common.Enums;
+using WorldShapingWandsMod.Common.Geometry;
 
 namespace WorldShapingWandsMod.Common.Settings;
 
@@ -36,15 +37,24 @@ public struct MagicWandReadConfig
     /// <summary>The 3-option contiguity radio pick. Default: <see cref="MagicWandContinuity.FourNeighbour"/>.</summary>
     public MagicWandContinuity Continuity { get; set; }
 
-    /// <summary>Default ctor produces (SameTile, FourNeighbour) — the safest, most-recognisable Magic-Wand behaviour.</summary>
+    /// <summary>
+    /// (C-S3 2026-05-03) Read-time actuation filter. Default: <see cref="ActuationFilter.Both"/>.
+    /// Controls which actuated state of tiles is admitted into the flood-fill result.
+    /// </summary>
+    public ActuationFilter ActuationFilter { get; set; }
+
+    /// <summary>Default ctor produces (SameTile, FourNeighbour, Both) — the safest, most-recognisable Magic-Wand behaviour.</summary>
     public static MagicWandReadConfig Default => new()
     {
         ObjectType = MagicWandObjectType.SameTile,
         Continuity = MagicWandContinuity.FourNeighbour,
+        ActuationFilter = ActuationFilter.Both,
     };
 
     private const string TagObject = "MagicWand_Object";
     private const string TagCont   = "MagicWand_Cont";
+    private const string TagActFilter = "MagicWand_ActFilter"; // C-S3 2026-05-03
+    private const string TagActFilterVersion = "MagicWand_ActFilter_V";
 
     /// <summary>
     /// Writes this config into the given save tag. Both fields use the
@@ -56,6 +66,8 @@ public struct MagicWandReadConfig
     {
         tag[TagObject] = (byte)ObjectType;
         tag[TagCont]   = (byte)Continuity;
+        tag[TagActFilter] = (byte)ActuationFilter;
+        tag[TagActFilterVersion] = (byte)1;
     }
 
     /// <summary>
@@ -76,6 +88,22 @@ public struct MagicWandReadConfig
         {
             byte v = tag.GetByte(TagCont);
             if (v <= (byte)MagicWandContinuity.NonContiguous) cfg.Continuity = (MagicWandContinuity)v;
+        }
+        if (tag.ContainsKey(TagActFilter))
+        {
+            byte v = tag.GetByte(TagActFilter);
+            if (v <= (byte)ActuationFilter.ActuatedOnly)
+            {
+                // Back-compat guard (C-S3 hotfix, 2026-05-03): some pre-version saves
+                // may carry legacy value 2 as "Both". Without a version marker this
+                // would be interpreted as ActuatedOnly in the current enum ordering.
+                // Heuristic: if no version tag exists and value is 2, treat it as Both.
+                bool hasVersion = tag.ContainsKey(TagActFilterVersion);
+                if (!hasVersion && v == 2)
+                    cfg.ActuationFilter = ActuationFilter.Both;
+                else
+                    cfg.ActuationFilter = (ActuationFilter)v;
+            }
         }
         return cfg;
     }

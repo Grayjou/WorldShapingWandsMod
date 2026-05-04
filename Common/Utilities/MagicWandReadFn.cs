@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 using WorldShapingWandsMod.Common.Enums;
+using WorldShapingWandsMod.Common.Geometry;
 using WorldShapingWandsMod.Common.Selection;
 using WorldShapingWandsMod.Common.Settings;
 
@@ -89,11 +90,22 @@ public static class MagicWandReadFn
             return TryGetTile(p, out var t) && MatchPredicate(t, oTile, config.ObjectType);
         }
 
+        // (C-S3 2026-05-03) Actuation filter: gates admission based on tile.IsActuated.
+        // Applied after the content-match predicate so that a non-matching tile
+        // is still rejected by the content predicate (cheaper) first.
+        var actuationFilter = config.ActuationFilter;
+        bool AdmitByActuation(Point p)
+        {
+            if (actuationFilter == ActuationFilter.Both) return true;
+            return TryGetTile(p, out var t) && actuationFilter.Admits(t.IsActuated);
+        }
+
         // Origin must itself match (otherwise contiguous flood has no seed).
         // For Non-contiguous mode we also enforce this — Read is "select
         // all things LIKE the origin", which presupposes the origin is
         // itself an instance of that thing.
         if (!Match(origin)) return (result, ReadStatus.Empty);
+        if (!AdmitByActuation(origin)) return (result, ReadStatus.Empty);
 
         if (config.Continuity == MagicWandContinuity.NonContiguous)
         {
@@ -101,7 +113,7 @@ public static class MagicWandReadFn
             foreach (var p in domain.GetAllPoints())
             {
                 if (result.Count >= cap) return (result, ReadStatus.Capped);
-                if (Match(p)) result.Add(p);
+                if (Match(p) && AdmitByActuation(p)) result.Add(p);
             }
             return (result, result.Count == 0 ? ReadStatus.Empty : ReadStatus.Success);
         }
@@ -125,6 +137,7 @@ public static class MagicWandReadFn
                     if (result.Contains(n)) continue;
                     if (!domain.Contains(n)) continue;
                     if (!Match(n)) continue;
+                    if (!AdmitByActuation(n)) continue;
                     result.Add(n);
                     if (result.Count >= cap) return (result, ReadStatus.Capped);
                     queue.Enqueue(n);

@@ -71,7 +71,9 @@ public class UISliceGrid : UIElement
 
     public UISliceGrid()
     {
-        float totalWidth = CellWidth * CellCount + Gap * (CellCount - 1);
+        float totalWidth = 0f;
+        for (int i = 0; i < CellCount; i++)
+            totalWidth = LayoutSpacing.AddHorizontalSpace(totalWidth, CellWidth, i == 0 ? 0f : Gap);
         Width.Set(totalWidth, 0f);
         Height.Set(CellHeight, 0f);
 

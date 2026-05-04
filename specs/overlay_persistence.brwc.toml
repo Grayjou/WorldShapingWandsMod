@@ -1,0 +1,51 @@
+# specs/overlay_persistence.brwc.toml
+# WSW BRWC slice spec — post-commit overlay persistence bug
+# Created: 2026-05-03   Session: W-S5 (Willow)
+# Format: DesignDoc_BRWC_DedicatedTokenizer.md §3 (C-S4 2026-05-03)
+
+[meta]
+name        = "OverlayPersistence"
+budget      = 65000
+purpose     = "BRWC: diagnose post-commit overlay persistence in Select Mode"
+created_by  = "Willow"
+created_on  = "2026-05-03"
+session     = "W-S5"
+
+[preamble]
+text = """
+You are inspecting Magic Wand selection lifecycle code. The bug under
+investigation: after click 2 commits a selection, the visual overlay
+PERSISTS instead of clearing. Cancel-anim only sometimes plays.
+
+Focus on:
+  - Where Selection.IsActive is set/cleared (grep for `Selection = `)
+  - SelectionOverlay.DrawAll branching
+  - Any cache that survives a commit
+
+Do NOT spend tokens on:
+  - Localization
+  - Non-Magic shapes (Rectangle, Ellipse, etc.) unless the bug
+    surface forces you there
+"""
+
+[[slice]]
+label  = "Selection lifecycle (WandPlayer)"
+path   = "Common/Players/WandPlayer.cs"
+ranges = ["390-560", "700-810"]
+
+[[slice]]
+label  = "Renderer entry point and branch tree"
+path   = "Common/Drawing/SelectionOverlay.cs"
+ranges = ["1-200", "700-900"]
+
+[[slice]]
+label  = "Manager system that snapshots state into the overlay context"
+path   = "Common/Drawing/OverlayManagerSystem.cs"
+ranges = ["full"]
+
+[ask]
+question = """
+Given these three files, name every code path that could cause
+SelectionOverlay to render a visible non-cancel overlay AFTER click 2
+commits but BEFORE the next click resets state. Rank by likelihood.
+"""

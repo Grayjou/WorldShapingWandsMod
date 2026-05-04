@@ -9,6 +9,7 @@ using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.UI;
 using WorldShapingWandsMod.Common.Enums;
+using WorldShapingWandsMod.Common.Geometry;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Settings;
 using WorldShapingWandsMod.Common.UI;
@@ -22,9 +23,10 @@ namespace WorldShapingWandsMod.Common.UI.Elements.Builders;
 /// body. Two top-level sections per the S4 2026-04-28 GrayJou ratification:
 ///
 /// <list type="number">
-///   <item><b>SampleMode</b> — 12 cells across three sub-rows (A: 2
-///   <c>Same as origin</c>; B-1: 6 object types; B-2: 4 domain extras +
-///   paint channels). Drives <see cref="MagicWandReadConfig.ObjectType"/>.</item>
+///   <item><b>SampleMode</b> — 12 cells across two balanced 6-cell rows.
+///   Row 1: SameTile, SameWall, Solid, Wall, Rope, Platform.
+///   Row 2: Rail, PlanterBox, Empty, Liquid, PaintTile, PaintWall.
+///   Drives <see cref="MagicWandReadConfig.ObjectType"/>.</item>
 ///   <item><b>Contiguity</b> — 3-cell radio (4-/8-/Non-contiguous).
 ///   Drives <see cref="MagicWandReadConfig.Continuity"/>.</item>
 /// </list>
@@ -59,11 +61,13 @@ internal static class MagicWandReadConfigBuilder
 
     // ── Layout constants (mirror ColorReplaceConfigBuilder's spirit) ──
 
-    private const float HorizontalPad      = 10f;
+    private const float HorizontalPad      = 2f;
     private const float SectionGap         = 10f;
     private const float SectionHeaderHeight = 18f;
     private const float RowGap             = 4f;
     private const float BottomPad          = 12f;
+
+    private const float TextFitPadding = 12f;
 
     private const float SampleCellW = WandPanelBuilder.SmallIconBtnSize;
     private const float SampleCellH = WandPanelBuilder.SmallIconBtnSize;
@@ -74,8 +78,15 @@ internal static class MagicWandReadConfigBuilder
     private const float ContigCellGap = 4f;
     private const float IconDrawSize = 16f;
 
+    private static float ComputeRowWidth(int elementCount, float elementWidth, float elementGap)
+    {
+        // This conditional is not necessary cause then elementGap * (elementCount - 1) would be zero when elementCount is 1, but it makes the intention clearer and avoids unnecessary multiplication.
+        float rowWidth = elementCount == 1 ? elementWidth : elementWidth * elementCount + elementGap * (elementCount - 1);
+        return rowWidth;
+    }
+
     /// <summary>
-    /// Builds the body element (SampleMode 3-row grid + Contiguity row).
+    /// Builds the body element (SampleMode 2-row grid + Contiguity row).
     /// The factory wraps this in a <see cref="WandSubPanel"/> with
     /// lifecycle metadata declared in
     /// <see cref="WandSubPanelFactories.CreateMagicWandReadConfig"/>.
@@ -109,20 +120,37 @@ internal static class MagicWandReadConfigBuilder
                 contigCells[i].IsSelected = (i == sel);
         };
 
-        // Section 1 sub-row layouts (cell index → (row, col, count-in-row))
-        // Row A:   indices 0..1   (SameTile, SameWall)            → 2 cells
-        // Row B-1: indices 2..7   (Solid..PlanterBox)             → 6 cells
-        // Row B-2: indices 8..11  (Empty, Liquid, PaintTile, PaintWall) → 4 cells
+        // Section 1 row layouts (cell index → row span)
+        // Row 1: indices 0..5   (SameTile, SameWall, Solid, Wall, Rope, Platform)
+        // Row 2: indices 6..11  (Rail, PlanterBox, Empty, Liquid, PaintTile, PaintWall)
         var rowGroups = new[]
         {
-            new RowGroup(0, 2),
-            new RowGroup(2, 6),
-            new RowGroup(8, 4),
+            new RowGroup(0, 6),
+            new RowGroup(6, 6),
         };
 
-        float bodyW = 6 * SampleCellW + 5 * SampleCellGap + HorizontalPad * 2f;
+        float contentW = 0f;
+        foreach (var grp in rowGroups)
+        {
+            float rowW = ComputeRowWidth(grp.Count, SampleCellW, SampleCellGap);
+            contentW = LayoutSpacing.FitHorizontalSpace(contentW, rowW);
+        }
+        float contigRowWForFold = ComputeRowWidth(3, ContigCellW, ContigCellGap);
+        contentW = LayoutSpacing.FitHorizontalSpace(contentW, contigRowWForFold);
+        /*
+            * The body is 176 pixels wide
+            * 6*22 + 5*4 = 152
+            * extra 12 pixels at the end
+            * 2*2 pixels horizontal = 2 * 2 = 4
+            * where are the extra 8 pixels comming from?
+            * I hardcoded bodyW to 60f to see if it was the Halign, but even tho most of the buttons were out of the frame, the first button
+            * was 12f from the left border, even though rowLeft was initialized as 0
+            * This ensures the body is always just wide enough to fit its content, without hardcoding any particular cell count or gap size.
+            */
+        float bodyW = contentW + HorizontalPad * 2f + 12f + TextFitPadding * 2f;
+
         float sampleSectionH = SectionHeaderHeight
-            + 3 * SampleCellH + 2 * RowGap;
+            + 2 * SampleCellH + RowGap;
         float contigSectionH = SectionHeaderHeight + ContigCellH;
         float bodyH = sampleSectionH + SectionGap + contigSectionH + BottomPad;
 
@@ -149,8 +177,8 @@ internal static class MagicWandReadConfigBuilder
         for (int g = 0; g < rowGroups.Length; g++)
         {
             var grp = rowGroups[g];
-            float rowW = grp.Count * SampleCellW + (grp.Count - 1) * SampleCellGap;
-            float rowLeft = (bodyW - rowW) * 0.5f;
+            float rowW = ComputeRowWidth(grp.Count, SampleCellW, SampleCellGap);
+            float rowLeft = TextFitPadding;
             for (int k = 0; k < grp.Count; k++)
             {
                 int idx = grp.StartIndex + k;
@@ -197,18 +225,28 @@ internal static class MagicWandReadConfigBuilder
             Language.GetTextValue("Mods.WorldShapingWandsMod.UI.MagicWandRead.Contiguity.Header"),
             0.85f)
         {
-            HAlign = 0.5f,
+            HAlign = 0f, // gets 12f just as the row buttons, idk why still
             IgnoresMouseInteraction = true,
         };
         contigHeader.Top.Set(yCursor, 0f);
         body.Append(contigHeader);
+        var actHeader = new UIText(
+            Language.GetTextValue("Mods.WorldShapingWandsMod.UI.MagicWandRead.ActuationFilter.Header"),
+            0.85f)
+        {
+            HAlign = 1.0f,
+            // Actually 120 pixels from the left, well I don't know anything anymore    
+            IgnoresMouseInteraction = true,
+        };
+        actHeader.Top.Set(yCursor, 0f);
+        body.Append(actHeader);
         yCursor = LayoutSpacing.AddVerticalSpace(
             currentSize: yCursor,
             elementSize: SectionHeaderHeight,
             bottomPadding: 0f);
 
-        float contigRowW = 3 * ContigCellW + 2 * ContigCellGap;
-        float contigLeft = (bodyW - contigRowW) * 0.5f;
+        float contigRowW = ComputeRowWidth(3, ContigCellW, ContigCellGap);
+        float contigLeft = 0f;//(bodyW - contigRowW) * 0.25f;
         for (int i = 0; i < 3; i++)
         {
             var cont = (MagicWandContinuity)i;
@@ -239,6 +277,38 @@ internal static class MagicWandReadConfigBuilder
             body.Append(cell);
         }
 
+
+        // ── Section 3: Actuation Filter (C-S3 2026-05-03) ──
+
+
+
+        // Single cycling button — clicking cycles Both → NonActuated → Actuated → Both.
+        var actuationBtn = new TriStateIconButton<ActuationFilter>(
+            getValue:       () => (Main.LocalPlayer?.GetModPlayer<WandPlayer>()?.MagicWandReadConfig ?? MagicWandReadConfig.Default).ActuationFilter,
+            setValue:       v =>
+            {
+                var wp = Main.LocalPlayer?.GetModPlayer<WandPlayer>();
+                if (wp == null) return;
+                var cfg = wp.MagicWandReadConfig;
+                cfg.ActuationFilter = v;
+                wp.MagicWandReadConfig = cfg;
+                onChanged?.Invoke(cfg);
+            },
+            next:           f => f.Next(),
+            iconForValue:   f => ResolveActuationFilterIcon(f),
+            tooltipForValue: f => ResolveActuationFilterTooltip(f),
+            stateColorForValue: f => ResolveActuationFilterColor(f));
+        actuationBtn.Width.Set(ContigCellW, 0f);
+        actuationBtn.Height.Set(ContigCellH, 0f);
+        actuationBtn.Left.Set(bodyW-64f, 0f); //((bodyW - ContigCellW) * 0.5f, 0f); Until I determine where the 12f extra pixels are coming from
+        actuationBtn.Top.Set(yCursor, 0f);
+        body.Append(actuationBtn);
+
+        // Grow body to fit the new section.
+        float newBodyH = yCursor + ContigCellH + BottomPad + 10f; // Need to inspect the height to see why the extra 10f is needed to make the section not hideous
+        // To have 14f pixels at the bottom just like there are 14f at the top before the chromes
+        body.Height.Set(newBodyH, 0f);
+
         // Initial visual sync (cells were constructed with their own
         // initial bit; this guarantees the row-wide invariant if the
         // config flips between Build() and the first Draw).
@@ -246,6 +316,31 @@ internal static class MagicWandReadConfigBuilder
         applyContigVisual();
 
         return body;
+    }
+
+    private static Asset<Texture2D> ResolveActuationFilterIcon(ActuationFilter filter)
+    {
+        // All three states reuse the same ToggleActuation icon as a placeholder.
+        // Future: create dedicated 16×16 icons per state and update these paths.
+        return RequestFirstExisting("Assets_Build/Icons/Toggles/ToggleActuation");
+    }
+
+    private static string ResolveActuationFilterTooltip(ActuationFilter filter)
+        => Language.GetTextValue(
+            $"Mods.WorldShapingWandsMod.UI.MagicWandRead.ActuationFilter.{filter}.Tooltip");
+
+    private static Color ResolveActuationFilterColor(ActuationFilter filter)
+    {
+        return filter switch
+        {
+            // Both = neutral / do-nothing state (matches tri-state "ignore" feel).
+            ActuationFilter.Both => WandPanelTheme.Colors.ButtonInactive,
+            // Non-actuated-only = exclusion filter (convention: red).
+            ActuationFilter.NonActuatedOnly => WandPanelTheme.Colors.ActiveRed,
+            // Actuated-only = focused include filter (convention: green).
+            ActuationFilter.ActuatedOnly => WandPanelTheme.Colors.ActiveGreen,
+            _ => WandPanelTheme.Colors.ButtonInactive,
+        };
     }
 
     // ── Helpers ───────────────────────────────────────────────────────

@@ -138,7 +138,9 @@ public static class CoatingPaintColorGrid
 
         int rows = (SwatchCount + columns - 1) / columns;
 
-        float totalWidth = columns * swatchSize + (columns - 1) * swatchGap;
+        float totalWidth = 0f;
+        for (int i = 0; i < columns; i++)
+            totalWidth = LayoutSpacing.AddHorizontalSpace(totalWidth, swatchSize, i == 0 ? 0f : swatchGap);
         // Tighter row-major height: rows of (size + gap) minus the trailing inter-row gap
         // so the body's reported Height matches the visible content tightly. The popout
         // host sizes its panel from this Height.Pixels so accuracy here is load-bearing.

@@ -436,7 +436,10 @@ public class MagicWandReadShape : IShapeProvider
         if (playerId < 0) return;
 
         bool prev = _mouseLeftPrevFrameByPlayer.TryGetValue(playerId, out bool p) && p;
-        bool now = Main.mouseLeft;
+        // (C-S3 2026-05-03) Ignore mouseLeft while the player has UI focus — UI mouse
+        // polling can flip the global flag without a real game-world press, which would
+        // keep _processedReadThisMousePressByPlayer stuck at true across frames.
+        bool now = Main.mouseLeft && !Main.LocalPlayer.mouseInterface;
 
         if (prev && !now)
         {

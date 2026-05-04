@@ -1,0 +1,13 @@
+[meta]
+name    = "OverlayPersistence"
+budget  = 65000
+created = "2026-05-03"
+purpose = "BRWC analysis request"
+
+[[slice]]
+path   = "Common/Drawing/SelectionOverlay.cs"
+ranges = ["1-200"]
+
+[[slice]]
+path   = "Common/Players/WandPlayer.cs"
+ranges = ["1-200"]
