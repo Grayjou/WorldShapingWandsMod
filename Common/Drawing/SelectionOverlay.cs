@@ -196,10 +196,6 @@ public class SelectionOverlay : ModSystem
         var wandPlayer = player.GetModPlayer<WandPlayer>();
         bool isHoldingWand = IsHoldingWandItem(player);
 
-#if DEBUG
-        TickDebugSnapshot(player, wandPlayer);
-#endif
-
         // Draw the cancelled selection overlay (fading out) if present
         if (wandPlayer.CancelledSelection != null && !wandPlayer.CancelledSelection.IsExpired)
         {
@@ -232,24 +228,6 @@ public class SelectionOverlay : ModSystem
                 DrawCursorHighlight(shapeSettings);
         }
     }
-
-#if DEBUG
-    /// <summary>
-    /// Emits a magenta chat snapshot whenever the overlay state changes.
-    /// Edge-triggered: fires at most once per state transition, never spams.
-    /// Design: C-S4 2026-05-03 (DesignDoc_OverlayDebugSnapshot_OnDemand.md §3).
-    /// </summary>
-    private void TickDebugSnapshot(Player player, WandPlayer wp)
-    {
-        var snap = global::WorldShapingWandsMod.Common.Debug.OverlaySnapshot.Capture(player, wp, this);
-        if (!_hasLastSnapshot || !snap.Equals(_lastSnapshot))
-        {
-            _hasLastSnapshot = true;
-            _lastSnapshot = snap;
-            Main.NewText(snap.ToChatLine(), Color.Magenta);
-        }
-    }
-#endif
 
     private bool DrawStoredMagicReadPreviewIfAvailable(WandPlayer wandPlayer, ShapeInfo shapeSettings)
     {
@@ -311,10 +289,8 @@ public class SelectionOverlay : ModSystem
     internal bool _managedByOverlaySystem;
 
 #if DEBUG
-    // Edge-triggered snapshot state (C-S4 2026-05-03).
+    // Used by on-demand overlay snapshot debugging commands.
     internal int DebugCachedTilesCount => _cachedTiles?.Count ?? 0;
-    private global::WorldShapingWandsMod.Common.Debug.OverlaySnapshot _lastSnapshot;
-    private bool _hasLastSnapshot;
 #endif
 
     private ShapeInfo GetCurrentShapeSettings(Player player, WandPlayer wandPlayer)
@@ -618,16 +594,18 @@ public class SelectionOverlay : ModSystem
         int visEndY = Math.Min(bounds.Bottom, screenCullMaxY);
 
         int visibleArea = Math.Max(0, visEndX - visStartX) * Math.Max(0, visEndY - visStartY);
-        // (C-S1.c 2026-05-03) Disable viewport-window optimisation for Magic Wand
-        // Read shapes. For MagicWandRead, context.GetBounds() is the
-        // cursor click bbox (1×1), not the bounding box of the translated/captured
-        // tile set. This means visibleArea ≈ 1 << tiles.Count, so useViewportWindow
-        // is always true, the walk covers only the 5×5 area around the cursor, and
-        // the entire shape is invisible unless the cursor is placed exactly on a
-        // captured tile. The screen-cull inside the fallback foreach passes handles
-        // performance adequately for these shapes.
-        bool isMagicWandShape = shapeSettings.Shape == ShapeType.MagicWandRead;
-        bool useViewportWindow = !isMagicWandShape && visibleArea > 0 && visibleArea < tiles.Count;
+        // (C-S1.c 2026-05-03 + 2026-05-05 follow-up) Disable viewport-window
+        // optimisation for pre-baked translated shapes (MagicWandRead, Mold).
+        // For these shapes, context.GetBounds() is based on selection endpoints
+        // (often a cursor 1×1 bbox), NOT the translated tile cloud bounds.
+        // That makes visibleArea tiny while tiles.Count may be huge, forcing the
+        // viewport walk to inspect only a tiny box around the cursor and effectively
+        // hiding the shape unless the cursor bbox spans the mold/read extent.
+        // The fallback foreach path already has per-tile screen culling and renders
+        // these anchored pre-baked shapes correctly.
+        bool isPreBakedTranslatedShape = shapeSettings.Shape == ShapeType.MagicWandRead
+            || shapeSettings.Shape == ShapeType.Mold;
+        bool useViewportWindow = !isPreBakedTranslatedShape && visibleArea > 0 && visibleArea < tiles.Count;
 
         if (useViewportWindow)
         {
@@ -785,38 +763,12 @@ public class SelectionOverlay : ModSystem
 
         Main.spriteBatch.End();
 
-#if DEBUG
-        // ── W-S4-1 (S4 2026-04-24) v3 smoothing debug HUD ─────────────
-        // Always-on in DEBUG builds. Prints the v3 smoothing state directly
-        // from WandPlayer (no helper-class snapshot anymore — that piece of
-        // v1/v2 scaffolding was deleted with SelectionOverlayMath). Cheap
-        // (single string per frame); never compiled into Release.
-        DrawSmoothOverlayDebugHud(wandPlayer, stampRenderMode, anchorTileWorld, subPixelOffset);
-#endif
-
         if (settings.ShowDimensions)
         {
             var dimContext = shapeSettings.ToShapeContext(selection.StartTile, selection.EndTile, selection.VerticalFirst);
             DrawDimensionLabel(shapeSettings.Shape, dimContext, tiles);
         }
     }
-
-#if DEBUG
-    private void DrawSmoothOverlayDebugHud(
-        WandPlayer wp, StampRenderMode mode, Vector2 anchorTileWorld, Vector2 subPixelOffset)
-    {
-        Vector2 mouseTileF = Main.MouseWorld / 16f;
-        string text =
-            $"WSW Overlay v3  mode={mode}  locked={wp.IsStampLocked}  init={wp.SmoothAnchorInitialised}\n" +
-            $"  mouseTile  = ({(int)Math.Floor(mouseTileF.X)}, {(int)Math.Floor(mouseTileF.Y)})\n" +
-            $"  anchorTW   = ({anchorTileWorld.X:F1}, {anchorTileWorld.Y:F1})\n" +
-            $"  smoothAW   = ({wp.SmoothAnchorWorld.X:F1}, {wp.SmoothAnchorWorld.Y:F1})\n" +
-            $"  subPixel   = ({subPixelOffset.X:F2}, {subPixelOffset.Y:F2})  |Δ|={subPixelOffset.Length():F2}";
-        Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
-        Terraria.Utils.DrawBorderString(Main.spriteBatch, text, new Vector2(8, 96), Color.Lime);
-        Main.spriteBatch.End();
-    }
-#endif
 
     /// <summary>
     /// Draws a lightweight bounding-rectangle outline while a large shape is being

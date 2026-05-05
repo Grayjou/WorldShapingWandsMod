@@ -6,6 +6,7 @@ using Terraria.Audio;
 using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.UI;
+using WorldShapingWandsMod.Common.UI;
 
 namespace WorldShapingWandsMod.Common.UI.Elements;
 
@@ -74,6 +75,17 @@ public class UIIconButton : UIElement
     /// </summary>
     public bool IsAction { get; set; }
 
+    /// <summary>
+    /// Draws the SubUI affordance badge on this icon when true.
+    /// </summary>
+    public bool HasSubUIBadge { get; set; }
+
+    /// <summary>
+    /// Optional dynamic provider for SubUI badge visibility.
+    /// When non-null, overrides <see cref="HasSubUIBadge"/>.
+    /// </summary>
+    public System.Func<bool> HasSubUIBadgeProvider { get; set; }
+
     public event MouseEvent OnToggled;
 
     /// <param name="texture">The icon texture asset.</param>
@@ -135,6 +147,10 @@ public class UIIconButton : UIElement
             );
             spriteBatch.Draw(tex, iconPos, Disabled ? Color.White * 0.4f : Color.White);
         }
+
+        bool showBadge = HasSubUIBadgeProvider?.Invoke() ?? HasSubUIBadge;
+        if (showBadge)
+            BadgeAssets.DrawSubUIBadge(spriteBatch, rect, dimmed: Disabled);
 
         // Hover tooltip
         if (IsMouseHovering)

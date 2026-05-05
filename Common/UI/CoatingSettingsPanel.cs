@@ -143,6 +143,7 @@ public class CoatingSettingsPanel : UIState
         _mainPanel.Append(_harvestMossBtn);
 
         _colorReplaceBtn = new UIColorReplaceButton(texReplaceBase, texIgnoreSource, texIgnoreTarget, texIgnoreBoth);
+        _colorReplaceBtn.HasSubUIBadge = true;
         _colorReplaceBtn.Width.Set(WandPanelBuilder.IconBtnSize, 0f);
         _colorReplaceBtn.Height.Set(WandPanelBuilder.IconBtnSize, 0f);
         _colorReplaceBtn.Left.Set(ModeCellLeft(4), 0f);

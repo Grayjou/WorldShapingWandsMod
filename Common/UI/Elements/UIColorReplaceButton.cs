@@ -157,6 +157,11 @@ public class UIColorReplaceButton : UIElement
     /// </summary>
     public bool IsWandSubPanelOpen { get; set; }
 
+    /// <summary>
+    /// When true, draws the SubUI affordance badge on this button.
+    /// </summary>
+    public bool HasSubUIBadge { get; set; }
+
     /// <summary>Background color when not hovered.</summary>
     public Color InactiveColor { get; set; } = WandPanelTheme.Colors.ElementInactive;
 
@@ -416,6 +421,9 @@ public class UIColorReplaceButton : UIElement
             // right becomes black" defect). See class docblock.
             spriteBatch.Draw(_bakedTex, iconRect, Color.White);
         }
+
+        if (HasSubUIBadge)
+            BadgeAssets.DrawSubUIBadge(spriteBatch, rect, dimmed: !IsActive);
 
         if (hovering && !string.IsNullOrEmpty(HoverText))
         {

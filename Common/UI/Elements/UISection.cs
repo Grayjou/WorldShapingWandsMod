@@ -226,7 +226,18 @@ public abstract class UISection : UIElement
         if (CanBePoppedOut && _popoutIcon != null
             && _popoutIcon.GetDimensions().ToRectangle().Contains(mx, my))
         {
-            if (IsPoppedOut) HandlePopoutCollapsed();
+            if (IsPoppedOut)
+            {
+                if (ActivePopout != null)
+                {
+                    var sys = ModContent.GetInstance<WandUISystem>();
+                    sys?.CloseWandSubPanel(ActivePopout);
+                }
+                else
+                {
+                    HandlePopoutCollapsed();
+                }
+            }
             else PopOut();
             SoundEngine.PlaySound(SoundID.MenuTick);
             return;

@@ -11,6 +11,7 @@ using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Settings;
 using WorldShapingWandsMod.Common.Configs;
 using WorldShapingWandsMod.Common.UI.Elements;
+using WorldShapingWandsMod.Content.Items;
 
 namespace WorldShapingWandsMod.Common.UI;
 
@@ -22,6 +23,9 @@ public class DismantlingSettingsPanel : UIState
     public UIElement PanelElement => _mainPanel;
 
     private UIDraggablePanel _mainPanel;
+
+    // Destroy options section (popout-capable)
+    private DismantlingOptionsSection _dismantlingOptionsSection;
 
     // Destroy toggles (icon buttons)
     private UIIconButton _destroyTilesBtn, _destroyWallsBtn, _destroyContainersBtn;
@@ -73,29 +77,67 @@ public class DismantlingSettingsPanel : UIState
         _builder = new WandPanelBuilder(_mainPanel, PanelWidth, Padding);
         _builder.AddTitle("Dismantling.Title");
 
-        // === DESTROY OPTIONS (icon buttons) ===
+        // === DESTROY OPTIONS (DismantlingOptionsSection — popout-capable) ===
+        // (Session 2 2026-05-03 — Dismantling Options Popout Implementation)
+        // Migrated from legacy direct button management via AddIconToggleRow
+        // to the unified DismantlingOptionsSection substrate (mirrors PaintColorSection
+        // pattern). Behaviour is byte-identical for the player: ⧓ pops out,
+        // ✕ collapses back, position persists via PopoutPositions["Dismantling.Options"].
+        //
+        // Key difference from PaintColor popout: Dismantling Options is ONLY for
+        // the Dismantling wand family, not shared across multiple families.
+
         var texDestroyTiles = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Destroy/DestroyTiles", AssetRequestMode.ImmediateLoad);
         var texDestroyWalls = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Destroy/DestroyWalls", AssetRequestMode.ImmediateLoad);
         var texDestroyContainers = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Destroy/DestroyContainers", AssetRequestMode.ImmediateLoad);
         var texVoidEverything = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Misc/VoidEverything", AssetRequestMode.ImmediateLoad);
 
-        _builder.AddIconToggleRow("Dismantling.Options", new WandPanelBuilder.IconDef[]
-        {
-            new(texDestroyTiles,      "Dismantling.DestroyTiles",      isToggle: true, initialState: true),
-            new(texDestroyWalls,      "Dismantling.DestroyWalls",      isToggle: true),
-            new(texDestroyContainers, "Dismantling.DestroyContainers", isToggle: true),
-            new(texVoidEverything,    "Dismantling.VoidEverythingTooltip", isToggle: true),
-        }, out var destroyBtns);
-        _destroyTilesBtn      = destroyBtns[0];
-        _destroyWallsBtn      = destroyBtns[1];
-        _destroyContainersBtn = destroyBtns[2];
-        _voidEverythingBtn    = destroyBtns[3];
+        float destroyOptionsSectionTop = _builder.CurrentY;
 
-        // Tint the destroy buttons to match their semantic colors
-        _destroyTilesBtn.ActiveColor      = WandPanelTheme.DestroyCategories.Tiles;
-        _destroyWallsBtn.ActiveColor      = WandPanelTheme.DestroyCategories.Walls;
-        _destroyContainersBtn.ActiveColor = WandPanelTheme.DestroyCategories.Containers;
-        _voidEverythingBtn.ActiveColor    = WandPanelTheme.DestroyCategories.Void;
+        // Build the options container with self-centering layout (matches PaintColorGrid pattern)
+        // Calculate total width needed for 4 buttons with gaps
+        float optionsTotalWidth = 0f;
+        for (int i = 0; i < 4; i++)
+        {
+            optionsTotalWidth = LayoutSpacing.AddHorizontalSpace(
+                optionsTotalWidth,
+                WandPanelBuilder.IconBtnSize,
+                i == 0 ? 0f : WandPanelBuilder.IconGap);
+        }
+
+        var optionsContainer = new UIElement();
+        optionsContainer.Width.Set(optionsTotalWidth, 0f);
+        optionsContainer.Height.Set(WandPanelBuilder.IconBtnSize, 0f);
+        optionsContainer.HAlign = 0.5f;  // Self-center in parent (works for any parent width)
+
+        _destroyTilesBtn = MakeDestroyToggle(texDestroyTiles, "Dismantling.DestroyTiles", true);
+        _destroyWallsBtn = MakeDestroyToggle(texDestroyWalls, "Dismantling.DestroyWalls", false);
+        _destroyContainersBtn = MakeDestroyToggle(texDestroyContainers, "Dismantling.DestroyContainers", false);
+        _voidEverythingBtn = MakeDestroyToggle(texVoidEverything, "Dismantling.VoidEverythingTooltip", false);
+
+        optionsContainer.Append(_destroyTilesBtn);
+        optionsContainer.Append(_destroyWallsBtn);
+        optionsContainer.Append(_destroyContainersBtn);
+        optionsContainer.Append(_voidEverythingBtn);
+
+        // Layout the buttons horizontally (strip-relative positions)
+        LayoutDestroyButtons(optionsContainer, _destroyTilesBtn, _destroyWallsBtn, _destroyContainersBtn, _voidEverythingBtn);
+
+        // Create the section
+        var dismantlingOptionsSection = new DismantlingOptionsSection(
+            optionsContainer: optionsContainer,
+            ownerVisibility: () =>
+            {
+                var heldMod = Main.LocalPlayer?.HeldItem?.ModItem;
+                return heldMod is WandOfDismantlingBase;
+            });
+        dismantlingOptionsSection.Top.Set(destroyOptionsSectionTop, 0f);
+        _mainPanel.Append(dismantlingOptionsSection);
+        dismantlingOptionsSection.Build();
+        _dismantlingOptionsSection = dismantlingOptionsSection;
+
+        _builder.AdvanceY(WandPanelBuilder.SectionHeaderSpacing - 22f /* UISection.HeaderHeightConst */
+                          + WandPanelBuilder.IconBtnSize + WandPanelBuilder.AfterIconGridSpacing);
 
         // === SHAPE ===
         _builder.AddFullShapeSection(out var shapes);
@@ -376,5 +418,55 @@ public class DismantlingSettingsPanel : UIState
         if (!IsVisible) return;
         base.Draw(spriteBatch);
         _builder?.DrawDebugLines(spriteBatch, _mainPanel.GetDimensions());
+    }
+
+    /// <summary>
+    /// Helper to create a single destroy option toggle button with proper styling.
+    /// </summary>
+    private UIIconButton MakeDestroyToggle(Asset<Texture2D> texture, string tooltipKey, bool initialState)
+    {
+        var btn = new UIIconButton(texture, L(tooltipKey), initialState);
+        btn.Width.Set(WandPanelBuilder.IconBtnSize, 0f);
+        btn.Height.Set(WandPanelBuilder.IconBtnSize, 0f);
+        btn.IsRadio = false;
+        btn.ActiveColor = GetDestroyButtonColor(tooltipKey);
+        return btn;
+    }
+
+    /// <summary>
+    /// Get the semantic color for a destroy button based on its tooltip key.
+    /// </summary>
+    private Color GetDestroyButtonColor(string tooltipKey)
+    {
+        return tooltipKey switch
+        {
+            "Dismantling.DestroyTiles" => WandPanelTheme.DestroyCategories.Tiles,
+            "Dismantling.DestroyWalls" => WandPanelTheme.DestroyCategories.Walls,
+            "Dismantling.DestroyContainers" => WandPanelTheme.DestroyCategories.Containers,
+            "Dismantling.VoidEverythingTooltip" => WandPanelTheme.DestroyCategories.Void,
+            _ => Color.White,
+        };
+    }
+
+    /// <summary>
+    /// Layout the destroy option buttons horizontally in a row relative to their
+    /// container (not absolute positioning). This allows the same layout to work
+    /// correctly whether the container is in the main panel or the popout subpanel.
+    /// Mirrors the CoatingPaintColorGrid strip-relative positioning pattern.
+    /// </summary>
+    private void LayoutDestroyButtons(UIElement container, params UIIconButton[] buttons)
+    {
+        float currentX = 0f;
+        for (int i = 0; i < buttons.Length && i < 4; i++)
+        {
+            // Add horizontal spacing before this button
+            if (i > 0)
+                currentX += WandPanelBuilder.IconGap;
+
+            buttons[i].Left.Set(currentX, 0f);
+            buttons[i].Top.Set(0f, 0f);
+
+            currentX += WandPanelBuilder.IconBtnSize;
+        }
     }
 }

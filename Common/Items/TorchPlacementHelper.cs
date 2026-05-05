@@ -71,7 +71,7 @@ public static class TorchPlacementHelper
         for (int i = 0; i < ItemLoader.ItemCount; i++)
         {
             var sample = ContentSamples.ItemsByType[i];
-            if (sample == null || sample.createTile == -1)
+            if (sample == null || sample.createTile <= -1)
                 continue;
 
             if (!TileID.Sets.Torch[sample.createTile])
@@ -104,7 +104,7 @@ public static class TorchPlacementHelper
                 continue;
 
             var item = ContentSamples.ItemsByType[itemType];
-            if (item == null || item.createTile < 0)
+            if (item == null || item.createTile <= -1)
                 continue;
 
             if (!TileID.Sets.Torch[item.createTile])

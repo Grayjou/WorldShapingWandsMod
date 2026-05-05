@@ -55,6 +55,8 @@ internal static class MoldCellWiring
     {
         if (moldBtn == null) return;
 
+        moldBtn.HasSubUIBadge = true;
+
         var mod = ModContent.GetInstance<WorldShapingWandsMod>();
 
         // Cache the 5 StencilChoice icons once \u2014 the HoverTextureProvider

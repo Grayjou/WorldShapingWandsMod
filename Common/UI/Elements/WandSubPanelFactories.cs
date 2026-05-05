@@ -370,4 +370,53 @@ public static class WandSubPanelFactories
 
         return panel;
     }
+
+    /// <summary>
+    /// (Session 2 2026-05-03 — Dismantling Options Popout Implementation)
+    /// Builds (but does NOT open) the Dismantling Options popout SubPanel.
+    /// Mirrors the <see cref="CreatePaintColorPopout"/> pattern but restricted
+    /// to the Dismantling wand family only (unlike PaintColor which serves
+    /// three families).
+    ///
+    /// <para>Lifecycle metadata: <c>Type=Popout</c>,
+    /// <c>OwnerFamilies=Dismantling</c> (ONLY dismantling wands),
+    /// <c>LockBehaviourDecl=Implicit</c> (popouts are always locked),
+    /// <c>OnChoice=NeverCloses</c> (player can toggle multiple options without
+    /// auto-dismissal), <c>OnParentClose=StaysUp</c> (popout stays visible
+    /// even if parent panel closes).</para>
+    /// </summary>
+    /// <param name="section">The <see cref="DismantlingOptionsSection"/> host.</param>
+    /// <param name="body">The options container element holding the four destroy
+    /// toggle buttons. Becomes the popout's body.</param>
+    /// <param name="ownerVisibility">Per-frame visibility predicate
+    /// (typically <c>HeldItem is WandOfDismantlingBase</c>). Wired into
+    /// <see cref="WandSubPanel.OwnerVisibilityCheck"/>. When false, the popout
+    /// parks (hides without closing).</param>
+    public static WandSubPanel CreateDismantlingOptionsPopout(
+        DismantlingOptionsSection section,
+        UIElement body,
+        Func<bool> ownerVisibility)
+    {
+        if (section is null) throw new ArgumentNullException(nameof(section));
+        if (body is null) throw new ArgumentNullException(nameof(body));
+
+        var panel = new WandSubPanel(
+            body: body,
+            titleKey: section.TitleKey,
+            defaultLocked: true, // Implicit lock ≡ structurally always-locked
+            host: section,
+            identityKey: "Dismantling.Options.Popout")
+        {
+            Type              = SubPanelType.Popout,
+            OwnerFamilies     = WandFamilyMask.Dismantling,
+            LockBehaviourDecl = LockBehaviour.Implicit,
+            OnChoice          = ChoiceBehaviour.NeverCloses,
+            OnParentClose     = ParentCloseBehaviour.StaysUp,
+            // Breathing room matching PaintColor popout
+            BodyPadding       = 6f,
+        };
+
+        panel.OwnerVisibilityCheck = ownerVisibility;
+        return panel;
+    }
 }

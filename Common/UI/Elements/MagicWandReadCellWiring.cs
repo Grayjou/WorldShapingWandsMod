@@ -55,6 +55,8 @@ internal static class MagicWandReadCellWiring
     {
         if (readBtn == null) return;
 
+        readBtn.HasSubUIBadge = true;
+
         readBtn.OnRightClick += (_, _) =>
         {
             var sys = ModContent.GetInstance<WandUISystem>();
