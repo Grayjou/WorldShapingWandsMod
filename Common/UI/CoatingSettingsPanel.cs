@@ -52,7 +52,7 @@ public class CoatingSettingsPanel : UIState
     private UIIconButton _triangleFilledBtn, _triangleHollowBtn;
     private UIIconButton _edgeBtn, _cardinalBtn, _straightLineBtn;
     private UIIconButton _moldBtn;
-    private UIIconButton _magicWandReadBtn, _magicWandApplyBtn;
+    private UIIconButton _magicWandReadBtn;
 
     private UIText _thicknessValue;
     private UIIconButton _equalDimensionsBtn, _connectDiameterBtn, _invertSelectionBtn, _flipHalfOrientationBtn, _repaintBtn;
@@ -234,7 +234,6 @@ public class CoatingSettingsPanel : UIState
         _edgeBtn = shapes.Elbow; _cardinalBtn = shapes.Cardinal; _straightLineBtn = shapes.StraightLine;
         _moldBtn = shapes.Mold;
         _magicWandReadBtn = shapes.MagicWandRead;
-        _magicWandApplyBtn = shapes.MagicWandApply;
 
         // (S4 2026-05-01 � StencilMagicWandSelectionPlan.md �4.1) Right-click on
         // the Magic Wand Read shape cell opens the Read configuration SubUI.
@@ -309,7 +308,6 @@ public class CoatingSettingsPanel : UIState
         _triangleHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.Triangle, ShapeMode.Hollow);
         _moldBtn.OnToggled += (_, _) => SetShape(ShapeType.Mold, ShapeMode.Filled);
         _magicWandReadBtn.OnToggled += (_, _) => SetShape(ShapeType.MagicWandRead, ShapeMode.Filled);
-        _magicWandApplyBtn.OnToggled += (_, _) => SetShape(ShapeType.MagicWandApply, ShapeMode.Filled);
 
         _equalDimensionsBtn.OnToggled += (_, _) => ToggleEqualDimensions();
         _connectDiameterBtn.OnToggled += (_, _) => ToggleConnectDiameter();
@@ -549,7 +547,6 @@ public class CoatingSettingsPanel : UIState
         _triangleHollowBtn.Toggled = shape.Shape == ShapeType.Triangle && shape.FillMode == ShapeMode.Hollow;
         _moldBtn.Toggled = shape.Shape == ShapeType.Mold;
         _magicWandReadBtn.Toggled = shape.Shape == ShapeType.MagicWandRead;
-        _magicWandApplyBtn.Toggled = shape.Shape == ShapeType.MagicWandApply;
     }
 
     private void UpdateThicknessDisplay() { _thicknessValue?.SetText(GetSettings()?.Shape.Thickness.ToString() ?? "1"); }

@@ -20,7 +20,7 @@ namespace WorldShapingWandsMod.Common.Geometry.Shapes;
 /// at <see cref="ShapeContext.Start"/> against the active stencil
 /// canvas, returns the matching tile set, and captures the result on
 /// <c>WandPlayer.LastMagicWandShape</c> for later replay by
-/// <see cref="MagicWandApplyShape"/>.
+/// downstream stamp consumers.
 /// </summary>
 /// <remarks>
 /// <para><b>Pure-shape contract</b>: <see cref="GetTiles"/> is the
@@ -61,6 +61,7 @@ public class MagicWandReadShape : IShapeProvider
     private static readonly Dictionary<int, (MagicWandReadFn.ReadStatus Status, ulong Tick)> _lastStatusByPlayer = new();
     private static readonly Dictionary<int, bool> _processedReadThisMousePressByPlayer = new();
     private static readonly Dictionary<int, bool> _blockedReadThisMousePressByPlayer = new();
+    private static readonly Dictionary<int, SelectionMode> _lastSelectionModeByPlayer = new();
     // (C-S1.b 2026-05-03) Tracks Main.mouseLeft per player from the previous
     // GetTiles call. The processed/blocked dicts above must reset on the
     // mouse-up edge of every physical press; previously the reset was buried
@@ -71,6 +72,12 @@ public class MagicWandReadShape : IShapeProvider
     // press. Symptom: "Magic Wand only works once or twice, then never again
     // until the mod is rebuilt" (rebuild reinitialises the static dicts).
     private static readonly Dictionary<int, bool> _mouseLeftPrevFrameByPlayer = new();
+
+    internal static void TickPerFrameState(int playerId, SelectionMode currentMode)
+    {
+        MaintainMousePressState(playerId);
+        MaintainModeSwitchState(playerId, currentMode);
+    }
 
     public ShapeType ShapeType => ShapeType.MagicWandRead;
 
@@ -93,7 +100,8 @@ public class MagicWandReadShape : IShapeProvider
         // that clears the once-per-press flags; if it lives inside the
         // commit branch instead, instant-mode releases never get cleaned up
         // and Read locks to a permanent no-op (see field comment above).
-        MaintainMousePressState(player.whoAmI);
+        SelectionMode heldMode = ResolveHeldSelectionMode(player);
+        TickPerFrameState(player.whoAmI, heldMode);
 
         bool isInstantReleaseCommit = IsInstantReleaseCommit(wp);
         bool isSelectionClickCommit = IsSelectionClickCommit(wp);
@@ -112,7 +120,10 @@ public class MagicWandReadShape : IShapeProvider
         if (!shouldProcessCommit)
         {
             if (WasReadBlockedThisMousePress(player.whoAmI))
+            {
+                wp.ClearSelectionAfterCommit();
                 return emptyResult;
+            }
             return BuildStoredShapeResult(wp.LastMagicWandShape, emptyResult);
         }
 
@@ -120,8 +131,6 @@ public class MagicWandReadShape : IShapeProvider
         bool allowReadInInstantMode = safetyCfg?.AllowReadInInstantMode ?? false;
         bool allowReadInSelectMode = safetyCfg?.AllowReadInSelectMode ?? false;
         bool allowReadWithoutCanvas = safetyCfg?.AllowReadWithoutCanvas ?? false;
-
-        SelectionMode heldMode = ResolveHeldSelectionMode(player);
         bool applyBlockedByMode = IsApplyBlockedByMode(heldMode, allowReadInInstantMode, allowReadInSelectMode);
 
         var canvas = mwp.Canvas;
@@ -136,6 +145,7 @@ public class MagicWandReadShape : IShapeProvider
             if (canvas == null || canvas.Count == 0)
             {
                 EmitNoCanvasChat(player.whoAmI);
+                wp.ClearSelectionAfterCommit();
                 return emptyResult;
             }
         }
@@ -148,16 +158,17 @@ public class MagicWandReadShape : IShapeProvider
         // (C-S1 2026-05-03) Safety gate runs BEFORE flood-fill capture.
         // Previously the capture into wp.LastMagicWandShape happened first,
         // which meant a Read blocked by config still poisoned the stored
-        // shape — the next MagicWandApply (or anything reading
+        // shape — the next downstream stamp consumer (or anything reading
         // LastMagicWandShape) replayed the blocked tile set, making the
         // safety configs feel like they did nothing. Now: blocked → no
         // flood-fill, no capture, explicit chat. Defence-in-depth on the
-        // Apply side (MagicWandApplyShape) covers any pre-existing
+        // Legacy Apply-side / downstream stamp consumers cover any pre-existing
         // capture from before the user flipped the config restrictive.
         if (applyBlockedByMode || applyBlockedByCanvasGuard)
         {
             EmitBlockedChat(player.whoAmI, applyBlockedByMode, applyBlockedByCanvasGuard, heldMode);
             MarkReadBlockedForMousePress(player.whoAmI);
+            wp.ClearSelectionAfterCommit();
             return emptyResult;
         }
 
@@ -177,6 +188,17 @@ public class MagicWandReadShape : IShapeProvider
                 origin: origin,
                 configAtCapture: wp.MagicWandReadConfig,
                 capturedAtTicks: DateTime.UtcNow.Ticks);
+        }
+        else
+        {
+            // (C-S5 2026-05-04) B-1 fix: a committed Read that found no tiles
+            // must not leave a ghost selection (sel=true, mw=0). The commit
+            // path already advanced SelectionClickStep to 1 before GetTiles was
+            // called; if we return here without clearing, the overlay reports
+            // sel=True / mw=0 and the next left-click executes against a
+            // zero-tile shape — dismantling nothing but consuming the click.
+            // ClearSelectionAfterCommit resets sel/step/mw in one call.
+            wp.ClearSelectionAfterCommit();
         }
 
         // Boundary: 4-neighbour edge mask, same convention as every
@@ -470,6 +492,21 @@ public class MagicWandReadShape : IShapeProvider
         return Main.mouseLeft
             && !wp.InstantSelection.IsActive
             && wp.Selection.IsActive;
+    }
+
+    private static void MaintainModeSwitchState(int playerId, SelectionMode currentMode)
+    {
+        if (playerId < 0) return;
+
+        if (_lastSelectionModeByPlayer.TryGetValue(playerId, out SelectionMode previousMode)
+            && previousMode != currentMode)
+        {
+            _processedReadThisMousePressByPlayer[playerId] = false;
+            _blockedReadThisMousePressByPlayer[playerId] = false;
+            _mouseLeftPrevFrameByPlayer[playerId] = false;
+        }
+
+        _lastSelectionModeByPlayer[playerId] = currentMode;
     }
 
     private static bool IsApplyBlockedByMode(SelectionMode mode, bool allowReadInInstantMode, bool allowReadInSelectMode)

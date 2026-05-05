@@ -38,15 +38,10 @@ public enum ShapeType : byte
     MagicWandRead = 8,
 
     /// <summary>
-    /// (S10 2026-04-29; <c>StencilMagicWandSelectionPlan.md</c> §0/§7)
-    /// Magic Wand — Apply variant. Available on every wand. Bare shape:
-    /// no parameter row, no SubUI, no configuration. At click time it
-    /// stamps <c>WandPlayer.LastMagicWandShape</c> at the cursor (Mold-
-    /// style translation by stored origin) and runs the wand's per-tile
-    /// action over the stamped set. Empty storage → no-op + chat warning
-    /// (*"Magic Wand: no captured shape. Use Magic Wand Read on a stencil
-    /// wand first."*). Strict sibling of <see cref="Mold"/> — both read
-    /// from a player-scoped tile set and stamp at the cursor.
+    /// Legacy Magic Wand Apply shape.
+    /// Deprecated in v1.1.0 in favour of Wand of Molding slot stamping
+    /// while preserving save compatibility for pre-v1.1.0 selections.
     /// </summary>
+    [System.Obsolete("Magic Wand Apply is deprecated. Use Wand of Molding slot stamps; this enum value is retained for save compatibility and will be removed in v1.2.0.")]
     MagicWandApply = 9,
 }

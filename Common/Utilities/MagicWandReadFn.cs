@@ -14,7 +14,7 @@ namespace WorldShapingWandsMod.Common.Utilities;
 /// backend Magic Wand (Read) flood-fill implementation. Pure function:
 /// takes an origin + config + domain + cap and returns the matching
 /// world-coordinate tile set. No I/O, no UI, no network. Used exclusively
-/// by <c>MagicWandReadShape</c>; <c>MagicWandApplyShape</c> does NOT call
+/// by <c>MagicWandReadShape</c>; deprecated Magic Wand Apply flows do NOT call
 /// this — Apply is a deterministic stamp from <c>StoredMagicWandShape</c>.
 /// </summary>
 /// <remarks>

@@ -331,7 +331,7 @@ public class WandPanelBuilder
         public UIIconButton TriangleFilled, TriangleHollow;
         public UIIconButton Elbow, Cardinal, StraightLine;
         public UIIconButton Mold;
-        public UIIconButton MagicWandRead, MagicWandApply;
+        public UIIconButton MagicWandRead;
     }
 
     /// <summary>
@@ -344,7 +344,6 @@ public class WandPanelBuilder
 
         var mod = ModContent.GetInstance<WorldShapingWandsMod>();
         var mwReadHover = Language.GetTextValue("Mods.WorldShapingWandsMod.Shape.MagicWandRead.Label");
-        var mwApplyHover = Language.GetTextValue("Mods.WorldShapingWandsMod.Shape.MagicWandApply.Label");
         var icons = new IconDef[]
         {
             // Row 1
@@ -363,7 +362,6 @@ public class WandPanelBuilder
             new(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/ShapeStraightLine",   AssetRequestMode.ImmediateLoad), "Common.ShapeStraightLine"),
             new(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/ShapeMold",           AssetRequestMode.ImmediateLoad), "Common.ShapeMold"),
             IconDef.WithText(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/MagicWandRead", AssetRequestMode.ImmediateLoad), mwReadHover),
-            IconDef.WithText(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/MagicWandApply", AssetRequestMode.ImmediateLoad), mwApplyHover),
         };
 
         AddIconGrid(icons, 5, out var btns);
@@ -379,7 +377,6 @@ public class WandPanelBuilder
             StraightLine  = btns[10],
             Mold          = btns[11],
             MagicWandRead = btns[12],
-            MagicWandApply = btns[13],
         };
 
         return this;
@@ -446,7 +443,7 @@ public class WandPanelBuilder
         public UIIconButton RectFilled;
         public UIIconButton DiamondFilled, TriangleFilled;
         public UIIconButton Elbow, Cardinal, StraightLine;
-        public UIIconButton MagicWandRead, MagicWandApply;
+        public UIIconButton MagicWandRead;
     }
 
     /// <summary>
@@ -459,7 +456,6 @@ public class WandPanelBuilder
 
         var mod = ModContent.GetInstance<WorldShapingWandsMod>();
         var mwReadHover = Language.GetTextValue("Mods.WorldShapingWandsMod.Shape.MagicWandRead.Label");
-        var mwApplyHover = Language.GetTextValue("Mods.WorldShapingWandsMod.Shape.MagicWandApply.Label");
         var icons = new IconDef[]
         {
             // Row 1: 5 icons
@@ -471,7 +467,6 @@ public class WandPanelBuilder
             // Row 2: 1 icon
             new(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/ShapeStraightLine",   AssetRequestMode.ImmediateLoad), "Common.ShapeStraightLine"),
             IconDef.WithText(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/MagicWandRead", AssetRequestMode.ImmediateLoad), mwReadHover),
-            IconDef.WithText(mod.Assets.Request<Texture2D>("Assets_Build/Icons/Shapes/MagicWandApply", AssetRequestMode.ImmediateLoad), mwApplyHover),
         };
 
         AddIconGrid(icons, 5, out var btns);
@@ -485,7 +480,6 @@ public class WandPanelBuilder
             TriangleFilled = btns[4],
             StraightLine  = btns[5],
             MagicWandRead = btns[6],
-            MagicWandApply = btns[7],
         };
 
         return this;

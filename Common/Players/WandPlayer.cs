@@ -7,6 +7,7 @@ using WorldShapingWandsMod.Common.Configs;
 using WorldShapingWandsMod.Common.Drawing;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Geometry;
+using WorldShapingWandsMod.Common.Geometry.Shapes;
 using WorldShapingWandsMod.Common.Items;
 using WorldShapingWandsMod.Common.Selection;
 using WorldShapingWandsMod.Common.Settings;
@@ -835,6 +836,17 @@ public class WandPlayer : ModPlayer
         }
         _lastHeldItemType = currentItemType;
 
+        // (C-S5 2026-05-04) Keep MagicWandRead per-press bookkeeping in sync
+        // even when overlay cache short-circuits and GetTiles isn't evaluated
+        // this frame (e.g. no cursor movement). Without this, processed/blocked
+        // flags can remain stale across a release->next-click transition.
+        if (Player?.whoAmI == Main.myPlayer)
+        {
+            var heldMode = (Player.HeldItem?.ModItem as BaseCyclingWand)?.WandSelectionMode
+                ?? SelectionMode.OneClick;
+            MagicWandReadShape.TickPerFrameState(Player.whoAmI, heldMode);
+        }
+
         // Selection compatibility is handled VISUALLY (IsSelectionVisuallyActive)
         // and DESTRUCTIVELY only on click (EnsureSelectionCompatibility in UseItem).
         // PostUpdate no longer clears incompatible selections — switching wands
@@ -960,11 +972,10 @@ public class WandPlayer : ModPlayer
         = MagicWandReadConfig.Default;
 
     /// <summary>
-    /// The most recent Magic Wand (Read) capture, replayed by
-    /// <c>MagicWandApplyShape</c> on any wand. <c>null</c> means
-    /// *“nothing has been Read yet this session”* — Apply on null
-    /// shows the chat warning *“Magic Wand: no captured shape. Use
-    /// Magic Wand Read on a stencil wand first.”* and is a no-op.
+    /// The most recent Magic Wand (Read) capture.
+    /// This stays as the inter-wand handoff shape buffer used by
+    /// deprecation-safe consumers (primarily Wand of Molding ingest).
+    /// <c>null</c> means *“nothing has been Read yet this session”*.
     /// In-memory only per <c>MultipleStencilsPlan.md</c> §8 / Cavendish
     /// C-S1 §C2 (only configs persist; canvases and captures don't);
     /// cleared on world-exit / disconnect via <c>OnEnterWorld</c>'s
@@ -1150,6 +1161,42 @@ public class WandPlayer : ModPlayer
         MagicWandReadConfig = global::WorldShapingWandsMod.Common.Settings.MagicWandReadConfig.Load(tag);
         // LastMagicWandShape is in-memory only — never loaded from save.
         LastMagicWandShape = null;
+
+        MigrateDeprecatedMagicWandApplySelections();
+    }
+
+    private void MigrateDeprecatedMagicWandApplySelections()
+    {
+#pragma warning disable CS0618
+        ShapeInfo MigrateShapeInfo(ShapeInfo shape)
+        {
+            if (shape.Shape != ShapeType.MagicWandApply)
+                return shape;
+
+            return new ShapeInfo(
+                ShapeType.Rectangle,
+                shape.FillMode,
+                shape.Thickness,
+                shape.EqualDimensions,
+                shape.Slice,
+                shape.ConnectDiameter,
+                shape.InvertSelection,
+                shape.InvertHalfOrientation);
+        }
+
+        Settings.ShapeType = Settings.ShapeType == ShapeType.MagicWandApply
+            ? ShapeType.Rectangle
+            : Settings.ShapeType;
+
+        BuildingSettings.Shape = MigrateShapeInfo(BuildingSettings.Shape);
+        DismantlingSettings.Shape = MigrateShapeInfo(DismantlingSettings.Shape);
+        ReplacementSettings.Shape = MigrateShapeInfo(ReplacementSettings.Shape);
+        WiringSettings.Shape = MigrateShapeInfo(WiringSettings.Shape);
+        SafekeepingSettings.Shape = MigrateShapeInfo(SafekeepingSettings.Shape);
+        CoatingSettings.Shape = MigrateShapeInfo(CoatingSettings.Shape);
+        FluidsSettings.Shape = MigrateShapeInfo(FluidsSettings.Shape);
+        TorchSettings.Shape = MigrateShapeInfo(TorchSettings.Shape);
+#pragma warning restore CS0618
     }
 
     private static void TrySetTag(TagCompound tag, string key, int? itemType)
@@ -1413,6 +1460,7 @@ public class WandPlayer : ModPlayer
         TorchSettings.PinnedTorchItemTypes = savedPinTorch;
         ReplacementSettings.PinnedSourceItemTypesByObjectType = savedPinReplaceSrc;
         ReplacementSettings.PinnedTargetItemTypesByObjectType = savedPinReplaceTgt;
+        MigrateDeprecatedMagicWandApplySelections();
 
         // 2026-04-23 Session 2 (Letter #11 — WoR choice/object-type save-load mismatch).
         // Bug GrayJou reported: "I was using the Inventory View to replace walls

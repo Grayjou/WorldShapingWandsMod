@@ -48,7 +48,7 @@ public class SelectionSettingsPanel : UIState
     private UIIconButton _triangleFilledBtn, _triangleHollowBtn;
     private UIIconButton _edgeBtn, _cardinalBtn, _straightLineBtn;
     private UIIconButton _moldBtn;
-    private UIIconButton _magicWandReadBtn, _magicWandApplyBtn;
+    private UIIconButton _magicWandReadBtn;
 
     // Shape options
     private UIIconButton _equalDimensionsBtn, _connectDiameterBtn, _invertSelectionBtn, _flipHalfOrientationBtn;
@@ -67,6 +67,9 @@ public class SelectionSettingsPanel : UIState
 
     // Delimitation options (icon toggles)
     private UIIconButton _autoCreateCanvasBtn;
+
+    // Transform actions (non-toggle)
+    private UIIconButton _flipHorizontalBtn, _flipVerticalBtn, _rotateCwBtn, _rotateCcwBtn;
 
     private WandPanelBuilder _builder;
 
@@ -184,7 +187,6 @@ public class SelectionSettingsPanel : UIState
         _edgeBtn = shapes.Elbow; _cardinalBtn = shapes.Cardinal; _straightLineBtn = shapes.StraightLine;
         _moldBtn = shapes.Mold;
         _magicWandReadBtn = shapes.MagicWandRead;
-        _magicWandApplyBtn = shapes.MagicWandApply;
 
         // (S4 2026-05-01 � StencilMagicWandSelectionPlan.md �4.1) Right-click on
         // the Magic Wand Read shape cell opens the Read configuration SubUI.
@@ -245,6 +247,27 @@ public class SelectionSettingsPanel : UIState
             new(texAutoCreateCanvas, "Selection.AutoCreateCanvas", isToggle: true),
         }, out var selectionOptionBtns);
         _autoCreateCanvasBtn = selectionOptionBtns[0];
+
+        var texFlipHorizontal = mod.Assets.Request<Texture2D>(
+            "Assets_Build/Icons/Stencil/FlipHorizontal", AssetRequestMode.ImmediateLoad);
+        var texFlipVertical = mod.Assets.Request<Texture2D>(
+            "Assets_Build/Icons/Stencil/FlipVertical", AssetRequestMode.ImmediateLoad);
+        var texRotateCW = mod.Assets.Request<Texture2D>(
+            "Assets_Build/Icons/Stencil/RotateCW", AssetRequestMode.ImmediateLoad);
+        var texRotateCCW = mod.Assets.Request<Texture2D>(
+            "Assets_Build/Icons/Stencil/RotateCCW", AssetRequestMode.ImmediateLoad);
+
+        _builder.AddActionIconRowNoHeader(new WandPanelBuilder.IconDef[]
+        {
+            WandPanelBuilder.IconDef.WithText(texFlipHorizontal, L("Selection.Transform.FlipHorizontal")),
+            WandPanelBuilder.IconDef.WithText(texFlipVertical, L("Selection.Transform.FlipVertical")),
+            WandPanelBuilder.IconDef.WithText(texRotateCW, L("Selection.Transform.RotateCW")),
+            WandPanelBuilder.IconDef.WithText(texRotateCCW, L("Selection.Transform.RotateCCW")),
+        }, out var transformBtns);
+        _flipHorizontalBtn = transformBtns[0];
+        _flipVerticalBtn = transformBtns[1];
+        _rotateCwBtn = transformBtns[2];
+        _rotateCcwBtn = transformBtns[3];
 
         // ═══════════════════════════════════════════════════════════════
         //  Action Buttons (icon-based: Clear Selection, Invert, Clear All, Teleport)
@@ -356,7 +379,6 @@ public class SelectionSettingsPanel : UIState
         _triangleHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.Triangle, ShapeMode.Hollow);
         _moldBtn.OnToggled += (_, _) => SetShape(ShapeType.Mold, ShapeMode.Filled);
         _magicWandReadBtn.OnToggled += (_, _) => SetShape(ShapeType.MagicWandRead, ShapeMode.Filled);
-        _magicWandApplyBtn.OnToggled += (_, _) => SetShape(ShapeType.MagicWandApply, ShapeMode.Filled);
 
         // Shape options
         _equalDimensionsBtn.OnToggled += (_, _) => ToggleEqualDimensions();
@@ -370,6 +392,11 @@ public class SelectionSettingsPanel : UIState
             var s = GetSettings();
             if (s != null) s.AutoCreateCanvas = _autoCreateCanvasBtn.Toggled;
         };
+
+        _flipHorizontalBtn.OnLeftClick += (_, _) => OnTransformFlipHorizontal();
+        _flipVerticalBtn.OnLeftClick += (_, _) => OnTransformFlipVertical();
+        _rotateCwBtn.OnLeftClick += (_, _) => OnTransformRotateCW();
+        _rotateCcwBtn.OnLeftClick += (_, _) => OnTransformRotateCCW();
 
         // Action buttons
         _clearSelectionBtn.OnLeftClick += (_, _) => OnClearSelection();
@@ -552,6 +579,221 @@ public class SelectionSettingsPanel : UIState
         Main.NewText($"Canvas teleported to player (Δ{dx},{dy})", Color.Cyan);
     }
 
+    private static void OnTransformFlipHorizontal()
+    {
+        ApplyFlipTransform(horizontal: true);
+    }
+
+    private static void OnTransformFlipVertical()
+    {
+        ApplyFlipTransform(horizontal: false);
+    }
+
+    private static void ApplyFlipTransform(bool horizontal)
+    {
+        var swp = GetDelimitationWandPlayer();
+        if (swp == null) return;
+
+        if (!swp.IsActive)
+        {
+            Main.NewText("No active delimitation slot.", Color.OrangeRed);
+            return;
+        }
+
+        bool flippedCanvas = false;
+        bool flippedSelection = false;
+
+        if (swp.Canvas.IsActive)
+        {
+            var referenceBounds = swp.Canvas.BoundingBox;
+            if (horizontal)
+                swp.Canvas.FlipHorizontal(referenceBounds, ensureNonNegative: false);
+            else
+                swp.Canvas.FlipVertical(referenceBounds, ensureNonNegative: false);
+            flippedCanvas = true;
+
+            if (swp.Selection.IsActive)
+            {
+                if (horizontal)
+                    swp.Selection.FlipHorizontal(referenceBounds, ensureNonNegative: false);
+                else
+                    swp.Selection.FlipVertical(referenceBounds, ensureNonNegative: false);
+                flippedSelection = true;
+            }
+
+            int minX = swp.Canvas.BoundingBox.Left;
+            int minY = swp.Canvas.BoundingBox.Top;
+            if (flippedSelection)
+            {
+                foreach (var p in swp.Selection.Tiles)
+                {
+                    if (p.X < minX) minX = p.X;
+                    if (p.Y < minY) minY = p.Y;
+                }
+            }
+
+            int dx = minX < 0 ? -minX : 0;
+            int dy = minY < 0 ? -minY : 0;
+            if (dx != 0 || dy != 0)
+            {
+                swp.Canvas.Translate(dx, dy);
+                if (flippedSelection)
+                    swp.Selection.Translate(dx, dy);
+            }
+        }
+        else if (swp.Selection.IsActive)
+        {
+            if (horizontal)
+                swp.Selection.FlipHorizontal();
+            else
+                swp.Selection.FlipVertical();
+            flippedSelection = true;
+        }
+
+        if (!flippedCanvas && !flippedSelection)
+        {
+            Main.NewText("No canvas or selection active — nothing to flip.", Color.OrangeRed);
+            return;
+        }
+
+        SoundEngine.PlaySound(SoundID.MenuTick with { Volume = 0.5f });
+        Main.NewText(
+            flippedCanvas
+                ? "Flipped delimitation canvas and selection."
+                : "Flipped delimitation selection.",
+            Color.Cyan);
+    }
+
+    private static void OnTransformRotateCW()
+    {
+        ApplyRotationTransform(clockwise: true);
+    }
+
+    private static void OnTransformRotateCCW()
+    {
+        ApplyRotationTransform(clockwise: false);
+    }
+
+    private static void ApplyRotationTransform(bool clockwise)
+    {
+        var swp = GetDelimitationWandPlayer();
+        if (swp == null) return;
+
+        if (!swp.IsActive)
+        {
+            Main.NewText("No active delimitation slot.", Color.OrangeRed);
+            return;
+        }
+
+        bool rotatedCanvas = false;
+        bool rotatedSelection = false;
+
+        if (swp.Canvas.IsActive)
+        {
+            var pivot = swp.Canvas.CenterOfMass;
+            if (clockwise)
+                swp.Canvas.Rotate90CW(pivot.X, pivot.Y, ensureNonNegative: false);
+            else
+                swp.Canvas.Rotate90CCW(pivot.X, pivot.Y, ensureNonNegative: false);
+            rotatedCanvas = true;
+
+            if (swp.Selection.IsActive)
+            {
+                if (clockwise)
+                    swp.Selection.Rotate90CW(pivot.X, pivot.Y, ensureNonNegative: false);
+                else
+                    swp.Selection.Rotate90CCW(pivot.X, pivot.Y, ensureNonNegative: false);
+                rotatedSelection = true;
+            }
+
+            int minX = swp.Canvas.BoundingBox.Left;
+            int minY = swp.Canvas.BoundingBox.Top;
+            if (rotatedSelection)
+            {
+                foreach (var p in swp.Selection.Tiles)
+                {
+                    if (p.X < minX) minX = p.X;
+                    if (p.Y < minY) minY = p.Y;
+                }
+            }
+
+            int dx = minX < 0 ? -minX : 0;
+            int dy = minY < 0 ? -minY : 0;
+            if (dx != 0 || dy != 0)
+            {
+                swp.Canvas.Translate(dx, dy);
+                if (rotatedSelection)
+                    swp.Selection.Translate(dx, dy);
+            }
+
+            if (rotatedSelection)
+                swp.Selection.ClipToCanvas(swp.Canvas);
+        }
+        else if (swp.Selection.IsActive)
+        {
+            if (clockwise)
+                swp.Selection.Rotate90CW();
+            else
+                swp.Selection.Rotate90CCW();
+            rotatedSelection = true;
+        }
+
+        if (!rotatedCanvas && !rotatedSelection)
+        {
+            Main.NewText("No canvas or selection active — nothing to rotate.", Color.OrangeRed);
+            return;
+        }
+
+        SoundEngine.PlaySound(SoundID.MenuTick with { Volume = 0.5f });
+        Main.NewText(
+            rotatedCanvas
+                ? "Rotated delimitation canvas and selection."
+                : "Rotated delimitation selection.",
+            Color.Cyan);
+    }
+
+    private static void ApplyTransform(
+        System.Action<DelimitationWandPlayer> applyCanvas,
+        System.Action<DelimitationWandPlayer> applySelection,
+        string actionName)
+    {
+        var swp = GetDelimitationWandPlayer();
+        var settings = GetSettings();
+        if (swp == null || settings == null) return;
+
+        if (!swp.IsActive)
+        {
+            Main.NewText("No active delimitation slot.", Color.OrangeRed);
+            return;
+        }
+
+        if (settings.Mode == DelimitationWandMode.CanvasEdit)
+        {
+            if (!swp.Canvas.IsActive)
+            {
+                Main.NewText("No canvas active — nothing to transform.", Color.OrangeRed);
+                return;
+            }
+
+            applyCanvas(swp);
+            if (swp.Selection.IsActive)
+                applySelection(swp);
+        }
+        else
+        {
+            if (!swp.Selection.IsActive)
+            {
+                Main.NewText("No selection active — nothing to transform.", Color.OrangeRed);
+                return;
+            }
+
+            applySelection(swp);
+        }
+
+        SoundEngine.PlaySound(SoundID.MenuTick with { Volume = 0.5f });
+        Main.NewText($"{actionName} delimitation {(settings.Mode == DelimitationWandMode.CanvasEdit ? "canvas" : "selection") }.", Color.Cyan);
+    }
+
     // ═══════════════════════════════════════════════════════════════════
     //  UI sync from settings (called every frame)
     // ═══════════════════════════════════════════════════════════════════
@@ -604,7 +846,6 @@ public class SelectionSettingsPanel : UIState
         _triangleHollowBtn.Toggled = shape.Shape == ShapeType.Triangle && shape.FillMode == ShapeMode.Hollow;
         _moldBtn.Toggled = shape.Shape == ShapeType.Mold;
         _magicWandReadBtn.Toggled = shape.Shape == ShapeType.MagicWandRead;
-        _magicWandApplyBtn.Toggled = shape.Shape == ShapeType.MagicWandApply;
     }
 
     private void UpdateThicknessDisplay()
@@ -646,6 +887,22 @@ public class SelectionSettingsPanel : UIState
         _sliceGrid.SetValue(s.Shape.Slice);
     }
 
+    private void UpdateTransformButtons()
+    {
+        var s = GetSettings();
+        var swp = GetDelimitationWandPlayer();
+        if (s == null || swp == null) return;
+
+        bool enabled = swp.IsActive && (s.Mode == DelimitationWandMode.CanvasEdit
+            ? swp.Canvas.IsActive
+            : swp.Selection.IsActive);
+
+        if (_flipHorizontalBtn != null) _flipHorizontalBtn.Disabled = !enabled;
+        if (_flipVerticalBtn != null) _flipVerticalBtn.Disabled = !enabled;
+        if (_rotateCwBtn != null) _rotateCwBtn.Disabled = !enabled;
+        if (_rotateCcwBtn != null) _rotateCcwBtn.Disabled = !enabled;
+    }
+
     private void UpdateStatusDisplay()
     {
         var swp = GetDelimitationWandPlayer();
@@ -672,6 +929,7 @@ public class SelectionSettingsPanel : UIState
         UpdateShapeOptions();
         UpdateAutoCreateCanvas();
         UpdateSliceGrid();
+        UpdateTransformButtons();
         UpdateStatusDisplay();
     }
 

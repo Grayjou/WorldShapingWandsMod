@@ -28,10 +28,8 @@ public static class ShapeRegistry
         Register(new MoldShape());
 
         // (S10 2026-04-29; StencilMagicWandSelectionPlan.md §7) Magic Wand
-        // Read + Apply. Both register unconditionally; panel-side shape
-        // grids decide what to render per wand family.
+        // Read provider.
         Register(new MagicWandReadShape());
-        Register(new MagicWandApplyShape());
 
         _initialized = true;
     }
@@ -56,6 +54,11 @@ public static class ShapeRegistry
         public static IShapeProvider GetProvider(ShapeType shapeType)
         {
             Initialize();
+
+#pragma warning disable CS0618
+            if (shapeType == ShapeType.MagicWandApply)
+                shapeType = ShapeType.MagicWandRead;
+#pragma warning restore CS0618
             
             if (_providers.TryGetValue(shapeType, out var provider))
                 return provider;
@@ -125,7 +128,9 @@ public static class ShapeRegistry
         // 2-point inputs to keep the existing pipeline; semantically
         // only the Start position matters.
         ShapeType.MagicWandRead => 2,
+    #pragma warning disable CS0618
         ShapeType.MagicWandApply => 2,
+    #pragma warning restore CS0618
         // Future multi-point shapes will be added here:
         // ShapeType.Arc => 3,
         // ShapeType.ArcDonut => 4,

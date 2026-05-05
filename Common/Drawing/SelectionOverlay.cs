@@ -34,6 +34,19 @@ public class SelectionOverlay : ModSystem
     // at the same world position (same start/end/shape key) still invalidates the cache
     // and redraws the new capture instead of reusing the previous tile set.
     private StoredMagicWandShape _cacheLastMagicWandShape;
+    // (C-S5 2026-05-04) MagicWandRead cache key includes mouse-left edge state.
+    // Reason: Read per-press gating resets on mouse-up inside GetTiles; if overlay
+    // cache returns early for a static cursor (no movement), GetTiles is skipped and
+    // the reset may never run, causing "second click does nothing unless mouse moves".
+    private bool _cacheMagicReadMouseLeft;
+    // (C-S5 2026-05-04) B-3 fix: track previous-frame cancellation state so we
+    // can detect the cancelling->done edge and invalidate _cachedTiles at that
+    // moment. Without this, _cachedTiles holds the last-cancelled shape tile set
+    // indefinitely, producing a ghost outline that nothing clears until a new
+    // selection fires. See Patch_OverlayPersistence_FixScope.md §2, bug B-3.
+    private bool _wasCancellingPrev;
+
+    // ── Area Calculation Cache
 
     // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
     //  Area Calculation Cache Ã¢â‚¬â€ debounced to avoid per-frame cost.
@@ -106,7 +119,8 @@ public class SelectionOverlay : ModSystem
             // position would hit cache and reuse the previous capture without this.
             && (shapeSettings.Shape != ShapeType.MagicWandRead
                 || ReferenceEquals(_cacheLastMagicWandShape,
-                    Main.LocalPlayer?.GetModPlayer<WandPlayer>()?.LastMagicWandShape)))
+                    Main.LocalPlayer?.GetModPlayer<WandPlayer>()?.LastMagicWandShape)
+                && _cacheMagicReadMouseLeft == Main.mouseLeft))
         {
             return _cachedTiles;
         }
@@ -115,6 +129,16 @@ public class SelectionOverlay : ModSystem
         var context = shapeSettings.ToShapeContext(start, end, verticalFirst);
         var tileSet = ShapeRegistry.GetShapeTiles(shapeSettings.Shape, context);
         var tiles = new HashSet<Point>(tileSet.Tiles);
+
+        // (C-S5 2026-05-04) For Magic Wand Read, keep ShapeRegistry evaluation so
+        // GetTiles can run commit/capture logic, then mirror cache to the canonical
+        // captured shape when available.
+        if (shapeSettings.Shape == ShapeType.MagicWandRead)
+        {
+            var stored = Main.LocalPlayer?.GetModPlayer<WandPlayer>()?.LastMagicWandShape;
+            if (stored?.Tiles != null && stored.Tiles.Count > 0)
+                tiles = new HashSet<Point>(stored.Tiles);
+        }
 
         // Apply inversion: swap selected Ã¢â€ â€ unselected within bounding rectangle
         if (shapeSettings.ShouldInvert)
@@ -142,6 +166,8 @@ public class SelectionOverlay : ModSystem
         _cacheLastMagicWandShape = shapeSettings.Shape == ShapeType.MagicWandRead
             ? Main.LocalPlayer?.GetModPlayer<WandPlayer>()?.LastMagicWandShape
             : null;
+        _cacheMagicReadMouseLeft = shapeSettings.Shape == ShapeType.MagicWandRead
+            && Main.mouseLeft;
         return _cachedTiles;
     }
 
@@ -179,6 +205,16 @@ public class SelectionOverlay : ModSystem
         {
             DrawCancelledSelection(wandPlayer.CancelledSelection);
         }
+
+        // (C-S5 2026-05-04) B-3 fix: detect cancelling->done edge.
+        // When the previous frame was mid-fade and this frame is no longer
+        // cancelling (expired or null), the animation is done -- any tile set
+        // cached during the fade is now stale and must be purged so the ghost
+        // outline doesn't persist. Cache will be rebuilt on the next selection.
+        bool isCancellingNow = wandPlayer.CancelledSelection != null && !wandPlayer.CancelledSelection.IsExpired;
+        if (_wasCancellingPrev && !isCancellingNow)
+            InvalidateCache();
+        _wasCancellingPrev = isCancellingNow;
 
         // Draw the active selection overlay -- only when visually compatible with held wand.
         // Incompatible selections are preserved in memory but not drawn; the cursor
@@ -583,15 +619,14 @@ public class SelectionOverlay : ModSystem
 
         int visibleArea = Math.Max(0, visEndX - visStartX) * Math.Max(0, visEndY - visStartY);
         // (C-S1.c 2026-05-03) Disable viewport-window optimisation for Magic Wand
-        // shapes. For MagicWandApply and MagicWandRead, context.GetBounds() is the
+        // Read shapes. For MagicWandRead, context.GetBounds() is the
         // cursor click bbox (1×1), not the bounding box of the translated/captured
         // tile set. This means visibleArea ≈ 1 << tiles.Count, so useViewportWindow
         // is always true, the walk covers only the 5×5 area around the cursor, and
         // the entire shape is invisible unless the cursor is placed exactly on a
         // captured tile. The screen-cull inside the fallback foreach passes handles
         // performance adequately for these shapes.
-        bool isMagicWandShape = shapeSettings.Shape == ShapeType.MagicWandApply
-                             || shapeSettings.Shape == ShapeType.MagicWandRead;
+        bool isMagicWandShape = shapeSettings.Shape == ShapeType.MagicWandRead;
         bool useViewportWindow = !isMagicWandShape && visibleArea > 0 && visibleArea < tiles.Count;
 
         if (useViewportWindow)

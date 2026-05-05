@@ -2,5 +2,5 @@ name = WorldShapingWandsMod
 displayName = World Shaping Wands
 author = Grayjou
 version = 1.0.0
-buildIgnore = *.csproj, *.user, obj\*, bin\*, .vs\*, .git\*, ShowcaseAssets\*, Archive\*, PythonVenvReqs\*, Scripts\*,*.py, *.md, *.xlsx, ImportedSummaries\*, *ModReferences\*, ContentSource\*, Assets\*, .venv\*
+buildIgnore = *.csproj, *.user, obj\*, bin\*, .vs\*, .git\*, ShowcaseAssets\*, Archive\*, PythonVenvReqs\*, Scripts\*,*.py, *.md, *.xlsx, ImportedSummaries\*, *ModReferences\*, ContentSource\*, Assets\*, .venv\*, References\*, .idea\*, *.toml, *.log, dev_notes\*, .github\*, .vscode\*, .editorconfig, .gitattributes, .gitignore, LICENSE, README.md
 homepage = https://github.com/Grayjou/WorldShapingWandsMod

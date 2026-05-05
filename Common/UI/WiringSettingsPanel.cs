@@ -32,7 +32,7 @@ public class WiringSettingsPanel : UIState
     // Shape buttons (icon-based)
     private UIIconButton _rectFilledBtn, _edgeBtn, _cardinalBtn, _straightLineBtn;
     private UIIconButton _diamondFilledBtn, _triangleFilledBtn;
-    private UIIconButton _magicWandReadBtn, _magicWandApplyBtn;
+    private UIIconButton _magicWandReadBtn;
 
     private UIText _thicknessValue;
 
@@ -97,9 +97,8 @@ public class WiringSettingsPanel : UIState
         _triangleFilledBtn = shapes.TriangleFilled;
         _straightLineBtn  = shapes.StraightLine;
         _magicWandReadBtn = shapes.MagicWandRead;
-        _magicWandApplyBtn = shapes.MagicWandApply;
 
-        // (S4 2026-05-01 — StencilMagicWandSelectionPlan.md §4.1) Right-click on
+        // (S4 2026-05-01 ï¿½ StencilMagicWandSelectionPlan.md ï¿½4.1) Right-click on
         // the Magic Wand Read shape cell opens the Read configuration SubUI.
         // The SubUI's underlying state (MagicWandReadConfig) is a player-scoped
         // preference shared across every wand, so the wiring is centralised in
@@ -153,7 +152,6 @@ public class WiringSettingsPanel : UIState
         _diamondFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.Diamond, ShapeMode.Filled);
         _triangleFilledBtn.OnToggled += (_, _) => SetShape(ShapeType.Triangle, ShapeMode.Filled);
         _magicWandReadBtn.OnToggled += (_, _) => SetShape(ShapeType.MagicWandRead, ShapeMode.Filled);
-        _magicWandApplyBtn.OnToggled += (_, _) => SetShape(ShapeType.MagicWandApply, ShapeMode.Filled);
 
         _equalDimensionsBtn.OnToggled += (_, _) => ToggleEqualDimensions();
         _connectDiameterBtn.OnToggled += (_, _) => ToggleConnectDiameter();
@@ -259,7 +257,6 @@ public class WiringSettingsPanel : UIState
         _diamondFilledBtn.Toggled = shape.Shape == ShapeType.Diamond && shape.FillMode == ShapeMode.Filled;
         _triangleFilledBtn.Toggled = shape.Shape == ShapeType.Triangle && shape.FillMode == ShapeMode.Filled;
         _magicWandReadBtn.Toggled = shape.Shape == ShapeType.MagicWandRead;
-        _magicWandApplyBtn.Toggled = shape.Shape == ShapeType.MagicWandApply;
     }
 
     private void UpdateThicknessDisplay()

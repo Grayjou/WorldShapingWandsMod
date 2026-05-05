@@ -44,7 +44,7 @@ public class MoldingSettingsPanel : UIState
     private UIIconButton _triangleFilledBtn, _triangleHollowBtn;
     private UIIconButton _edgeBtn, _cardinalBtn, _straightLineBtn;
     private UIIconButton _moldBtn;
-    private UIIconButton _magicWandReadBtn, _magicWandApplyBtn;
+    private UIIconButton _magicWandReadBtn;
 
     // Stencil-slot row (per MultipleStencilsPlan.md §0.1, S6 2026-04-28)
     private UIIconButton[] _stencilSlotBtns;
@@ -65,6 +65,9 @@ public class MoldingSettingsPanel : UIState
     // Molding options (icon toggles)
     private UIIconButton _autoCreateCanvasBtn;
     private UIIconButton _autoPromoteBtn;
+
+    // Transform actions (non-toggle)
+    private UIIconButton _flipHorizontalBtn, _flipVerticalBtn, _rotateCwBtn, _rotateCcwBtn;
 
     private WandPanelBuilder _builder;
 
@@ -155,7 +158,6 @@ public class MoldingSettingsPanel : UIState
         _edgeBtn = shapes.Elbow; _cardinalBtn = shapes.Cardinal; _straightLineBtn = shapes.StraightLine;
         _moldBtn = shapes.Mold;
         _magicWandReadBtn = shapes.MagicWandRead;
-        _magicWandApplyBtn = shapes.MagicWandApply;
 
         // (S4 2026-05-01 � StencilMagicWandSelectionPlan.md �4.1) Right-click on
         // the Magic Wand Read shape cell opens the Read configuration SubUI.
@@ -242,6 +244,27 @@ public class MoldingSettingsPanel : UIState
         _autoCreateCanvasBtn = moldingOptionsBtns[0];
         _autoPromoteBtn = moldingOptionsBtns[1];
 
+        var texFlipHorizontal = mod.Assets.Request<Texture2D>(
+            "Assets_Build/Icons/Stencil/FlipHorizontal", AssetRequestMode.ImmediateLoad);
+        var texFlipVertical = mod.Assets.Request<Texture2D>(
+            "Assets_Build/Icons/Stencil/FlipVertical", AssetRequestMode.ImmediateLoad);
+        var texRotateCW = mod.Assets.Request<Texture2D>(
+            "Assets_Build/Icons/Stencil/RotateCW", AssetRequestMode.ImmediateLoad);
+        var texRotateCCW = mod.Assets.Request<Texture2D>(
+            "Assets_Build/Icons/Stencil/RotateCCW", AssetRequestMode.ImmediateLoad);
+
+        _builder.AddActionIconRowNoHeader(new WandPanelBuilder.IconDef[]
+        {
+            WandPanelBuilder.IconDef.WithText(texFlipHorizontal, L("Molding.Transform.FlipHorizontal")),
+            WandPanelBuilder.IconDef.WithText(texFlipVertical, L("Molding.Transform.FlipVertical")),
+            WandPanelBuilder.IconDef.WithText(texRotateCW, L("Molding.Transform.RotateCW")),
+            WandPanelBuilder.IconDef.WithText(texRotateCCW, L("Molding.Transform.RotateCCW")),
+        }, out var transformBtns);
+        _flipHorizontalBtn = transformBtns[0];
+        _flipVerticalBtn = transformBtns[1];
+        _rotateCwBtn = transformBtns[2];
+        _rotateCcwBtn = transformBtns[3];
+
         // ═══════════════════════════════════════════════════════════════
         //  Action Buttons (icon-based: Clear Selection, Invert, Clear Canvas, Clear All, Teleport)
         // ═══════════════════════════════════════════════════════════════
@@ -306,7 +329,6 @@ public class MoldingSettingsPanel : UIState
         _triangleHollowBtn.OnToggled += (_, _) => SetShape(ShapeType.Triangle, ShapeMode.Hollow);
         _moldBtn.OnToggled += (_, _) => SetShape(ShapeType.Mold, ShapeMode.Filled);
         _magicWandReadBtn.OnToggled += (_, _) => SetShape(ShapeType.MagicWandRead, ShapeMode.Filled);
-        _magicWandApplyBtn.OnToggled += (_, _) => SetShape(ShapeType.MagicWandApply, ShapeMode.Filled);
 
         // Stencil-slot row — left-click sets ActiveStencilSlot to N (0-indexed).
         // Per plan §0.1: "Each cell is a direct-select for that slot." Toggled
@@ -342,6 +364,11 @@ public class MoldingSettingsPanel : UIState
             if (mwp.AutoPromote && mwp.Selection.IsActive)
                 mwp.PromoteMoldToCustomShape();
         };
+
+        _flipHorizontalBtn.OnLeftClick += (_, _) => OnTransformFlipHorizontal();
+        _flipVerticalBtn.OnLeftClick += (_, _) => OnTransformFlipVertical();
+        _rotateCwBtn.OnLeftClick += (_, _) => OnTransformRotateCW();
+        _rotateCcwBtn.OnLeftClick += (_, _) => OnTransformRotateCCW();
 
         // Action buttons
         _clearSelectionBtn.OnLeftClick += (_, _) => OnClearSelection();
@@ -557,6 +584,224 @@ public class MoldingSettingsPanel : UIState
         Main.NewText($"Canvas teleported to player (Δ{dx},{dy})", WandColors.MsgMolding);
     }
 
+    private static void OnTransformFlipHorizontal()
+    {
+        ApplyFlipTransform(horizontal: true);
+    }
+
+    private static void OnTransformFlipVertical()
+    {
+        ApplyFlipTransform(horizontal: false);
+    }
+
+    private static void ApplyFlipTransform(bool horizontal)
+    {
+        var mwp = GetMoldingWandPlayer();
+        if (mwp == null) return;
+
+        bool flippedCanvas = false;
+        bool flippedSelection = false;
+
+        if (mwp.Canvas.IsActive)
+        {
+            var referenceBounds = mwp.Canvas.BoundingBox;
+            if (horizontal)
+                mwp.Canvas.FlipHorizontal(referenceBounds, ensureNonNegative: false);
+            else
+                mwp.Canvas.FlipVertical(referenceBounds, ensureNonNegative: false);
+            flippedCanvas = true;
+
+            if (mwp.Selection.IsActive)
+            {
+                if (horizontal)
+                    mwp.Selection.FlipHorizontal(referenceBounds, ensureNonNegative: false);
+                else
+                    mwp.Selection.FlipVertical(referenceBounds, ensureNonNegative: false);
+                flippedSelection = true;
+            }
+
+            int minX = mwp.Canvas.BoundingBox.Left;
+            int minY = mwp.Canvas.BoundingBox.Top;
+            if (flippedSelection)
+            {
+                foreach (var p in mwp.Selection.Tiles)
+                {
+                    if (p.X < minX) minX = p.X;
+                    if (p.Y < minY) minY = p.Y;
+                }
+            }
+
+            int dx = minX < 0 ? -minX : 0;
+            int dy = minY < 0 ? -minY : 0;
+            if (dx != 0 || dy != 0)
+            {
+                mwp.Canvas.Translate(dx, dy);
+                if (flippedSelection)
+                    mwp.Selection.Translate(dx, dy);
+            }
+        }
+        else if (mwp.Selection.IsActive)
+        {
+            if (horizontal)
+                mwp.Selection.FlipHorizontal();
+            else
+                mwp.Selection.FlipVertical();
+            flippedSelection = true;
+        }
+
+        if (!flippedCanvas && !flippedSelection)
+        {
+            Main.NewText("No canvas or selection active — nothing to flip.", Color.OrangeRed);
+            return;
+        }
+
+        if (mwp.AutoPromote && mwp.Selection.IsActive)
+            mwp.PromoteMoldToCustomShape();
+        else if (!mwp.Selection.IsActive)
+            mwp.ClearMoldedShape();
+
+        SoundEngine.PlaySound(SoundID.MenuTick with { Volume = 0.5f });
+        Main.NewText(
+            flippedCanvas
+                ? "Flipped molding canvas and selection."
+                : "Flipped molding selection.",
+            WandColors.MsgMolding);
+    }
+
+    private static void OnTransformRotateCW()
+    {
+        ApplyRotationTransform(clockwise: true);
+    }
+
+    private static void OnTransformRotateCCW()
+    {
+        ApplyRotationTransform(clockwise: false);
+    }
+
+    private static void ApplyRotationTransform(bool clockwise)
+    {
+        var mwp = GetMoldingWandPlayer();
+        if (mwp == null) return;
+
+        bool rotatedCanvas = false;
+        bool rotatedSelection = false;
+
+        if (mwp.Canvas.IsActive)
+        {
+            var pivot = mwp.Canvas.CenterOfMass;
+            if (clockwise)
+                mwp.Canvas.Rotate90CW(pivot.X, pivot.Y, ensureNonNegative: false);
+            else
+                mwp.Canvas.Rotate90CCW(pivot.X, pivot.Y, ensureNonNegative: false);
+            rotatedCanvas = true;
+
+            if (mwp.Selection.IsActive)
+            {
+                if (clockwise)
+                    mwp.Selection.Rotate90CW(pivot.X, pivot.Y, ensureNonNegative: false);
+                else
+                    mwp.Selection.Rotate90CCW(pivot.X, pivot.Y, ensureNonNegative: false);
+                rotatedSelection = true;
+            }
+
+            int minX = mwp.Canvas.BoundingBox.Left;
+            int minY = mwp.Canvas.BoundingBox.Top;
+            if (rotatedSelection)
+            {
+                foreach (var p in mwp.Selection.Tiles)
+                {
+                    if (p.X < minX) minX = p.X;
+                    if (p.Y < minY) minY = p.Y;
+                }
+            }
+
+            int dx = minX < 0 ? -minX : 0;
+            int dy = minY < 0 ? -minY : 0;
+            if (dx != 0 || dy != 0)
+            {
+                mwp.Canvas.Translate(dx, dy);
+                if (rotatedSelection)
+                    mwp.Selection.Translate(dx, dy);
+            }
+
+            if (rotatedSelection)
+                mwp.Selection.ClipToCanvas(mwp.Canvas);
+        }
+        else if (mwp.Selection.IsActive)
+        {
+            if (clockwise)
+                mwp.Selection.Rotate90CW();
+            else
+                mwp.Selection.Rotate90CCW();
+            rotatedSelection = true;
+        }
+
+        if (!rotatedCanvas && !rotatedSelection)
+        {
+            Main.NewText("No canvas or selection active — nothing to rotate.", Color.OrangeRed);
+            return;
+        }
+
+        if (mwp.AutoPromote && mwp.Selection.IsActive)
+            mwp.PromoteMoldToCustomShape();
+        else if (!mwp.Selection.IsActive)
+            mwp.ClearMoldedShape();
+
+        SoundEngine.PlaySound(SoundID.MenuTick with { Volume = 0.5f });
+        Main.NewText(
+            rotatedCanvas
+                ? "Rotated molding canvas and selection."
+                : "Rotated molding selection.",
+            WandColors.MsgMolding);
+    }
+
+    private static void ApplyTransform(
+        System.Action<MoldingWandPlayer> applyCanvas,
+        System.Action<MoldingWandPlayer> applySelection,
+        string actionName)
+    {
+        var mwp = GetMoldingWandPlayer();
+        var settings = GetSettings();
+        if (mwp == null || settings == null) return;
+
+        bool transformed = false;
+        if (settings.Mode == MoldingWandMode.CanvasEdit)
+        {
+            if (!mwp.Canvas.IsActive)
+            {
+                Main.NewText("No canvas active — nothing to transform.", Color.OrangeRed);
+                return;
+            }
+
+            applyCanvas(mwp);
+            if (mwp.Selection.IsActive)
+                applySelection(mwp);
+            transformed = true;
+        }
+        else
+        {
+            if (!mwp.Selection.IsActive)
+            {
+                Main.NewText("No selection active — nothing to transform.", Color.OrangeRed);
+                return;
+            }
+
+            applySelection(mwp);
+            transformed = true;
+        }
+
+        if (!transformed)
+            return;
+
+        if (mwp.AutoPromote && mwp.Selection.IsActive)
+            mwp.PromoteMoldToCustomShape();
+        else if (!mwp.Selection.IsActive)
+            mwp.ClearMoldedShape();
+
+        SoundEngine.PlaySound(SoundID.MenuTick with { Volume = 0.5f });
+        Main.NewText($"{actionName} molding {(settings.Mode == MoldingWandMode.CanvasEdit ? "canvas" : "selection") }.", WandColors.MsgMolding);
+    }
+
     // ═══════════════════════════════════════════════════════════════════
     //  UI sync from settings (called every frame)
     // ═══════════════════════════════════════════════════════════════════
@@ -597,7 +842,6 @@ public class MoldingSettingsPanel : UIState
         _triangleHollowBtn.Toggled = shape.Shape == ShapeType.Triangle && shape.FillMode == ShapeMode.Hollow;
         _moldBtn.Toggled = shape.Shape == ShapeType.Mold;
         _magicWandReadBtn.Toggled = shape.Shape == ShapeType.MagicWandRead;
-        _magicWandApplyBtn.Toggled = shape.Shape == ShapeType.MagicWandApply;
     }
 
     private void UpdateThicknessDisplay()
@@ -654,6 +898,22 @@ public class MoldingSettingsPanel : UIState
         _sliceGrid.SetValue(s.Shape.Slice);
     }
 
+    private void UpdateTransformButtons()
+    {
+        var s = GetSettings();
+        var mwp = GetMoldingWandPlayer();
+        if (s == null || mwp == null) return;
+
+        bool enabled = s.Mode == MoldingWandMode.CanvasEdit
+            ? mwp.Canvas.IsActive
+            : mwp.Selection.IsActive;
+
+        if (_flipHorizontalBtn != null) _flipHorizontalBtn.Disabled = !enabled;
+        if (_flipVerticalBtn != null) _flipVerticalBtn.Disabled = !enabled;
+        if (_rotateCwBtn != null) _rotateCwBtn.Disabled = !enabled;
+        if (_rotateCcwBtn != null) _rotateCcwBtn.Disabled = !enabled;
+    }
+
     private void SyncFromSettings()
     {
         UpdateModeButtons();
@@ -666,6 +926,7 @@ public class MoldingSettingsPanel : UIState
         UpdateAutoPromote();
         UpdatePromoteActionButton();
         UpdateSliceGrid();
+        UpdateTransformButtons();
     }
 
     private void UpdateStencilSlotButtons()

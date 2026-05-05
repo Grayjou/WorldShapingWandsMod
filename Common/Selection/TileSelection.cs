@@ -127,6 +127,62 @@ public class TileSelection
         _selectedTiles = translated;
     }
 
+    public void FlipHorizontal(SelectionCanvas canvas = null)
+    {
+        if (_selectedTiles.Count == 0) return;
+        _selectedTiles = TileCoordTransforms.FlipHorizontal(_selectedTiles);
+        if (canvas != null)
+            ClipToCanvas(canvas);
+    }
+
+    public void FlipHorizontal(Rectangle referenceBounds, bool ensureNonNegative = true)
+    {
+        if (_selectedTiles.Count == 0) return;
+        _selectedTiles = TileCoordTransforms.FlipHorizontal(_selectedTiles, referenceBounds, ensureNonNegative);
+    }
+
+    public void FlipVertical(SelectionCanvas canvas = null)
+    {
+        if (_selectedTiles.Count == 0) return;
+        _selectedTiles = TileCoordTransforms.FlipVertical(_selectedTiles);
+        if (canvas != null)
+            ClipToCanvas(canvas);
+    }
+
+    public void FlipVertical(Rectangle referenceBounds, bool ensureNonNegative = true)
+    {
+        if (_selectedTiles.Count == 0) return;
+        _selectedTiles = TileCoordTransforms.FlipVertical(_selectedTiles, referenceBounds, ensureNonNegative);
+    }
+
+    public void Rotate90CW(SelectionCanvas canvas = null)
+    {
+        if (_selectedTiles.Count == 0) return;
+        _selectedTiles = TileCoordTransforms.Rotate90CW(_selectedTiles);
+        if (canvas != null)
+            ClipToCanvas(canvas);
+    }
+
+    public void Rotate90CW(double pivotX, double pivotY, bool ensureNonNegative = true)
+    {
+        if (_selectedTiles.Count == 0) return;
+        _selectedTiles = TileCoordTransforms.Rotate90CW(_selectedTiles, pivotX, pivotY, ensureNonNegative);
+    }
+
+    public void Rotate90CCW(SelectionCanvas canvas = null)
+    {
+        if (_selectedTiles.Count == 0) return;
+        _selectedTiles = TileCoordTransforms.Rotate90CCW(_selectedTiles);
+        if (canvas != null)
+            ClipToCanvas(canvas);
+    }
+
+    public void Rotate90CCW(double pivotX, double pivotY, bool ensureNonNegative = true)
+    {
+        if (_selectedTiles.Count == 0) return;
+        _selectedTiles = TileCoordTransforms.Rotate90CCW(_selectedTiles, pivotX, pivotY, ensureNonNegative);
+    }
+
     /// <summary>
     /// Filters an enumerable of tile positions to only those within the canvas.
     /// </summary>

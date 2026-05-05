@@ -159,6 +159,78 @@ public class SelectionCanvas
         }
     }
 
+    public void FlipHorizontal()
+    {
+        if (_canvasTiles.Count == 0) return;
+        _canvasTiles = TileCoordTransforms.FlipHorizontal(_canvasTiles);
+        RecalculateMoments();
+        RecalculateBoundingBox();
+        RecomputeBorderEdges();
+    }
+
+    public void FlipHorizontal(Rectangle referenceBounds, bool ensureNonNegative = true)
+    {
+        if (_canvasTiles.Count == 0) return;
+        _canvasTiles = TileCoordTransforms.FlipHorizontal(_canvasTiles, referenceBounds, ensureNonNegative);
+        RecalculateMoments();
+        RecalculateBoundingBox();
+        RecomputeBorderEdges();
+    }
+
+    public void FlipVertical()
+    {
+        if (_canvasTiles.Count == 0) return;
+        _canvasTiles = TileCoordTransforms.FlipVertical(_canvasTiles);
+        RecalculateMoments();
+        RecalculateBoundingBox();
+        RecomputeBorderEdges();
+    }
+
+    public void FlipVertical(Rectangle referenceBounds, bool ensureNonNegative = true)
+    {
+        if (_canvasTiles.Count == 0) return;
+        _canvasTiles = TileCoordTransforms.FlipVertical(_canvasTiles, referenceBounds, ensureNonNegative);
+        RecalculateMoments();
+        RecalculateBoundingBox();
+        RecomputeBorderEdges();
+    }
+
+    public void Rotate90CW()
+    {
+        if (_canvasTiles.Count == 0) return;
+        _canvasTiles = TileCoordTransforms.Rotate90CW(_canvasTiles);
+        RecalculateMoments();
+        RecalculateBoundingBox();
+        RecomputeBorderEdges();
+    }
+
+    public void Rotate90CW(double pivotX, double pivotY, bool ensureNonNegative = true)
+    {
+        if (_canvasTiles.Count == 0) return;
+        _canvasTiles = TileCoordTransforms.Rotate90CW(_canvasTiles, pivotX, pivotY, ensureNonNegative);
+        RecalculateMoments();
+        RecalculateBoundingBox();
+        RecomputeBorderEdges();
+    }
+
+    public void Rotate90CCW()
+    {
+        if (_canvasTiles.Count == 0) return;
+        _canvasTiles = TileCoordTransforms.Rotate90CCW(_canvasTiles);
+        RecalculateMoments();
+        RecalculateBoundingBox();
+        RecomputeBorderEdges();
+    }
+
+    public void Rotate90CCW(double pivotX, double pivotY, bool ensureNonNegative = true)
+    {
+        if (_canvasTiles.Count == 0) return;
+        _canvasTiles = TileCoordTransforms.Rotate90CCW(_canvasTiles, pivotX, pivotY, ensureNonNegative);
+        RecalculateMoments();
+        RecalculateBoundingBox();
+        RecomputeBorderEdges();
+    }
+
     /// <summary>
     /// Read-only access to all canvas tile positions.
     /// Used by <see cref="TileSelection.ApplyOperation"/> for Invert operations.
@@ -226,5 +298,16 @@ public class SelectionCanvas
         }
 
         _boundingBox = new Rectangle(minX, minY, maxX - minX + 1, maxY - minY + 1);
+    }
+
+    private void RecalculateMoments()
+    {
+        _momentX = 0;
+        _momentY = 0;
+        foreach (var p in _canvasTiles)
+        {
+            _momentX += p.X + 0.5;
+            _momentY += p.Y + 0.5;
+        }
     }
 }

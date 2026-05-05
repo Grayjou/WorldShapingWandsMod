@@ -91,4 +91,36 @@ public class CustomShape
             result.Add(new Point(p.X + offsetX, p.Y + offsetY));
         return result;
     }
+
+    public CustomShape FlipHorizontal()
+    {
+        var transformed = TileCoordTransforms.FlipHorizontal(RelativeTiles);
+        var normalized = TileCoordTransforms.NormalizeToOrigin(transformed);
+        var bounds = TileCoordTransforms.ComputeBounds(normalized);
+        return new CustomShape(normalized, bounds);
+    }
+
+    public CustomShape FlipVertical()
+    {
+        var transformed = TileCoordTransforms.FlipVertical(RelativeTiles);
+        var normalized = TileCoordTransforms.NormalizeToOrigin(transformed);
+        var bounds = TileCoordTransforms.ComputeBounds(normalized);
+        return new CustomShape(normalized, bounds);
+    }
+
+    public CustomShape Rotate90CW()
+    {
+        var transformed = TileCoordTransforms.Rotate90CW(RelativeTiles);
+        var normalized = TileCoordTransforms.NormalizeToOrigin(transformed);
+        var bounds = TileCoordTransforms.ComputeBounds(normalized);
+        return new CustomShape(normalized, bounds);
+    }
+
+    public CustomShape Rotate90CCW()
+    {
+        var transformed = TileCoordTransforms.Rotate90CCW(RelativeTiles);
+        var normalized = TileCoordTransforms.NormalizeToOrigin(transformed);
+        var bounds = TileCoordTransforms.ComputeBounds(normalized);
+        return new CustomShape(normalized, bounds);
+    }
 }

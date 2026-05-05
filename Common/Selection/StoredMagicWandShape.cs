@@ -16,7 +16,7 @@ namespace WorldShapingWandsMod.Common.Selection;
 /// <list type="bullet">
 ///   <item>Captured: at the end of every successful
 ///   <c>MagicWandReadShape</c> click.</item>
-///   <item>Consumed: at every <c>MagicWandApplyShape</c> click.
+///   <item>Consumed by downstream stamp consumers (legacy Apply path and modern mold ingest).
 ///   NOT cleared on consume — Apply is repeatable across multiple click
 ///   positions until a new Read overwrites the slot or the player exits.</item>
 ///   <item>Cleared: on world exit / disconnect (in-memory only, like

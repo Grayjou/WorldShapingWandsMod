@@ -592,6 +592,34 @@ UI: {
 		TeleportToPlayer: Teletransportar a mi posiciÃ³n
 		// Options: Delimitation Options
 		AutoCreateCanvas: Auto-creado de Canvas
+
+		Transform: {
+			/* FlipHorizontal:
+				'''
+				Flip Horizontal
+				Mirrors the canvas (or selection, in Selection Mode) left-to-right within its
+				bounding box. The shape stays in the same world location.
+				''' */
+			/* FlipVertical:
+				'''
+				Flip Vertical
+				Mirrors the canvas (or selection, in Selection Mode) top-to-bottom within its
+				bounding box. The shape stays in the same world location.
+				''' */
+			/* RotateCW:
+				'''
+				Rotate 90° Clockwise
+				Rotates the canvas (or selection, in Selection Mode) 90° clockwise around its
+				centroid (centre of mass), so the shape spins in place.
+				''' */
+			/* RotateCCW:
+				'''
+				Rotate 90° Counter-clockwise
+				Rotates the canvas (or selection, in Selection Mode) 90° counter-clockwise around
+				its centroid (centre of mass), so the shape spins in place.
+				''' */
+		}
+
 		Status: Estado
 	}
 
@@ -625,6 +653,34 @@ UI: {
 			When ON, edit operations immediately refresh the molded shape for stamping.
 			When OFF, edits do not auto-promote until an explicit promote action occurs.
 			''' */
+
+		Transform: {
+			/* FlipHorizontal:
+				'''
+				Flip Horizontal
+				Mirrors the canvas (or selection, in Selection Mode) left-to-right within its
+				bounding box. The shape stays in the same world location.
+				''' */
+			/* FlipVertical:
+				'''
+				Flip Vertical
+				Mirrors the canvas (or selection, in Selection Mode) top-to-bottom within its
+				bounding box. The shape stays in the same world location.
+				''' */
+			/* RotateCW:
+				'''
+				Rotate 90° Clockwise
+				Rotates the canvas (or selection, in Selection Mode) 90° clockwise around its
+				centroid (centre of mass), so the shape spins in place.
+				''' */
+			/* RotateCCW:
+				'''
+				Rotate 90° Counter-clockwise
+				Rotates the canvas (or selection, in Selection Mode) 90° counter-clockwise around
+				its centroid (centre of mass), so the shape spins in place.
+				''' */
+		}
+
 		Status: Estado
 	}
 
@@ -2093,11 +2149,6 @@ Configs: {
 	Shape: {
 		MagicWandRead: {
 			// Label: Magic Wand Read
-			// Tooltip: ""
-		}
-
-		MagicWandApply: {
-			// Label: Magic Wand Apply
 			// Tooltip: ""
 		}
 	}
