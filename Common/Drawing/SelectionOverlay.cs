@@ -605,7 +605,14 @@ public class SelectionOverlay : ModSystem
         // these anchored pre-baked shapes correctly.
         bool isPreBakedTranslatedShape = shapeSettings.Shape == ShapeType.MagicWandRead
             || shapeSettings.Shape == ShapeType.Mold;
-        bool useViewportWindow = !isPreBakedTranslatedShape && visibleArea > 0 && visibleArea < tiles.Count;
+        bool isThickLinearShape = (shapeSettings.Shape == ShapeType.CardinalLine
+            || shapeSettings.Shape == ShapeType.StraightLine
+            || shapeSettings.Shape == ShapeType.Elbow)
+            && shapeSettings.Thickness > 1;
+        bool useViewportWindow = !isPreBakedTranslatedShape
+            && !isThickLinearShape
+            && visibleArea > 0
+            && visibleArea < tiles.Count;
 
         if (useViewportWindow)
         {
@@ -871,7 +878,11 @@ public class SelectionOverlay : ModSystem
         // Determine highlight tiles
         List<Point> highlightTiles;
 
-        if ((shapeSettings.Shape == ShapeType.CardinalLine || shapeSettings.Shape == ShapeType.StraightLine) && shapeSettings.Thickness > 1)
+        if (shapeSettings.Shape == ShapeType.Mold && TryGetMoldHoverTiles(mouseTile, out var moldHoverTiles))
+        {
+            highlightTiles = moldHoverTiles;
+        }
+        else if ((shapeSettings.Shape == ShapeType.CardinalLine || shapeSettings.Shape == ShapeType.StraightLine) && shapeSettings.Thickness > 1)
         {
             // Show circle brush preview for thick cardinal lines.
             // Uses EllipseShape's IncrementalFast algorithm for Ã¢â€°Â¥ 4 diameter,
@@ -936,6 +947,35 @@ public class SelectionOverlay : ModSystem
         }
 
         Main.spriteBatch.End();
+    }
+
+    private static bool TryGetMoldHoverTiles(Point anchorTile, out List<Point> tiles)
+    {
+        tiles = null;
+
+        var player = Main.LocalPlayer;
+        if (player?.active != true)
+            return false;
+
+        var mwp = player.GetModPlayer<MoldingWandPlayer>();
+        CustomShape mold = mwp?.ActOnStencil?.MoldedShape;
+
+        if (mold == null)
+        {
+            var dwp = player.GetModPlayer<DelimitationWandPlayer>();
+            mold = dwp?.ActiveCustomShape;
+        }
+
+        if (mold == null || mold.Count == 0)
+            return false;
+
+        Point moldCenter = new Point(mold.BoundingBox.Width / 2, mold.BoundingBox.Height / 2);
+        var translated = mold.GetTilesAtWithAnchor(anchorTile, moldCenter);
+        if (translated == null || translated.Count == 0)
+            return false;
+
+        tiles = translated.ToList();
+        return true;
     }
 
     /// <summary>

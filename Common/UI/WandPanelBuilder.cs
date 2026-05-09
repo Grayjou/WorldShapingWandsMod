@@ -43,6 +43,7 @@ public class WandPanelBuilder
     private readonly float _panelWidth;
     private readonly float _padding;
     private bool _panelChromeAdded;
+    private string _panelUiScope = "Common";
 
     /// <summary>Current Y offset � automatically advanced by each Add method.</summary>
     public float CurrentY { get; private set; }
@@ -158,6 +159,10 @@ public class WandPanelBuilder
     /// <summary>Adds the panel title (larger UISectionTitle).</summary>
     public WandPanelBuilder AddTitle(string locKey)
     {
+        int dot = locKey?.IndexOf('.') ?? -1;
+        if (dot > 0)
+            _panelUiScope = locKey.Substring(0, dot);
+
         MarkSection();
         var title = new UISectionTitle(L(locKey));
         title.Width.Set(0f, 1f);
@@ -757,9 +762,10 @@ public class WandPanelBuilder
     }
 
     /// <summary>
-    /// Adds bottom-right WandPanel chrome action buttons: (?) Help and (i) Info.
-    /// Help button dispatches verbosity-aware tooltip text to chat.
-    /// Info button is intentionally inert placeholder (pending G-43/G-44 payload design).
+    /// Adds WandPanel chrome controls:
+    /// - Bottom-right: (?) Help and (i) Info
+    /// - Bottom-left: tooltip verbosity toggle (long/short)
+    /// Emits telemetry stubs so downstream tooling can consume chrome interactions.
     /// </summary>
     private void EnsurePanelChromeButtons()
     {
@@ -769,6 +775,7 @@ public class WandPanelBuilder
         var mod = ModContent.GetInstance<WorldShapingWandsMod>();
         var texHelp = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Chromes/QuestionMark", AssetRequestMode.ImmediateLoad);
         var texInfo = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Chromes/Info", AssetRequestMode.ImmediateLoad);
+        var texTooltips = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Chromes/Tooltips", AssetRequestMode.ImmediateLoad);
 
         var helpBtn = new UIIconButton(texHelp, L("Chrome.Help"))
         {
@@ -781,34 +788,22 @@ public class WandPanelBuilder
         helpBtn.VAlign = 1f;
         helpBtn.Left.Set(-_padding, 0f);
         helpBtn.Top.Set(-ChromeBottomMargin, 0f);
+        helpBtn.HoverTextProvider = () => ResolveChromeTooltip(isHelp: true, Main.LocalPlayer);
         
-        // (G-42 Session 4 2026-05-02) Wire Help button to dispatch tooltip to chat
-        // using per-player verbosity preference. Shows both variants as examples.
+        // Help left-click: dispatch current-mode tooltip text.
         helpBtn.OnLeftClick += (evt, elem) =>
         {
             var player = Main.LocalPlayer;
-            if (player != null)
-            {
-                var wandPlayer = player.GetModPlayer<Common.Players.WandPlayer>();
-                if (wandPlayer != null)
-                {
-                    var longText = Language.GetTextValue("Mods.WorldShapingWandsMod.UI.Chrome.Help");
-                    var shortText = Common.UI.Resolvers.TooltipVerbosityResolver.ResolveTooltip(
-                        "Mods.WorldShapingWandsMod.UI.Chrome.Help", player);
-                    
-                    bool isVerbose = wandPlayer.TooltipVerbosityEnabled;
-                    var verbosityStatus = isVerbose ? "Verbose (Long)" : "Concise (Short)";
-                    
-                    Main.NewText("[Wand Help - Current Mode: " + verbosityStatus + "]", Color.Cyan);
-                    Main.NewText(shortText, Color.White);
-                    
-                    // Show both variants if on long form to demonstrate options
-                    if (isVerbose)
-                    {
-                        Main.NewText("(Long form above; click again or use verbosity toggle to see short form)", Color.Gray);
-                    }
-                }
-            }
+            if (player == null)
+                return;
+
+            var wandPlayer = TryGetWandPlayer(player);
+            bool isVerbose = wandPlayer?.TooltipVerbosityEnabled ?? true;
+            string text = ResolveChromeTooltip(isHelp: true, player);
+
+            Main.NewText($"[Wand Help - {CurrentVerbosityLabel(isVerbose)}]", Color.Cyan);
+            Main.NewText(text, Color.White);
+            EmitChromeTelemetry(action: "HelpLeftClick", isHelp: true, isVerbose: isVerbose);
         };
 
         var infoBtn = new UIIconButton(texInfo, L("Chrome.Info"))
@@ -822,10 +817,129 @@ public class WandPanelBuilder
         infoBtn.VAlign = 1f;
         infoBtn.Left.Set(-_padding - ChromeIconSize - ChromeIconGap, 0f);
         infoBtn.Top.Set(-ChromeBottomMargin, 0f);
+        infoBtn.HoverTextProvider = () => ResolveChromeTooltip(isHelp: false, Main.LocalPlayer);
+
+#if DEBUG
+        // Info left-click: dispatch current-mode info text.
+        infoBtn.OnLeftClick += (_, _) =>
+        {
+            var player = Main.LocalPlayer;
+            if (player == null)
+                return;
+
+            var wandPlayer = TryGetWandPlayer(player);
+            bool isVerbose = wandPlayer?.TooltipVerbosityEnabled ?? true;
+            string text = ResolveChromeTooltip(isHelp: false, player);
+
+            Main.NewText($"[Wand Info - {CurrentVerbosityLabel(isVerbose)}]", Color.Cyan);
+            Main.NewText(text, Color.White);
+            EmitChromeTelemetry(action: "InfoLeftClick", isHelp: false, isVerbose: isVerbose);
+        };
+        #else
+            // Telemetry/info payload is intentionally unhooked in non-debug builds.
+            infoBtn.Disabled = true;
+        #endif
+
+        var player = Main.LocalPlayer;
+        bool verboseDefault = TryGetWandPlayer(player)?.TooltipVerbosityEnabled ?? true;
+
+        var tooltipBtn = new UIIconButton(texTooltips, L("Chrome.TooltipToggleVerbose"), verboseDefault)
+        {
+            IsRadio = false,
+            IsAction = false,
+        };
+        tooltipBtn.Width.Set(ChromeIconSize, 0f);
+        tooltipBtn.Height.Set(ChromeIconSize, 0f);
+        tooltipBtn.HAlign = 0f;
+        tooltipBtn.VAlign = 1f;
+        tooltipBtn.Left.Set(_padding, 0f);
+        tooltipBtn.Top.Set(-ChromeBottomMargin, 0f);
+        tooltipBtn.HoverTextProvider = () =>
+        {
+            var p = Main.LocalPlayer;
+            bool isVerbose = TryGetWandPlayer(p)?.TooltipVerbosityEnabled ?? true;
+            return L(isVerbose ? "Chrome.TooltipToggleVerbose" : "Chrome.TooltipToggleShort");
+        };
+        tooltipBtn.OnToggled += (_, _) =>
+        {
+            SetTooltipVerbosityFromChrome(tooltipBtn.Toggled, source: "TooltipChromeToggle");
+            EmitChromeTelemetry(action: "TooltipChromeToggle", isHelp: false, isVerbose: tooltipBtn.Toggled);
+        };
 
         _panel.Append(helpBtn);
         _panel.Append(infoBtn);
+        _panel.Append(tooltipBtn);
         _panelChromeAdded = true;
+    }
+
+    private void SetTooltipVerbosityFromChrome(bool verboseEnabled, string source)
+    {
+        var player = Main.LocalPlayer;
+        if (player == null)
+            return;
+
+        var wandPlayer = TryGetWandPlayer(player);
+        if (wandPlayer != null)
+            wandPlayer.TooltipVerbosityEnabled = verboseEnabled;
+
+        Main.NewText($"[Tooltips] {CurrentVerbosityLabel(verboseEnabled)}", Color.Orange);
+        EmitChromeTelemetry(action: source, isHelp: false, isVerbose: verboseEnabled);
+    }
+
+    private string ResolveChromeTooltip(bool isHelp, Player player)
+    {
+        string scopedLong = BuildScopedChromeLongKey(isHelp);
+        string fallbackLong = BuildFallbackChromeLongKey(isHelp);
+
+        string scopedText = Common.UI.Resolvers.TooltipVerbosityResolver.ResolveTooltip(scopedLong, player);
+        if (!IsMissingLocalization(scopedText, scopedLong) && !IsMissingLocalization(scopedText, scopedLong + "_Short"))
+            return scopedText;
+
+        return Common.UI.Resolvers.TooltipVerbosityResolver.ResolveTooltip(fallbackLong, player);
+    }
+
+    private static Common.Players.WandPlayer TryGetWandPlayer(Player player)
+    {
+        if (player == null)
+            return null;
+
+        try
+        {
+            return player.GetModPlayer<Common.Players.WandPlayer>();
+        }
+        catch (IndexOutOfRangeException)
+        {
+            return null;
+        }
+    }
+
+    private string BuildScopedChromeLongKey(bool isHelp)
+        => $"Mods.WorldShapingWandsMod.UI.{_panelUiScope}.Chrome.{(isHelp ? "Help" : "Info")}";
+
+    private static string BuildFallbackChromeLongKey(bool isHelp)
+        => $"Mods.WorldShapingWandsMod.UI.Chrome.{(isHelp ? "Help" : "Info")}";
+
+    private static bool IsMissingLocalization(string value, string key)
+    {
+        if (string.IsNullOrEmpty(value))
+            return true;
+
+        if (value == key)
+            return true;
+
+        return value.StartsWith("[") && value.EndsWith("]");
+    }
+
+    private static string CurrentVerbosityLabel(bool isVerbose)
+        => isVerbose ? "Long" : "Short";
+
+    private void EmitChromeTelemetry(string action, bool isHelp, bool isVerbose)
+    {
+#if DEBUG
+        string key = BuildScopedChromeLongKey(isHelp);
+        System.Diagnostics.Debug.WriteLine(
+            $"WSW.UI.ChromeTelemetry|Scope={_panelUiScope}|Action={action}|Key={key}|Verbosity={(isVerbose ? "Long" : "Short")}");
+#endif
     }
 
     // -------------------------------------------------------------------

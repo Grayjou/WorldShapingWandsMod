@@ -118,6 +118,8 @@ UI: {
 			Wand Info (Coming Soon)
 			Reserved chrome button. No action yet.
 			'''
+		TooltipToggleVerbose: Tooltips: detailed (click to shorten)
+		TooltipToggleShort: Tooltips: short (click to expand)
 		Help_Short: Wand Guide (Soon)
 		Info_Short: Wand Info (Soon)
 	}
@@ -380,6 +382,24 @@ UI: {
 
 	Building: {
 		Title: Wand of Building
+
+		Chrome: {
+			Help:
+				'''
+				Building Guide (Draft)
+				Layout scaffold for the Wand of Building chrome help content.
+				Populate this text from your sheet workflow.
+				'''
+			Info:
+				'''
+				Building Info (Draft)
+				Telemetry/layout scaffold for building-specific info content.
+				Populate this text from your sheet workflow.
+				'''
+			Help_Short: Building Guide (Draft)
+			Info_Short: Building Info (Draft)
+		}
+
 		ObjectType: Object Type
 		SolidBlock: Solid Block
 		Platform: Platform
@@ -403,6 +423,24 @@ UI: {
 	Dismantling: {
 		Title: Wand of Dismantling
 		Options: Options
+
+		Chrome: {
+			Help:
+				'''
+				Dismantling Guide (Draft)
+				Layout scaffold for the Wand of Dismantling chrome help content.
+				Populate this text from your sheet workflow.
+				'''
+			Info:
+				'''
+				Dismantling Info (Draft)
+				Telemetry/layout scaffold for dismantling-specific info content.
+				Populate this text from your sheet workflow.
+				'''
+			Help_Short: Dismantling Guide (Draft)
+			Info_Short: Dismantling Info (Draft)
+		}
+
 		DestroyTiles: Destroy Tiles
 		DestroyWalls: Destroy Walls
 		DestroyContainers: Destroy Chests
@@ -414,6 +452,24 @@ UI: {
 
 	Replacement: {
 		Title: Wand of Replacement
+
+		Chrome: {
+			Help:
+				'''
+				Replacement Guide (Draft)
+				Layout scaffold for the Wand of Replacement chrome help content.
+				Populate this text from your sheet workflow.
+				'''
+			Info:
+				'''
+				Replacement Info (Draft)
+				Telemetry/layout scaffold for replacement-specific info content.
+				Populate this text from your sheet workflow.
+				'''
+			Help_Short: Replacement Guide (Draft)
+			Info_Short: Replacement Info (Draft)
+		}
+
 		SourceType: Source Type (Find)
 		TargetType: Target Type (Replace)
 		Tile: Tile
@@ -436,6 +492,24 @@ UI: {
 
 	Wiring: {
 		Title: Wand of Wiring
+
+		Chrome: {
+			Help:
+				'''
+				Wiring Guide (Draft)
+				Layout scaffold for the Wand of Wiring chrome help content.
+				Populate this text from your sheet workflow.
+				'''
+			Info:
+				'''
+				Wiring Info (Draft)
+				Telemetry/layout scaffold for wiring-specific info content.
+				Populate this text from your sheet workflow.
+				'''
+			Help_Short: Wiring Guide (Draft)
+			Info_Short: Wiring Info (Draft)
+		}
+
 		WireTypes: Wire Types
 		RedWire: Red Wire
 		GreenWire: Green Wire
@@ -449,6 +523,24 @@ UI: {
 
 	Safekeeping: {
 		Title: Wand of Safekeeping
+
+		Chrome: {
+			Help:
+				'''
+				Safekeeping Guide (Draft)
+				Layout scaffold for the Wand of Safekeeping chrome help content.
+				Populate this text from your sheet workflow.
+				'''
+			Info:
+				'''
+				Safekeeping Info (Draft)
+				Telemetry/layout scaffold for safekeeping-specific info content.
+				Populate this text from your sheet workflow.
+				'''
+			Help_Short: Safekeeping Guide (Draft)
+			Info_Short: Safekeeping Info (Draft)
+		}
+
 		Mode: Mode
 		Protect: Protect
 		Unprotect: Unprotect
@@ -460,6 +552,24 @@ UI: {
 
 	Coating: {
 		Title: Wand of Coating
+
+		Chrome: {
+			Help:
+				'''
+				Coating Guide (Draft)
+				Layout scaffold for the Wand of Coating chrome help content.
+				Populate this text from your sheet workflow.
+				'''
+			Info:
+				'''
+				Coating Info (Draft)
+				Telemetry/layout scaffold for coating-specific info content.
+				Populate this text from your sheet workflow.
+				'''
+			Help_Short: Coating Guide (Draft)
+			Info_Short: Coating Info (Draft)
+		}
+
 		Mode: Mode
 		PaintTile: Paint Tile
 		PaintWall: Paint Wall
@@ -514,6 +624,24 @@ UI: {
 
 	Fluids: {
 		Title: Wand of Fluids
+
+		Chrome: {
+			Help:
+				'''
+				Fluids Guide (Draft)
+				Layout scaffold for the Wand of Fluids chrome help content.
+				Populate this text from your sheet workflow.
+				'''
+			Info:
+				'''
+				Fluids Info (Draft)
+				Telemetry/layout scaffold for fluids-specific info content.
+				Populate this text from your sheet workflow.
+				'''
+			Help_Short: Fluids Guide (Draft)
+			Info_Short: Fluids Info (Draft)
+		}
+
 		PlaceType: Liquid Type
 		Water: Water
 		Lava: Lava
@@ -542,6 +670,24 @@ UI: {
 
 	Torches: {
 		Title: Wand of Torches
+
+		Chrome: {
+			Help:
+				'''
+				Torches Guide (Draft)
+				Layout scaffold for the Wand of Torches chrome help content.
+				Populate this text from your sheet workflow.
+				'''
+			Info:
+				'''
+				Torches Info (Draft)
+				Telemetry/layout scaffold for torches-specific info content.
+				Populate this text from your sheet workflow.
+				'''
+			Help_Short: Torches Guide (Draft)
+			Info_Short: Torches Info (Draft)
+		}
+
 		TilingStyle: Tiling Style
 		Manhattan: Manhattan (Diamond Lattice)
 		Grid: Grid (Rectangular)
@@ -572,6 +718,24 @@ UI: {
 
 	Selection: {
 		Title: Wand of Delimitation
+
+		Chrome: {
+			Help:
+				'''
+				Delimitation Guide (Draft)
+				Layout scaffold for the Wand of Delimitation chrome help content.
+				Populate this text from your sheet workflow.
+				'''
+			Info:
+				'''
+				Delimitation Info (Draft)
+				Telemetry/layout scaffold for delimitation-specific info content.
+				Populate this text from your sheet workflow.
+				'''
+			Help_Short: Delimitation Guide (Draft)
+			Info_Short: Delimitation Info (Draft)
+		}
+
 		Mode: Mode
 		ModeSelection: Selection Mode
 		ModeCanvasEdit: Canvas Edit Mode
@@ -621,6 +785,24 @@ UI: {
 
 	Molding: {
 		Title: Wand of Molding
+
+		Chrome: {
+			Help:
+				'''
+				Molding Guide (Draft)
+				Layout scaffold for the Wand of Molding chrome help content.
+				Populate this text from your sheet workflow.
+				'''
+			Info:
+				'''
+				Molding Info (Draft)
+				Telemetry/layout scaffold for molding-specific info content.
+				Populate this text from your sheet workflow.
+				'''
+			Help_Short: Molding Guide (Draft)
+			Info_Short: Molding Info (Draft)
+		}
+
 		Mode: Mode
 		ModeSelection: Selection Mode
 		ModeCanvasEdit: Canvas Edit Mode
