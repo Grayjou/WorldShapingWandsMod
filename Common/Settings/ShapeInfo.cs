@@ -100,7 +100,11 @@ public struct ShapeInfo
     /// Static helper: returns true if inversion is supported for the given shape type.
     /// Used by both instance <see cref="SupportsInversion"/> and server-side packet handling.
     /// </summary>
-    public static bool ShapeSupportsInversion(ShapeType shape) => true;
+    public static bool ShapeSupportsInversion(ShapeType shape) => shape switch
+    {
+        ShapeType.Mold => false,
+        _ => true,
+    };
 
     /// <summary>
     /// Returns true if the selection should actually be inverted — only when the

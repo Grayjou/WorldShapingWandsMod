@@ -1033,9 +1033,11 @@ public class MoldingSettingsPanel : UIState
         if (_invertSelectionBtn != null)
         {
             _invertSelectionBtn.Toggled = s.Shape.InvertSelection;
-            // InvertSelection is meaningless for Mold shape (shape = saved tiles, no inversion concept).
-            bool isMoldShape = s.Shape.Shape == ShapeType.Mold;
-            _invertSelectionBtn.Disabled = !s.Shape.SupportsInversion || isMoldShape;
+            bool supportsInversion = s.Shape.SupportsInversion;
+            _invertSelectionBtn.Disabled = !supportsInversion;
+            _invertSelectionBtn.HoverText = supportsInversion
+                ? L("Common.InvertSelection")
+                : L("Common.InvertSelectionDisabledNoBounds");
         }
         // (S2 2026-04-30 — InvertHalfOrientation #IOP)
         if (_flipHalfOrientationBtn != null)

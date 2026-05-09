@@ -123,6 +123,7 @@ public static class ShapeRegistry
         ShapeType.Elbow => 2,
         ShapeType.CardinalLine => 2,
         ShapeType.StraightLine => 2,
+        ShapeType.Mold => 1,
         // Magic Wand shapes are single-point stamps like Mold:
         // Start == End == cursor. The shape-cycle UI treats them as
         // 2-point inputs to keep the existing pipeline; semantically

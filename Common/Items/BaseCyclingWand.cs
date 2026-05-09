@@ -14,6 +14,7 @@ using WorldShapingWandsMod.Common.Drawing;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Networking;
 using WorldShapingWandsMod.Common.Players;
+using WorldShapingWandsMod.Common.Geometry;
 using WorldShapingWandsMod.Content.Projectiles;
 using WorldShapingWandsMod.Content.Projectiles.WandModes;
 using WorldShapingWandsMod.Content.Projectiles.WandActions;
@@ -427,6 +428,25 @@ public abstract class BaseCyclingWand : ModItem
     /// </summary>
     protected virtual bool IsDefinitionImmediate => false;
 
+    /// <summary>
+    /// Returns how many input points are required to define the currently active shape.
+    /// Defaults to <see cref="ShapeRegistry.GetRequiredPoints(ShapeType)"/> for the
+    /// current wand shape, with a safety fallback to 2.
+    /// </summary>
+    protected virtual int GetDefinitionPointArity(WandPlayer wandPlayer)
+    {
+        ShapeType shapeType = GetWandShape(wandPlayer).Shape;
+        int points = ShapeRegistry.GetRequiredPoints(shapeType);
+        return points <= 0 ? 2 : points;
+    }
+
+    /// <summary>
+    /// Returns true when the active shape can complete definition from a single click.
+    /// Preserves legacy family overrides via <see cref="IsDefinitionImmediate"/>.
+    /// </summary>
+    protected bool IsCurrentDefinitionImmediate(WandPlayer wandPlayer)
+        => IsDefinitionImmediate || GetDefinitionPointArity(wandPlayer) <= 1;
+
     // ══ Wand Action Projectile Management ══════════════════════════════════════════
     // Spawns and sustains the new unified WandActionProjectile above the player's
     // head. Opt-in via UseWandActionProjectile. Passes WandAction + WandMode.
@@ -700,7 +720,7 @@ public abstract class BaseCyclingWand : ModItem
 
             // If the active shape requires only one definition point (e.g., Mold shape),
             // execute immediately on the same click rather than waiting for a second click.
-            if (IsDefinitionImmediate)
+            if (IsCurrentDefinitionImmediate(wandPlayer))
             {
                 if (IsOnLocalCooldown()) return false;
                 wandPlayer.UpdateSelection(mouseTile);
@@ -739,7 +759,7 @@ public abstract class BaseCyclingWand : ModItem
 
             // Mold shape (or any IsDefinitionImmediate family): collapse definition step.
             // The anchor click also locks the selection — next click confirms & executes.
-            if (IsDefinitionImmediate)
+            if (IsCurrentDefinitionImmediate(wandPlayer))
             {
                 wandPlayer.UpdateSelection(mouseTile);
                 wandPlayer.LockSelection();
@@ -782,7 +802,7 @@ public abstract class BaseCyclingWand : ModItem
 
             // Mold shape (or any IsDefinitionImmediate family): collapse definition step.
             // The anchor click also locks the selection — next click locks the stamp offset.
-            if (IsDefinitionImmediate)
+            if (IsCurrentDefinitionImmediate(wandPlayer))
             {
                 wandPlayer.UpdateSelection(mouseTile);
                 wandPlayer.LockSelection();
@@ -906,6 +926,13 @@ public abstract class BaseCyclingWand : ModItem
 
     private void TemplateStampHoldItem(Player player, WandPlayer wandPlayer)
     {
+        if (!wandPlayer.IsStampLocked && wandPlayer.Selection.IsActive && wandPlayer.Selection.IsLocked && IsCurrentDefinitionImmediate(wandPlayer))
+        {
+            Point hoverTile = GeometryHelper.GetMouseTile();
+            wandPlayer.RepositionLockedSinglePointSelection(hoverTile);
+            return;
+        }
+
         if (!wandPlayer.IsStampLocked || !wandPlayer.Selection.IsActive)
             return;
 

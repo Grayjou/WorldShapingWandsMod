@@ -53,6 +53,11 @@ UI: {
 		// ConnectDiameter: Connect Diameter
 		// ConnectDiameterTooltip: Connect Diameter (hollow half-shapes only; does not clear pre-existing tiles on the open side)
 		// InvertSelection: Invert Selection
+		/* InvertSelectionDisabledNoBounds:
+			'''
+			Invert Selection (disabled)
+			Has no effect for this shape because it has no enclosing bounds to invert.
+			''' */
 		/* FlipHalfOrientation:
 			'''
 			Flip half orientation
@@ -1985,6 +1990,16 @@ Configs: {
 			// Tooltip: ""
 		}
 
+		WandPanelDragMode: {
+			// Label: Wand Panel Drag Mode
+			/* Tooltip:
+				'''
+				Controls how wand settings panels start dragging.
+				• Handle Only: drag starts only from the drag handle.
+				• Handle or Anywhere: drag starts from the handle or panel background.
+				''' */
+		}
+
 		// TransformMode.Header: Transform
 
 		TransformAnchorTMOff: {
@@ -2069,6 +2084,20 @@ Configs: {
 
 		Centroid: {
 			// Label: Centroid
+			// Tooltip: ""
+		}
+	}
+
+	WandPanelDragMode: {
+		// Tooltip: ""
+
+		HandleOnly: {
+			// Label: Handle Only
+			// Tooltip: ""
+		}
+
+		HandleOrAnywhere: {
+			// Label: Handle or Anywhere
 			// Tooltip: ""
 		}
 	}

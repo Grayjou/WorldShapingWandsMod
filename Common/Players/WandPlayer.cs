@@ -711,6 +711,20 @@ public class WandPlayer : ModPlayer
                         .WithLocked(true);
     }
 
+    /// <summary>
+    /// Repositions a locked single-point selection (start=end) to the given tile.
+    /// Used by one-point shapes in Stamp mode between freeze (click 1) and
+    /// anchor lock (click 2) so preview position tracks the cursor.
+    /// </summary>
+    public void RepositionLockedSinglePointSelection(Point tile)
+    {
+        if (!Selection.IsActive || !Selection.IsLocked || IsStampLocked)
+            return;
+
+        Selection = SelectionState.Create(tile, tile, Selection.VerticalFirst)
+                        .WithLocked(true);
+    }
+
     public bool CanStartNewSelection()
     {
         // Can't start if we just cancelled and left mouse is still held

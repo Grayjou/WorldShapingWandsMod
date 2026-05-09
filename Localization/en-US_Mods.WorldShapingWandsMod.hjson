@@ -53,6 +53,11 @@ UI: {
 		ConnectDiameter: Connect Diameter
 		ConnectDiameterTooltip: Connect Diameter (hollow half-shapes only; does not clear pre-existing tiles on the open side)
 		InvertSelection: Invert Selection
+		InvertSelectionDisabledNoBounds:
+			'''
+			Invert Selection (disabled)
+			Has no effect for this shape because it has no enclosing bounds to invert.
+			'''
 		FlipHalfOrientation:
 			'''
 			Flip half orientation

@@ -1055,7 +1055,11 @@ public class SelectionSettingsPanel : UIState
         if (_invertSelectionBtn != null)
         {
             _invertSelectionBtn.Toggled = s.Shape.InvertSelection;
-            _invertSelectionBtn.Disabled = !s.Shape.SupportsInversion;
+            bool supportsInversion = s.Shape.SupportsInversion;
+            _invertSelectionBtn.Disabled = !supportsInversion;
+            _invertSelectionBtn.HoverText = supportsInversion
+                ? L("Common.InvertSelection")
+                : L("Common.InvertSelectionDisabledNoBounds");
         }
         // (S2 2026-04-30 — InvertHalfOrientation #IOP)
         if (_flipHalfOrientationBtn != null)
