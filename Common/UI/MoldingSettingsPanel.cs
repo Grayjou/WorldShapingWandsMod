@@ -69,6 +69,9 @@ public class MoldingSettingsPanel : UIState
     // Transform actions (non-toggle)
     private UIIconButton _flipHorizontalBtn, _flipVerticalBtn, _rotateCwBtn, _rotateCcwBtn;
 
+    // Transform selector buttons (single-choice radio group)
+    private UIIconButton _transformMoveBtn, _transformPivotPersistentBtn, _transformPivotTemporaryBtn;
+
     private WandPanelBuilder _builder;
 
     private const string UIPrefix = "Mods.WorldShapingWandsMod.UI";
@@ -76,6 +79,8 @@ public class MoldingSettingsPanel : UIState
 
     private const float PanelWidth = 320f;
     private const float Padding = 10f;
+    private const string TransformModeSubUITitleKey = "Mods.WorldShapingWandsMod.UI.TransformMode.SubUITitle";
+    private const string TransformModeSubUIIdentityKey = "WandOfMolding.TransformModeShell";
 
     public override void OnInitialize()
     {
@@ -264,6 +269,8 @@ public class MoldingSettingsPanel : UIState
         _flipVerticalBtn = transformBtns[1];
         _rotateCwBtn = transformBtns[2];
         _rotateCcwBtn = transformBtns[3];
+        _rotateCwBtn.HasSubUIBadge = true;
+        _rotateCcwBtn.HasSubUIBadge = true;
 
         // ═══════════════════════════════════════════════════════════════
         //  Action Buttons (icon-based: Clear Selection, Invert, Clear Canvas, Clear All, Teleport)
@@ -369,6 +376,8 @@ public class MoldingSettingsPanel : UIState
         _flipVerticalBtn.OnLeftClick += (_, _) => OnTransformFlipVertical();
         _rotateCwBtn.OnLeftClick += (_, _) => OnTransformRotateCW();
         _rotateCcwBtn.OnLeftClick += (_, _) => OnTransformRotateCCW();
+        _rotateCwBtn.OnRightClick += (_, _) => OpenTransformModeSubUI(_rotateCwBtn);
+        _rotateCcwBtn.OnRightClick += (_, _) => OpenTransformModeSubUI(_rotateCcwBtn);
 
         // Action buttons
         _clearSelectionBtn.OnLeftClick += (_, _) => OnClearSelection();
@@ -681,14 +690,16 @@ public class MoldingSettingsPanel : UIState
     private static void ApplyRotationTransform(bool clockwise)
     {
         var mwp = GetMoldingWandPlayer();
+        var settings = GetSettings();
         if (mwp == null) return;
+        if (settings == null) return;
 
         bool rotatedCanvas = false;
         bool rotatedSelection = false;
+        var pivot = ResolveTransformPivot(mwp, settings);
 
         if (mwp.Canvas.IsActive)
         {
-            var pivot = mwp.Canvas.CenterOfMass;
             if (clockwise)
                 mwp.Canvas.Rotate90CW(pivot.X, pivot.Y, ensureNonNegative: false);
             else
@@ -755,6 +766,56 @@ public class MoldingSettingsPanel : UIState
             WandColors.MsgMolding);
     }
 
+    private static Vector2 ResolveTransformPivot(MoldingWandPlayer mwp, MoldingWandSettings settings)
+    {
+        Vector2 centroid = ResolveCentroidPivot(mwp);
+        bool transformModeActive = settings.TransformModeEnabled;
+        var anchorPreference = WandConfigs.Preferences?.TransformAnchorTMOff ?? TransformAnchorTMOff.Pivot;
+
+        if (transformModeActive)
+        {
+            if (settings.TemporaryPivot.HasValue)
+                return new Vector2(settings.TemporaryPivot.Value.X + 0.5f, settings.TemporaryPivot.Value.Y + 0.5f);
+
+            if (settings.PersistentPivot.HasValue)
+                return new Vector2(settings.PersistentPivot.Value.X + 0.5f, settings.PersistentPivot.Value.Y + 0.5f);
+
+            return centroid;
+        }
+
+        if (anchorPreference == TransformAnchorTMOff.Centroid)
+            return centroid;
+
+        if (settings.PersistentPivot.HasValue)
+            return new Vector2(settings.PersistentPivot.Value.X + 0.5f, settings.PersistentPivot.Value.Y + 0.5f);
+
+        return centroid;
+    }
+
+    private static Vector2 ResolveCentroidPivot(MoldingWandPlayer mwp)
+    {
+        if (mwp.Canvas.IsActive)
+            return mwp.Canvas.CenterOfMass;
+
+        if (mwp.Selection.IsActive)
+        {
+            double sumX = 0d;
+            double sumY = 0d;
+            int count = 0;
+            foreach (var tile in mwp.Selection.Tiles)
+            {
+                sumX += tile.X + 0.5d;
+                sumY += tile.Y + 0.5d;
+                count++;
+            }
+
+            if (count > 0)
+                return new Vector2((float)(sumX / count), (float)(sumY / count));
+        }
+
+        return Vector2.Zero;
+    }
+
     private static void ApplyTransform(
         System.Action<MoldingWandPlayer> applyCanvas,
         System.Action<MoldingWandPlayer> applySelection,
@@ -800,6 +861,120 @@ public class MoldingSettingsPanel : UIState
 
         SoundEngine.PlaySound(SoundID.MenuTick with { Volume = 0.5f });
         Main.NewText($"{actionName} molding {(settings.Mode == MoldingWandMode.CanvasEdit ? "canvas" : "selection") }.", WandColors.MsgMolding);
+    }
+
+    private void OpenTransformModeSubUI(UIIconButton hostButton)
+    {
+        var settings = GetSettings();
+        var sys = ModContent.GetInstance<WandUISystem>();
+        if (sys?.WandSubPanelHost == null || hostButton == null || settings == null)
+            return;
+
+        if (settings.TransformModeEnabled)
+        {
+            if (ReferenceEquals(hostButton, _rotateCwBtn))
+                OnTransformRotateCW();
+            else if (ReferenceEquals(hostButton, _rotateCcwBtn))
+                OnTransformRotateCCW();
+            return;
+        }
+
+        settings.TransformModeEnabled = true;
+
+        foreach (var panel in sys.WandSubPanelHost.Panels)
+        {
+            if (panel.IdentityKey == TransformModeSubUIIdentityKey)
+                return;
+        }
+
+        var panelShell = WandSubPanelFactories.CreateTransformModeShell(
+            host: hostButton,
+            titleKey: TransformModeSubUITitleKey,
+            identityKey: TransformModeSubUIIdentityKey,
+            ownerFamilies: WandFamilyMask.Molding,
+            onSetPivotPersistent: OnTransformSubUISetPivotPersistent,
+            onSetPivotTemporary: OnTransformSubUISetPivotTemporary,
+            onMove: OnTransformSubUIMove,
+            out _transformMoveBtn,
+            out _transformPivotPersistentBtn,
+            out _transformPivotTemporaryBtn);
+
+        UpdateTransformButtons();
+
+        sys.OpenWandSubPanel(panelShell);
+        panelShell.AnchorToHost();
+    }
+
+    private static bool IsTransformModeSubUIOpen()
+    {
+        var sys = ModContent.GetInstance<WandUISystem>();
+        if (sys?.WandSubPanelHost == null)
+            return false;
+
+        foreach (var panel in sys.WandSubPanelHost.Panels)
+        {
+            if (panel.IdentityKey == TransformModeSubUIIdentityKey && !panel.IsHidden)
+                return true;
+        }
+
+        return false;
+    }
+
+    private static void UpdateTransformModeLifecycle()
+    {
+        var settings = GetSettings();
+        if (settings == null)
+            return;
+
+        if (!IsTransformModeSubUIOpen())
+        {
+            settings.TransformModeEnabled = false;
+            settings.ActiveTransformAction = TransformActionMode.None;
+            settings.PendingTransformMoveStart = null;
+            settings.TemporaryPivot = null;
+        }
+    }
+
+    private static void OnTransformSubUISetPivotPersistent()
+    {
+        var mwp = GetMoldingWandPlayer();
+        var settings = GetSettings();
+        if (mwp == null || settings == null) return;
+
+        settings.TransformModeEnabled = true;
+        settings.ActiveTransformAction = TransformActionMode.SetPivotPersistent;
+        settings.PendingTransformMoveStart = null;
+        Main.NewText(Language.GetTextValue("Mods.WorldShapingWandsMod.UI.TransformMode.SetPivotPersistentHint"), WandColors.MsgInfo);
+    }
+
+    private static void OnTransformSubUISetPivotTemporary()
+    {
+        var mwp = GetMoldingWandPlayer();
+        var settings = GetSettings();
+        if (mwp == null || settings == null) return;
+
+        settings.TransformModeEnabled = true;
+        settings.ActiveTransformAction = TransformActionMode.SetPivotTemporary;
+        settings.PendingTransformMoveStart = null;
+        Main.NewText(Language.GetTextValue("Mods.WorldShapingWandsMod.UI.TransformMode.SetPivotTemporaryHint"), WandColors.MsgInfo);
+    }
+
+    private static void OnTransformSubUIMove()
+    {
+        var mwp = GetMoldingWandPlayer();
+        var settings = GetSettings();
+        if (mwp == null || settings == null) return;
+
+        if (!mwp.Canvas.IsActive && !mwp.Selection.IsActive)
+        {
+            Main.NewText("No canvas or selection active — nothing to move.", Color.OrangeRed);
+            return;
+        }
+
+        settings.TransformModeEnabled = true;
+        settings.ActiveTransformAction = TransformActionMode.Move;
+        settings.PendingTransformMoveStart = null;
+        Main.NewText(Language.GetTextValue("Mods.WorldShapingWandsMod.UI.TransformMode.MoveHint"), WandColors.MsgInfo);
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -858,7 +1033,9 @@ public class MoldingSettingsPanel : UIState
         if (_invertSelectionBtn != null)
         {
             _invertSelectionBtn.Toggled = s.Shape.InvertSelection;
-            _invertSelectionBtn.Disabled = !s.Shape.SupportsInversion;
+            // InvertSelection is meaningless for Mold shape (shape = saved tiles, no inversion concept).
+            bool isMoldShape = s.Shape.Shape == ShapeType.Mold;
+            _invertSelectionBtn.Disabled = !s.Shape.SupportsInversion || isMoldShape;
         }
         // (S2 2026-04-30 — InvertHalfOrientation #IOP)
         if (_flipHalfOrientationBtn != null)
@@ -912,6 +1089,16 @@ public class MoldingSettingsPanel : UIState
         if (_flipVerticalBtn != null) _flipVerticalBtn.Disabled = !enabled;
         if (_rotateCwBtn != null) _rotateCwBtn.Disabled = !enabled;
         if (_rotateCcwBtn != null) _rotateCcwBtn.Disabled = !enabled;
+
+        if (_transformMoveBtn != null)
+            _transformMoveBtn.Toggled = s.ActiveTransformAction == TransformActionMode.Move;
+        if (_transformPivotPersistentBtn != null)
+            _transformPivotPersistentBtn.Toggled = s.ActiveTransformAction == TransformActionMode.SetPivotPersistent;
+        if (_transformPivotTemporaryBtn != null)
+            _transformPivotTemporaryBtn.Toggled = s.ActiveTransformAction == TransformActionMode.SetPivotTemporary;
+
+        if (!(_transformMoveBtn?.Toggled == true || _transformPivotPersistentBtn?.Toggled == true || _transformPivotTemporaryBtn?.Toggled == true))
+            s.ActiveTransformAction = TransformActionMode.None;
     }
 
     private void SyncFromSettings()
@@ -947,6 +1134,7 @@ public class MoldingSettingsPanel : UIState
     {
         base.Update(gameTime);
         SyncFromSettings();
+        UpdateTransformModeLifecycle();
 
         if (_mainPanel.ContainsPoint(Main.MouseScreen))
             Main.LocalPlayer.mouseInterface = true;

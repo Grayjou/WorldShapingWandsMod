@@ -1,5 +1,6 @@
 using Terraria;
 using Terraria.Localization;
+using WorldShapingWandsMod.Common.Configs;
 using WorldShapingWandsMod.Common.Players;
 
 namespace WorldShapingWandsMod.Common.UI.Resolvers;
@@ -44,17 +45,12 @@ public static class TooltipVerbosityResolver
         if (longKey == null)
             return "";
 
-        // Null player → default to long form (safety fallback).
-        if (player == null)
-            return Language.GetTextValue(longKey);
-
-        var wandPlayer = player.GetModPlayer<WandPlayer>();
-        if (wandPlayer == null)
-            return Language.GetTextValue(longKey);
+        // Source of truth is the shared client config toggle.
+        bool verboseEnabled = WandConfigs.Preferences?.ShowLongTooltips ?? true;
 
         // If verbosity is enabled (true = verbose = long form), use the long key.
         // If verbosity is disabled (false = concise = short form), try the short key.
-        if (wandPlayer.TooltipVerbosityEnabled)
+        if (verboseEnabled)
             return Language.GetTextValue(longKey);
 
         // Try the short variant. If it doesn't exist, fall back to long.
@@ -84,11 +80,17 @@ public static class TooltipVerbosityResolver
     /// <param name="player">The player to toggle. If null, does nothing.</param>
     public static void ToggleVerbosity(Player player)
     {
-        if (player == null)
-            return;
+        bool current = WandConfigs.Preferences?.ShowLongTooltips ?? true;
+        bool next = !current;
 
-        var wandPlayer = player.GetModPlayer<WandPlayer>();
-        if (wandPlayer != null)
-            wandPlayer.TooltipVerbosityEnabled = !wandPlayer.TooltipVerbosityEnabled;
+        if (WandConfigs.Preferences != null)
+            WandConfigs.Preferences.ShowLongTooltips = next;
+
+        if (player != null)
+        {
+            var wandPlayer = player.GetModPlayer<WandPlayer>();
+            if (wandPlayer != null)
+                wandPlayer.TooltipVerbosityEnabled = next;
+        }
     }
 }

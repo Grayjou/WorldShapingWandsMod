@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using WorldShapingWandsMod.Common.Drawing;
 using WorldShapingWandsMod.Common.Enums;
@@ -105,8 +106,113 @@ public abstract class WandOfDelimitationBase : BaseCyclingWand
         wandPlayer.CancelSelection(GetCancelColor(), swp.Settings.Shape);
     }
 
-    public override bool? UseItem(Player player) => TemplateUseItem(player);
-    public override void HoldItem(Player player) => TemplateHoldItem(player);
+    public override bool? UseItem(Player player)
+    {
+        if (ShouldInterceptTransformWorldAction(player))
+            return false;
+        return TemplateUseItem(player);
+    }
+
+    public override void HoldItem(Player player)
+    {
+        if (IsTransformWorldActionArmed(player))
+            return;
+        TemplateHoldItem(player);
+    }
+
+    private static bool IsTransformWorldActionArmed(Player player)
+    {
+        var swp = player.GetModPlayer<DelimitationWandPlayer>();
+        if (swp?.Settings == null || !swp.Settings.TransformModeEnabled || swp.Settings.ActiveTransformAction == TransformActionMode.None)
+            return false;
+
+        if (IsMouseOverUI())
+            return false;
+
+        return true;
+    }
+
+    private static bool ShouldInterceptTransformWorldAction(Player player)
+    {
+        if (!IsTransformWorldActionArmed(player))
+            return false;
+
+        if (Main.myPlayer != player.whoAmI)
+            return true;
+
+        if (!Main.mouseLeft || Main.LocalPlayer.mouseInterface)
+            return true;
+
+        if (!Main.mouseLeftRelease)
+            return true;
+
+        Main.mouseLeftRelease = false;
+
+        var swp = player.GetModPlayer<DelimitationWandPlayer>();
+
+        return HandleTransformWorldAction(player, swp);
+    }
+
+    private static bool HandleTransformWorldAction(Player player, DelimitationWandPlayer swp)
+    {
+        var settings = swp.Settings;
+        Point mouseTile = Main.MouseWorld.ToTileCoordinates();
+
+        switch (settings.ActiveTransformAction)
+        {
+            case TransformActionMode.SetPivotPersistent:
+                settings.PersistentPivot = mouseTile;
+                settings.PendingTransformMoveStart = null;
+                if (Main.myPlayer == player.whoAmI)
+                    Main.NewText(Language.GetTextValue("Mods.WorldShapingWandsMod.UI.TransformMode.SetPivotPersistentHint"), WandColors.MsgInfo);
+                return true;
+
+            case TransformActionMode.SetPivotTemporary:
+                settings.TemporaryPivot = mouseTile;
+                settings.PendingTransformMoveStart = null;
+                if (Main.myPlayer == player.whoAmI)
+                    Main.NewText(Language.GetTextValue("Mods.WorldShapingWandsMod.UI.TransformMode.SetPivotTemporaryHint"), WandColors.MsgInfo);
+                return true;
+
+            case TransformActionMode.Move:
+                if (!swp.Canvas.IsActive && !swp.Selection.IsActive)
+                    return true;
+
+                if (!settings.PendingTransformMoveStart.HasValue)
+                {
+                    settings.PendingTransformMoveStart = mouseTile;
+                    if (Main.myPlayer == player.whoAmI)
+                        Main.NewText(Language.GetTextValue("Mods.WorldShapingWandsMod.UI.TransformMode.MoveStartHint"), WandColors.MsgInfo);
+                    return true;
+                }
+
+                Point start = settings.PendingTransformMoveStart.Value;
+                int dx = mouseTile.X - start.X;
+                int dy = mouseTile.Y - start.Y;
+                settings.PendingTransformMoveStart = null;
+
+                if (dx == 0 && dy == 0)
+                    return true;
+
+                if (swp.Canvas.IsActive)
+                    swp.Canvas.Translate(dx, dy);
+
+                if (swp.Selection.IsActive)
+                    swp.Selection.Translate(dx, dy);
+
+                if (settings.PersistentPivot.HasValue)
+                    settings.PersistentPivot = new Point(settings.PersistentPivot.Value.X + dx, settings.PersistentPivot.Value.Y + dy);
+
+                if (settings.TemporaryPivot.HasValue)
+                    settings.TemporaryPivot = new Point(settings.TemporaryPivot.Value.X + dx, settings.TemporaryPivot.Value.Y + dy);
+
+                if (Main.myPlayer == player.whoAmI)
+                    Main.NewText(Language.GetTextValue("Mods.WorldShapingWandsMod.UI.TransformMode.MoveHint"), WandColors.MsgInfo);
+                return true;
+        }
+
+        return false;
+    }
 
     // ════════════════════════════════════════════════════════════════
     //  Core Execution — apply shape to canvas or selection

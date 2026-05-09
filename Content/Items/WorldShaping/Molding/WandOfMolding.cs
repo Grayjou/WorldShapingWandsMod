@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using WorldShapingWandsMod.Common.Drawing;
 using WorldShapingWandsMod.Common.Enums;
@@ -76,6 +77,20 @@ public abstract class WandOfMoldingBase : BaseCyclingWand
     // ── WandActionProjectile opt-in ──
     protected override bool UseWandActionProjectile => true;
 
+    /// <summary>
+    /// When the Mold shape is active, the shape is fully defined by its stored tile data —
+    /// only an anchor point is needed. Collapse TwoClick/ThreeClick/FourClick definition
+    /// to a single click so the user places one anchor and the operation fires immediately.
+    /// </summary>
+    protected override bool IsDefinitionImmediate
+    {
+        get
+        {
+            var mwp = Main.LocalPlayer?.GetModPlayer<MoldingWandPlayer>();
+            return mwp?.Settings.Shape.Shape == Common.Enums.ShapeType.Mold;
+        }
+    }
+
     protected override WandAction ResolveCurrentAction()
     {
         var mwp = Main.LocalPlayer.GetModPlayer<MoldingWandPlayer>();
@@ -120,8 +135,113 @@ public abstract class WandOfMoldingBase : BaseCyclingWand
         wandPlayer.CancelSelection(GetCancelColor(), mwp.Settings.Shape);
     }
 
-    public override bool? UseItem(Player player) => TemplateUseItem(player);
-    public override void HoldItem(Player player) => TemplateHoldItem(player);
+    public override bool? UseItem(Player player)
+    {
+        if (ShouldInterceptTransformWorldAction(player))
+            return false;
+        return TemplateUseItem(player);
+    }
+
+    public override void HoldItem(Player player)
+    {
+        if (IsTransformWorldActionArmed(player))
+            return;
+        TemplateHoldItem(player);
+    }
+
+    private static bool IsTransformWorldActionArmed(Player player)
+    {
+        var mwp = player.GetModPlayer<MoldingWandPlayer>();
+        if (mwp?.Settings == null || !mwp.Settings.TransformModeEnabled || mwp.Settings.ActiveTransformAction == TransformActionMode.None)
+            return false;
+
+        if (IsMouseOverUI())
+            return false;
+
+        return true;
+    }
+
+    private static bool ShouldInterceptTransformWorldAction(Player player)
+    {
+        if (!IsTransformWorldActionArmed(player))
+            return false;
+
+        if (Main.myPlayer != player.whoAmI)
+            return true;
+
+        if (!Main.mouseLeft || Main.LocalPlayer.mouseInterface)
+            return true;
+
+        if (!Main.mouseLeftRelease)
+            return true;
+
+        Main.mouseLeftRelease = false;
+
+        var mwp = player.GetModPlayer<MoldingWandPlayer>();
+
+        return HandleTransformWorldAction(player, mwp);
+    }
+
+    private static bool HandleTransformWorldAction(Player player, MoldingWandPlayer mwp)
+    {
+        var settings = mwp.Settings;
+        Point mouseTile = Main.MouseWorld.ToTileCoordinates();
+
+        switch (settings.ActiveTransformAction)
+        {
+            case TransformActionMode.SetPivotPersistent:
+                settings.PersistentPivot = mouseTile;
+                settings.PendingTransformMoveStart = null;
+                if (Main.myPlayer == player.whoAmI)
+                    Main.NewText(Language.GetTextValue("Mods.WorldShapingWandsMod.UI.TransformMode.SetPivotPersistentHint"), WandColors.MsgInfo);
+                return true;
+
+            case TransformActionMode.SetPivotTemporary:
+                settings.TemporaryPivot = mouseTile;
+                settings.PendingTransformMoveStart = null;
+                if (Main.myPlayer == player.whoAmI)
+                    Main.NewText(Language.GetTextValue("Mods.WorldShapingWandsMod.UI.TransformMode.SetPivotTemporaryHint"), WandColors.MsgInfo);
+                return true;
+
+            case TransformActionMode.Move:
+                if (!mwp.Canvas.IsActive && !mwp.Selection.IsActive)
+                    return true;
+
+                if (!settings.PendingTransformMoveStart.HasValue)
+                {
+                    settings.PendingTransformMoveStart = mouseTile;
+                    if (Main.myPlayer == player.whoAmI)
+                        Main.NewText(Language.GetTextValue("Mods.WorldShapingWandsMod.UI.TransformMode.MoveStartHint"), WandColors.MsgInfo);
+                    return true;
+                }
+
+                Point start = settings.PendingTransformMoveStart.Value;
+                int dx = mouseTile.X - start.X;
+                int dy = mouseTile.Y - start.Y;
+                settings.PendingTransformMoveStart = null;
+
+                if (dx == 0 && dy == 0)
+                    return true;
+
+                if (mwp.Canvas.IsActive)
+                    mwp.Canvas.Translate(dx, dy);
+
+                if (mwp.Selection.IsActive)
+                    mwp.Selection.Translate(dx, dy);
+
+                if (settings.PersistentPivot.HasValue)
+                    settings.PersistentPivot = new Point(settings.PersistentPivot.Value.X + dx, settings.PersistentPivot.Value.Y + dy);
+
+                if (settings.TemporaryPivot.HasValue)
+                    settings.TemporaryPivot = new Point(settings.TemporaryPivot.Value.X + dx, settings.TemporaryPivot.Value.Y + dy);
+
+                if (Main.myPlayer == player.whoAmI)
+                    Main.NewText(Language.GetTextValue("Mods.WorldShapingWandsMod.UI.TransformMode.MoveHint"), WandColors.MsgInfo);
+                return true;
+        }
+
+        return false;
+    }
 
     // ════════════════════════════════════════════════════════════════
     //  Core Execution — apply shape to canvas/selection, then auto-promote

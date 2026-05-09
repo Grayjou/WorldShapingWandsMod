@@ -86,6 +86,12 @@ public sealed class WandSubPanel : UIDraggablePanel
     /// </summary>
     public float ExtraHeight { get; init; }
 
+    /// <summary>
+    /// Extra Y-offset for the chrome title text baseline.
+    /// Defaults to the legacy 2px offset.
+    /// </summary>
+    public float TitleTopOffset { get; init; } = 2f;
+
     // ── Identity / configuration ────────────────────────────────────────
 
     /// <summary>Stable per-(player, SubUI-identity) key for lock-state persistence.
@@ -390,7 +396,7 @@ public sealed class WandSubPanel : UIDraggablePanel
                 HAlign = 0.5f,
                 VAlign = 0f,
             };
-            _titleText.Top.Set(2f, 0f);
+            _titleText.Top.Set(TitleTopOffset, 0f);
             Append(_titleText);
         }
 
@@ -528,6 +534,7 @@ public sealed class WandSubPanel : UIDraggablePanel
     }
 
     private bool _extraSizeApplied;
+    private bool _titleOffsetApplied;
 
     /// <summary>
     /// (S14 2026-04-29) Lazy one-shot mirror of
@@ -552,11 +559,21 @@ public sealed class WandSubPanel : UIDraggablePanel
         AnchorToHost();
     }
 
+    private void EnsureTitleOffsetApplied()
+    {
+        if (_titleOffsetApplied) return;
+        _titleOffsetApplied = true;
+        if (_titleText == null) return;
+        _titleText.Top.Set(TitleTopOffset, 0f);
+        Recalculate();
+    }
+
     public override void Update(GameTime gameTime)
     {
         EnsureLockBehaviourApplied();
         EnsureChromeInsetsApplied();
         EnsureExtraSizeApplied();
+        EnsureTitleOffsetApplied();
         TickVisibilityFade();
         base.Update(gameTime);
     }

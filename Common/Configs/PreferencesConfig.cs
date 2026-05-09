@@ -115,6 +115,49 @@ namespace WorldShapingWandsMod.Common.Configs
         public LavaRainStyle LavaRainStyle { get; set; } = LavaRainStyle.Embers;
 
         // ═════════════════════════════════════════════
+        //  Wand Panel Buttons
+        // ═════════════════════════════════════════════
+
+        [Header("$Mods.WorldShapingWandsMod.Configs.PreferencesConfig.WandPanelButtons.Header")]
+        [DefaultValue(true)]
+        [LabelKey("$Mods.WorldShapingWandsMod.Configs.PreferencesConfig.ShowHelpButton.Label")]
+        [TooltipKey("$Mods.WorldShapingWandsMod.Configs.PreferencesConfig.ShowHelpButton.Tooltip")]
+        public bool ShowHelpButton { get; set; } = true;
+
+        [DefaultValue(false)]
+        [LabelKey("$Mods.WorldShapingWandsMod.Configs.PreferencesConfig.ShowInfoButton.Label")]
+        [TooltipKey("$Mods.WorldShapingWandsMod.Configs.PreferencesConfig.ShowInfoButton.Tooltip")]
+        public bool ShowInfoButton { get; set; } = false;
+
+        [DefaultValue(true)]
+        [LabelKey("$Mods.WorldShapingWandsMod.Configs.PreferencesConfig.ShowTooltipButton.Label")]
+        [TooltipKey("$Mods.WorldShapingWandsMod.Configs.PreferencesConfig.ShowTooltipButton.Tooltip")]
+        public bool ShowTooltipButton { get; set; } = true;
+
+        [DefaultValue(true)]
+        [LabelKey("$Mods.WorldShapingWandsMod.Configs.PreferencesConfig.ShowLongTooltips.Label")]
+        [TooltipKey("$Mods.WorldShapingWandsMod.Configs.PreferencesConfig.ShowLongTooltips.Tooltip")]
+        public bool ShowLongTooltips { get; set; } = true;
+
+        [DefaultValue(WandPanelDragMode.HandleOrAnywhere)]
+        [DrawTicks]
+        [LabelKey("$Mods.WorldShapingWandsMod.Configs.PreferencesConfig.WandPanelDragMode.Label")]
+        [TooltipKey("$Mods.WorldShapingWandsMod.Configs.PreferencesConfig.WandPanelDragMode.Tooltip")]
+        public WandPanelDragMode WandPanelDragMode { get; set; } = WandPanelDragMode.HandleOrAnywhere;
+
+        [Header("$Mods.WorldShapingWandsMod.Configs.PreferencesConfig.TransformMode.Header")]
+        [DefaultValue(TransformAnchorTMOff.Pivot)]
+        [DrawTicks]
+        [LabelKey("$Mods.WorldShapingWandsMod.Configs.PreferencesConfig.TransformAnchorTMOff.Label")]
+        [TooltipKey("$Mods.WorldShapingWandsMod.Configs.PreferencesConfig.TransformAnchorTMOff.Tooltip")]
+        public TransformAnchorTMOff TransformAnchorTMOff { get; set; } = TransformAnchorTMOff.Pivot;
+
+        [DefaultValue(true)]
+        [LabelKey("$Mods.WorldShapingWandsMod.Configs.PreferencesConfig.AlwaysShowPivot.Label")]
+        [TooltipKey("$Mods.WorldShapingWandsMod.Configs.PreferencesConfig.AlwaysShowPivot.Tooltip")]
+        public bool AlwaysShowPivot { get; set; } = true;
+
+        // ═════════════════════════════════════════════
         //  Block Exhaustion Behavior (building wands)
         // ═════════════════════════════════════════════
 

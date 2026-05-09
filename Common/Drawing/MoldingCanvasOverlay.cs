@@ -43,6 +43,11 @@ namespace WorldShapingWandsMod.Common.Drawing;
 [Autoload(Side = ModSide.Client)]
 internal sealed class MoldingCanvasOverlay : IComposableOverlay
 {
+    private static readonly ReLogic.Content.Asset<Texture2D> PivotIcon = ModContent.Request<Texture2D>(
+        "Assets_Build/Icons/Stencil/Pivot", ReLogic.Content.AssetRequestMode.ImmediateLoad);
+    private static readonly ReLogic.Content.Asset<Texture2D> CentroidIcon = ModContent.Request<Texture2D>(
+        "Assets_Build/Icons/Stencil/Centroid", ReLogic.Content.AssetRequestMode.ImmediateLoad);
+
     /// <summary>
     /// Draws right after SelectionCanvasOverlay (-10) so both canvas systems
     /// can coexist without z-fighting.
@@ -150,6 +155,8 @@ internal sealed class MoldingCanvasOverlay : IComposableOverlay
         if (canvasActive)
             CanvasBorderRenderer.DrawBorder(spriteBatch, mwp.Canvas.BorderEdges, screenBounds,
                 MoldingWandSettings.CanvasBorderColor);
+
+        DrawTransformIndicators(spriteBatch, mwp, settings);
     }
 
     // ================================================================
@@ -207,5 +214,97 @@ internal sealed class MoldingCanvasOverlay : IComposableOverlay
             var pos = new Vector2(tile.X * 16, tile.Y * 16) - Main.screenPosition;
             sb.Draw(pixel, pos, new Rectangle(0, 0, 16, 16), fillColor);
         }
+    }
+
+    private static void DrawTransformIndicators(
+        SpriteBatch sb,
+        MoldingWandPlayer mwp,
+        MoldingWandSettings settings)
+    {
+        if (!TryResolveCentroidTile(mwp, out var centroidTile))
+            return;
+
+        var prefs = WandConfigs.Preferences;
+        bool transformModeOn = settings.TransformModeEnabled;
+        bool alwaysShowPivot = prefs?.AlwaysShowPivot ?? true;
+        var offModeAnchor = prefs?.TransformAnchorTMOff ?? TransformAnchorTMOff.Pivot;
+
+        bool hasPivot = false;
+        Vector2 pivotTile = Vector2.Zero;
+
+        if (settings.TemporaryPivot.HasValue)
+        {
+            var p = settings.TemporaryPivot.Value;
+            pivotTile = new Vector2(p.X + 0.5f, p.Y + 0.5f);
+            hasPivot = true;
+        }
+        else if (settings.PersistentPivot.HasValue)
+        {
+            var p = settings.PersistentPivot.Value;
+            pivotTile = new Vector2(p.X + 0.5f, p.Y + 0.5f);
+            hasPivot = true;
+        }
+
+        if (transformModeOn)
+        {
+            DrawTransformIcon(sb, centroidTile, usePivotIcon: false, MoldingWandSettings.CanvasBorderColor);
+            if (hasPivot)
+                DrawTransformIcon(sb, pivotTile, usePivotIcon: true, MoldingWandSettings.CanvasBorderColor);
+            return;
+        }
+
+        if (!alwaysShowPivot)
+            return;
+
+        if (offModeAnchor == TransformAnchorTMOff.Centroid)
+        {
+            DrawTransformIcon(sb, centroidTile, usePivotIcon: false, MoldingWandSettings.CanvasBorderColor);
+            return;
+        }
+
+        DrawTransformIcon(sb, centroidTile, usePivotIcon: false, MoldingWandSettings.CanvasBorderColor);
+        if (hasPivot)
+            DrawTransformIcon(sb, pivotTile, usePivotIcon: true, MoldingWandSettings.CanvasBorderColor);
+    }
+
+    private static void DrawTransformIcon(SpriteBatch sb, Vector2 tilePos, bool usePivotIcon, Color pivotTint)
+    {
+        var icon = usePivotIcon ? PivotIcon.Value : CentroidIcon.Value;
+        Vector2 worldPos = tilePos * 16f;
+        Vector2 drawPos = worldPos - Main.screenPosition;
+        Vector2 origin = new Vector2(icon.Width * 0.5f, icon.Height * 0.5f);
+        Color tint = usePivotIcon ? pivotTint : Color.White;
+        sb.Draw(icon, drawPos, null, tint * 0.95f, 0f, origin, 1f, SpriteEffects.None, 0f);
+    }
+
+    private static bool TryResolveCentroidTile(MoldingWandPlayer mwp, out Vector2 centroidTile)
+    {
+        if (mwp.Canvas.IsActive)
+        {
+            centroidTile = mwp.Canvas.CenterOfMass;
+            return true;
+        }
+
+        if (mwp.Selection.IsActive)
+        {
+            double sumX = 0d;
+            double sumY = 0d;
+            int count = 0;
+            foreach (var tile in mwp.Selection.Tiles)
+            {
+                sumX += tile.X + 0.5d;
+                sumY += tile.Y + 0.5d;
+                count++;
+            }
+
+            if (count > 0)
+            {
+                centroidTile = new Vector2((float)(sumX / count), (float)(sumY / count));
+                return true;
+            }
+        }
+
+        centroidTile = Vector2.Zero;
+        return false;
     }
 }

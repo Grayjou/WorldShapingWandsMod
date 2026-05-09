@@ -418,6 +418,15 @@ public abstract class BaseCyclingWand : ModItem
     /// </summary>
     protected virtual void OnHoldItemFamily(Player player, WandPlayer wandPlayer) { }
 
+    /// <summary>
+    /// When <c>true</c>, the TwoClick (Select) mode collapses to a single click:
+    /// the definition click immediately executes the operation without a second click.
+    /// Used by families whose active shape is fully defined by a single point
+    /// (e.g., Wand of Molding when the Mold shape is active — the shape data is
+    /// already stored, so the anchor click is sufficient).
+    /// </summary>
+    protected virtual bool IsDefinitionImmediate => false;
+
     // ══ Wand Action Projectile Management ══════════════════════════════════════════
     // Spawns and sustains the new unified WandActionProjectile above the player's
     // head. Opt-in via UseWandActionProjectile. Passes WandAction + WandMode.
@@ -688,6 +697,21 @@ public abstract class BaseCyclingWand : ModItem
             bool vertical = Math.Abs(Main.MouseWorld.Y - player.Center.Y) >
                             Math.Abs(Main.MouseWorld.X - player.Center.X);
             wandPlayer.StartSelection(mouseTile, vertical);
+
+            // If the active shape requires only one definition point (e.g., Mold shape),
+            // execute immediately on the same click rather than waiting for a second click.
+            if (IsDefinitionImmediate)
+            {
+                if (IsOnLocalCooldown()) return false;
+                wandPlayer.UpdateSelection(mouseTile);
+                if (CanExecute(player, wandPlayer))
+                {
+                    ExecuteWandOperation(player, wandPlayer);
+                    wandPlayer.ClearSelectionAfterCommit();
+                }
+                return false;
+            }
+
             if (UseWandActionProjectile) ManageWandActionProjectile(player); else ManageModeProjectile(player);
             Main.NewText(Get("SelectStartClickAgain", "apply"), WandColors.MsgPrompt);
             return false;
@@ -712,6 +736,18 @@ public abstract class BaseCyclingWand : ModItem
             bool vertical = Math.Abs(Main.MouseWorld.Y - player.Center.Y) >
                             Math.Abs(Main.MouseWorld.X - player.Center.X);
             wandPlayer.StartSelection(mouseTile, vertical);
+
+            // Mold shape (or any IsDefinitionImmediate family): collapse definition step.
+            // The anchor click also locks the selection — next click confirms & executes.
+            if (IsDefinitionImmediate)
+            {
+                wandPlayer.UpdateSelection(mouseTile);
+                wandPlayer.LockSelection();
+                if (UseWandActionProjectile) ManageWandActionProjectile(player); else ManageModeProjectile(player);
+                Main.NewText(Get("ClickToConfirmOrCancel"), WandColors.MsgConfirm);
+                return false;
+            }
+
             Main.NewText(Get("SelectStartClickEnd"), WandColors.MsgPrompt);
             return false;
         }
@@ -743,6 +779,17 @@ public abstract class BaseCyclingWand : ModItem
             bool vertical = Math.Abs(Main.MouseWorld.Y - player.Center.Y) >
                             Math.Abs(Main.MouseWorld.X - player.Center.X);
             wandPlayer.StartSelection(mouseTile, vertical);
+
+            // Mold shape (or any IsDefinitionImmediate family): collapse definition step.
+            // The anchor click also locks the selection — next click locks the stamp offset.
+            if (IsDefinitionImmediate)
+            {
+                wandPlayer.UpdateSelection(mouseTile);
+                wandPlayer.LockSelection();
+                Main.NewText(Get("StampClickLock"), WandColors.MsgConfirm);
+                return false;
+            }
+
             Main.NewText(Get("StampClickEnd"), WandColors.MsgPrompt);
             return false;
         }

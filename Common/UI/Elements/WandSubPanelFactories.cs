@@ -1,8 +1,12 @@
 using System;
+using Microsoft.Xna.Framework.Graphics;
 using Terraria;
+using Terraria.Localization;
+using Terraria.ModLoader;
 using Terraria.UI;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Items;
+using WorldShapingWandsMod.Common.UI;
 using WorldShapingWandsMod.Common.UI.Elements.Builders;
 using WorldShapingWandsMod.Content.Items;
 
@@ -52,6 +56,147 @@ namespace WorldShapingWandsMod.Common.UI.Elements;
 /// </summary>
 public static class WandSubPanelFactories
 {
+    private static UIElement BuildTransformModeShellBody(
+        Action onSetPivotPersistent,
+        Action onSetPivotTemporary,
+        Action onMove,
+        out UIIconButton moveBtn,
+        out UIIconButton setPivotPersistentBtn,
+        out UIIconButton setPivotTemporaryBtn)
+    {
+        const float topInset = 18f;
+        float buttonSize = WandPanelBuilder.SmallIconBtnSize;
+        float buttonGap = WandPanelBuilder.SmallIconGap;
+
+        var mod = ModContent.GetInstance<WorldShapingWandsMod>();
+        var texSetPivotPersistent = mod.Assets.Request<Texture2D>(
+            "Assets_Build/Icons/Stencil/SetPivotPersistent",
+            ReLogic.Content.AssetRequestMode.ImmediateLoad);
+        var texSetPivotTemporary = mod.Assets.Request<Texture2D>(
+            "Assets_Build/Icons/Stencil/SetPivotEphemeral",
+            ReLogic.Content.AssetRequestMode.ImmediateLoad);
+        var texMove = mod.Assets.Request<Texture2D>(
+            "Assets_Build/Icons/Stencil/Move",
+            ReLogic.Content.AssetRequestMode.ImmediateLoad);
+
+        var body = new UIElement();
+
+        float rowWidth = 0f;
+        rowWidth = LayoutSpacing.AddHorizontalSpace(rowWidth, buttonSize);
+        rowWidth = LayoutSpacing.AddHorizontalSpace(rowWidth, buttonSize, buttonGap);
+        rowWidth = LayoutSpacing.AddHorizontalSpace(rowWidth, buttonSize, buttonGap);
+
+        float contentWidth = 0f;
+        contentWidth = LayoutSpacing.FitHorizontalSpace(contentWidth, rowWidth);
+
+        float contentHeight = LayoutSpacing.AddVerticalSpace(0f, topInset, buttonSize);
+        contentHeight = LayoutSpacing.AddVerticalSpace(contentHeight, 0f, 24f);
+
+        body.Width.Set(contentWidth, 0f);
+        body.Height.Set(contentHeight, 0f);
+
+        float x = 0f;
+
+        var localMoveBtn = new UIIconButton(
+            texMove,
+            Language.GetTextValue("Mods.WorldShapingWandsMod.UI.TransformMode.Move"))
+        {
+            IsRadio = true,
+            AllowDeselect = true,
+        };
+        localMoveBtn.Width.Set(buttonSize, 0f);
+        localMoveBtn.Height.Set(buttonSize, 0f);
+        localMoveBtn.Left.Set(x, 0f);
+        localMoveBtn.Top.Set(topInset, 0f);
+        localMoveBtn.OnToggled += (_, _) =>
+        {
+            if (localMoveBtn.Toggled)
+                onMove?.Invoke();
+        };
+        body.Append(localMoveBtn);
+        moveBtn = localMoveBtn;
+        x = LayoutSpacing.AddHorizontalSpace(x, buttonSize, buttonGap);
+
+        var localSetPivotPersistentBtn = new UIIconButton(
+            texSetPivotPersistent,
+            Language.GetTextValue("Mods.WorldShapingWandsMod.UI.TransformMode.SetPivotPersistent"))
+        {
+            IsRadio = true,
+            AllowDeselect = true,
+        };
+        localSetPivotPersistentBtn.Width.Set(buttonSize, 0f);
+        localSetPivotPersistentBtn.Height.Set(buttonSize, 0f);
+        localSetPivotPersistentBtn.Left.Set(x, 0f);
+        localSetPivotPersistentBtn.Top.Set(topInset, 0f);
+        localSetPivotPersistentBtn.OnToggled += (_, _) =>
+        {
+            if (localSetPivotPersistentBtn.Toggled)
+                onSetPivotPersistent?.Invoke();
+        };
+        body.Append(localSetPivotPersistentBtn);
+        setPivotPersistentBtn = localSetPivotPersistentBtn;
+        x = LayoutSpacing.AddHorizontalSpace(x, buttonSize, buttonGap);
+
+        var localSetPivotTemporaryBtn = new UIIconButton(
+            texSetPivotTemporary,
+            Language.GetTextValue("Mods.WorldShapingWandsMod.UI.TransformMode.SetPivotTemporary"))
+        {
+            IsRadio = true,
+            AllowDeselect = true,
+        };
+        localSetPivotTemporaryBtn.Width.Set(buttonSize, 0f);
+        localSetPivotTemporaryBtn.Height.Set(buttonSize, 0f);
+        localSetPivotTemporaryBtn.Left.Set(x, 0f);
+        localSetPivotTemporaryBtn.Top.Set(topInset, 0f);
+        localSetPivotTemporaryBtn.OnToggled += (_, _) =>
+        {
+            if (localSetPivotTemporaryBtn.Toggled)
+                onSetPivotTemporary?.Invoke();
+        };
+        body.Append(localSetPivotTemporaryBtn);
+        setPivotTemporaryBtn = localSetPivotTemporaryBtn;
+
+        return body;
+    }
+
+    public static WandSubPanel CreateTransformModeShell(
+        UIElement host,
+        string titleKey,
+        string identityKey,
+        WandFamilyMask ownerFamilies,
+        Action onSetPivotPersistent,
+        Action onSetPivotTemporary,
+        Action onMove,
+        out UIIconButton moveBtn,
+        out UIIconButton setPivotPersistentBtn,
+        out UIIconButton setPivotTemporaryBtn)
+    {
+        var body = BuildTransformModeShellBody(
+            onSetPivotPersistent,
+            onSetPivotTemporary,
+            onMove,
+            out moveBtn,
+            out setPivotPersistentBtn,
+            out setPivotTemporaryBtn);
+
+        return new WandSubPanel(
+            body: body,
+            titleKey: titleKey,
+            defaultLocked: false,
+            host: host,
+            identityKey: identityKey)
+        {
+            Type = SubPanelType.Panel,
+            OwnerFamilies = ownerFamilies,
+            LockBehaviourDecl = LockBehaviour.DefaultUnlocked,
+            OnChoice = ChoiceBehaviour.NeverCloses,
+            OnParentClose = ParentCloseBehaviour.StaysUpIfLocked,
+            TitleTopOffset = 26f,
+            ExtraWidth = 16f,
+            ExtraHeight = 0f,
+        };
+    }
+
     /// <summary>
     /// Builds (but does NOT open) a fresh Stencil Slot picker SubPanel
     /// anchored to the given host element (typically the Mold cell of

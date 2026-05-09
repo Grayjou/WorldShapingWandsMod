@@ -38,6 +38,21 @@ public class DelimitationWandSettings
     /// <summary>The shape configuration (shape type, fill mode, outline thickness).</summary>
     public ShapeInfo Shape { get; set; } = ShapeInfo.Default;
 
+    /// <summary>When true, Transform Mode behavior is active for delimitation UI interactions.</summary>
+    public bool TransformModeEnabled { get; set; }
+
+    /// <summary>The currently selected Transform Mode selector button.</summary>
+    public TransformActionMode ActiveTransformAction { get; set; } = TransformActionMode.None;
+
+    /// <summary>Anchor point captured by the Move selector before the second click commits.</summary>
+    public Point? PendingTransformMoveStart { get; set; }
+
+    /// <summary>Persistent pivot used by transform actions and rotations when set.</summary>
+    public Point? PersistentPivot { get; set; }
+
+    /// <summary>Temporary pivot used while transform mode is active; cleared when mode is disabled.</summary>
+    public Point? TemporaryPivot { get; set; }
+
     // ── Three-Layer Overlay Colors (all configurable) ─────────────────
     // Layer 1 (bottom): Outside — darkens area outside the canvas
     // Layer 2 (middle): Canvas — shows the canvas working area
@@ -84,5 +99,10 @@ public class DelimitationWandSettings
         AutoCreateCanvas = true;
         ClearSelectionOnPromote = true;
         Shape = ShapeInfo.Default;
+        TransformModeEnabled = false;
+        ActiveTransformAction = TransformActionMode.None;
+        PendingTransformMoveStart = null;
+        PersistentPivot = null;
+        TemporaryPivot = null;
     }
 }

@@ -10,6 +10,7 @@ using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.UI;
 using WorldShapingWandsMod.Common.Configs;
+using WorldShapingWandsMod.Common.Drawing;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Settings;
@@ -71,6 +72,9 @@ public class SelectionSettingsPanel : UIState
     // Transform actions (non-toggle)
     private UIIconButton _flipHorizontalBtn, _flipVerticalBtn, _rotateCwBtn, _rotateCcwBtn;
 
+    // Transform selector buttons (single-choice radio group)
+    private UIIconButton _transformMoveBtn, _transformPivotPersistentBtn, _transformPivotTemporaryBtn;
+
     private WandPanelBuilder _builder;
 
     private const string UIPrefix = "Mods.WorldShapingWandsMod.UI";
@@ -78,6 +82,8 @@ public class SelectionSettingsPanel : UIState
 
     private const float PanelWidth = 320f;
     private const float Padding = 10f;
+    private const string TransformModeSubUITitleKey = "Mods.WorldShapingWandsMod.UI.TransformMode.SubUITitle";
+    private const string TransformModeSubUIIdentityKey = "WandOfDelimitation.TransformModeShell";
 
     public override void OnInitialize()
     {
@@ -268,6 +274,8 @@ public class SelectionSettingsPanel : UIState
         _flipVerticalBtn = transformBtns[1];
         _rotateCwBtn = transformBtns[2];
         _rotateCcwBtn = transformBtns[3];
+        _rotateCwBtn.HasSubUIBadge = true;
+        _rotateCcwBtn.HasSubUIBadge = true;
 
         // ═══════════════════════════════════════════════════════════════
         //  Action Buttons (icon-based: Clear Selection, Invert, Clear All, Teleport)
@@ -397,6 +405,8 @@ public class SelectionSettingsPanel : UIState
         _flipVerticalBtn.OnLeftClick += (_, _) => OnTransformFlipVertical();
         _rotateCwBtn.OnLeftClick += (_, _) => OnTransformRotateCW();
         _rotateCcwBtn.OnLeftClick += (_, _) => OnTransformRotateCCW();
+        _rotateCwBtn.OnRightClick += (_, _) => OpenTransformModeSubUI(_rotateCwBtn);
+        _rotateCcwBtn.OnRightClick += (_, _) => OpenTransformModeSubUI(_rotateCcwBtn);
 
         // Action buttons
         _clearSelectionBtn.OnLeftClick += (_, _) => OnClearSelection();
@@ -677,7 +687,9 @@ public class SelectionSettingsPanel : UIState
     private static void ApplyRotationTransform(bool clockwise)
     {
         var swp = GetDelimitationWandPlayer();
+        var settings = GetSettings();
         if (swp == null) return;
+        if (settings == null) return;
 
         if (!swp.IsActive)
         {
@@ -687,10 +699,10 @@ public class SelectionSettingsPanel : UIState
 
         bool rotatedCanvas = false;
         bool rotatedSelection = false;
+        var pivot = ResolveTransformPivot(swp, settings);
 
         if (swp.Canvas.IsActive)
         {
-            var pivot = swp.Canvas.CenterOfMass;
             if (clockwise)
                 swp.Canvas.Rotate90CW(pivot.X, pivot.Y, ensureNonNegative: false);
             else
@@ -752,6 +764,56 @@ public class SelectionSettingsPanel : UIState
             Color.Cyan);
     }
 
+    private static Vector2 ResolveTransformPivot(DelimitationWandPlayer swp, DelimitationWandSettings settings)
+    {
+        Vector2 centroid = ResolveCentroidPivot(swp);
+        bool transformModeActive = settings.TransformModeEnabled;
+        var anchorPreference = WandConfigs.Preferences?.TransformAnchorTMOff ?? TransformAnchorTMOff.Pivot;
+
+        if (transformModeActive)
+        {
+            if (settings.TemporaryPivot.HasValue)
+                return new Vector2(settings.TemporaryPivot.Value.X + 0.5f, settings.TemporaryPivot.Value.Y + 0.5f);
+
+            if (settings.PersistentPivot.HasValue)
+                return new Vector2(settings.PersistentPivot.Value.X + 0.5f, settings.PersistentPivot.Value.Y + 0.5f);
+
+            return centroid;
+        }
+
+        if (anchorPreference == TransformAnchorTMOff.Centroid)
+            return centroid;
+
+        if (settings.PersistentPivot.HasValue)
+            return new Vector2(settings.PersistentPivot.Value.X + 0.5f, settings.PersistentPivot.Value.Y + 0.5f);
+
+        return centroid;
+    }
+
+    private static Vector2 ResolveCentroidPivot(DelimitationWandPlayer swp)
+    {
+        if (swp.Canvas.IsActive)
+            return swp.Canvas.CenterOfMass;
+
+        if (swp.Selection.IsActive)
+        {
+            double sumX = 0d;
+            double sumY = 0d;
+            int count = 0;
+            foreach (var tile in swp.Selection.Tiles)
+            {
+                sumX += tile.X + 0.5d;
+                sumY += tile.Y + 0.5d;
+                count++;
+            }
+
+            if (count > 0)
+                return new Vector2((float)(sumX / count), (float)(sumY / count));
+        }
+
+        return Vector2.Zero;
+    }
+
     private static void ApplyTransform(
         System.Action<DelimitationWandPlayer> applyCanvas,
         System.Action<DelimitationWandPlayer> applySelection,
@@ -792,6 +854,137 @@ public class SelectionSettingsPanel : UIState
 
         SoundEngine.PlaySound(SoundID.MenuTick with { Volume = 0.5f });
         Main.NewText($"{actionName} delimitation {(settings.Mode == DelimitationWandMode.CanvasEdit ? "canvas" : "selection") }.", Color.Cyan);
+    }
+
+    private void OpenTransformModeSubUI(UIIconButton hostButton)
+    {
+        var settings = GetSettings();
+        var sys = ModContent.GetInstance<WandUISystem>();
+        if (sys?.WandSubPanelHost == null || hostButton == null || settings == null)
+            return;
+
+        if (settings.TransformModeEnabled)
+        {
+            if (ReferenceEquals(hostButton, _rotateCwBtn))
+                OnTransformRotateCW();
+            else if (ReferenceEquals(hostButton, _rotateCcwBtn))
+                OnTransformRotateCCW();
+            return;
+        }
+
+        settings.TransformModeEnabled = true;
+
+        foreach (var panel in sys.WandSubPanelHost.Panels)
+        {
+            if (panel.IdentityKey == TransformModeSubUIIdentityKey)
+                return;
+        }
+
+        var panelShell = WandSubPanelFactories.CreateTransformModeShell(
+            host: hostButton,
+            titleKey: TransformModeSubUITitleKey,
+            identityKey: TransformModeSubUIIdentityKey,
+            ownerFamilies: WandFamilyMask.Delimitation,
+            onSetPivotPersistent: OnTransformSubUISetPivotPersistent,
+            onSetPivotTemporary: OnTransformSubUISetPivotTemporary,
+            onMove: OnTransformSubUIMove,
+            out _transformMoveBtn,
+            out _transformPivotPersistentBtn,
+            out _transformPivotTemporaryBtn);
+
+        UpdateTransformButtons();
+
+        sys.OpenWandSubPanel(panelShell);
+        panelShell.AnchorToHost();
+    }
+
+    private static bool IsTransformModeSubUIOpen()
+    {
+        var sys = ModContent.GetInstance<WandUISystem>();
+        if (sys?.WandSubPanelHost == null)
+            return false;
+
+        foreach (var panel in sys.WandSubPanelHost.Panels)
+        {
+            if (panel.IdentityKey == TransformModeSubUIIdentityKey && !panel.IsHidden)
+                return true;
+        }
+
+        return false;
+    }
+
+    private static void UpdateTransformModeLifecycle()
+    {
+        var settings = GetSettings();
+        if (settings == null)
+            return;
+
+        if (!IsTransformModeSubUIOpen())
+        {
+            settings.TransformModeEnabled = false;
+            settings.ActiveTransformAction = TransformActionMode.None;
+            settings.PendingTransformMoveStart = null;
+            settings.TemporaryPivot = null;
+        }
+    }
+
+    private static void OnTransformSubUISetPivotPersistent()
+    {
+        var swp = GetDelimitationWandPlayer();
+        var settings = GetSettings();
+        if (swp == null || settings == null) return;
+
+        if (!swp.IsActive)
+        {
+            Main.NewText("No active delimitation slot.", Color.OrangeRed);
+            return;
+        }
+
+        settings.TransformModeEnabled = true;
+        settings.ActiveTransformAction = TransformActionMode.SetPivotPersistent;
+        settings.PendingTransformMoveStart = null;
+        Main.NewText(Language.GetTextValue("Mods.WorldShapingWandsMod.UI.TransformMode.SetPivotPersistentHint"), WandColors.MsgInfo);
+    }
+
+    private static void OnTransformSubUISetPivotTemporary()
+    {
+        var swp = GetDelimitationWandPlayer();
+        var settings = GetSettings();
+        if (swp == null || settings == null) return;
+
+        if (!swp.IsActive)
+        {
+            Main.NewText("No active delimitation slot.", Color.OrangeRed);
+            return;
+        }
+
+        settings.TransformModeEnabled = true;
+        settings.ActiveTransformAction = TransformActionMode.SetPivotTemporary;
+        settings.PendingTransformMoveStart = null;
+        Main.NewText(Language.GetTextValue("Mods.WorldShapingWandsMod.UI.TransformMode.SetPivotTemporaryHint"), WandColors.MsgInfo);
+    }
+
+    private static void OnTransformSubUIMove()
+    {
+        var swp = GetDelimitationWandPlayer();
+        var settings = GetSettings();
+        if (swp == null || settings == null) return;
+
+        if (!swp.IsActive)
+        {
+            Main.NewText("No active delimitation slot.", Color.OrangeRed);
+            return;
+        }
+
+        if (!swp.Canvas.IsActive && !swp.Selection.IsActive)
+        {
+            Main.NewText("No canvas or selection active — nothing to move.", Color.OrangeRed);
+            return;
+        }
+        settings.TransformModeEnabled = true;
+        settings.ActiveTransformAction = TransformActionMode.Move;
+        settings.PendingTransformMoveStart = null;
+        Main.NewText(Language.GetTextValue("Mods.WorldShapingWandsMod.UI.TransformMode.MoveHint"), WandColors.MsgInfo);
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -901,6 +1094,16 @@ public class SelectionSettingsPanel : UIState
         if (_flipVerticalBtn != null) _flipVerticalBtn.Disabled = !enabled;
         if (_rotateCwBtn != null) _rotateCwBtn.Disabled = !enabled;
         if (_rotateCcwBtn != null) _rotateCcwBtn.Disabled = !enabled;
+
+        if (_transformMoveBtn != null)
+            _transformMoveBtn.Toggled = s.ActiveTransformAction == TransformActionMode.Move;
+        if (_transformPivotPersistentBtn != null)
+            _transformPivotPersistentBtn.Toggled = s.ActiveTransformAction == TransformActionMode.SetPivotPersistent;
+        if (_transformPivotTemporaryBtn != null)
+            _transformPivotTemporaryBtn.Toggled = s.ActiveTransformAction == TransformActionMode.SetPivotTemporary;
+
+        if (!(_transformMoveBtn?.Toggled == true || _transformPivotPersistentBtn?.Toggled == true || _transformPivotTemporaryBtn?.Toggled == true))
+            s.ActiveTransformAction = TransformActionMode.None;
     }
 
     private void UpdateStatusDisplay()
@@ -941,6 +1144,7 @@ public class SelectionSettingsPanel : UIState
     {
         base.Update(gameTime);
         SyncFromSettings();
+        UpdateTransformModeLifecycle();
 
         if (_mainPanel.ContainsPoint(Main.MouseScreen))
             Main.LocalPlayer.mouseInterface = true;

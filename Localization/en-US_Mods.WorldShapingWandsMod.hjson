@@ -146,6 +146,20 @@ UI: {
 		CloseTooltip: Close
 	}
 
+	TransformMode: {
+		SubUITitle: Transform
+		SetPivot: Set Pivot
+		SetPivotPersistent: Set Pivot (Persistent)
+		SetPivotTemporary: Set Pivot (Temporary)
+		Move: Move
+		SetPivotHint: Transform pivot set at cursor.
+		SetPivotPersistentHint: Persistent transform pivot set at cursor.
+		SetPivotTemporaryHint: Temporary transform pivot set at cursor.
+		MoveStartHint: Transform move anchor set. Click again to move the target.
+		MoveHint: Transform target moved to cursor.
+		ActionInterceptHint: Transform Mode active — pick a panel button or close the SubUI.
+	}
+
 	# Stencil-slot row appended below the shape selector on stencil wands
 	# (Wand of Molding; Wand of Delimitation TBD). Per MultipleStencilsPlan.md
 	# §0.1, S6 2026-04-28. Slots are 1-indexed in UI, 0-indexed internally.
@@ -1948,6 +1962,59 @@ Configs: {
 				  leaving placed tiles in place.
 				'''
 		}
+
+		WandPanelButtons.Header: Show Help Button Header
+
+		ShowHelpButton: {
+			Label: Show Help Button
+			Tooltip: ""
+		}
+
+		ShowInfoButton: {
+			Label: Show Info Button
+			Tooltip: ""
+		}
+
+		ShowTooltipButton: {
+			Label: Show Tooltip Button
+			Tooltip: ""
+		}
+
+		ShowLongTooltips: {
+			Label: Show Long Tooltips
+			Tooltip: ""
+		}
+
+		WandPanelDragMode: {
+			Label: Wand Panel Drag Mode
+			Tooltip:
+				'''
+				Controls how wand settings panels start dragging.
+				• Handle Only: drag starts only from the drag handle.
+				• Handle or Anywhere: drag starts from the handle or panel background.
+				'''
+		}
+
+		TransformMode.Header: Transform
+
+		TransformAnchorTMOff: {
+			Label: Rotation Anchor (Transform Off)
+			Tooltip:
+				'''
+				Chooses which anchor normal rotate buttons use while Transform Mode is off.
+				• Pivot: use the persistent pivot if set; otherwise fall back to centroid.
+				• Centroid: always rotate around the geometric centroid.
+				'''
+		}
+
+		AlwaysShowPivot: {
+			Label: Always Show Transform Anchor
+			Tooltip:
+				'''
+				When enabled, draws the current transform anchor marker even while Transform Mode is off.
+				When disabled, anchor markers are only shown while Transform Mode is active.
+				'''
+		}
 	}
 
 	InfiniteOverride: {
@@ -1998,6 +2065,34 @@ Configs: {
 
 		Smooth: {
 			Label: Smooth
+			Tooltip: ""
+		}
+	}
+
+	TransformAnchorTMOff: {
+		Tooltip: ""
+
+		Pivot: {
+			Label: Pivot
+			Tooltip: ""
+		}
+
+		Centroid: {
+			Label: Centroid
+			Tooltip: ""
+		}
+	}
+
+	WandPanelDragMode: {
+		Tooltip: ""
+
+		HandleOnly: {
+			Label: Handle Only
+			Tooltip: ""
+		}
+
+		HandleOrAnywhere: {
+			Label: Handle or Anywhere
 			Tooltip: ""
 		}
 	}
