@@ -174,7 +174,7 @@ public sealed class InventoryViewPanel : UIState
         _mainPanel.Height.Set(cursorY, 0f);
         _mainPanel.RemoveChild(_dragHandle);
         _mainPanel.Append(_dragHandle);
-        if (_swapSourceTargetBtn != null)
+        if (_swapSourceTargetBtn?.Parent == _mainPanel)
         {
             _mainPanel.RemoveChild(_swapSourceTargetBtn);
             _mainPanel.Append(_swapSourceTargetBtn);
@@ -190,9 +190,14 @@ public sealed class InventoryViewPanel : UIState
         bool isReplacement = BaseCyclingWand.GetCurrentFamily(player) == WandFamily.Replacement;
         if (!isReplacement)
         {
+            if (_swapSourceTargetBtn.Parent == _mainPanel)
+                _mainPanel.RemoveChild(_swapSourceTargetBtn);
             _swapSourceTargetBtn.Disabled = true;
             return;
         }
+
+        if (_swapSourceTargetBtn.Parent != _mainPanel)
+            _mainPanel.Append(_swapSourceTargetBtn);
 
         var settings = player.GetModPlayer<WandPlayer>()?.ReplacementSettings;
         if (settings == null)

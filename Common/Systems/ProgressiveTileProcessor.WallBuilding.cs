@@ -27,6 +27,7 @@ public partial class ProgressiveTileProcessor
         float intervalSeconds,
         bool shouldConsume,
         Func<Item, bool> buildCondition,
+        Item fallbackBuildItem,
         bool vacuumItems = true)
     {
         if (walls.Count == 0) return;
@@ -46,6 +47,7 @@ public partial class ProgressiveTileProcessor
             TotalProcessed = 0,
             ShouldConsume = shouldConsume,
             BuildCondition = buildCondition,
+            FallbackBuildItem = fallbackBuildItem,
             VacuumItems = vacuumItems
         };
 
@@ -83,10 +85,14 @@ public partial class ProgressiveTileProcessor
 
             // Re-find source wall item for each tile (supports exhaustion)
             int idx = ItemTypeHelper.FindFirstItemIndex(op.Player, op.BuildCondition);
-            if (idx < 0)
+            Item srcItem;
+            if (idx >= 0)
+                srcItem = op.Player.inventory[idx];
+            else if (!op.ShouldConsume && op.FallbackBuildItem != null)
+                srcItem = op.FallbackBuildItem;
+            else
                 continue; // no more items
 
-            Item srcItem = op.Player.inventory[idx];
             ushort wallType = (ushort)srcItem.createWall;
             var t = Main.tile[info.Position.X, info.Position.Y];
 

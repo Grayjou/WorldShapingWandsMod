@@ -645,16 +645,17 @@ public sealed class WandSubPanel : UIDraggablePanel
         float w = Width.Pixels;
         float h = Height.Pixels;
 
-        float x = hostDims.X;
+        // Start to the right of the host with 70px offset
+        float x = hostDims.X + 70f;
         float y = hostDims.Y + hostDims.Height + 4f;
 
         // Vertical flip: if it'd clip below, anchor above the host.
         if (y + h > Main.screenHeight - 8f)
             y = hostDims.Y - h - 4f;
 
-        // Horizontal flip: if it'd clip right, right-align with host's right edge.
+        // Horizontal flip: if it'd clip right, flip to left side of host.
         if (x + w > Main.screenWidth - 8f)
-            x = hostDims.X + hostDims.Width - w;
+            x = hostDims.X - w - 4f;
 
         // Clamp to screen with margin.
         x = MathHelper.Clamp(x, 8f, Math.Max(8f, Main.screenWidth  - w - 8f));

@@ -170,18 +170,18 @@ internal static class TileCoordTransforms
             return new HashSet<Point>();
 
         // Screen-space rotation (Y-down):
-        //   CW : (dx, dy) -> (-dy,  dx)
-        //   CCW: (dx, dy) -> ( dy, -dx)
+        //   CW : (dx, dy) -> ( dy, -dx)
+        //   CCW: (dx, dy) -> (-dy,  dx)
         var result = new HashSet<Point>();
         int minResX = int.MaxValue, minResY = int.MaxValue;
         foreach (var p in list)
         {
             double dx = p.X - pivotX;
             double dy = p.Y - pivotY;
-            double rdx = clockwise ? -dy : dy;
-            double rdy = clockwise ?  dx : -dx;
-            int nx = (int)System.Math.Round(pivotX + rdx, System.MidpointRounding.AwayFromZero);
-            int ny = (int)System.Math.Round(pivotY + rdy, System.MidpointRounding.AwayFromZero);
+            double rdx = clockwise ?  dy : -dy;
+            double rdy = clockwise ? -dx :  dx;
+            int nx = (int)System.Math.Floor(pivotX + rdx + 0.5);
+            int ny = (int)System.Math.Floor(pivotY + rdy + 0.5);
             result.Add(new Point(nx, ny));
             if (nx < minResX) minResX = nx;
             if (ny < minResY) minResY = ny;

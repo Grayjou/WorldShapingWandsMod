@@ -552,6 +552,7 @@ public static class TorchPlacementHelper
         int totalStack = 0;
         int bestTileType = -1;
         int bestPlaceStyle = -1;
+        bool chosenFoundInInventory = false;
 
         // Choice pre-pass: pick the chosen torch as bestType if it's still valid.
         if (chosenItemType.HasValue && chosenItemType.Value > 0)
@@ -565,7 +566,16 @@ public static class TorchPlacementHelper
                 bestType = choice;
                 bestTileType = choiceTileType;
                 bestPlaceStyle = choicePlaceStyle;
+                chosenFoundInInventory = true;
                 break;
+            }
+
+            if (!chosenFoundInInventory && (WandConfigs.Carefree?.EnableCarefreeMode ?? false))
+            {
+                Item probe = new();
+                probe.SetDefaults(choice);
+                if (!probe.IsAir && IsTorchItem(probe, out int probeTileType, out int probePlaceStyle))
+                    return (choice, 1, probeTileType, probePlaceStyle);
             }
         }
 

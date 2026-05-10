@@ -20,7 +20,6 @@ using WorldShapingWandsMod.Common.Debug;
 #endif
 
 namespace WorldShapingWandsMod.Content.Items;
-
 // ════════════════════════════════════════════════════════════════════
 //  WandOfMoldingBase — shared logic for all Molding Wand modes
 // ════════════════════════════════════════════════════════════════════
@@ -185,7 +184,7 @@ public abstract class WandOfMoldingBase : BaseCyclingWand
     private static bool HandleTransformWorldAction(Player player, MoldingWandPlayer mwp)
     {
         var settings = mwp.Settings;
-        Point mouseTile = Main.MouseWorld.ToTileCoordinates();
+        Point mouseTile = GeometryHelper.GetMouseTile();
 
         switch (settings.ActiveTransformAction)
         {

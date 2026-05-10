@@ -156,7 +156,7 @@ public abstract class WandOfDelimitationBase : BaseCyclingWand
     private static bool HandleTransformWorldAction(Player player, DelimitationWandPlayer swp)
     {
         var settings = swp.Settings;
-        Point mouseTile = Main.MouseWorld.ToTileCoordinates();
+        Point mouseTile = GeometryHelper.GetMouseTile();
 
         switch (settings.ActiveTransformAction)
         {

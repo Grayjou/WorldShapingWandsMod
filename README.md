@@ -1,7 +1,5 @@
 # World Shaping Wands Mod
 
-> **Status: Pre-release / Active Development** — not yet published on the Steam Workshop.
-
 A [tModLoader](https://github.com/tModLoader/tModLoader) mod for Terraria that provides a suite of
 geometric world-shaping wands. Build, dismantle, replace, wire, coat, protect, fill liquids, place
 torches, sculpt custom shapes, and constrain operations to precise areas — all with

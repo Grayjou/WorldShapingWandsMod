@@ -28,6 +28,7 @@ public partial class ProgressiveTileProcessor
         float intervalSeconds,
         bool shouldConsume,
         Func<Item, bool> buildCondition,
+        Item fallbackBuildItem,
         bool overwriteSlope,
         Enums.SlopeType slopeType,
         bool vacuumItems = true)
@@ -49,6 +50,7 @@ public partial class ProgressiveTileProcessor
             TotalProcessed = 0,
             ShouldConsume = shouldConsume,
             BuildCondition = buildCondition,
+            FallbackBuildItem = fallbackBuildItem,
             OverwriteSlope = overwriteSlope,
             SlopeType = slopeType,
             VacuumItems = vacuumItems
@@ -88,10 +90,14 @@ public partial class ProgressiveTileProcessor
 
             // Re-find source item for each tile (supports NextBlock exhaustion)
             int idx = ItemTypeHelper.FindFirstItemIndex(op.Player, op.BuildCondition);
-            if (idx < 0)
+            Item srcItem;
+            if (idx >= 0)
+                srcItem = op.Player.inventory[idx];
+            else if (!op.ShouldConsume && op.FallbackBuildItem != null)
+                srcItem = op.FallbackBuildItem;
+            else
                 continue; // no more items, skip remaining
 
-            Item srcItem = op.Player.inventory[idx];
             ushort tType = (ushort)srcItem.createTile;
             var existingTile = Main.tile[info.Position.X, info.Position.Y];
 

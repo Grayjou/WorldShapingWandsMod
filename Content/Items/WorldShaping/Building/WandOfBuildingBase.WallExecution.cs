@@ -35,8 +35,25 @@ namespace WorldShapingWandsMod.Content.Items
 
             // InventoryView v1 (S6 2026-04-22): honor the wall choice if the player
             // set one via the panel. Stale choices fall back to the broad scan.
-            int sourceIndex = ItemTypeHelper.FindFirstItemIndex(player, condition, settings.ChosenWallItemType);
-            if (sourceIndex < 0)
+            bool carefreeChosenGhost = false;
+            Item initialWallItem = null;
+
+            if (settings.ChosenWallItemType.HasValue && settings.ChosenWallItemType.Value > 0
+                && WandConfigs.Carefree?.EnableCarefreeMode == true)
+            {
+                Item chosenProbe = new();
+                chosenProbe.SetDefaults(settings.ChosenWallItemType.Value);
+                if (!chosenProbe.IsAir && condition(chosenProbe))
+                {
+                    initialWallItem = chosenProbe;
+                    carefreeChosenGhost = true;
+                }
+            }
+
+            if (initialWallItem == null)
+                initialWallItem = ItemTypeHelper.FindFirstItem(player, condition, settings.ChosenWallItemType);
+
+            if (initialWallItem == null)
             {
                 Main.NewText(Get("NoWallItemFound"), Color.Red);
                 return;
@@ -52,7 +69,6 @@ namespace WorldShapingWandsMod.Content.Items
             // semantics apply here so the WoB Wall mode also stops silently substituting
             // a scan-order-first wall in place of the user's chosen wall.
             var exhaustModeWall = WandConfigs.Preferences?.BlockExhaustion ?? BlockExhaustionMode.NextBlock;
-            Item initialWallItem = player.inventory[sourceIndex];
             bool choiceHonoredWall = settings.ChosenWallItemType.HasValue
                                   && initialWallItem.type == settings.ChosenWallItemType.Value;
 
@@ -66,7 +82,8 @@ namespace WorldShapingWandsMod.Content.Items
             if ((exhaustModeWall == BlockExhaustionMode.Interrupt
                     || exhaustModeWall == BlockExhaustionMode.Cancel)
                 && settings.ChosenWallItemType.HasValue
-                && !choiceHonoredWall)
+                && !choiceHonoredWall
+                && !carefreeChosenGhost)
             {
                 Main.NewText(Get("ChosenMissingUnderInterrupt"), Color.Red);
                 return;
@@ -88,7 +105,7 @@ namespace WorldShapingWandsMod.Content.Items
             // ── Multiplayer: send packet to server instead of executing locally ──
             if (Main.netMode == NetmodeID.MultiplayerClient)
             {
-                Item mpItem = player.inventory[sourceIndex];
+                Item mpItem = initialWallItem;
                 BuildingPacketHandler.SendBuildingOperation(
                     selection.StartTile, selection.EndTile,
                     settings.Shape.Shape, settings.Shape.FillMode,
@@ -117,7 +134,7 @@ namespace WorldShapingWandsMod.Content.Items
             if (config.IsInfiniteForPlaceType(PlaceType.Wall))
             {
                 // Count only the specific wall item type — not all wall items combined
-                Item wallSourceItem = player.inventory[sourceIndex];
+                Item wallSourceItem = initialWallItem;
                 Func<Item, bool> wallInfCond = i => !i.IsAir && i.type == wallSourceItem.type;
                 ItemTypeHelper.CountItems(player.inventory, wallInfCond, out int grandTotal);
                 int threshold = config.GetThresholdForPlaceType(PlaceType.Wall);
@@ -127,9 +144,10 @@ namespace WorldShapingWandsMod.Content.Items
                     shouldConsume = false;
             }
 
-            if ((WandConfigs.Preferences?.BlockExhaustion ?? BlockExhaustionMode.NextBlock) == BlockExhaustionMode.Cancel)
+            if ((WandConfigs.Preferences?.BlockExhaustion ?? BlockExhaustionMode.NextBlock) == BlockExhaustionMode.Cancel
+                && !carefreeChosenGhost)
             {
-                Item firstItem = player.inventory[sourceIndex];
+                Item firstItem = initialWallItem;
                 Func<Item, bool> checkCond = i => !i.IsAir && i.type == firstItem.type;
                 bool hasInfinite = ItemTypeHelper.CountItems(player.inventory, checkCond, out int totalAvailable);
                 if (!hasInfinite && totalAvailable < tilesToProcess.Length)
@@ -152,13 +170,13 @@ namespace WorldShapingWandsMod.Content.Items
             {
                 ExecuteWallBuildingProgressive(
                     player, settings, config, sandbox, perfConfig, condition, tilesToProcess,
-                    shouldConsume, replaceMode, undoMgr, action);
+                    shouldConsume, replaceMode, undoMgr, action, initialWallItem);
                 return;
             }
 
             ExecuteWallBuildingInstant(
                 player, settings, config, sandbox, perfConfig, clientCfg, condition, tilesToProcess,
-                shouldConsume, replaceMode, undoMgr, action);
+                shouldConsume, replaceMode, undoMgr, action, initialWallItem);
         }
 
         /// <summary>
@@ -177,7 +195,8 @@ namespace WorldShapingWandsMod.Content.Items
             bool shouldConsume,
             bool replaceMode,
             UndoManager undoMgr,
-            UndoAction action)
+            UndoAction action,
+            Item fallbackSourceItem)
         {
             var wandPlayer = player.GetModPlayer<WandPlayer>();
             // Pre-validate walls and snapshot them for progressive processing
@@ -194,8 +213,14 @@ namespace WorldShapingWandsMod.Content.Items
                     if (!replaceMode) continue;
 
                     int idx = ItemTypeHelper.FindFirstItemIndex(player, condition);
-                    if (idx < 0) continue;
-                    Item srcItem = player.inventory[idx];
+                    Item srcItem;
+                    if (idx >= 0)
+                        srcItem = player.inventory[idx];
+                    else if (!shouldConsume && fallbackSourceItem != null)
+                        srcItem = fallbackSourceItem;
+                    else
+                        continue;
+
                     ushort wallType = (ushort)srcItem.createWall;
                     if (t.WallType == wallType) continue;
 
@@ -247,12 +272,17 @@ namespace WorldShapingWandsMod.Content.Items
                     int x = info.Position.X, y = info.Position.Y;
 
                     int idx = ItemTypeHelper.FindFirstItemIndex(player, condition);
-                    if (idx < 0)
+                    Item srcItem;
+                    if (idx >= 0)
+                        srcItem = player.inventory[idx];
+                    else if (!shouldConsume && fallbackSourceItem != null)
+                        srcItem = fallbackSourceItem;
+                    else
                     {
                         if ((WandConfigs.Preferences?.BlockExhaustion ?? BlockExhaustionMode.NextBlock) == BlockExhaustionMode.Interrupt) break;
                         continue;
                     }
-                    Item srcItem = player.inventory[idx];
+
                     ushort wallType = (ushort)srcItem.createWall;
 
                     WorldGen.gen = true;
@@ -284,6 +314,7 @@ namespace WorldShapingWandsMod.Content.Items
                 ProgressiveTileProcessor.EnqueueWallBuilding(
                     player, batchWalls, action, undoMgr,
                     batchSize, interval, shouldConsume, condition,
+                    fallbackSourceItem,
                     vacuumItems: sandbox.VacuumItems);
 
                 int batches = (int)Math.Ceiling((double)batchWalls.Count / batchSize);
@@ -321,7 +352,8 @@ namespace WorldShapingWandsMod.Content.Items
             bool shouldConsume,
             bool replaceMode,
             UndoManager undoMgr,
-            UndoAction action)
+            UndoAction action,
+            Item fallbackSourceItem)
         {
             var wandPlayer = player.GetModPlayer<WandPlayer>();
             int placed = 0;
@@ -339,13 +371,16 @@ namespace WorldShapingWandsMod.Content.Items
                 var t = Main.tile[tile.X, tile.Y];
 
                 int idx = ItemTypeHelper.FindFirstItemIndex(player, condition);
-                if (idx < 0)
+                Item srcItem;
+                if (idx >= 0)
+                    srcItem = player.inventory[idx];
+                else if (!shouldConsume && fallbackSourceItem != null)
+                    srcItem = fallbackSourceItem;
+                else
                 {
                     if ((WandConfigs.Preferences?.BlockExhaustion ?? BlockExhaustionMode.NextBlock) == BlockExhaustionMode.Interrupt) { interrupted = true; break; }
                     continue;
                 }
-
-                Item srcItem = player.inventory[idx];
                 ushort wallType = (ushort)srcItem.createWall;
 
                 if (t.WallType != WallID.None)

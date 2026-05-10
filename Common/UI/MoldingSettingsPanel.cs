@@ -15,6 +15,7 @@ using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Settings;
 using WorldShapingWandsMod.Common.UI.Elements;
 using WorldShapingWandsMod.Common.UI.Elements.Builders;
+using WorldShapingWandsMod.Common.Utilities;
 
 namespace WorldShapingWandsMod.Common.UI;
 
@@ -775,10 +776,10 @@ public class MoldingSettingsPanel : UIState
         if (transformModeActive)
         {
             if (settings.TemporaryPivot.HasValue)
-                return new Vector2(settings.TemporaryPivot.Value.X + 0.5f, settings.TemporaryPivot.Value.Y + 0.5f);
+                return TransformPivotSnapHelper.TileCenterFromTile(settings.TemporaryPivot.Value);
 
             if (settings.PersistentPivot.HasValue)
-                return new Vector2(settings.PersistentPivot.Value.X + 0.5f, settings.PersistentPivot.Value.Y + 0.5f);
+                return TransformPivotSnapHelper.TileCenterFromTile(settings.PersistentPivot.Value);
 
             return centroid;
         }
@@ -787,7 +788,7 @@ public class MoldingSettingsPanel : UIState
             return centroid;
 
         if (settings.PersistentPivot.HasValue)
-            return new Vector2(settings.PersistentPivot.Value.X + 0.5f, settings.PersistentPivot.Value.Y + 0.5f);
+            return TransformPivotSnapHelper.TileCenterFromTile(settings.PersistentPivot.Value);
 
         return centroid;
     }
@@ -795,7 +796,7 @@ public class MoldingSettingsPanel : UIState
     private static Vector2 ResolveCentroidPivot(MoldingWandPlayer mwp)
     {
         if (mwp.Canvas.IsActive)
-            return mwp.Canvas.CenterOfMass;
+            return TransformPivotSnapHelper.SnapTileCenter(mwp.Canvas.CenterOfMass);
 
         if (mwp.Selection.IsActive)
         {
@@ -810,7 +811,7 @@ public class MoldingSettingsPanel : UIState
             }
 
             if (count > 0)
-                return new Vector2((float)(sumX / count), (float)(sumY / count));
+                return TransformPivotSnapHelper.SnapTileCenter(new Vector2((float)(sumX / count), (float)(sumY / count)));
         }
 
         return Vector2.Zero;

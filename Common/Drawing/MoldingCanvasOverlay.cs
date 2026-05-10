@@ -8,6 +8,7 @@ using WorldShapingWandsMod.Common.Configs;
 using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Settings;
+using WorldShapingWandsMod.Common.Utilities;
 using WorldShapingWandsMod.Content.Items;
 
 namespace WorldShapingWandsMod.Common.Drawing;
@@ -43,10 +44,42 @@ namespace WorldShapingWandsMod.Common.Drawing;
 [Autoload(Side = ModSide.Client)]
 internal sealed class MoldingCanvasOverlay : IComposableOverlay
 {
-    private static readonly ReLogic.Content.Asset<Texture2D> PivotIcon = ModContent.Request<Texture2D>(
-        "Assets_Build/Icons/Stencil/Pivot", ReLogic.Content.AssetRequestMode.ImmediateLoad);
-    private static readonly ReLogic.Content.Asset<Texture2D> CentroidIcon = ModContent.Request<Texture2D>(
-        "Assets_Build/Icons/Stencil/Centroid", ReLogic.Content.AssetRequestMode.ImmediateLoad);
+    private static ReLogic.Content.Asset<Texture2D> _pivotIcon;
+    private static ReLogic.Content.Asset<Texture2D> _centroidIcon;
+    private static bool _iconsInitialized;
+
+    private static void EnsureTransformIconsLoaded()
+    {
+        if (_iconsInitialized)
+            return;
+
+        _iconsInitialized = true;
+
+        var mod = ModContent.GetInstance<WorldShapingWandsMod>();
+        if (mod?.Assets == null)
+            return;
+
+        const string pivotPath = "Assets_Build/Icons/Stencil/Pivot";
+        const string centroidPath = "Assets_Build/Icons/Stencil/Centroid";
+
+        try
+        {
+            _pivotIcon = mod.Assets.Request<Texture2D>(pivotPath, ReLogic.Content.AssetRequestMode.ImmediateLoad);
+        }
+        catch
+        {
+            _pivotIcon = null;
+        }
+
+        try
+        {
+            _centroidIcon = mod.Assets.Request<Texture2D>(centroidPath, ReLogic.Content.AssetRequestMode.ImmediateLoad);
+        }
+        catch
+        {
+            _centroidIcon = null;
+        }
+    }
 
     /// <summary>
     /// Draws right after SelectionCanvasOverlay (-10) so both canvas systems
@@ -157,6 +190,7 @@ internal sealed class MoldingCanvasOverlay : IComposableOverlay
                 MoldingWandSettings.CanvasBorderColor);
 
         DrawTransformIndicators(spriteBatch, mwp, settings);
+        DrawMoveElbowOverlay(spriteBatch, settings, MoldingWandSettings.CanvasBorderColor);
     }
 
     // ================================================================
@@ -269,7 +303,13 @@ internal sealed class MoldingCanvasOverlay : IComposableOverlay
 
     private static void DrawTransformIcon(SpriteBatch sb, Vector2 tilePos, bool usePivotIcon, Color pivotTint)
     {
-        var icon = usePivotIcon ? PivotIcon.Value : CentroidIcon.Value;
+        EnsureTransformIconsLoaded();
+
+        var iconAsset = usePivotIcon ? _pivotIcon : _centroidIcon;
+        var icon = iconAsset?.Value;
+        if (icon == null)
+            return;
+
         Vector2 worldPos = tilePos * 16f;
         Vector2 drawPos = worldPos - Main.screenPosition;
         Vector2 origin = new Vector2(icon.Width * 0.5f, icon.Height * 0.5f);
@@ -281,7 +321,7 @@ internal sealed class MoldingCanvasOverlay : IComposableOverlay
     {
         if (mwp.Canvas.IsActive)
         {
-            centroidTile = mwp.Canvas.CenterOfMass;
+            centroidTile = TransformPivotSnapHelper.SnapTileCenter(mwp.Canvas.CenterOfMass);
             return true;
         }
 
@@ -299,12 +339,67 @@ internal sealed class MoldingCanvasOverlay : IComposableOverlay
 
             if (count > 0)
             {
-                centroidTile = new Vector2((float)(sumX / count), (float)(sumY / count));
+                centroidTile = TransformPivotSnapHelper.SnapTileCenter(new Vector2((float)(sumX / count), (float)(sumY / count)));
                 return true;
             }
         }
 
         centroidTile = Vector2.Zero;
         return false;
+    }
+
+    private static void DrawMoveElbowOverlay(SpriteBatch sb, MoldingWandSettings settings, Color accentColor)
+    {
+        if (!settings.TransformModeEnabled ||
+            settings.ActiveTransformAction != TransformActionMode.Move ||
+            !settings.PendingTransformMoveStart.HasValue)
+            return;
+
+        Point startTile = settings.PendingTransformMoveStart.Value;
+        Point nowTile = GeometryHelper.GetMouseTile();
+        Point elbowTile = new Point(nowTile.X, startTile.Y);
+
+        int dx = nowTile.X - startTile.X;
+        int dy = nowTile.Y - startTile.Y;
+
+        Color lineColor = accentColor * 0.55f;
+        DrawElbowSegment1Tile(sb, startTile, elbowTile, lineColor);
+        DrawElbowSegment1Tile(sb, elbowTile, nowTile, lineColor);
+
+        if (dx == 0 && dy == 0)
+            return;
+
+        string label = $"{dx} x {dy}";
+        Vector2 elbowWorld = new Vector2((elbowTile.X + 0.5f) * 16f, (elbowTile.Y + 0.5f) * 16f);
+        Vector2 elbowScreen = elbowWorld - Main.screenPosition;
+        Vector2 labelPos = elbowScreen + new Vector2(dx >= 0 ? 8f : -52f, dy >= 0 ? 8f : -24f);
+        Utils.DrawBorderString(sb, label, labelPos, Color.White * 0.95f, 0.85f);
+    }
+
+    private static void DrawElbowSegment1Tile(SpriteBatch sb, Point fromTile, Point toTile, Color color)
+    {
+        var pixel = TextureAssets.MagicPixel.Value;
+
+        if (fromTile.Y == toTile.Y)
+        {
+            int y = fromTile.Y;
+            int minX = System.Math.Min(fromTile.X, toTile.X);
+            int maxX = System.Math.Max(fromTile.X, toTile.X);
+            for (int x = minX; x <= maxX; x++)
+            {
+                Vector2 pos = new Vector2(x * 16f, y * 16f) - Main.screenPosition;
+                sb.Draw(pixel, pos, new Rectangle(0, 0, 16, 16), color);
+            }
+            return;
+        }
+
+        int xCol = fromTile.X;
+        int minY = System.Math.Min(fromTile.Y, toTile.Y);
+        int maxY = System.Math.Max(fromTile.Y, toTile.Y);
+        for (int y = minY; y <= maxY; y++)
+        {
+            Vector2 pos = new Vector2(xCol * 16f, y * 16f) - Main.screenPosition;
+            sb.Draw(pixel, pos, new Rectangle(0, 0, 16, 16), color);
+        }
     }
 }

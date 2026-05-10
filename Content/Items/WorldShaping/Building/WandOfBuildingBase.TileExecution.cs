@@ -111,14 +111,29 @@ namespace WorldShapingWandsMod.Content.Items
             // (S1 2026-04-26 fix): choice is keyed by PlaceType so Platform mode
             // cannot bleed a Solid-mode choice through.
             int? chosenTileItemType = settings.GetChosenTileItemType(settings.Object);
-            int sourceIndex = ItemTypeHelper.FindFirstItemIndex(player, condition, chosenTileItemType);
-            if (sourceIndex < 0)
+            bool carefreeChosenGhost = false;
+            Item initialSourceItem = null;
+
+            if (chosenTileItemType.HasValue && chosenTileItemType.Value > 0
+                && WandConfigs.Carefree?.EnableCarefreeMode == true)
+            {
+                Item chosenProbe = new();
+                chosenProbe.SetDefaults(chosenTileItemType.Value);
+                if (!chosenProbe.IsAir && condition(chosenProbe))
+                {
+                    initialSourceItem = chosenProbe;
+                    carefreeChosenGhost = true;
+                }
+            }
+
+            if (initialSourceItem == null)
+                initialSourceItem = ItemTypeHelper.FindFirstItem(player, condition, chosenTileItemType);
+
+            if (initialSourceItem == null)
             {
                 Main.NewText(Get("NoSuitableItem", settings.Object), Color.Red);
                 return;
             }
-
-            Item initialSourceItem = player.inventory[sourceIndex];
 
             // ── ExhaustMode / Choice: narrow `condition` to the FIRST source item type ──
             //
@@ -167,7 +182,8 @@ namespace WorldShapingWandsMod.Content.Items
             if ((exhaustMode == BlockExhaustionMode.Interrupt
                     || exhaustMode == BlockExhaustionMode.Cancel)
                 && chosenTileItemType.HasValue
-                && !choiceHonored)
+                && !choiceHonored
+                && !carefreeChosenGhost)
             {
                 Main.NewText(Get("ChosenMissingUnderInterrupt"), Color.Red);
                 return;
@@ -214,9 +230,10 @@ namespace WorldShapingWandsMod.Content.Items
             int required = tilesToProcess.Length;
 
             // --- Cancel mode: pre-check total stock before touching anything ---
-            if ((WandConfigs.Preferences?.BlockExhaustion ?? BlockExhaustionMode.NextBlock) == BlockExhaustionMode.Cancel)
+            if ((WandConfigs.Preferences?.BlockExhaustion ?? BlockExhaustionMode.NextBlock) == BlockExhaustionMode.Cancel
+                && !carefreeChosenGhost)
             {
-                Item firstSourceItem = player.inventory[sourceIndex];
+                Item firstSourceItem = initialSourceItem;
                 bool usingTileWandForCheck = firstSourceItem.tileWand >= 0;
                 Func<Item, bool> checkCond = usingTileWandForCheck
                     ? i => !i.IsAir && i.type == firstSourceItem.tileWand
@@ -266,13 +283,13 @@ namespace WorldShapingWandsMod.Content.Items
             {
                 ExecuteTileBuildingProgressive(
                     player, settings, config, sandbox, perfConfig, condition, tilesToProcess,
-                    shouldConsume, replaceMode, undoMgr, action);
+                    shouldConsume, replaceMode, undoMgr, action, initialSourceItem);
                 return;
             }
 
             ExecuteTileBuildingInstant(
                 player, settings, config, sandbox, perfConfig, clientCfg, condition, tilesToProcess,
-                shouldConsume, replaceMode, undoMgr, action);
+                shouldConsume, replaceMode, undoMgr, action, initialSourceItem);
         }
 
         private void ExecuteTileAttributeOnlyInstant(
@@ -353,7 +370,8 @@ namespace WorldShapingWandsMod.Content.Items
             bool shouldConsume,
             bool replaceMode,
             UndoManager undoMgr,
-            UndoAction action)
+            UndoAction action,
+            Item fallbackSourceItem)
         {
             var wandPlayer = player.GetModPlayer<WandPlayer>();
             // Pre-validate tiles and snapshot them for progressive processing
@@ -490,12 +508,20 @@ namespace WorldShapingWandsMod.Content.Items
                     }
 
                     int idx = ItemTypeHelper.FindFirstItemIndex(player, condition);
-                    if (idx < 0)
+                    Item srcItem;
+                    if (idx >= 0)
+                    {
+                        srcItem = player.inventory[idx];
+                    }
+                    else if (!shouldConsume && fallbackSourceItem != null)
+                    {
+                        srcItem = fallbackSourceItem;
+                    }
+                    else
                     {
                         if ((WandConfigs.Preferences?.BlockExhaustion ?? BlockExhaustionMode.NextBlock) == BlockExhaustionMode.Interrupt) break;
                         continue;
                     }
-                    Item srcItem = player.inventory[idx];
                     ushort tType = (ushort)srcItem.createTile;
 
                     WorldGen.gen = true;
@@ -525,6 +551,7 @@ namespace WorldShapingWandsMod.Content.Items
                 ProgressiveTileProcessor.EnqueueBuilding(
                     player, batchTiles, action, undoMgr,
                     batchSize, interval, shouldConsume, condition,
+                    fallbackSourceItem,
                     settings.OverwriteSlope, settings.Slope,
                     vacuumItems: sandbox.VacuumItems);
 
@@ -564,7 +591,8 @@ namespace WorldShapingWandsMod.Content.Items
             bool shouldConsume,
             bool replaceMode,
             UndoManager undoMgr,
-            UndoAction action)
+            UndoAction action,
+            Item fallbackSourceItem)
         {
             int placed = 0;
             int replaced = 0;
@@ -591,13 +619,20 @@ namespace WorldShapingWandsMod.Content.Items
                 {
                     // Re-lookup source item for this tile (supports NextBlock)
                     int idx = ItemTypeHelper.FindFirstItemIndex(player, condition);
-                    if (idx < 0)
+                    Item srcItem;
+                    if (idx >= 0)
+                    {
+                        srcItem = player.inventory[idx];
+                    }
+                    else if (!shouldConsume && fallbackSourceItem != null)
+                    {
+                        srcItem = fallbackSourceItem;
+                    }
+                    else
                     {
                         if ((WandConfigs.Preferences?.BlockExhaustion ?? BlockExhaustionMode.NextBlock) == BlockExhaustionMode.Interrupt) { interrupted = true; break; }
                         continue; // NextBlock: no more items, skip remaining
                     }
-
-                    Item srcItem = player.inventory[idx];
                     ushort tType = (ushort)srcItem.createTile;
 
                     // === GRASS SEED SPECIAL PATH ===
@@ -697,13 +732,20 @@ namespace WorldShapingWandsMod.Content.Items
                 {
                     // Re-lookup source item for this tile (supports NextBlock)
                     int idx = ItemTypeHelper.FindFirstItemIndex(player, condition);
-                    if (idx < 0)
+                    Item srcItem;
+                    if (idx >= 0)
+                    {
+                        srcItem = player.inventory[idx];
+                    }
+                    else if (!shouldConsume && fallbackSourceItem != null)
+                    {
+                        srcItem = fallbackSourceItem;
+                    }
+                    else
                     {
                         if ((WandConfigs.Preferences?.BlockExhaustion ?? BlockExhaustionMode.NextBlock) == BlockExhaustionMode.Interrupt) { interrupted = true; break; }
                         continue; // NextBlock: no more items, skip remaining
                     }
-
-                    Item srcItem = player.inventory[idx];
                     ushort tType = (ushort)srcItem.createTile;
 
                     // Placement path: always suppress effects (no drops from empty space)

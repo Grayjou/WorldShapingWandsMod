@@ -1549,6 +1549,8 @@ Configs: {
 				When enabled: infinite resources, bypass pickaxe power, ignore locked keys,
 				auto-open chests, and configurable overrides for suppress drops,
 				demon altar destruction, and delicate tile destruction.
+				Also bypasses chosen-item inventory checks, so chosen ghost items can be used
+				as if they were in inventory.
 				Individual sandbox settings are still respected when this is off.
 				'''
 		}

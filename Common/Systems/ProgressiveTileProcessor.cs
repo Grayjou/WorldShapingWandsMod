@@ -329,6 +329,7 @@ public partial class ProgressiveTileProcessor : ModSystem
         public List<TileBuildingInfo> BuildingTiles;
         public List<WallBuildingInfo> WallBuildingTiles;
         public Func<Item, bool> BuildCondition;     // condition to find source items
+        public Item FallbackBuildItem;              // optional ghost/fallback source for non-consuming modes
         public bool OverwriteSlope;
         public Enums.SlopeType SlopeType;
 

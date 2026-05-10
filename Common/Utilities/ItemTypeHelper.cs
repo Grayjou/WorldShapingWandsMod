@@ -4,6 +4,7 @@ using System.Linq;
 using Terraria;
 using Terraria.ID;
 using Terraria.ObjectData;
+using WorldShapingWandsMod.Common.Configs;
 using WorldShapingWandsMod.Common.Enums;
 
 namespace WorldShapingWandsMod.Common.Utilities
@@ -271,6 +272,18 @@ namespace WorldShapingWandsMod.Common.Utilities
                     if (!it.IsAir && it.type == choice && condition(it))
                         return it;
                 }
+
+                // Carefree mode: allow ghost-choice execution even when the chosen
+                // item is missing from inventory. This keeps chosen-item semantics
+                // authoritative instead of silently falling back to scan order.
+                if (WandConfigs.Carefree?.EnableCarefreeMode == true)
+                {
+                    Item probe = new();
+                    probe.SetDefaults(choice);
+                    if (!probe.IsAir && condition(probe))
+                        return probe;
+                }
+
                 // Fall through: choice is stale, run the normal scan.
             }
 
