@@ -1,55 +1,79 @@
 {
-  "version": "2.0.0",
-  "tasks": [
-    {
-      "label": "Deploy WSW to Cloned",
-      "type": "shell",
-      "command": "powershell",
-      "args": [
-        "-ExecutionPolicy", "Bypass",
-        "-File", "${workspaceFolder}\\Scripts\\DevOps\\deploy_to_cloned.ps1"
-      ],
-      "group": "build",
-      "presentation": {
-        "reveal": "always",
-        "panel": "shared",
-        "clear": true
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Deploy WSW to Cloned (Dry Run)",
-      "type": "shell",
-      "command": "powershell",
-      "args": [
-        "-ExecutionPolicy", "Bypass",
-        "-File", "${workspaceFolder}\\Scripts\\DevOps\\deploy_to_cloned.ps1",
-        "-DryRun"
-      ],
-      "group": "build",
-      "presentation": {
-        "reveal": "always",
-        "panel": "shared",
-        "clear": true
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Deploy WSW to Cloned (Verbose)",
-      "type": "shell",
-      "command": "powershell",
-      "args": [
-        "-ExecutionPolicy", "Bypass",
-        "-File", "${workspaceFolder}\\Scripts\\DevOps\\deploy_to_cloned.ps1",
-        "-Verbose"
-      ],
-      "group": "build",
-      "presentation": {
-        "reveal": "always",
-        "panel": "shared",
-        "clear": true
-      },
-      "problemMatcher": []
-    }
-  ]
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Deploy WSW to Cloned",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				"${workspaceFolder}\\Scripts\\DevOps\\deploy_to_cloned.ps1"
+			],
+			"group": "build",
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared",
+				"clear": true
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Deploy WSW to Cloned (Dry Run)",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				"${workspaceFolder}\\Scripts\\DevOps\\deploy_to_cloned.ps1",
+				"-DryRun"
+			],
+			"group": "build",
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared",
+				"clear": true
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Deploy WSW to Cloned (Verbose)",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				"${workspaceFolder}\\Scripts\\DevOps\\deploy_to_cloned.ps1",
+				"-Verbose"
+			],
+			"group": "build",
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared",
+				"clear": true
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Build after UI row and Info Chrome fix",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Build after row merge correction",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build"
+			],
+			"group": "build"
+		}
+	]
 }

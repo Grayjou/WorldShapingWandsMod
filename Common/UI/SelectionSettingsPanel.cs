@@ -231,6 +231,10 @@ public class SelectionSettingsPanel : UIState
             // TODO: pending ToggleFlipHalfOrientation dedicated asset (placeholder = ToggleInvertSel byte-copy; tracked in dev_notes/dev_tasks/pending_assets.md §3b)
             "Assets_Build/Icons/Toggles/ToggleFlipHalfOrientation", AssetRequestMode.ImmediateLoad);
 
+
+        // Shape options
+        var texAutoCreateCanvas = mod.Assets.Request<Texture2D>(
+            "Assets_Build/Icons/Stencil/AutoCreateCanvas", AssetRequestMode.ImmediateLoad);
         _builder.AddShapeOptionsSection(new WandPanelBuilder.IconDef[]
         {
             new(texEqualDim, "Common.EqualDimensions", isToggle: true),
@@ -243,18 +247,6 @@ public class SelectionSettingsPanel : UIState
         _invertSelectionBtn = optBtns[2];
         _flipHalfOrientationBtn = optBtns[3];
 
-        // ═══════════════════════════════════════════════════════════════
-        //  Delimitation Options (icon toggles)
-        // ═══════════════════════════════════════════════════════════════
-
-        var texAutoCreateCanvas = mod.Assets.Request<Texture2D>(
-            "Assets_Build/Icons/Stencil/AutoCreateCanvas", AssetRequestMode.ImmediateLoad);
-        _builder.AddIconToggleRow("Selection.Options", new WandPanelBuilder.IconDef[]
-        {
-            new(texAutoCreateCanvas, "Selection.AutoCreateCanvas", isToggle: true),
-        }, out var selectionOptionBtns);
-        _autoCreateCanvasBtn = selectionOptionBtns[0];
-
         var texFlipHorizontal = mod.Assets.Request<Texture2D>(
             "Assets_Build/Icons/Stencil/FlipHorizontal", AssetRequestMode.ImmediateLoad);
         var texFlipVertical = mod.Assets.Request<Texture2D>(
@@ -264,17 +256,19 @@ public class SelectionSettingsPanel : UIState
         var texRotateCCW = mod.Assets.Request<Texture2D>(
             "Assets_Build/Icons/Stencil/RotateCCW", AssetRequestMode.ImmediateLoad);
 
-        _builder.AddActionIconRowNoHeader(new WandPanelBuilder.IconDef[]
+        _builder.AddActionIconRow("Selection.Options", new WandPanelBuilder.IconDef[]
         {
+            new(texAutoCreateCanvas, "Selection.AutoCreateCanvas", isToggle: true),
             WandPanelBuilder.IconDef.WithText(texFlipHorizontal, L("Selection.Transform.FlipHorizontal")),
             WandPanelBuilder.IconDef.WithText(texFlipVertical, L("Selection.Transform.FlipVertical")),
             WandPanelBuilder.IconDef.WithText(texRotateCW, L("Selection.Transform.RotateCW")),
             WandPanelBuilder.IconDef.WithText(texRotateCCW, L("Selection.Transform.RotateCCW")),
         }, out var transformBtns);
-        _flipHorizontalBtn = transformBtns[0];
-        _flipVerticalBtn = transformBtns[1];
-        _rotateCwBtn = transformBtns[2];
-        _rotateCcwBtn = transformBtns[3];
+        _autoCreateCanvasBtn = transformBtns[0];
+        _flipHorizontalBtn = transformBtns[1];
+        _flipVerticalBtn = transformBtns[2];
+        _rotateCwBtn = transformBtns[3];
+        _rotateCcwBtn = transformBtns[4];
         _rotateCwBtn.HasSubUIBadge = true;
         _rotateCcwBtn.HasSubUIBadge = true;
 

@@ -221,6 +221,12 @@ public class MoldingSettingsPanel : UIState
             // TODO: pending ToggleFlipHalfOrientation dedicated asset (placeholder = ToggleInvertSel byte-copy; tracked in dev_notes/dev_tasks/pending_assets.md §3b)
             "Assets_Build/Icons/Toggles/ToggleFlipHalfOrientation", AssetRequestMode.ImmediateLoad);
 
+
+        // Shape options
+        var texAutoCreateCanvas = mod.Assets.Request<Texture2D>(
+            "Assets_Build/Icons/Stencil/AutoCreateCanvas", AssetRequestMode.ImmediateLoad);
+        var texAutoPromoteMold = mod.Assets.Request<Texture2D>(
+            "Assets_Build/Icons/Molding/AutoPromoteMold", AssetRequestMode.ImmediateLoad);
         _builder.AddShapeOptionsSection(new WandPanelBuilder.IconDef[]
         {
             new(texEqualDim, "Common.EqualDimensions", isToggle: true),
@@ -233,23 +239,6 @@ public class MoldingSettingsPanel : UIState
         _invertSelectionBtn = optBtns[2];
         _flipHalfOrientationBtn = optBtns[3];
 
-        // ═══════════════════════════════════════════════════════════════
-        //  Molding Options (icon toggles)
-        // ═══════════════════════════════════════════════════════════════
-
-        var texAutoCreateCanvas = mod.Assets.Request<Texture2D>(
-            "Assets_Build/Icons/Stencil/AutoCreateCanvas", AssetRequestMode.ImmediateLoad);
-        var texAutoPromoteMold = mod.Assets.Request<Texture2D>(
-            "Assets_Build/Icons/Molding/AutoPromoteMold", AssetRequestMode.ImmediateLoad);
-
-        _builder.AddIconToggleRow("Molding.Options", new WandPanelBuilder.IconDef[]
-        {
-            new(texAutoCreateCanvas, "Molding.AutoCreateCanvas", isToggle: true),
-            new(texAutoPromoteMold, "Molding.AutoPromote", isToggle: true),
-        }, out var moldingOptionsBtns);
-        _autoCreateCanvasBtn = moldingOptionsBtns[0];
-        _autoPromoteBtn = moldingOptionsBtns[1];
-
         var texFlipHorizontal = mod.Assets.Request<Texture2D>(
             "Assets_Build/Icons/Stencil/FlipHorizontal", AssetRequestMode.ImmediateLoad);
         var texFlipVertical = mod.Assets.Request<Texture2D>(
@@ -259,17 +248,21 @@ public class MoldingSettingsPanel : UIState
         var texRotateCCW = mod.Assets.Request<Texture2D>(
             "Assets_Build/Icons/Stencil/RotateCCW", AssetRequestMode.ImmediateLoad);
 
-        _builder.AddActionIconRowNoHeader(new WandPanelBuilder.IconDef[]
+        _builder.AddActionIconRow("Molding.Options", new WandPanelBuilder.IconDef[]
         {
+            new(texAutoCreateCanvas, "Molding.AutoCreateCanvas", isToggle: true),
+            new(texAutoPromoteMold, "Molding.AutoPromote", isToggle: true),
             WandPanelBuilder.IconDef.WithText(texFlipHorizontal, L("Molding.Transform.FlipHorizontal")),
             WandPanelBuilder.IconDef.WithText(texFlipVertical, L("Molding.Transform.FlipVertical")),
             WandPanelBuilder.IconDef.WithText(texRotateCW, L("Molding.Transform.RotateCW")),
             WandPanelBuilder.IconDef.WithText(texRotateCCW, L("Molding.Transform.RotateCCW")),
         }, out var transformBtns);
-        _flipHorizontalBtn = transformBtns[0];
-        _flipVerticalBtn = transformBtns[1];
-        _rotateCwBtn = transformBtns[2];
-        _rotateCcwBtn = transformBtns[3];
+        _autoCreateCanvasBtn = transformBtns[0];
+        _autoPromoteBtn = transformBtns[1];
+        _flipHorizontalBtn = transformBtns[2];
+        _flipVerticalBtn = transformBtns[3];
+        _rotateCwBtn = transformBtns[4];
+        _rotateCcwBtn = transformBtns[5];
         _rotateCwBtn.HasSubUIBadge = true;
         _rotateCcwBtn.HasSubUIBadge = true;
 

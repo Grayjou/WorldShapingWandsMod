@@ -812,11 +812,7 @@ public class WandPanelBuilder
         }
 
         UIIconButton infoBtn = null;
-#if DEBUG
-        bool showInfo = true;
-#else
         bool showInfo = prefs.ShowInfoButton;
-#endif
         if (showInfo)
         {
             infoBtn = new UIIconButton(texInfo, L("Chrome.Info"))
@@ -825,7 +821,6 @@ public class WandPanelBuilder
                 IsAction = true,
             };
             infoBtn.HoverTextProvider = () => ResolveChromeTooltip(isHelp: false, Main.LocalPlayer);
-
 #if DEBUG
             // Info left-click: echo current-mode info payload to chat.
             infoBtn.OnLeftClick += (_, _) =>
@@ -1003,7 +998,9 @@ public class WandPanelBuilder
         for (int i = 0; i < count; i++)
         {
             var def = icons[i];
-            var btn = MakeActionIconBtn(def.Texture, def.HoverText, startX + (IconBtnSize + IconGap) * i, CurrentY);
+            var btn = def.IsToggle
+                ? MakeToggleIconBtn(def.Texture, def.HoverText, startX + (IconBtnSize + IconGap) * i, CurrentY, def.InitialState)
+                : MakeActionIconBtn(def.Texture, def.HoverText, startX + (IconBtnSize + IconGap) * i, CurrentY);
             _panel.Append(btn);
             buttons[i] = btn;
         }
@@ -1028,7 +1025,9 @@ public class WandPanelBuilder
         for (int i = 0; i < count; i++)
         {
             var def = icons[i];
-            var btn = MakeActionIconBtn(def.Texture, def.HoverText, startX + (IconBtnSize + IconGap) * i, CurrentY);
+            var btn = def.IsToggle
+                ? MakeToggleIconBtn(def.Texture, def.HoverText, startX + (IconBtnSize + IconGap) * i, CurrentY, def.InitialState)
+                : MakeActionIconBtn(def.Texture, def.HoverText, startX + (IconBtnSize + IconGap) * i, CurrentY);
             _panel.Append(btn);
             buttons[i] = btn;
         }
