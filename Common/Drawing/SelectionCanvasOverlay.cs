@@ -183,18 +183,18 @@ internal sealed class SelectionCanvasOverlay : IComposableOverlay
             var effectiveFill = (isDelimitationWand && settings.Mode == DelimitationWandMode.CanvasEdit)
                 ? DelimitationWandSettings.CanvasEditAccentColor * canvasA
                 : canvasFill;
-            DrawTileFill(spriteBatch, swp.Canvas.Tiles, screenBounds, effectiveFill);
+            StencilOverlayRenderer.DrawFill(spriteBatch, swp.Canvas.Tiles, screenBounds, effectiveFill);
         }
 
         // Layer 2 (middle): Outside — dim everything outside the canvas
         // Only drawn when a canvas is active; otherwise it would darken the whole screen.
         if (canvasActive)
-            DrawOutsideFill(spriteBatch, swp.Canvas.Tiles, screenBounds, outsideColor);
+            StencilOverlayRenderer.DrawOutsideFill(spriteBatch, swp.Canvas.Tiles, screenBounds, outsideColor);
 
         // Layer 3 (top): TileSelection — highlight selected tiles
         // Hidden during Canvas Edit mode to reduce visual noise
         if (selectionActive && settings.Mode != DelimitationWandMode.CanvasEdit)
-            DrawTileFill(spriteBatch, swp.Selection.Tiles, screenBounds, tileSelColor);
+            StencilOverlayRenderer.DrawFill(spriteBatch, swp.Selection.Tiles, screenBounds, tileSelColor);
 
         // Border: Canvas edge segments on top of everything
         if (canvasActive)
@@ -208,59 +208,6 @@ internal sealed class SelectionCanvasOverlay : IComposableOverlay
     // ================================================================
     //  Drawing helpers
     // ================================================================
-
-    /// <summary>
-    /// Draws a semi-transparent fill over all visible tiles that are NOT in the canvas.
-    /// Creates a "spotlight" dimming effect where only the canvas area is bright.
-    /// </summary>
-    private static void DrawOutsideFill(
-        SpriteBatch sb,
-        IReadOnlySet<Point> canvasTiles,
-        Rectangle screenBounds,
-        Color outsideColor)
-    {
-        if (outsideColor.A == 0)
-            return;
-
-        var pixel = TextureAssets.MagicPixel.Value;
-
-        for (int x = screenBounds.Left; x < screenBounds.Right; x++)
-        for (int y = screenBounds.Top; y < screenBounds.Bottom; y++)
-        {
-            if (!canvasTiles.Contains(new Point(x, y)))
-            {
-                var pos = new Vector2(x * 16, y * 16) - Main.screenPosition;
-                sb.Draw(pixel, pos, new Rectangle(0, 0, 16, 16), outsideColor);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Draws a semi-transparent fill over the specified tile set, within the visible screen bounds.
-    /// Used for both canvas fill (Layer 2) and selection fill (Layer 3).
-    /// </summary>
-    private static void DrawTileFill(
-        SpriteBatch sb,
-        IReadOnlySet<Point> tiles,
-        Rectangle screenBounds,
-        Color fillColor)
-    {
-        if (fillColor.A == 0 || tiles.Count == 0)
-            return;
-
-        var pixel = TextureAssets.MagicPixel.Value;
-
-        foreach (var tile in tiles)
-        {
-            // Viewport culling
-            if (tile.X < screenBounds.Left || tile.X >= screenBounds.Right ||
-                tile.Y < screenBounds.Top || tile.Y >= screenBounds.Bottom)
-                continue;
-
-            var pos = new Vector2(tile.X * 16, tile.Y * 16) - Main.screenPosition;
-            sb.Draw(pixel, pos, new Rectangle(0, 0, 16, 16), fillColor);
-        }
-    }
 
     private static void DrawTransformIndicators(
         SpriteBatch sb,

@@ -88,9 +88,6 @@ public class PlanificationWandPlayer : ModPlayer
         PerStencilRenderConfigs[slot] = config;
     }
 
-    public void SetSlotShape(int slot, HashSet<Point> worldTiles)
-        => SetSlotSelectionShape(slot, worldTiles);
-
     public void SetSlotCanvasShape(int slot, HashSet<Point> worldTiles)
     {
         SetStoredSlot(CanvasSlots, slot, worldTiles);
@@ -153,9 +150,6 @@ public class PlanificationWandPlayer : ModPlayer
         SetSlotSelectionShape(slot, worldTiles);
     }
 
-    public HashSet<Point> GetSlotWorldTiles(int slot)
-        => GetSlotSelectionWorldTiles(slot);
-
     public HashSet<Point> GetSlotCanvasWorldTiles(int slot)
         => GetStoredSlotWorldTiles(CanvasSlots, slot);
 
@@ -177,9 +171,6 @@ public class PlanificationWandPlayer : ModPlayer
 
         return result;
     }
-
-    public void ApplyOperationToSlot(int slot, HashSet<Point> operandTiles, SelectionOperation operation)
-        => ApplySelectionOperationToSlot(slot, operandTiles, operation);
 
     public void ApplyCanvasOperationToSlot(int slot, HashSet<Point> operandTiles, SelectionOperation operation)
     {

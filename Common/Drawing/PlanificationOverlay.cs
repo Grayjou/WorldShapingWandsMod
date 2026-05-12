@@ -10,7 +10,7 @@ using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Geometry;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Settings;
-using WorldShapingWandsMod.Content.Items;
+using WorldShapingWandsMod.Common.Items;
 
 namespace WorldShapingWandsMod.Common.Drawing;
 
@@ -54,8 +54,8 @@ internal sealed class PlanificationOverlay : IComposableOverlay
         if (player == null)
             return;
 
-        bool isPlanificationHeld = player.HeldItem?.ModItem is WandOfPlanificationBase;
-        if (!isPlanificationHeld)
+        bool isAnyWand = player.HeldItem?.ModItem is BaseCyclingWand;
+        if (!isAnyWand)
             return;
 
         var pwp = player.GetModPlayer<PlanificationWandPlayer>();

@@ -171,25 +171,20 @@ public class PlanificationSettingsPanel : UIState
         _invertSelectionBtn = optBtns[2];
         _flipHalfOrientationBtn = optBtns[3];
 
-        _builder.AddSectionHeader("Planification Options");
-        var texAutoCreateCanvas = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Stencil/AutoCreateCanvas", ReLogic.Content.AssetRequestMode.ImmediateLoad);
-        var texFlipHorizontal = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Stencil/FlipHorizontal", ReLogic.Content.AssetRequestMode.ImmediateLoad);
-        var texFlipVertical = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Stencil/FlipVertical", ReLogic.Content.AssetRequestMode.ImmediateLoad);
-        var texRotateCW = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Stencil/RotateCW", ReLogic.Content.AssetRequestMode.ImmediateLoad);
-        var texRotateCCW = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Stencil/RotateCCW", ReLogic.Content.AssetRequestMode.ImmediateLoad);
-        _builder.AddIconGrid(new WandPanelBuilder.IconDef[]
-        {
-            new(texAutoCreateCanvas, "Selection.AutoCreateCanvas", isToggle: true),
-            WandPanelBuilder.IconDef.WithText(texFlipHorizontal, "Flip Horizontal"),
-            WandPanelBuilder.IconDef.WithText(texFlipVertical, "Flip Vertical"),
-            WandPanelBuilder.IconDef.WithText(texRotateCW, "Rotate CW"),
-            WandPanelBuilder.IconDef.WithText(texRotateCCW, "Rotate CCW"),
-        }, iconsPerRow: 5, out var transformBtns);
-        _autoCreateCanvasBtn = transformBtns[0];
-        _flipHorizontalBtn = transformBtns[1];
-        _flipVerticalBtn = transformBtns[2];
-        _rotateCwBtn = transformBtns[3];
-        _rotateCcwBtn = transformBtns[4];
+        StencilPanelRowHelpers.AddTransformOptionsRow(
+            _builder,
+            mod,
+            "Planification Options",
+            "Selection.AutoCreateCanvas",
+            "Flip Horizontal",
+            "Flip Vertical",
+            "Rotate CW",
+            "Rotate CCW",
+            out _autoCreateCanvasBtn,
+            out _flipHorizontalBtn,
+            out _flipVerticalBtn,
+            out _rotateCwBtn,
+            out _rotateCcwBtn);
         _rotateCwBtn.HasSubUIBadge = true;
         _rotateCcwBtn.HasSubUIBadge = true;
 
@@ -645,7 +640,7 @@ public class PlanificationSettingsPanel : UIState
         var pwp = GetPlayerState();
         if (pwp == null) return;
 
-        var tiles = pwp.GetSlotWorldTiles(pwp.ActiveEditSlot);
+        var tiles = pwp.GetSlotSelectionWorldTiles(pwp.ActiveEditSlot);
         if (tiles.Count == 0)
             return;
 
