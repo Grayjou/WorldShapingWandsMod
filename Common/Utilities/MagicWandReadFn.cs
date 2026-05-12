@@ -46,6 +46,8 @@ namespace WorldShapingWandsMod.Common.Utilities;
 /// </remarks>
 public static class MagicWandReadFn
 {
+    private static readonly Dictionary<(int Width, int Height), Point[]> _spiralLocalOrderCache = new();
+
     /// <summary>Outcome flags returned alongside the matching tile set.</summary>
     public enum ReadStatus
     {
@@ -109,8 +111,9 @@ public static class MagicWandReadFn
 
         if (config.Continuity == MagicWandContinuity.NonContiguous)
         {
-            // Iterate the entire domain. Cap-aware.
-            foreach (var p in domain.GetAllPoints())
+            // Iterate domain points in a deterministic center-out spiral order.
+            // This avoids rectangular/axis-biased sweeps when cap truncation occurs.
+            foreach (var p in EnumerateDomainPointsSpiral(domain))
             {
                 if (result.Count >= cap) return (result, ReadStatus.Capped);
                 if (Match(p) && AdmitByActuation(p)) result.Add(p);
@@ -146,6 +149,88 @@ public static class MagicWandReadFn
         }
 
         return (result, result.Count == 0 ? ReadStatus.Empty : ReadStatus.Success);
+    }
+
+    private static IEnumerable<Point> EnumerateDomainPointsSpiral(SelectionCanvas domain)
+    {
+        var bounds = domain.BoundingBox;
+        if (bounds.Width <= 0 || bounds.Height <= 0)
+            yield break;
+
+        var localOrder = GetSpiralLocalOrder(bounds.Width, bounds.Height);
+        for (int i = 0; i < localOrder.Length; i++)
+        {
+            var local = localOrder[i];
+            var world = new Point(bounds.X + local.X, bounds.Y + local.Y);
+            if (domain.Contains(world))
+                yield return world;
+        }
+    }
+
+    private static Point[] GetSpiralLocalOrder(int width, int height)
+    {
+        if (width <= 0 || height <= 0)
+            return System.Array.Empty<Point>();
+
+        var key = (width, height);
+        if (_spiralLocalOrderCache.TryGetValue(key, out var cached))
+            return cached;
+
+        var order = BuildSpiralLocalOrder(width, height);
+        _spiralLocalOrderCache[key] = order;
+        return order;
+    }
+
+    private static Point[] BuildSpiralLocalOrder(int width, int height)
+    {
+        int cx = (width - 1) / 2;
+        int cy = (height - 1) / 2;
+
+        var order = new List<Point>(width * height);
+        var seen = new HashSet<Point>();
+
+        static void TryAdd(int x, int y, int w, int h, HashSet<Point> seenSet, List<Point> dst)
+        {
+            if (x < 0 || y < 0 || x >= w || y >= h)
+                return;
+
+            var p = new Point(x, y);
+            if (seenSet.Add(p))
+                dst.Add(p);
+        }
+
+        TryAdd(cx, cy, width, height, seen, order);
+
+        int maxRadius = System.Math.Max(
+            System.Math.Max(cx, cy),
+            System.Math.Max(width - 1 - cx, height - 1 - cy));
+
+        for (int radius = 1; radius <= maxRadius; radius++)
+        {
+            int x = cx - radius;
+            int y = cy - radius;
+
+            // top edge -> right
+            for (int dx = 0; dx <= 2 * radius; dx++)
+                TryAdd(x + dx, y, width, height, seen, order);
+
+            // right edge -> down
+            x = cx + radius;
+            for (int dy = 1; dy <= 2 * radius; dy++)
+                TryAdd(x, y + dy, width, height, seen, order);
+
+            // bottom edge <- left
+            y = cy + radius;
+            for (int dx = 1; dx <= 2 * radius; dx++)
+                TryAdd(cx + radius - dx, y, width, height, seen, order);
+
+            // left edge -> up
+            x = cx - radius;
+            for (int dy = 1; dy < 2 * radius; dy++)
+                TryAdd(x, cy + radius - dy, width, height, seen, order);
+        }
+
+        return order.ToArray();
     }
 
     /// <summary>
