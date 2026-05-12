@@ -10,6 +10,7 @@ using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Geometry;
 using WorldShapingWandsMod.Common.Items;
 using WorldShapingWandsMod.Common.Players;
+using WorldShapingWandsMod.Common.Selection;
 using WorldShapingWandsMod.Common.Settings;
 using WorldShapingWandsMod.Common.Utilities;
 using static WorldShapingWandsMod.Common.Utilities.Msg;
@@ -59,53 +60,66 @@ public abstract class WandOfPlanificationBase : BaseCyclingWand
         if (!selection.IsActive)
             return;
 
-        var context = settings.Shape.ToShapeContext(
-            selection.StartTile,
-            selection.EndTile,
-            selection.VerticalFirst);
-
-        var tileSet = ShapeRegistry.GetShapeTiles(settings.Shape.Shape, context);
-        var tiles = settings.Shape.ApplyInversion(tileSet.Tiles.ToArray(), context);
-
-        if (tiles == null || tiles.Length == 0)
+        var shapeTiles = StencilOperationEngine.BuildOperandTiles(wandPlayer, settings.Shape);
+        if (shapeTiles.Count == 0)
         {
             Main.NewText(Msg.Get("NoTilesInShape"), Color.Gray);
             return;
         }
 
         int activeSlot = pwp.ActiveEditSlot;
-        var operandTiles = new HashSet<Point>(tiles);
-        var canvasTiles = pwp.GetSlotCanvasWorldTiles(activeSlot);
+        var slot = BuildStencilSlotState(pwp, activeSlot);
 
         if (settings.Mode == DelimitationWandMode.CanvasEdit)
         {
-            pwp.ApplyCanvasOperationToSlot(activeSlot, operandTiles, settings.Operation);
-            pwp.ClipSelectionToCanvas(activeSlot);
-            var canvasCount = pwp.GetSlotCanvasWorldTiles(activeSlot).Count;
-            Main.NewText($"Planification slot {activeSlot + 1}: Canvas {settings.Operation} ({canvasCount} total)", WandColors.MsgInfo);
-            SoundEngine.PlaySound(SoundID.MenuTick with { Volume = 0.6f }, player.Center);
-            return;
-        }
+            int beforeCount = slot.CanvasCount;
+            StencilOperationEngine.ExecuteCanvasOperation(slot, shapeTiles, settings.Operation);
+            ApplyStencilSlotState(pwp, activeSlot, slot);
 
-        if (canvasTiles.Count == 0)
+            int afterCount = slot.CanvasCount;
+            int delta = System.Math.Abs(afterCount - beforeCount);
+            Main.NewText($"Planification slot {activeSlot + 1}: Canvas {settings.Operation} ({delta} tiles, {afterCount} total)", WandColors.MsgInfo);
+        }
+        else
         {
-            if (!settings.AutoCreateCanvas)
+            int beforeCount = slot.SelectionCount;
+            bool hadCanvas = slot.HasCanvas;
+
+            if (!StencilOperationEngine.ExecuteSelectionOperation(slot, shapeTiles, settings.Operation, settings.AutoCreateCanvas))
             {
-                Main.NewText("No canvas to mask against. Enable Auto Create Canvas or switch to Canvas Edit.", Color.Gray);
                 return;
             }
 
-            pwp.SetSlotCanvasShape(activeSlot, operandTiles);
-            canvasTiles = pwp.GetSlotCanvasWorldTiles(activeSlot);
-            Main.NewText($"Planification slot {activeSlot + 1}: Canvas created ({canvasTiles.Count} tiles)", WandColors.MsgInfo);
+            ApplyStencilSlotState(pwp, activeSlot, slot);
+
+            if (!hadCanvas && slot.HasCanvas)
+                Main.NewText($"Planification slot {activeSlot + 1}: Canvas created ({slot.CanvasCount} tiles)", WandColors.MsgInfo);
+
+            int afterCount = slot.SelectionCount;
+            int delta = System.Math.Abs(afterCount - beforeCount);
+            Main.NewText($"Planification slot {activeSlot + 1}: Selection {settings.Operation} ({delta} tiles, {afterCount} total)", WandColors.MsgInfo);
         }
 
-        operandTiles.IntersectWith(canvasTiles);
-        pwp.ApplySelectionOperationToSlot(activeSlot, operandTiles, settings.Operation);
-        var selectionCount = pwp.GetSlotSelectionWorldTiles(activeSlot).Count;
-
         SoundEngine.PlaySound(SoundID.MenuTick with { Volume = 0.6f }, player.Center);
-        Main.NewText($"Planification slot {activeSlot + 1}: Selection {settings.Operation} ({selectionCount} total)", WandColors.MsgInfo);
+    }
+
+    private static StencilSlotState BuildStencilSlotState(PlanificationWandPlayer pwp, int slot)
+    {
+        var state = new StencilSlotState();
+        state.SetCanvas(pwp.GetSlotCanvasWorldTiles(slot));
+        state.SetSelection(pwp.GetSlotSelectionWorldTiles(slot));
+        return state;
+    }
+
+    private static void ApplyStencilSlotState(PlanificationWandPlayer pwp, int slot, StencilSlotState state)
+    {
+        pwp.ClearSlot(slot);
+
+        if (state.CanvasCount > 0)
+            pwp.SetSlotCanvasShape(slot, state.CloneCanvas());
+
+        if (state.SelectionCount > 0)
+            pwp.SetSlotSelectionShape(slot, state.CloneSelection());
     }
 }
 

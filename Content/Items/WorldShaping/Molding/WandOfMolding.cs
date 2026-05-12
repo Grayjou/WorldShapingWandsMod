@@ -152,95 +152,60 @@ public abstract class WandOfMoldingBase : BaseCyclingWand
     private static bool IsTransformWorldActionArmed(Player player)
     {
         var mwp = player.GetModPlayer<MoldingWandPlayer>();
-        if (mwp?.Settings == null || !mwp.Settings.TransformModeEnabled || mwp.Settings.ActiveTransformAction == TransformActionMode.None)
+        if (mwp?.Settings == null)
             return false;
 
-        if (IsMouseOverUI())
-            return false;
-
-        return true;
+        return StencilTransformWorldAction.IsArmed(
+            mwp.Settings.TransformModeEnabled,
+            mwp.Settings.ActiveTransformAction,
+            IsMouseOverUI());
     }
 
     private static bool ShouldInterceptTransformWorldAction(Player player)
     {
-        if (!IsTransformWorldActionArmed(player))
+        var mwp = player.GetModPlayer<MoldingWandPlayer>();
+        if (mwp?.Settings == null)
             return false;
 
-        if (Main.myPlayer != player.whoAmI)
-            return true;
-
-        if (!Main.mouseLeft || Main.LocalPlayer.mouseInterface)
-            return true;
-
-        if (!Main.mouseLeftRelease)
-            return true;
-
-        Main.mouseLeftRelease = false;
-
-        var mwp = player.GetModPlayer<MoldingWandPlayer>();
-
-        return HandleTransformWorldAction(player, mwp);
+        return StencilTransformWorldAction.ShouldInterceptTransformClick(
+            player,
+            IsTransformWorldActionArmed(player),
+            () => HandleTransformWorldAction(player, mwp));
     }
 
     private static bool HandleTransformWorldAction(Player player, MoldingWandPlayer mwp)
     {
         var settings = mwp.Settings;
-        Point mouseTile = GeometryHelper.GetMouseTile();
-
-        switch (settings.ActiveTransformAction)
+        var state = new StencilTransformWorldAction.TransformState
         {
-            case TransformActionMode.SetPivotPersistent:
-                settings.PersistentPivot = mouseTile;
-                settings.PendingTransformMoveStart = null;
-                if (Main.myPlayer == player.whoAmI)
-                    Main.NewText(Language.GetTextValue("Mods.WorldShapingWandsMod.UI.TransformMode.SetPivotPersistentHint"), WandColors.MsgInfo);
-                return true;
+            ActiveAction = settings.ActiveTransformAction,
+            PendingMoveStart = settings.PendingTransformMoveStart,
+            PersistentPivot = settings.PersistentPivot,
+            TemporaryPivot = settings.TemporaryPivot,
+        };
 
-            case TransformActionMode.SetPivotTemporary:
-                settings.TemporaryPivot = mouseTile;
-                settings.PendingTransformMoveStart = null;
-                if (Main.myPlayer == player.whoAmI)
-                    Main.NewText(Language.GetTextValue("Mods.WorldShapingWandsMod.UI.TransformMode.SetPivotTemporaryHint"), WandColors.MsgInfo);
-                return true;
-
-            case TransformActionMode.Move:
-                if (!mwp.Canvas.IsActive && !mwp.Selection.IsActive)
-                    return true;
-
-                if (!settings.PendingTransformMoveStart.HasValue)
-                {
-                    settings.PendingTransformMoveStart = mouseTile;
-                    if (Main.myPlayer == player.whoAmI)
-                        Main.NewText(Language.GetTextValue("Mods.WorldShapingWandsMod.UI.TransformMode.MoveStartHint"), WandColors.MsgInfo);
-                    return true;
-                }
-
-                Point start = settings.PendingTransformMoveStart.Value;
-                int dx = mouseTile.X - start.X;
-                int dy = mouseTile.Y - start.Y;
-                settings.PendingTransformMoveStart = null;
-
-                if (dx == 0 && dy == 0)
-                    return true;
-
+        bool handled = StencilTransformWorldAction.Handle(
+            state,
+            GeometryHelper.GetMouseTile(),
+            mwp.Canvas.IsActive || mwp.Selection.IsActive,
+            (dx, dy) =>
+            {
                 if (mwp.Canvas.IsActive)
                     mwp.Canvas.Translate(dx, dy);
-
                 if (mwp.Selection.IsActive)
                     mwp.Selection.Translate(dx, dy);
-
-                if (settings.PersistentPivot.HasValue)
-                    settings.PersistentPivot = new Point(settings.PersistentPivot.Value.X + dx, settings.PersistentPivot.Value.Y + dy);
-
-                if (settings.TemporaryPivot.HasValue)
-                    settings.TemporaryPivot = new Point(settings.TemporaryPivot.Value.X + dx, settings.TemporaryPivot.Value.Y + dy);
-
+            },
+            key =>
+            {
                 if (Main.myPlayer == player.whoAmI)
-                    Main.NewText(Language.GetTextValue("Mods.WorldShapingWandsMod.UI.TransformMode.MoveHint"), WandColors.MsgInfo);
-                return true;
-        }
+                    Main.NewText(Language.GetTextValue(key), WandColors.MsgInfo);
+            },
+            out var updated);
 
-        return false;
+        settings.PendingTransformMoveStart = updated.PendingMoveStart;
+        settings.PersistentPivot = updated.PersistentPivot;
+        settings.TemporaryPivot = updated.TemporaryPivot;
+        return handled;
     }
 
     // ════════════════════════════════════════════════════════════════
