@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -54,6 +55,11 @@ public class PlanificationSettingsPanel : UIState
     private UIIconButton _equalDimensionsBtn, _connectDiameterBtn, _invertSelectionBtn, _flipHalfOrientationBtn;
 
     private UIIconButton _autoCreateCanvasBtn, _flipHorizontalBtn, _flipVerticalBtn, _rotateCwBtn, _rotateCcwBtn;
+
+    private UIIconButton _transformMoveBtn, _transformPivotPersistentBtn, _transformPivotTemporaryBtn;
+
+    private const string TransformModeSubUITitleKey = "Mods.WorldShapingWandsMod.UI.TransformMode.SubUITitle";
+    private const string TransformModeSubUIIdentityKey = "WandOfPlanification.TransformModeShell";
 
     private UIIconButton _clearCurrentBtn, _clearAllBtn, _teleportBtn;
 
@@ -184,6 +190,8 @@ public class PlanificationSettingsPanel : UIState
         _flipVerticalBtn = transformBtns[2];
         _rotateCwBtn = transformBtns[3];
         _rotateCcwBtn = transformBtns[4];
+        _rotateCwBtn.HasSubUIBadge = true;
+        _rotateCcwBtn.HasSubUIBadge = true;
 
         _builder.AddSectionHeader("Selection.Actions");
         var texActionClearSel = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Actions/ActionClearSelection", ReLogic.Content.AssetRequestMode.ImmediateLoad);
@@ -269,6 +277,8 @@ public class PlanificationSettingsPanel : UIState
         _flipVerticalBtn.OnLeftClick += (_, _) => TransformActiveSlot(TileCoordTransforms.FlipVertical, "Flipped slot vertically");
         _rotateCwBtn.OnLeftClick += (_, _) => TransformActiveSlot(TileCoordTransforms.Rotate90CW, "Rotated slot CW");
         _rotateCcwBtn.OnLeftClick += (_, _) => TransformActiveSlot(TileCoordTransforms.Rotate90CCW, "Rotated slot CCW");
+        _rotateCwBtn.OnRightClick += (_, _) => OpenTransformModeSubUI(_rotateCwBtn);
+        _rotateCcwBtn.OnRightClick += (_, _) => OpenTransformModeSubUI(_rotateCcwBtn);
 
         _clearCurrentBtn.OnLeftClick += (_, _) =>
         {
@@ -479,14 +489,155 @@ public class PlanificationSettingsPanel : UIState
         var pwp = GetPlayerState();
         if (pwp == null) return;
 
-        var tiles = pwp.GetSlotWorldTiles(pwp.ActiveEditSlot);
-        if (tiles.Count == 0)
+        int activeSlot = pwp.ActiveEditSlot;
+        var slot = BuildStencilSlotState(pwp, activeSlot);
+        if (!slot.HasCanvas && !slot.HasSelection)
             return;
 
-        var transformed = transform(tiles);
-        pwp.ReplaceSlotWorldTiles(pwp.ActiveEditSlot, transformed);
+        if (slot.HasCanvas)
+            slot.SetCanvas(transform(slot.CanvasTiles));
+
+        if (slot.HasSelection)
+            slot.SetSelection(transform(slot.SelectionTiles));
+
+        ApplyStencilSlotState(pwp, activeSlot, slot);
         Main.NewText(message, WandColors.MsgInfo);
         SoundEngine.PlaySound(SoundID.MenuTick with { Volume = 0.5f });
+    }
+
+    private static StencilSlotState BuildStencilSlotState(PlanificationWandPlayer pwp, int slot)
+    {
+        var state = new StencilSlotState();
+        state.SetCanvas(pwp.GetSlotCanvasWorldTiles(slot));
+        state.SetSelection(pwp.GetSlotSelectionWorldTiles(slot));
+        return state;
+    }
+
+    private static void ApplyStencilSlotState(PlanificationWandPlayer pwp, int slot, StencilSlotState state)
+    {
+        pwp.ClearSlot(slot);
+
+        if (state.CanvasCount > 0)
+            pwp.SetSlotCanvasShape(slot, state.CloneCanvas());
+
+        if (state.SelectionCount > 0)
+            pwp.SetSlotSelectionShape(slot, state.CloneSelection());
+    }
+
+    private void OpenTransformModeSubUI(UIIconButton hostButton)
+    {
+        var settings = GetSettings();
+        var sys = ModContent.GetInstance<WandUISystem>();
+        if (sys?.WandSubPanelHost == null || hostButton == null || settings == null)
+            return;
+
+        if (settings.TransformModeEnabled)
+        {
+            if (ReferenceEquals(hostButton, _rotateCwBtn))
+                TransformActiveSlot(TileCoordTransforms.Rotate90CW, "Rotated slot CW");
+            else if (ReferenceEquals(hostButton, _rotateCcwBtn))
+                TransformActiveSlot(TileCoordTransforms.Rotate90CCW, "Rotated slot CCW");
+            return;
+        }
+
+        settings.TransformModeEnabled = true;
+
+        foreach (var panel in sys.WandSubPanelHost.Panels)
+        {
+            if (panel.IdentityKey == TransformModeSubUIIdentityKey)
+                return;
+        }
+
+        var panelShell = WandSubPanelFactories.CreateTransformModeShell(
+            host: hostButton,
+            titleKey: TransformModeSubUITitleKey,
+            identityKey: TransformModeSubUIIdentityKey,
+            ownerFamilies: WandFamilyMask.Planification,
+            onSetPivotPersistent: OnTransformSubUISetPivotPersistent,
+            onSetPivotTemporary: OnTransformSubUISetPivotTemporary,
+            onMove: OnTransformSubUIMove,
+            out _transformMoveBtn,
+            out _transformPivotPersistentBtn,
+            out _transformPivotTemporaryBtn);
+
+        UpdateTransformButtons();
+
+        sys.OpenWandSubPanel(panelShell);
+        panelShell.AnchorToHost();
+    }
+
+    private static bool IsTransformModeSubUIOpen()
+    {
+        var sys = ModContent.GetInstance<WandUISystem>();
+        if (sys?.WandSubPanelHost == null)
+            return false;
+
+        foreach (var panel in sys.WandSubPanelHost.Panels)
+        {
+            if (panel.IdentityKey == TransformModeSubUIIdentityKey && !panel.IsHidden)
+                return true;
+        }
+
+        return false;
+    }
+
+    private static void UpdateTransformModeLifecycle()
+    {
+        var settings = GetSettings();
+        if (settings == null)
+            return;
+
+        if (!IsTransformModeSubUIOpen())
+        {
+            settings.TransformModeEnabled = false;
+            settings.ActiveTransformAction = TransformActionMode.None;
+            settings.PendingTransformMoveStart = null;
+            settings.TemporaryPivot = null;
+        }
+    }
+
+    private static void OnTransformSubUISetPivotPersistent()
+    {
+        var settings = GetSettings();
+        if (settings == null)
+            return;
+
+        settings.TransformModeEnabled = true;
+        settings.ActiveTransformAction = TransformActionMode.SetPivotPersistent;
+        settings.PendingTransformMoveStart = null;
+        Main.NewText(Language.GetTextValue("Mods.WorldShapingWandsMod.UI.TransformMode.SetPivotPersistentHint"), WandColors.MsgInfo);
+    }
+
+    private static void OnTransformSubUISetPivotTemporary()
+    {
+        var settings = GetSettings();
+        if (settings == null)
+            return;
+
+        settings.TransformModeEnabled = true;
+        settings.ActiveTransformAction = TransformActionMode.SetPivotTemporary;
+        settings.PendingTransformMoveStart = null;
+        Main.NewText(Language.GetTextValue("Mods.WorldShapingWandsMod.UI.TransformMode.SetPivotTemporaryHint"), WandColors.MsgInfo);
+    }
+
+    private static void OnTransformSubUIMove()
+    {
+        var pwp = GetPlayerState();
+        var settings = GetSettings();
+        if (pwp == null || settings == null)
+            return;
+
+        var slot = BuildStencilSlotState(pwp, pwp.ActiveEditSlot);
+        if (!slot.HasCanvas && !slot.HasSelection)
+        {
+            Main.NewText("No canvas or selection active — nothing to move.", Color.OrangeRed);
+            return;
+        }
+
+        settings.TransformModeEnabled = true;
+        settings.ActiveTransformAction = TransformActionMode.Move;
+        settings.PendingTransformMoveStart = null;
+        Main.NewText(Language.GetTextValue("Mods.WorldShapingWandsMod.UI.TransformMode.MoveHint"), WandColors.MsgInfo);
     }
 
     private void TeleportActiveSlotToPlayer()
@@ -598,10 +749,39 @@ public class PlanificationSettingsPanel : UIState
         if (!IsVisible)
             return;
 
+        UpdateTransformModeLifecycle();
+
         UpdateModeButtons();
         UpdateOperationButtons();
         UpdateSlotButtons();
         UpdateRenderConfigButtons();
         UpdateShapeButtons();
+        UpdateTransformButtons();
+    }
+
+    private void UpdateTransformButtons()
+    {
+        var settings = GetSettings();
+        var pwp = GetPlayerState();
+        if (settings == null || pwp == null)
+            return;
+
+        var slot = BuildStencilSlotState(pwp, pwp.ActiveEditSlot);
+        bool enabled = slot.HasCanvas || slot.HasSelection;
+
+        if (_flipHorizontalBtn != null) _flipHorizontalBtn.Disabled = !enabled;
+        if (_flipVerticalBtn != null) _flipVerticalBtn.Disabled = !enabled;
+        if (_rotateCwBtn != null) _rotateCwBtn.Disabled = !enabled;
+        if (_rotateCcwBtn != null) _rotateCcwBtn.Disabled = !enabled;
+
+        if (_transformMoveBtn != null)
+            _transformMoveBtn.Toggled = settings.ActiveTransformAction == TransformActionMode.Move;
+        if (_transformPivotPersistentBtn != null)
+            _transformPivotPersistentBtn.Toggled = settings.ActiveTransformAction == TransformActionMode.SetPivotPersistent;
+        if (_transformPivotTemporaryBtn != null)
+            _transformPivotTemporaryBtn.Toggled = settings.ActiveTransformAction == TransformActionMode.SetPivotTemporary;
+
+        if (!(_transformMoveBtn?.Toggled == true || _transformPivotPersistentBtn?.Toggled == true || _transformPivotTemporaryBtn?.Toggled == true))
+            settings.ActiveTransformAction = TransformActionMode.None;
     }
 }

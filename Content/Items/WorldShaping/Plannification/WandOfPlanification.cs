@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using WorldShapingWandsMod.Common.Drawing;
 using WorldShapingWandsMod.Common.Enums;
@@ -47,9 +48,107 @@ public abstract class WandOfPlanificationBase : BaseCyclingWand
         wandPlayer.CancelSelection(GetCancelColor(), pwp.Settings.Shape);
     }
 
-    public override bool? UseItem(Player player) => TemplateUseItem(player);
+    public override bool? UseItem(Player player)
+    {
+        if (ShouldInterceptTransformWorldAction(player))
+            return false;
 
-    public override void HoldItem(Player player) => TemplateHoldItem(player);
+        return TemplateUseItem(player);
+    }
+
+    public override void HoldItem(Player player)
+    {
+        if (IsTransformWorldActionArmed(player))
+            return;
+
+        TemplateHoldItem(player);
+    }
+
+    private static bool IsTransformWorldActionArmed(Player player)
+    {
+        var pwp = player.GetModPlayer<PlanificationWandPlayer>();
+        if (pwp?.Settings == null)
+            return false;
+
+        return StencilTransformWorldAction.IsArmed(
+            pwp.Settings.TransformModeEnabled,
+            pwp.Settings.ActiveTransformAction,
+            IsMouseOverUI());
+    }
+
+    private static bool ShouldInterceptTransformWorldAction(Player player)
+    {
+        var pwp = player.GetModPlayer<PlanificationWandPlayer>();
+        if (pwp?.Settings == null)
+            return false;
+
+        return StencilTransformWorldAction.ShouldInterceptTransformClick(
+            player,
+            IsTransformWorldActionArmed(player),
+            () => HandleTransformWorldAction(player, pwp));
+    }
+
+    private static bool HandleTransformWorldAction(Player player, PlanificationWandPlayer pwp)
+    {
+        var settings = pwp.Settings;
+        int activeSlot = pwp.ActiveEditSlot;
+        var slot = BuildStencilSlotState(pwp, activeSlot);
+
+        if (settings.ActiveTransformAction == TransformActionMode.Move && !slot.HasCanvas && !slot.HasSelection)
+        {
+            Main.NewText("No canvas or selection active — nothing to move.", Color.OrangeRed);
+            return true;
+        }
+
+        var state = new StencilTransformWorldAction.TransformState
+        {
+            ActiveAction = settings.ActiveTransformAction,
+            PendingMoveStart = settings.PendingTransformMoveStart,
+            PersistentPivot = settings.PersistentPivot,
+            TemporaryPivot = settings.TemporaryPivot,
+        };
+
+        bool handled = StencilTransformWorldAction.Handle(
+            state,
+            GeometryHelper.GetMouseTile(),
+            slot.HasCanvas || slot.HasSelection,
+            (dx, dy) => slot.Translate(dx, dy),
+            key =>
+            {
+                if (Main.myPlayer == player.whoAmI)
+                    Main.NewText(Language.GetTextValue(key), WandColors.MsgInfo);
+            },
+            out var updated);
+
+        settings.PendingTransformMoveStart = updated.PendingMoveStart;
+        settings.PersistentPivot = updated.PersistentPivot;
+        settings.TemporaryPivot = updated.TemporaryPivot;
+
+        if (!handled)
+            return false;
+
+        ApplyStencilSlotState(pwp, activeSlot, slot);
+        return true;
+    }
+
+    private static StencilSlotState BuildStencilSlotState(PlanificationWandPlayer pwp, int slot)
+    {
+        var state = new StencilSlotState();
+        state.SetCanvas(pwp.GetSlotCanvasWorldTiles(slot));
+        state.SetSelection(pwp.GetSlotSelectionWorldTiles(slot));
+        return state;
+    }
+
+    private static void ApplyStencilSlotState(PlanificationWandPlayer pwp, int slot, StencilSlotState state)
+    {
+        pwp.ClearSlot(slot);
+
+        if (state.CanvasCount > 0)
+            pwp.SetSlotCanvasShape(slot, state.CloneCanvas());
+
+        if (state.SelectionCount > 0)
+            pwp.SetSlotSelectionShape(slot, state.CloneSelection());
+    }
 
     protected virtual void ExecutePlanificationOperation(Player player, WandPlayer wandPlayer)
     {
@@ -103,24 +202,6 @@ public abstract class WandOfPlanificationBase : BaseCyclingWand
         SoundEngine.PlaySound(SoundID.MenuTick with { Volume = 0.6f }, player.Center);
     }
 
-    private static StencilSlotState BuildStencilSlotState(PlanificationWandPlayer pwp, int slot)
-    {
-        var state = new StencilSlotState();
-        state.SetCanvas(pwp.GetSlotCanvasWorldTiles(slot));
-        state.SetSelection(pwp.GetSlotSelectionWorldTiles(slot));
-        return state;
-    }
-
-    private static void ApplyStencilSlotState(PlanificationWandPlayer pwp, int slot, StencilSlotState state)
-    {
-        pwp.ClearSlot(slot);
-
-        if (state.CanvasCount > 0)
-            pwp.SetSlotCanvasShape(slot, state.CloneCanvas());
-
-        if (state.SelectionCount > 0)
-            pwp.SetSlotSelectionShape(slot, state.CloneSelection());
-    }
 }
 
 public class WandOfPlanificationInstant : WandOfPlanificationBase

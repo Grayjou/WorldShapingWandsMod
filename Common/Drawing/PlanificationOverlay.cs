@@ -116,16 +116,16 @@ internal sealed class PlanificationOverlay : IComposableOverlay
         // Match Delimitation behavior: hide selection overlay while canvas-editing.
         if (canvasPreview.Count > 0)
         {
-            DrawFill(spriteBatch, canvasPreview, screenBounds, canvasFillColor);
-            DrawOutsideFill(spriteBatch, canvasPreview, screenBounds, outsideColor);
-            DrawOutline(spriteBatch, canvasPreview, screenBounds, color * 0.65f, 2);
+            StencilOverlayRenderer.DrawFill(spriteBatch, canvasPreview, screenBounds, canvasFillColor);
+            StencilOverlayRenderer.DrawOutsideFill(spriteBatch, canvasPreview, screenBounds, outsideColor);
+            StencilOverlayRenderer.DrawOutline(spriteBatch, canvasPreview, screenBounds, color * 0.65f, 2);
         }
 
         if (pwp.Settings.Mode != DelimitationWandMode.CanvasEdit && selectionPreview.Count > 0)
-            DrawFill(spriteBatch, selectionPreview, screenBounds, activeSelectionColor);
+            StencilOverlayRenderer.DrawFill(spriteBatch, selectionPreview, screenBounds, activeSelectionColor);
 
         if (selectionPreview.Count > 0)
-            DrawOutline(spriteBatch, selectionPreview, screenBounds, color * 0.80f, 2);
+            StencilOverlayRenderer.DrawOutline(spriteBatch, selectionPreview, screenBounds, color * 0.80f, 2);
     }
 
     private static bool TryBuildActiveOperationPreviewTiles(
@@ -249,95 +249,13 @@ internal sealed class PlanificationOverlay : IComposableOverlay
         int outlineThickness = isActiveSlot ? 2 : 1;
 
         if (cfg.ShowFill)
-            DrawFill(spriteBatch, tiles, screenBounds, color * fillAlpha);
+            StencilOverlayRenderer.DrawFill(spriteBatch, tiles, screenBounds, color * fillAlpha);
 
         if (cfg.ShowGrid)
-            DrawGrid(spriteBatch, tiles, screenBounds, color * gridAlpha);
+            StencilOverlayRenderer.DrawGrid(spriteBatch, tiles, screenBounds, color * gridAlpha);
 
         bool drawOutline = cfg.ShowOutline || (!cfg.ShowFill && !cfg.ShowGrid);
         if (drawOutline)
-            DrawOutline(spriteBatch, tiles, screenBounds, color * outlineAlpha, outlineThickness);
-    }
-
-    private static void DrawOutsideFill(
-        SpriteBatch spriteBatch,
-        IReadOnlySet<Point> canvasTiles,
-        Rectangle screenBounds,
-        Color outsideColor)
-    {
-        if (outsideColor.A == 0)
-            return;
-
-        var pixel = TextureAssets.MagicPixel.Value;
-
-        for (int x = screenBounds.Left; x < screenBounds.Right; x++)
-        for (int y = screenBounds.Top; y < screenBounds.Bottom; y++)
-        {
-            if (canvasTiles.Contains(new Point(x, y)))
-                continue;
-
-            var pos = new Vector2(x * 16, y * 16) - Main.screenPosition;
-            spriteBatch.Draw(pixel, pos, new Rectangle(0, 0, 16, 16), outsideColor);
-        }
-    }
-
-    private static void DrawFill(SpriteBatch spriteBatch, IReadOnlySet<Point> tiles, Rectangle screenBounds, Color color)
-    {
-        if (color.A == 0)
-            return;
-
-        var pixel = TextureAssets.MagicPixel.Value;
-        foreach (var tile in tiles)
-        {
-            if (tile.X < screenBounds.Left || tile.X >= screenBounds.Right ||
-                tile.Y < screenBounds.Top || tile.Y >= screenBounds.Bottom)
-                continue;
-
-            var pos = new Vector2(tile.X * 16, tile.Y * 16) - Main.screenPosition;
-            spriteBatch.Draw(pixel, pos, new Rectangle(0, 0, 16, 16), color);
-        }
-    }
-
-    private static void DrawGrid(SpriteBatch spriteBatch, IReadOnlySet<Point> tiles, Rectangle screenBounds, Color color)
-    {
-        if (color.A == 0)
-            return;
-
-        var pixel = TextureAssets.MagicPixel.Value;
-        foreach (var tile in tiles)
-        {
-            if (tile.X < screenBounds.Left || tile.X >= screenBounds.Right ||
-                tile.Y < screenBounds.Top || tile.Y >= screenBounds.Bottom)
-                continue;
-
-            var basePos = new Vector2(tile.X * 16, tile.Y * 16) - Main.screenPosition;
-            spriteBatch.Draw(pixel, basePos, new Rectangle(0, 0, 16, 1), color);
-            spriteBatch.Draw(pixel, basePos, new Rectangle(0, 0, 1, 16), color);
-        }
-    }
-
-    private static void DrawOutline(SpriteBatch spriteBatch, IReadOnlySet<Point> tiles, Rectangle screenBounds, Color color, int thickness)
-    {
-        if (color.A == 0 || tiles.Count == 0)
-            return;
-
-        var pixel = TextureAssets.MagicPixel.Value;
-        foreach (var tile in tiles)
-        {
-            if (tile.X < screenBounds.Left || tile.X >= screenBounds.Right ||
-                tile.Y < screenBounds.Top || tile.Y >= screenBounds.Bottom)
-                continue;
-
-            var basePos = new Vector2(tile.X * 16, tile.Y * 16) - Main.screenPosition;
-
-            if (!tiles.Contains(new Point(tile.X, tile.Y - 1)))
-                spriteBatch.Draw(pixel, basePos, new Rectangle(0, 0, 16, thickness), color);
-            if (!tiles.Contains(new Point(tile.X + 1, tile.Y)))
-                spriteBatch.Draw(pixel, basePos + new Vector2(16 - thickness, 0), new Rectangle(0, 0, thickness, 16), color);
-            if (!tiles.Contains(new Point(tile.X, tile.Y + 1)))
-                spriteBatch.Draw(pixel, basePos + new Vector2(0, 16 - thickness), new Rectangle(0, 0, 16, thickness), color);
-            if (!tiles.Contains(new Point(tile.X - 1, tile.Y)))
-                spriteBatch.Draw(pixel, basePos, new Rectangle(0, 0, thickness, 16), color);
-        }
+            StencilOverlayRenderer.DrawOutline(spriteBatch, tiles, screenBounds, color * outlineAlpha, outlineThickness);
     }
 }
