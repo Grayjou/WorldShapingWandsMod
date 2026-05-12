@@ -167,5 +167,16 @@ namespace WorldShapingWandsMod.Common.Configs
         [LabelKey("$Mods.WorldShapingWandsMod.Configs.PreferencesConfig.BlockExhaustion.Label")]
         [TooltipKey("$Mods.WorldShapingWandsMod.Configs.PreferencesConfig.BlockExhaustion.Tooltip")]
         public BlockExhaustionMode BlockExhaustion { get; set; } = BlockExhaustionMode.NextBlock;
+
+        // ═════════════════════════════════════════════
+        //  Planification
+        // ═════════════════════════════════════════════
+
+        [Header("Planification")]
+        [DefaultValue(true)]
+        public bool SharedPlanificationRenderConfig { get; set; } = true;
+
+        [DefaultValue(false)]
+        public bool UseFirstStencilColorForAll { get; set; } = false;
     }
 }

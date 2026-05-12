@@ -37,5 +37,8 @@ public enum WandFamily : byte
     Delimitation = 9,
 
     /// <summary>Wand of Molding — sculpts custom shapes via canvas editing.</summary>
-    Molding = 10
+    Molding = 10,
+
+    /// <summary>Wand of Planification — manages multi-stencil planning overlays.</summary>
+    Planification = 11
 }

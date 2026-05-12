@@ -25,6 +25,7 @@ public class WandUISystem : ModSystem
     internal TorchesSettingsPanel TorchesUI;
     internal SelectionSettingsPanel SelectionUI;
     internal MoldingSettingsPanel MoldingUI;
+    internal PlanificationSettingsPanel PlanificationUI;
 
     internal InventoryViewPanel InventoryViewUI;
 
@@ -66,6 +67,7 @@ public class WandUISystem : ModSystem
         (TorchesUI?.IsVisible ?? false) ||
         (SelectionUI?.IsVisible ?? false) ||
         (MoldingUI?.IsVisible ?? false) ||
+        (PlanificationUI?.IsVisible ?? false) ||
         (InventoryViewUI?.IsVisible ?? false);
 
     public bool IsCursorOverPanel()
@@ -84,6 +86,7 @@ public class WandUISystem : ModSystem
         if (TorchesUI?.IsVisible == true && (TorchesUI.PanelElement?.ContainsPoint(mousePos) ?? false)) return true;
         if (SelectionUI?.IsVisible == true && (SelectionUI.PanelElement?.ContainsPoint(mousePos) ?? false)) return true;
         if (MoldingUI?.IsVisible == true && (MoldingUI.PanelElement?.ContainsPoint(mousePos) ?? false)) return true;
+        if (PlanificationUI?.IsVisible == true && (PlanificationUI.PanelElement?.ContainsPoint(mousePos) ?? false)) return true;
         if (InventoryViewUI?.IsVisible == true && (InventoryViewUI.PanelElement?.ContainsPoint(mousePos) ?? false)) return true;
 
         return false;
@@ -128,6 +131,9 @@ public class WandUISystem : ModSystem
         MoldingUI = new MoldingSettingsPanel();
         MoldingUI.Activate();
 
+        PlanificationUI = new PlanificationSettingsPanel();
+        PlanificationUI.Activate();
+
         InventoryViewUI = new InventoryViewPanel();
         InventoryViewUI.Activate();
 
@@ -147,6 +153,7 @@ public class WandUISystem : ModSystem
         TorchesUI = null;
         SelectionUI = null;
         MoldingUI = null;
+        PlanificationUI = null;
         InventoryViewUI = null;
         WandSubPanelHost = null;
         _userInterface = null;
@@ -210,6 +217,11 @@ public class WandUISystem : ModSystem
             MoldingUI.IsVisible = true;
             _userInterface.SetState(MoldingUI);
         }
+        else if (heldItem is WandOfPlanificationBase)
+        {
+            PlanificationUI.IsVisible = true;
+            _userInterface.SetState(PlanificationUI);
+        }
     }
 
     public void ToggleUIForCurrentWand()
@@ -228,6 +240,7 @@ public class WandUISystem : ModSystem
             WandOfTorchesBase => TorchesUI?.IsVisible ?? false,
             WandOfDelimitationBase => SelectionUI?.IsVisible ?? false,
             WandOfMoldingBase => MoldingUI?.IsVisible ?? false,
+            WandOfPlanificationBase => PlanificationUI?.IsVisible ?? false,
             _ => false
         };
 
@@ -300,6 +313,7 @@ public class WandUISystem : ModSystem
         if (TorchesUI != null) TorchesUI.IsVisible = false;
         if (SelectionUI != null) SelectionUI.IsVisible = false;
         if (MoldingUI != null) MoldingUI.IsVisible = false;
+        if (PlanificationUI != null) PlanificationUI.IsVisible = false;
         _userInterface?.SetState(null);
         CloseAllWandSubPanels();
     }

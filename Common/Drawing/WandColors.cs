@@ -275,6 +275,7 @@ public static class WandColors
         { WandFamily.Torches,      new Color(255, 170, 50)   },  // Amber/Orange (35°)
         { WandFamily.Delimitation, new Color(230, 195, 50)   },  // Gold (45°)
         { WandFamily.Molding,      new Color(0, 210, 210)    },  // Cyan (180°)
+        { WandFamily.Planification,new Color(255, 120, 180)  },  // Pink (330°)
     };
 
     // ── Temperature-Based Cancel Colors ───────────────────────────────
@@ -326,6 +327,7 @@ public static class WandColors
             WandFamily.Coating      => CancelRed,       // 170° → Cool → Red
             WandFamily.Molding      => CancelRed,       // 180° → Cool → Red
             WandFamily.Fluids       => CancelRed,       // 215° → Cool → Red
+            WandFamily.Planification => CancelBlue,     // 330° → Warm → Blue
             WandFamily.Replacement  => CancelBlue,      // 280° → Warm → Blue
             _                       => Color.Orange      // fallback (legacy behavior)
         };

@@ -240,6 +240,10 @@ public class WandPlayer : ModPlayer
         {
             cap = config.DelimitationSelectionCap;
         }
+        else if (Player.HeldItem?.ModItem is WandOfPlanificationBase)
+        {
+            cap = config.DelimitationSelectionCap;
+        }
         else if (currentShape == ShapeType.Elbow || currentShape == ShapeType.CardinalLine || currentShape == ShapeType.StraightLine)
             cap = config.SmallSelectionCap;
         else if (GetCurrentFillMode() == ShapeMode.Hollow)
@@ -282,6 +286,11 @@ public class WandPlayer : ModPlayer
             var mwp = Player.GetModPlayer<MoldingWandPlayer>();
             return mwp.Settings.Shape.Shape;
         }
+        if (Player.HeldItem?.ModItem is WandOfPlanificationBase)
+        {
+            var pwp = Player.GetModPlayer<PlanificationWandPlayer>();
+            return pwp.Settings.Shape.Shape;
+        }
         return Settings.ShapeType;
     }
 
@@ -315,6 +324,11 @@ public class WandPlayer : ModPlayer
         {
             var mwp = Player.GetModPlayer<MoldingWandPlayer>();
             return mwp.Settings.Shape.FillMode;
+        }
+        if (Player.HeldItem?.ModItem is WandOfPlanificationBase)
+        {
+            var pwp = Player.GetModPlayer<PlanificationWandPlayer>();
+            return pwp.Settings.Shape.FillMode;
         }
         return Settings.ShapeMode;
     }
@@ -908,6 +922,7 @@ public class WandPlayer : ModPlayer
             || Player.HeldItem?.ModItem is WandOfTorchesBase
             || Player.HeldItem?.ModItem is WandOfDelimitationBase
             || Player.HeldItem?.ModItem is WandOfMoldingBase
+                || Player.HeldItem?.ModItem is WandOfPlanificationBase
             ;
     }
 

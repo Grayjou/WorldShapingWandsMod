@@ -80,6 +80,7 @@ public abstract class BaseCyclingWand : ModItem
         WandFamily.Torches       => WandAction.TorchPlace,
         WandFamily.Delimitation  => WandAction.DelimitationCanvasAdd,
         WandFamily.Molding       => WandAction.MoldingCanvasAdd,
+        WandFamily.Planification => WandAction.MoldingCanvasAdd,
         _                        => WandAction.BuildingSolid,
     };
 

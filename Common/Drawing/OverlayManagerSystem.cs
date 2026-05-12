@@ -32,6 +32,10 @@ internal sealed class OverlayManagerSystem : ModSystem
         var moldingCanvasOverlay = new MoldingCanvasOverlay();
         OverlayManager.Instance?.Register(moldingCanvasOverlay);
 
+        // Register Planification's multi-stencil visual overlay.
+        var planificationOverlay = new PlanificationOverlay();
+        OverlayManager.Instance?.Register(planificationOverlay);
+
         // Register the selection overlay adapter — wraps the existing SelectionOverlay
         var selectionAdapter = new SelectionOverlayAdapter();
         OverlayManager.Instance?.Register(selectionAdapter);
@@ -133,6 +137,11 @@ internal sealed class OverlayManagerSystem : ModSystem
             var mwp = player.GetModPlayer<Players.MoldingWandPlayer>();
             return mwp.Settings.Shape;
         }
+        if (player.HeldItem?.ModItem is WandOfPlanificationBase)
+        {
+            var pwp = player.GetModPlayer<Players.PlanificationWandPlayer>();
+            return pwp.Settings.Shape;
+        }
 
         return new ShapeInfo(
             wandPlayer.Settings.ShapeType,
@@ -156,7 +165,8 @@ internal sealed class OverlayManagerSystem : ModSystem
             || player.HeldItem?.ModItem is WandOfFluidsBase
             || player.HeldItem?.ModItem is WandOfTorchesBase
             || player.HeldItem?.ModItem is WandOfDelimitationBase
-            || player.HeldItem?.ModItem is WandOfMoldingBase;
+                || player.HeldItem?.ModItem is WandOfMoldingBase
+                || player.HeldItem?.ModItem is WandOfPlanificationBase;
     }
 
     /// <summary>

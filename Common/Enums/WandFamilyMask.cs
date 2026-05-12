@@ -51,12 +51,13 @@ public enum WandFamilyMask : uint
     Torches      = 1u << 7,
     Delimitation = 1u << 8,
     Molding      = 1u << 9,
+    Planification = 1u << 10,
 
     /// <summary>All ten WSW wand families. Use for SubPanels that should
     /// stay visible whenever any WSW wand is held (e.g. the Shape Selector
     /// per the architecture doc's Instance Reference table).</summary>
     All = Building | Dismantling | Replacement | Wiring | Safekeeping
-        | Coating | Fluids | Torches | Delimitation | Molding,
+        | Coating | Fluids | Torches | Delimitation | Molding | Planification,
 
     /// <summary>The three families that consume the global paint colour
     /// (paint pickers stay visible across this group). Per the
@@ -89,6 +90,7 @@ public static class WandFamilyMaskExtensions
         WandFamily.Torches      => WandFamilyMask.Torches,
         WandFamily.Delimitation => WandFamilyMask.Delimitation,
         WandFamily.Molding      => WandFamilyMask.Molding,
+        WandFamily.Planification => WandFamilyMask.Planification,
         _                       => WandFamilyMask.None,
     };
 

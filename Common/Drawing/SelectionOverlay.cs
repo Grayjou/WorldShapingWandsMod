@@ -337,6 +337,11 @@ public class SelectionOverlay : ModSystem
             var mwp = player.GetModPlayer<MoldingWandPlayer>();
             return mwp.Settings.Shape;
         }
+        else if (player.HeldItem?.ModItem is WandOfPlanificationBase)
+        {
+            var pwp = player.GetModPlayer<PlanificationWandPlayer>();
+            return pwp.Settings.Shape;
+        }
         else
         {
             return new ShapeInfo(wandPlayer.Settings.ShapeType, wandPlayer.Settings.ShapeMode, wandPlayer.Settings.Thickness, slice: wandPlayer.Settings.Slice); // fallback
@@ -354,7 +359,8 @@ public class SelectionOverlay : ModSystem
             || player.HeldItem?.ModItem is WandOfFluidsBase
             || player.HeldItem?.ModItem is WandOfTorchesBase
             || player.HeldItem?.ModItem is WandOfDelimitationBase
-            || player.HeldItem?.ModItem is WandOfMoldingBase;
+                || player.HeldItem?.ModItem is WandOfMoldingBase
+                || player.HeldItem?.ModItem is WandOfPlanificationBase;
     }
 
     /// <summary>

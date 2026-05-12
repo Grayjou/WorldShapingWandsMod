@@ -2026,6 +2026,18 @@ Configs: {
 				When disabled, anchor markers are only shown while Transform Mode is active.
 				''' */
 		}
+
+		// Headers.Planification: Planification Header
+
+		SharedPlanificationRenderConfig: {
+			// Label: Shared Planification Render Config
+			// Tooltip: ""
+		}
+
+		UseFirstStencilColorForAll: {
+			// Label: Use First Stencil Color For All
+			// Tooltip: ""
+		}
 	}
 
 	InfiniteOverride: {
@@ -2703,6 +2715,26 @@ Items: {
 	WandOfMoldingStamp: {
 		DisplayName: Varita de Moldeo (Sello)
 		Tooltip: Define una forma de molde una vez, luego estÃ¡mpala repetidamente
+	}
+
+	WandOfPlanificationConfirm: {
+		// DisplayName: Wand Of Planification Confirm
+		// Tooltip: ""
+	}
+
+	WandOfPlanificationInstant: {
+		// DisplayName: Wand Of Planification Instant
+		// Tooltip: ""
+	}
+
+	WandOfPlanificationSelect: {
+		// DisplayName: Wand Of Planification Select
+		// Tooltip: ""
+	}
+
+	WandOfPlanificationStamp: {
+		// DisplayName: Wand Of Planification Stamp
+		// Tooltip: ""
 	}
 }
 
