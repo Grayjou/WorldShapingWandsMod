@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -236,9 +237,8 @@ public abstract class WandOfDelimitationBase : BaseCyclingWand
 
         var settings = swp.Settings;
 
-        // Generate shape tiles from the wand's selection state
-        var shapeTiles = GenerateShapeTiles(wandPlayer, settings);
-        if (shapeTiles == null || shapeTiles.Length == 0)
+        var shapeTiles = StencilOperationEngine.BuildOperandTiles(wandPlayer, settings.Shape);
+        if (shapeTiles.Count == 0)
         {
             Main.NewText(Get("NoTilesInShape"), Color.Gray);
             return;
@@ -257,39 +257,17 @@ public abstract class WandOfDelimitationBase : BaseCyclingWand
         SoundEngine.PlaySound(SoundID.MenuTick with { Volume = 0.6f }, player.Center);
     }
 
-    /// <summary>
-    /// Generates the filled shape tiles from the wand player's visual selection,
-    /// using the Select Wand's own shape settings.
-    /// </summary>
-    private static Point[] GenerateShapeTiles(WandPlayer wandPlayer, DelimitationWandSettings settings)
-    {
-        var selection = wandPlayer.GetVisualSelection();
-        if (!selection.IsActive)
-            return null;
-
-        var context = settings.Shape.ToShapeContext(
-            selection.StartTile, selection.EndTile, selection.VerticalFirst);
-
-        var tileSet = ShapeRegistry.GetShapeTiles(settings.Shape.Shape, context);
-        return settings.Shape.ApplyInversion(tileSet.Tiles.ToArray(), context);
-    }
-
-    /// <summary>
-    /// Applies the current <see cref="CanvasOperation"/> (mapped from <see cref="SelectionOperation"/>)
-    /// to the canvas, then clips the selection to the new canvas bounds.
-    /// </summary>
     private static void ExecuteCanvasOperation(
-        DelimitationWandPlayer swp, DelimitationWandSettings settings, Point[] shapeTiles)
+        DelimitationWandPlayer swp, DelimitationWandSettings settings, HashSet<Point> shapeTiles)
     {
-        var canvasOp = ToCanvasOp(settings.Operation);
         int beforeCount = swp.Canvas.Count;
-        swp.Canvas.ApplyOperation(shapeTiles, canvasOp);
+
+        var slot = BuildStencilSlotState(swp);
+        StencilOperationEngine.ExecuteCanvasOperation(slot, shapeTiles, settings.Operation);
+        ApplyStencilSlotState(swp, slot);
+
         int afterCount = swp.Canvas.Count;
-
-        // Clip selection to new canvas bounds
-        swp.Selection.ClipToCanvas(swp.Canvas);
-
-        string opName = canvasOp.ToString();
+        string opName = StencilOperationEngine.ToCanvasOperation(settings.Operation).ToString();
         int delta = Math.Abs(afterCount - beforeCount);
         Main.NewText($"Canvas {opName}: {delta} tiles ({afterCount} total)", Color.Gold);
     }
@@ -299,17 +277,18 @@ public abstract class WandOfDelimitationBase : BaseCyclingWand
     /// auto-creating the canvas if needed.
     /// </summary>
     private static void ExecuteSelectionOperation(
-        DelimitationWandPlayer swp, DelimitationWandSettings settings, Point[] shapeTiles)
+        DelimitationWandPlayer swp, DelimitationWandSettings settings, HashSet<Point> shapeTiles)
     {
-        // Auto-create canvas from first shape if no canvas exists
-        if (!swp.Canvas.IsActive && settings.AutoCreateCanvas)
-        {
-            swp.Canvas.ApplyOperation(shapeTiles, CanvasOperation.Add);
-            Main.NewText($"Canvas created ({swp.Canvas.Count} tiles)", Color.Gold);
-        }
+        bool hadCanvas = swp.Canvas.IsActive;
+        var slot = BuildStencilSlotState(swp);
 
         int beforeCount = swp.Selection.Count;
-        swp.Selection.ApplyOperation(shapeTiles, settings.Operation, swp.Canvas);
+        StencilOperationEngine.ExecuteSelectionOperation(slot, shapeTiles, settings.Operation, settings.AutoCreateCanvas);
+        ApplyStencilSlotState(swp, slot);
+
+        if (!hadCanvas && swp.Canvas.IsActive)
+            Main.NewText($"Canvas created ({swp.Canvas.Count} tiles)", Color.Gold);
+
         int afterCount = swp.Selection.Count;
 
         string opName = settings.Operation.ToString();
@@ -317,17 +296,27 @@ public abstract class WandOfDelimitationBase : BaseCyclingWand
         Main.NewText($"Selection {opName}: {delta} tiles ({afterCount} total)", Color.Cyan);
     }
 
-    /// <summary>
-    /// Maps a <see cref="SelectionOperation"/> to its equivalent <see cref="CanvasOperation"/>.
-    /// Operations not applicable to canvas (Intersect, XOR, Invert) map to Add.
-    /// </summary>
-    private static CanvasOperation ToCanvasOp(SelectionOperation op) => op switch
+    private static StencilSlotState BuildStencilSlotState(DelimitationWandPlayer swp)
     {
-        SelectionOperation.Add => CanvasOperation.Add,
-        SelectionOperation.Remove => CanvasOperation.Remove,
-        SelectionOperation.Clear => CanvasOperation.Clear,
-        _ => CanvasOperation.Add, // Intersect, XOR, Invert → Add for canvas
-    };
+        var slot = new StencilSlotState();
+        slot.SetCanvas(swp.Canvas.Tiles);
+        slot.SetSelection(swp.Selection.Tiles);
+        slot.CustomShape = swp.ActiveCustomShape;
+        return slot;
+    }
+
+    private static void ApplyStencilSlotState(DelimitationWandPlayer swp, StencilSlotState slot)
+    {
+        swp.Canvas.Clear();
+        if (slot.CanvasCount > 0)
+            swp.Canvas.ApplyOperation(slot.CanvasTiles, CanvasOperation.Add);
+
+        swp.Selection.Clear();
+        if (slot.SelectionCount > 0)
+            swp.Selection.ApplyOperation(slot.SelectionTiles, SelectionOperation.Add, swp.Canvas);
+
+        swp.ActiveCustomShape = slot.CustomShape;
+    }
 }
 
 // ════════════════════════════════════════════════════════════════════

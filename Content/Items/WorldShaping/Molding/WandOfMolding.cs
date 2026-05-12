@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -256,9 +257,8 @@ public abstract class WandOfMoldingBase : BaseCyclingWand
         var mwp = player.GetModPlayer<MoldingWandPlayer>();
         var settings = mwp.Settings;
 
-        // Generate shape tiles from the wand's selection state
-        var shapeTiles = GenerateShapeTiles(wandPlayer, settings);
-        if (shapeTiles == null || shapeTiles.Length == 0)
+        var shapeTiles = StencilOperationEngine.BuildOperandTiles(wandPlayer, settings.Shape);
+        if (shapeTiles.Count == 0)
         {
             Main.NewText(Get("NoTilesInShape"), Color.Gray);
             return;
@@ -288,38 +288,17 @@ public abstract class WandOfMoldingBase : BaseCyclingWand
         SoundEngine.PlaySound(SoundID.MenuTick with { Volume = 0.6f }, player.Center);
     }
 
-    /// <summary>
-    /// Generates the filled shape tiles from the wand player's visual selection,
-    /// using the Molding Wand's own shape settings.
-    /// </summary>
-    private static Point[] GenerateShapeTiles(WandPlayer wandPlayer, MoldingWandSettings settings)
-    {
-        var selection = wandPlayer.GetVisualSelection();
-        if (!selection.IsActive)
-            return null;
-
-        var context = settings.Shape.ToShapeContext(
-            selection.StartTile, selection.EndTile, selection.VerticalFirst);
-
-        var tileSet = ShapeRegistry.GetShapeTiles(settings.Shape.Shape, context);
-        return settings.Shape.ApplyInversion(tileSet.Tiles.ToArray(), context);
-    }
-
-    /// <summary>
-    /// Applies the operation to the canvas, then clips the mold selection to new bounds.
-    /// </summary>
     private static void ExecuteCanvasOperation(
-        MoldingWandPlayer mwp, MoldingWandSettings settings, Point[] shapeTiles)
+        MoldingWandPlayer mwp, MoldingWandSettings settings, HashSet<Point> shapeTiles)
     {
-        var canvasOp = ToCanvasOp(settings.Operation);
         int beforeCount = mwp.Canvas.Count;
-        mwp.Canvas.ApplyOperation(shapeTiles, canvasOp);
+
+        var slot = BuildStencilSlotState(mwp);
+        StencilOperationEngine.ExecuteCanvasOperation(slot, shapeTiles, settings.Operation);
+        ApplyStencilSlotState(mwp, slot);
+
         int afterCount = mwp.Canvas.Count;
-
-        // Clip mold selection to new canvas bounds
-        mwp.Selection.ClipToCanvas(mwp.Canvas);
-
-        string opName = canvasOp.ToString();
+        string opName = StencilOperationEngine.ToCanvasOperation(settings.Operation).ToString();
         int delta = Math.Abs(afterCount - beforeCount);
         Main.NewText($"Mold Canvas {opName}: {delta} tiles ({afterCount} total)", new Color(0, 200, 200));
     }
@@ -329,17 +308,18 @@ public abstract class WandOfMoldingBase : BaseCyclingWand
     /// When zero cells are changed, shows a contextual hint to guide the user.
     /// </summary>
     private static void ExecuteSelectionOperation(
-        MoldingWandPlayer mwp, MoldingWandSettings settings, Point[] shapeTiles)
+        MoldingWandPlayer mwp, MoldingWandSettings settings, HashSet<Point> shapeTiles)
     {
-        // Auto-create canvas from first shape if no canvas exists
-        if (!mwp.Canvas.IsActive && settings.AutoCreateCanvas)
-        {
-            mwp.Canvas.ApplyOperation(shapeTiles, CanvasOperation.Add);
-            Main.NewText($"Mold canvas created ({mwp.Canvas.Count} tiles)", new Color(0, 200, 200));
-        }
+        bool hadCanvas = mwp.Canvas.IsActive;
+        var slot = BuildStencilSlotState(mwp);
 
         int beforeCount = mwp.Selection.Count;
-        mwp.Selection.ApplyOperation(shapeTiles, settings.Operation, mwp.Canvas);
+        StencilOperationEngine.ExecuteSelectionOperation(slot, shapeTiles, settings.Operation, settings.AutoCreateCanvas);
+        ApplyStencilSlotState(mwp, slot);
+
+        if (!hadCanvas && mwp.Canvas.IsActive)
+            Main.NewText($"Mold canvas created ({mwp.Canvas.Count} tiles)", new Color(0, 200, 200));
+
         int afterCount = mwp.Selection.Count;
 
         string opName = settings.Operation.ToString();
@@ -353,6 +333,28 @@ public abstract class WandOfMoldingBase : BaseCyclingWand
         {
             Main.NewText($"Mold {opName}: {delta} tiles ({afterCount} total)", new Color(0, 220, 220));
         }
+    }
+
+    private static StencilSlotState BuildStencilSlotState(MoldingWandPlayer mwp)
+    {
+        var slot = new StencilSlotState();
+        slot.SetCanvas(mwp.Canvas.Tiles);
+        slot.SetSelection(mwp.Selection.Tiles);
+        slot.CustomShape = mwp.MoldedShape;
+        return slot;
+    }
+
+    private static void ApplyStencilSlotState(MoldingWandPlayer mwp, StencilSlotState slot)
+    {
+        mwp.Canvas.Clear();
+        if (slot.CanvasCount > 0)
+            mwp.Canvas.ApplyOperation(slot.CanvasTiles, CanvasOperation.Add);
+
+        mwp.Selection.Clear();
+        if (slot.SelectionCount > 0)
+            mwp.Selection.ApplyOperation(slot.SelectionTiles, SelectionOperation.Add, mwp.Canvas);
+
+        mwp.ActiveStencil.MoldedShape = slot.CustomShape;
     }
 
     /// <summary>
@@ -453,16 +455,6 @@ public abstract class WandOfMoldingBase : BaseCyclingWand
         return MathF.Sqrt(dx * dx + dy * dy);
     }
 
-    /// <summary>
-    /// Maps a <see cref="SelectionOperation"/> to its equivalent <see cref="CanvasOperation"/>.
-    /// </summary>
-    private static CanvasOperation ToCanvasOp(SelectionOperation op) => op switch
-    {
-        SelectionOperation.Add => CanvasOperation.Add,
-        SelectionOperation.Remove => CanvasOperation.Remove,
-        SelectionOperation.Clear => CanvasOperation.Clear,
-        _ => CanvasOperation.Add,
-    };
 }
 
 // ════════════════════════════════════════════════════════════════════
