@@ -21,7 +21,7 @@ namespace WorldShapingWandsMod.Common.UI;
 
 /// <summary>
 /// Settings panel for the Wand of Molding.
-/// Structurally mirrors <see cref="SelectionSettingsPanel"/> but reads from / writes to
+/// Structurally mirrors <see cref="DelimitationSettingsPanel"/> but reads from / writes to
 /// <see cref="MoldingWandPlayer"/> and <see cref="MoldingWandSettings"/> instead of the
 /// Delimitation counterparts, ensuring the two systems remain fully independent.
 /// </summary>

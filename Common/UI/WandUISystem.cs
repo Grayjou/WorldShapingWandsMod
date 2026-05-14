@@ -23,7 +23,7 @@ public class WandUISystem : ModSystem
     internal CoatingSettingsPanel CoatingUI;
     internal FluidsSettingsPanel FluidsUI;
     internal TorchesSettingsPanel TorchesUI;
-    internal SelectionSettingsPanel SelectionUI;
+    internal DelimitationSettingsPanel SelectionUI;
     internal MoldingSettingsPanel MoldingUI;
     internal PlanificationSettingsPanel PlanificationUI;
 
@@ -125,7 +125,7 @@ public class WandUISystem : ModSystem
         TorchesUI = new TorchesSettingsPanel();
         TorchesUI.Activate();
 
-        SelectionUI = new SelectionSettingsPanel();
+        SelectionUI = new DelimitationSettingsPanel();
         SelectionUI.Activate();
 
         MoldingUI = new MoldingSettingsPanel();

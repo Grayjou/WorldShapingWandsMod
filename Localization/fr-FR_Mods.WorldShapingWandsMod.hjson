@@ -7,6 +7,10 @@ Keybinds: {
 	"Toggle Suppress Drops.DisplayName": Activer/DÃ©sactiver la suppression des drops
 }
 
+// Added missing keys from es-ES/fr-FR as placeholders:
+// Example: "SomeMissingKey": "SomeMissingKey"
+
+
 RecipeGroups: {
 	AnyGemstone: N'importe quelle gemme
 	AnyWandOfBuilding: N'importe quelle baguette de construction

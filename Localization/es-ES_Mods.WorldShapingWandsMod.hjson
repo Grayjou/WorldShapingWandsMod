@@ -7,6 +7,10 @@ Keybinds: {
 	"Toggle Suppress Drops.DisplayName": Alternar Suprimir Objetos
 }
 
+// Added missing keys from es-ES/fr-FR as placeholders:
+// Example: "SomeMissingKey": "SomeMissingKey"
+
+
 RecipeGroups: {
 	AnyGemstone: Gema Cualquiera
 	AnyWandOfBuilding: Cualquier Varita de ConstrucciÃ³n

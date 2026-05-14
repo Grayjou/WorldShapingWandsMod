@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -149,6 +149,7 @@ public class PlanificationSettingsPanel : UIState
         _triangleFilledBtn = shapes.TriangleFilled; _triangleHollowBtn = shapes.TriangleHollow;
         _edgeBtn = shapes.Elbow; _cardinalBtn = shapes.Cardinal; _straightLineBtn = shapes.StraightLine;
         _moldBtn = shapes.Mold; _magicWandReadBtn = shapes.MagicWandRead;
+        Common.UI.Elements.MoldCellWiring.WireActOnPicker(_moldBtn);
         Common.UI.Elements.MagicWandReadCellWiring.WireConfigSubUI(_magicWandReadBtn);
 
         _builder.AddSliceSection(out _sliceGrid, OnSliceChanged);
@@ -231,6 +232,7 @@ public class PlanificationSettingsPanel : UIState
             };
         }
 
+        // Left click shows hint if verbosity is enabled; right click opens subUI
         _visibilityBtn.OnLeftClick += (_, _) =>
         {
             if (WandConfigs.Preferences?.WandVerbosity == true)
@@ -305,24 +307,24 @@ public class PlanificationSettingsPanel : UIState
             if (openPanel.IdentityKey == VisibilitySubUIIdentityKey)
                 return;
         }
-
-        var body = BuildVisibilityBody();
-        var panel = new WandSubPanel(
-            body: body,
+        var panelShell = new WandSubPanel(
+            body: BuildVisibilityBody(),
             titleKey: "Planification.VisibleStencils",
-            defaultLocked: false,
+            defaultLocked: true,
             host: _visibilityBtn,
             identityKey: VisibilitySubUIIdentityKey)
         {
             Type = SubPanelType.Panel,
             OwnerFamilies = WandFamilyMask.Planification,
-            LockBehaviourDecl = LockBehaviour.DefaultUnlocked,
+            LockBehaviourDecl = LockBehaviour.DefaultLocked,
             OnChoice = ChoiceBehaviour.NeverCloses,
             OnParentClose = ParentCloseBehaviour.StaysUpIfLocked,
+            ExtraWidth = 12f,
+            ExtraHeight = 22f,
         };
 
-        sys.OpenWandSubPanel(panel);
-        panel.AnchorToHost();
+        sys.OpenWandSubPanel(panelShell);
+        panelShell.AnchorToHost();
     }
 
     private UIElement BuildVisibilityBody()
@@ -625,7 +627,7 @@ public class PlanificationSettingsPanel : UIState
         var slot = BuildStencilSlotState(pwp, pwp.ActiveEditSlot);
         if (!slot.HasCanvas && !slot.HasSelection)
         {
-            Main.NewText("No canvas or selection active — nothing to move.", Color.OrangeRed);
+            Main.NewText("No canvas or selection active â€” nothing to move.", Color.OrangeRed);
             return;
         }
 
@@ -780,3 +782,5 @@ public class PlanificationSettingsPanel : UIState
             settings.ActiveTransformAction = TransformActionMode.None;
     }
 }
+
+

@@ -1,4 +1,4 @@
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using ReLogic.Content;
@@ -94,9 +94,6 @@ internal static class BadgeAssets
         BadgeCorner corner, Color tint)
     {
         var pos = BadgeCornerOffset(buttonRect, tex.Width, corner);
-        var backingRect = new Rectangle((int)pos.X - 1, (int)pos.Y - 1, tex.Width + 2, tex.Height + 2);
-        float backingAlpha = tint.A / 255f * 0.35f;
-        spriteBatch.Draw(TextureAssets.MagicPixel.Value, backingRect, Color.Black * backingAlpha);
         spriteBatch.Draw(tex, pos, tint);
     }
 
@@ -139,3 +136,4 @@ internal static class BadgeAssets
 #endif
     }
 }
+

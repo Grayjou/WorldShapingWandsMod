@@ -26,7 +26,7 @@ namespace WorldShapingWandsMod.Common.UI;
 /// action commands (Clear Selection, Invert Selection, Clear Canvas).
 /// Displays live tile counts for both canvas and selection.
 /// </summary>
-public class SelectionSettingsPanel : UIState
+public class DelimitationSettingsPanel : UIState
 {
     public bool IsVisible { get; set; }
     public UIElement PanelElement => _mainPanel;

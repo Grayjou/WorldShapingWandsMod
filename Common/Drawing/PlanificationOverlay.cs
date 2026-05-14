@@ -11,6 +11,7 @@ using WorldShapingWandsMod.Common.Geometry;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.Settings;
 using WorldShapingWandsMod.Common.Items;
+using WorldShapingWandsMod.Content.Items;
 
 namespace WorldShapingWandsMod.Common.Drawing;
 
@@ -58,6 +59,8 @@ internal sealed class PlanificationOverlay : IComposableOverlay
         if (!isAnyWand)
             return;
 
+        bool isPlanificationWand = player.HeldItem?.ModItem is WandOfPlanificationBase;
+
         var pwp = player.GetModPlayer<PlanificationWandPlayer>();
         if (pwp == null)
             return;
@@ -78,7 +81,7 @@ internal sealed class PlanificationOverlay : IComposableOverlay
             var cfg = pwp.GetRenderConfig(slot);
             var color = useFirstColor ? SlotColors[0] : SlotColors[slot];
 
-            if (isActiveSlot)
+            if (isActiveSlot && isPlanificationWand)
             {
                 DrawActiveSlotLikeDelimitation(spriteBatch, context, pwp, canvasTiles, selectionTiles, screenBounds, color);
                 continue;
