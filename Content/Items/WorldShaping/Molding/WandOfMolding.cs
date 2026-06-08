@@ -279,7 +279,7 @@ public abstract class WandOfMoldingBase : BaseCyclingWand
         var slot = BuildStencilSlotState(mwp);
 
         int beforeCount = mwp.Selection.Count;
-        StencilOperationEngine.ExecuteSelectionOperation(slot, shapeTiles, settings.Operation, settings.AutoCreateCanvas);
+        StencilOperationEngine.ExecuteSelectionOperation(slot, shapeTiles, settings.Operation, settings.AutoCreateCanvas, settings.AutoExpandCanvas);
         ApplyStencilSlotState(mwp, slot);
 
         if (!hadCanvas && mwp.Canvas.IsActive)

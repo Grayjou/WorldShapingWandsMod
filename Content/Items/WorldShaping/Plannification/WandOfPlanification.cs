@@ -184,7 +184,7 @@ public abstract class WandOfPlanificationBase : BaseCyclingWand
             int beforeCount = slot.SelectionCount;
             bool hadCanvas = slot.HasCanvas;
 
-            if (!StencilOperationEngine.ExecuteSelectionOperation(slot, shapeTiles, settings.Operation, settings.AutoCreateCanvas))
+            if (!StencilOperationEngine.ExecuteSelectionOperation(slot, shapeTiles, settings.Operation, settings.AutoCreateCanvas, settings.AutoExpandCanvas))
             {
                 return;
             }

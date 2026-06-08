@@ -68,6 +68,7 @@ public class DelimitationSettingsPanel : UIState
 
     // Delimitation options (icon toggles)
     private UIIconButton _autoCreateCanvasBtn;
+    private UIIconButton _autoExpandCanvasBtn;
 
     // Transform actions (non-toggle)
     private UIIconButton _flipHorizontalBtn, _flipVerticalBtn, _rotateCwBtn, _rotateCcwBtn;
@@ -263,19 +264,28 @@ public class DelimitationSettingsPanel : UIState
         var texRotateCCW = mod.Assets.Request<Texture2D>(
             "Assets_Build/Icons/Stencil/RotateCCW", AssetRequestMode.ImmediateLoad);
 
+        var texAutoExpandCanvas = mod.Assets.Request<Texture2D>(
+            "Assets_Build/Icons/Stencil/AutoExpandCanvas", AssetRequestMode.ImmediateLoad);
+
         _builder.AddActionIconRow("Selection.Options", new WandPanelBuilder.IconDef[]
         {
             new(texAutoCreateCanvas, "Selection.AutoCreateCanvas", isToggle: true),
+            new(texAutoExpandCanvas, "Selection.AutoExpandCanvas", isToggle: true),
+        }, out var optionsBtns);
+        _autoCreateCanvasBtn = optionsBtns[0];
+        _autoExpandCanvasBtn = optionsBtns[1];
+
+        _builder.AddActionIconRow("Selection.Transform", new WandPanelBuilder.IconDef[]
+        {
             WandPanelBuilder.IconDef.WithText(texFlipHorizontal, L("Selection.Transform.FlipHorizontal")),
             WandPanelBuilder.IconDef.WithText(texFlipVertical, L("Selection.Transform.FlipVertical")),
             WandPanelBuilder.IconDef.WithText(texRotateCW, L("Selection.Transform.RotateCW")),
             WandPanelBuilder.IconDef.WithText(texRotateCCW, L("Selection.Transform.RotateCCW")),
         }, out var transformBtns);
-        _autoCreateCanvasBtn = transformBtns[0];
-        _flipHorizontalBtn = transformBtns[1];
-        _flipVerticalBtn = transformBtns[2];
-        _rotateCwBtn = transformBtns[3];
-        _rotateCcwBtn = transformBtns[4];
+        _flipHorizontalBtn = transformBtns[0];
+        _flipVerticalBtn = transformBtns[1];
+        _rotateCwBtn = transformBtns[2];
+        _rotateCcwBtn = transformBtns[3];
         _rotateCwBtn.HasSubUIBadge = true;
         _rotateCcwBtn.HasSubUIBadge = true;
 
@@ -378,6 +388,12 @@ public class DelimitationSettingsPanel : UIState
         {
             var s = GetSettings();
             if (s != null) s.AutoCreateCanvas = _autoCreateCanvasBtn.Toggled;
+        };
+
+        _autoExpandCanvasBtn.OnToggled += (_, _) =>
+        {
+            var s = GetSettings();
+            if (s != null) s.AutoExpandCanvas = _autoExpandCanvasBtn.Toggled;
         };
 
         _flipHorizontalBtn.OnLeftClick += (_, _) => OnTransformFlipHorizontal();
@@ -1095,6 +1111,14 @@ public class DelimitationSettingsPanel : UIState
             _autoCreateCanvasBtn.Toggled = s.AutoCreateCanvas;
     }
 
+    private void UpdateAutoExpandCanvas()
+    {
+        var s = GetSettings();
+        if (s == null) return;
+        if (_autoExpandCanvasBtn != null && _autoExpandCanvasBtn.Toggled != s.AutoExpandCanvas)
+            _autoExpandCanvasBtn.Toggled = s.AutoExpandCanvas;
+    }
+
     private void UpdateSliceGrid()
     {
         var s = GetSettings();
@@ -1137,6 +1161,7 @@ public class DelimitationSettingsPanel : UIState
         UpdateThicknessDisplay();
         UpdateShapeOptions();
         UpdateAutoCreateCanvas();
+        UpdateAutoExpandCanvas();
         UpdateSliceGrid();
         UpdateTransformButtons();
     }

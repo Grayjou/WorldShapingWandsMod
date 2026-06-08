@@ -233,6 +233,8 @@ public static class WandSubPanelFactories
             LockBehaviourDecl = LockBehaviour.DefaultUnlocked,
             OnChoice          = ChoiceBehaviour.ClosesIfUnlocked,
             OnParentClose     = ParentCloseBehaviour.StaysUpIfLocked,
+            ExtraWidth        = 20f,
+            ExtraHeight       = 10f,
         };
         panelRef = panel;
 

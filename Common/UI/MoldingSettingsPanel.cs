@@ -68,6 +68,7 @@ public class MoldingSettingsPanel : UIState
     // Molding options (icon toggles)
     private UIIconButton _autoCreateCanvasBtn;
     private UIIconButton _autoPromoteBtn;
+    private UIIconButton _autoExpandCanvasBtn;
 
     // Transform actions (non-toggle)
     private UIIconButton _flipHorizontalBtn, _flipVerticalBtn, _rotateCwBtn, _rotateCcwBtn;
@@ -232,6 +233,8 @@ public class MoldingSettingsPanel : UIState
             "Assets_Build/Icons/Stencil/AutoCreateCanvas", AssetRequestMode.ImmediateLoad);
         var texAutoPromoteMold = mod.Assets.Request<Texture2D>(
             "Assets_Build/Icons/Molding/AutoPromoteMold", AssetRequestMode.ImmediateLoad);
+        var texAutoExpandCanvas = mod.Assets.Request<Texture2D>(
+            "Assets_Build/Icons/Stencil/AutoExpandCanvas", AssetRequestMode.ImmediateLoad);
         _builder.AddShapeOptionsSection(new WandPanelBuilder.IconDef[]
         {
             new(texEqualDim, "Common.EqualDimensions", isToggle: true),
@@ -249,6 +252,16 @@ public class MoldingSettingsPanel : UIState
         _drawFromCenterBtn.AllowDeselect = true;
         _drawFromCenterBtn.InactiveColor = WandPanelTheme.Colors.ButtonInactive;
 
+        _builder.AddActionIconRow("Molding.Options", new WandPanelBuilder.IconDef[]
+        {
+            new(texAutoCreateCanvas, "Molding.AutoCreateCanvas", isToggle: true),
+            new(texAutoPromoteMold, "Molding.AutoPromote", isToggle: true),
+            new(texAutoExpandCanvas, "Molding.AutoExpandCanvas", isToggle: true),
+        }, out var optRowBtns);
+        _autoCreateCanvasBtn = optRowBtns[0];
+        _autoPromoteBtn = optRowBtns[1];
+        _autoExpandCanvasBtn = optRowBtns[2];
+
         var texFlipHorizontal = mod.Assets.Request<Texture2D>(
             "Assets_Build/Icons/Stencil/FlipHorizontal", AssetRequestMode.ImmediateLoad);
         var texFlipVertical = mod.Assets.Request<Texture2D>(
@@ -258,21 +271,17 @@ public class MoldingSettingsPanel : UIState
         var texRotateCCW = mod.Assets.Request<Texture2D>(
             "Assets_Build/Icons/Stencil/RotateCCW", AssetRequestMode.ImmediateLoad);
 
-        _builder.AddActionIconRow("Molding.Options", new WandPanelBuilder.IconDef[]
+        _builder.AddActionIconRow("Molding.Transform", new WandPanelBuilder.IconDef[]
         {
-            new(texAutoCreateCanvas, "Molding.AutoCreateCanvas", isToggle: true),
-            new(texAutoPromoteMold, "Molding.AutoPromote", isToggle: true),
             WandPanelBuilder.IconDef.WithText(texFlipHorizontal, L("Molding.Transform.FlipHorizontal")),
             WandPanelBuilder.IconDef.WithText(texFlipVertical, L("Molding.Transform.FlipVertical")),
             WandPanelBuilder.IconDef.WithText(texRotateCW, L("Molding.Transform.RotateCW")),
             WandPanelBuilder.IconDef.WithText(texRotateCCW, L("Molding.Transform.RotateCCW")),
         }, out var transformBtns);
-        _autoCreateCanvasBtn = transformBtns[0];
-        _autoPromoteBtn = transformBtns[1];
-        _flipHorizontalBtn = transformBtns[2];
-        _flipVerticalBtn = transformBtns[3];
-        _rotateCwBtn = transformBtns[4];
-        _rotateCcwBtn = transformBtns[5];
+        _flipHorizontalBtn = transformBtns[0];
+        _flipVerticalBtn = transformBtns[1];
+        _rotateCwBtn = transformBtns[2];
+        _rotateCcwBtn = transformBtns[3];
         _rotateCwBtn.HasSubUIBadge = true;
         _rotateCcwBtn.HasSubUIBadge = true;
 
@@ -375,6 +384,12 @@ public class MoldingSettingsPanel : UIState
             mwp.AutoPromote = _autoPromoteBtn.Toggled;
             if (mwp.AutoPromote && mwp.Selection.IsActive)
                 mwp.PromoteMoldToCustomShape();
+        };
+
+        _autoExpandCanvasBtn.OnToggled += (_, _) =>
+        {
+            var s = GetSettings();
+            if (s != null) s.AutoExpandCanvas = _autoExpandCanvasBtn.Toggled;
         };
 
         _flipHorizontalBtn.OnLeftClick += (_, _) => OnTransformFlipHorizontal();
@@ -1099,6 +1114,14 @@ public class MoldingSettingsPanel : UIState
             _autoCreateCanvasBtn.Toggled = s.AutoCreateCanvas;
     }
 
+    private void UpdateAutoExpandCanvas()
+    {
+        var s = GetSettings();
+        if (s == null) return;
+        if (_autoExpandCanvasBtn != null && _autoExpandCanvasBtn.Toggled != s.AutoExpandCanvas)
+            _autoExpandCanvasBtn.Toggled = s.AutoExpandCanvas;
+    }
+
     private void UpdateAutoPromote()
     {
         var mwp = GetMoldingWandPlayer();
@@ -1156,6 +1179,7 @@ public class MoldingSettingsPanel : UIState
         UpdateThicknessDisplay();
         UpdateShapeOptions();
         UpdateAutoCreateCanvas();
+        UpdateAutoExpandCanvas();
         UpdateAutoPromote();
         UpdatePromoteActionButton();
         UpdateSliceGrid();

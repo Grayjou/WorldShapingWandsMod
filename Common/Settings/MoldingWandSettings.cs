@@ -34,6 +34,14 @@ public class MoldingWandSettings
     /// </summary>
     public bool AutoCreateCanvas { get; set; } = true;
 
+    /// <summary>
+    /// When <c>true</c>, the canvas auto-expands to include any operand tiles
+    /// that fall outside its current boundary. Supersedes AutoCreateCanvas:
+    /// if AutoExpandCanvas is on, the canvas will be created/expanded even
+    /// when AutoCreateCanvas is off.
+    /// </summary>
+    public bool AutoExpandCanvas { get; set; } = true;
+
     /// <summary>The shape configuration (shape type, fill mode, outline thickness).</summary>
     public ShapeInfo Shape { get; set; } = ShapeInfo.Default;
 
@@ -93,6 +101,7 @@ public class MoldingWandSettings
         Operation = SelectionOperation.Add;
         Mode = MoldingWandMode.Selection;
         AutoCreateCanvas = true;
+        AutoExpandCanvas = true;
         Shape = ShapeInfo.Default;
         TransformModeEnabled = false;
         ActiveTransformAction = TransformActionMode.None;

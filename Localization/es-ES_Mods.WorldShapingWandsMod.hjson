@@ -140,6 +140,9 @@ UI: {
 		// PinnedNotInInventory: pinned, but not in your inventory — right-click to unpin
 		ShapeOptions: Opciones de Forma
 		Slice: Corte de Figura
+		// Outline: Outline
+		// Grid: Grid
+		// Fill: Fill
 	}
 
 	// ARCHIVED 2026-05-24 S1 — Chrome button keys removed pending:
@@ -809,8 +812,16 @@ UI: {
 		TeleportToPlayer: Teletransportar a mi posiciÃ³n
 		// Options: Delimitation Options
 		AutoCreateCanvas: Auto-creado de Canvas
+		/* AutoExpandCanvas:
+			'''
+			Auto-Expand Canvas
+			When ON, the canvas auto-expands to include any shape tiles that fall outside
+			its current boundary. Supersedes Auto-Create Canvas.
+			When OFF, the canvas stays fixed; tiles outside it are ignored.
+			''' */
 
 		Transform: {
+			// $parentVal: Transform
 			/* FlipHorizontal:
 				'''
 				Flip Horizontal
@@ -882,6 +893,13 @@ UI: {
 		TeleportToPlayer: Teletransportar a mi posiciÃ³n
 		// Options: Molding Options
 		AutoCreateCanvas: Auto-creado de Canvas
+		/* AutoExpandCanvas:
+			'''
+			Auto-Expand Canvas
+			When ON, the canvas auto-expands to include any shape tiles that fall outside
+			its current boundary. Supersedes Auto-Create Canvas.
+			When OFF, the canvas stays fixed; tiles outside it are ignored.
+			''' */
 		/* AutoPromote:
 			'''
 			Auto-Promote Mold
@@ -890,6 +908,7 @@ UI: {
 			''' */
 
 		Transform: {
+			// $parentVal: Transform
 			/* FlipHorizontal:
 				'''
 				Flip Horizontal

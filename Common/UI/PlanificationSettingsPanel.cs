@@ -57,7 +57,7 @@ public class PlanificationSettingsPanel : UIState
     private UIIconButton _drawFromCenterBtn;
     private Asset<Texture2D> _texDrawFromCenterOff, _texDrawFromCenterOdd, _texDrawFromCenterEven;
 
-    private UIIconButton _autoCreateCanvasBtn, _flipHorizontalBtn, _flipVerticalBtn, _rotateCwBtn, _rotateCcwBtn;
+    private UIIconButton _autoCreateCanvasBtn, _autoExpandCanvasBtn, _flipHorizontalBtn, _flipVerticalBtn, _rotateCwBtn, _rotateCcwBtn;
 
     private UIIconButton _transformMoveBtn, _transformPivotPersistentBtn, _transformPivotTemporaryBtn;
 
@@ -191,11 +191,13 @@ public class PlanificationSettingsPanel : UIState
             mod,
             "Planification.Options",
             "Selection.AutoCreateCanvas",
+            "Selection.AutoExpandCanvas",
             "Flip Horizontal",
             "Flip Vertical",
             "Rotate CW",
             "Rotate CCW",
             out _autoCreateCanvasBtn,
+            out _autoExpandCanvasBtn,
             out _flipHorizontalBtn,
             out _flipVerticalBtn,
             out _rotateCwBtn,
@@ -284,6 +286,13 @@ public class PlanificationSettingsPanel : UIState
             var settings = GetSettings();
             if (settings == null) return;
             settings.AutoCreateCanvas = _autoCreateCanvasBtn.Toggled;
+        };
+
+        _autoExpandCanvasBtn.OnToggled += (_, _) =>
+        {
+            var settings = GetSettings();
+            if (settings == null) return;
+            settings.AutoExpandCanvas = _autoExpandCanvasBtn.Toggled;
         };
 
         _flipHorizontalBtn.OnLeftClick += (_, _) => TransformActiveSlot(TileCoordTransforms.FlipHorizontal, "Flipped slot horizontally");
@@ -791,6 +800,7 @@ public class PlanificationSettingsPanel : UIState
         _flipHalfOrientationBtn.Toggled = shape.InvertHalfOrientation;
         UpdateDrawFromCenterButton();
         _autoCreateCanvasBtn.Toggled = settings.AutoCreateCanvas;
+        _autoExpandCanvasBtn.Toggled = settings.AutoExpandCanvas;
 
         _sliceGrid.SetValue(shape.Slice);
         _thicknessValue.SetText(shape.Thickness.ToString());

@@ -248,7 +248,7 @@ public abstract class WandOfDelimitationBase : BaseCyclingWand
         var slot = BuildStencilSlotState(swp);
 
         int beforeCount = swp.Selection.Count;
-        StencilOperationEngine.ExecuteSelectionOperation(slot, shapeTiles, settings.Operation, settings.AutoCreateCanvas);
+        StencilOperationEngine.ExecuteSelectionOperation(slot, shapeTiles, settings.Operation, settings.AutoCreateCanvas, settings.AutoExpandCanvas);
         ApplyStencilSlotState(swp, slot);
 
         if (!hadCanvas && swp.Canvas.IsActive)

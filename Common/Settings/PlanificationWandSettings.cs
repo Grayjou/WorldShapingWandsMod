@@ -9,6 +9,8 @@ public class PlanificationWandSettings
 
     public bool AutoCreateCanvas { get; set; } = true;
 
+    public bool AutoExpandCanvas { get; set; } = true;
+
     public DelimitationWandMode Mode { get; set; } = DelimitationWandMode.Selection;
 
     public ShapeInfo Shape { get; set; } = ShapeInfo.Default;
@@ -27,6 +29,7 @@ public class PlanificationWandSettings
     {
         Operation = SelectionOperation.Add;
         AutoCreateCanvas = true;
+        AutoExpandCanvas = true;
         Mode = DelimitationWandMode.Selection;
         Shape = ShapeInfo.Default;
         TransformModeEnabled = false;

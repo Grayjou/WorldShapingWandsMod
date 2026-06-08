@@ -52,11 +52,17 @@ public static class StencilOperationEngine
         StencilSlotState slot,
         HashSet<Point> operandTiles,
         SelectionOperation operation,
-        bool autoCreateCanvas)
+        bool autoCreateCanvas,
+        bool autoExpandCanvas = false)
     {
         operandTiles ??= new HashSet<Point>();
-        if (!EnsureCanvasForSelection(slot, operandTiles, autoCreateCanvas))
+
+        bool canvasNeeded = autoCreateCanvas || autoExpandCanvas;
+        if (!EnsureCanvasForSelection(slot, operandTiles, canvasNeeded))
             return false;
+
+        if (autoExpandCanvas && slot.HasCanvas)
+            slot.CanvasTiles.UnionWith(operandTiles);
 
         var clippedOperand = new HashSet<Point>(operandTiles);
         clippedOperand.IntersectWith(slot.CanvasTiles);

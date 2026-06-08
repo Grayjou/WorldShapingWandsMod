@@ -9,11 +9,13 @@ public static class StencilPanelRowHelpers
         WorldShapingWandsMod mod,
         string headerKey,
         string autoCreateCanvasHoverText,
+        string autoExpandCanvasHoverText,
         string flipHorizontalHoverText,
         string flipVerticalHoverText,
         string rotateCwHoverText,
         string rotateCcwHoverText,
         out UIIconButton autoCreateCanvasBtn,
+        out UIIconButton autoExpandCanvasBtn,
         out UIIconButton flipHorizontalBtn,
         out UIIconButton flipVerticalBtn,
         out UIIconButton rotateCwBtn,
@@ -22,6 +24,7 @@ public static class StencilPanelRowHelpers
         builder.AddSectionHeader(headerKey);
 
         var texAutoCreateCanvas = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Stencil/AutoCreateCanvas", ReLogic.Content.AssetRequestMode.ImmediateLoad);
+        var texAutoExpandCanvas = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Stencil/AutoExpandCanvas", ReLogic.Content.AssetRequestMode.ImmediateLoad);
         var texFlipHorizontal = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Stencil/FlipHorizontal", ReLogic.Content.AssetRequestMode.ImmediateLoad);
         var texFlipVertical = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Stencil/FlipVertical", ReLogic.Content.AssetRequestMode.ImmediateLoad);
         var texRotateCW = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Stencil/RotateCW", ReLogic.Content.AssetRequestMode.ImmediateLoad);
@@ -30,16 +33,18 @@ public static class StencilPanelRowHelpers
         builder.AddIconGrid(new WandPanelBuilder.IconDef[]
         {
             new(texAutoCreateCanvas, autoCreateCanvasHoverText, isToggle: true),
+            new(texAutoExpandCanvas, autoExpandCanvasHoverText, isToggle: true),
             WandPanelBuilder.IconDef.WithText(texFlipHorizontal, flipHorizontalHoverText),
             WandPanelBuilder.IconDef.WithText(texFlipVertical, flipVerticalHoverText),
             WandPanelBuilder.IconDef.WithText(texRotateCW, rotateCwHoverText),
             WandPanelBuilder.IconDef.WithText(texRotateCCW, rotateCcwHoverText),
-        }, iconsPerRow: 5, out var buttons);
+        }, iconsPerRow: 6, out var buttons);
 
         autoCreateCanvasBtn = buttons[0];
-        flipHorizontalBtn = buttons[1];
-        flipVerticalBtn = buttons[2];
-        rotateCwBtn = buttons[3];
-        rotateCcwBtn = buttons[4];
+        autoExpandCanvasBtn = buttons[1];
+        flipHorizontalBtn = buttons[2];
+        flipVerticalBtn = buttons[3];
+        rotateCwBtn = buttons[4];
+        rotateCcwBtn = buttons[5];
     }
 }
