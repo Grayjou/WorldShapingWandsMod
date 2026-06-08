@@ -14,6 +14,7 @@ using WorldShapingWandsMod.Common.Enums;
 using WorldShapingWandsMod.Common.Items;
 using WorldShapingWandsMod.Common.Players;
 using WorldShapingWandsMod.Common.UI.Elements;
+using WorldShapingWandsMod.Common.UI.Helpers;
 
 namespace WorldShapingWandsMod.Common.UI.InventoryView;
 
@@ -79,11 +80,6 @@ public sealed class InventoryViewPanel : UIState
         // (S6 §1) Handle at top-right, mirrored from WandPanel's top-right
         // for visual consistency across all WSW panels.
         _dragHandle = new UIDragHandle(16);
-        _dragHandle.HAlign = 1f;
-        //_dragHandle.Top.Set(Padding + 4f, 0f);
-        _dragHandle.Top.Set(Padding - 4f, 0f);
-        _dragHandle.Left.Set(-Padding, 0f);
-        _mainPanel.Append(_dragHandle);
 
         // Session 1 2026-05-02: replacement-only Swap Source/Target affordance in
         // InventoryView (requested by GrayJou). Button is always mounted in panel
@@ -96,13 +92,10 @@ public sealed class InventoryViewPanel : UIState
             IsAction = true,
             Disabled = true,
         };
-        _swapSourceTargetBtn.Width.Set(16f, 0f);
-        _swapSourceTargetBtn.Height.Set(16f, 0f);
-        _swapSourceTargetBtn.HAlign = 1f;
-        _swapSourceTargetBtn.Top.Set(Padding - 4f, 0f);
-        _swapSourceTargetBtn.Left.Set(-Padding - 16f - 4f - 16f, 0f);
         _swapSourceTargetBtn.OnLeftClick += (_, _) => SwapReplacementSourceAndTarget();
-        _mainPanel.Append(_swapSourceTargetBtn);
+
+        var chrome = new UIElement[] { _dragHandle, _swapSourceTargetBtn };
+        StackButtons.Stack(_mainPanel, chrome, StackDirection.RightToLeft, 16f, 4f, 1f, 0f, -Padding, Padding - 4f);
     }
 
     public override void Update(GameTime gameTime)
@@ -172,13 +165,10 @@ public sealed class InventoryViewPanel : UIState
 
         cursorY += Padding *3f;
         _mainPanel.Height.Set(cursorY, 0f);
-        _mainPanel.RemoveChild(_dragHandle);
-        _mainPanel.Append(_dragHandle);
+        var chrome = new List<UIElement> { _dragHandle };
         if (_swapSourceTargetBtn?.Parent == _mainPanel)
-        {
-            _mainPanel.RemoveChild(_swapSourceTargetBtn);
-            _mainPanel.Append(_swapSourceTargetBtn);
-        }
+            chrome.Add(_swapSourceTargetBtn);
+        StackButtons.Stack(_mainPanel, chrome, StackDirection.RightToLeft, 16f, 4f, 1f, 0f, -Padding, Padding - 4f);
         _mainPanel.Recalculate();
     }
 

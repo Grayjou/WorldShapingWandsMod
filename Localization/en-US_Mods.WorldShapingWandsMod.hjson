@@ -68,6 +68,28 @@ UI: {
 			Inverts which side of the half-shape is kept relative to your drag direction.
 			'''
 
+		DrawFromCenter: {
+			$parentVal: Draw From Center
+			# Tri-state: Off / Odd / Even. Click to cycle.
+			Off:
+				'''
+				Draw From Center: Off
+				Default drag behavior — your first click and release define the two opposite corners of the bounding box.
+				'''
+			Odd:
+				'''
+				Draw From Center: On (Odd)
+				Your first click is the center tile. The shape expands symmetrically in all directions.
+				Width and height are always odd (2r+1). Works with Rectangle, Diamond, and Ellipse.
+				'''
+			Even:
+				'''
+				Draw From Center: On (Even)
+				Your first click is the corner of a central 2×2 block. The shape expands in the drag direction.
+				Width and height are always even (2r). Works with Rectangle, Diamond, and Ellipse.
+				'''
+		}
+
 		PaintSprayer: {
 			$parentVal: Paint Sprayer
 			# Tri-state Paint Sprayer source toggle. Click to cycle: Off -> Inventory -> Coating -> Off.
@@ -116,23 +138,20 @@ UI: {
 		Slice: Shape Slice
 	}
 
-	Chrome: {
-		Help:
-			'''
-			Wand Guide (Coming Soon)
-			Reserved chrome button. No action yet.
-			'''
-		Info:
-			'''
-			Wand Info (Coming Soon)
-			Reserved chrome button. No action yet.
-			'''
-		TooltipToggleVerbose: Tooltips: detailed (click to shorten)
-		TooltipToggleShort: Tooltips: short (click to expand)
-		Help_Short: Wand Guide (Soon)
-		Info_Short: Wand Info (Soon)
-	}
-
+	// ARCHIVED 2026-05-24 S1 — Chrome button keys removed pending:
+	//   Help: real guide content authored per G-44
+	//   Info: telemetry payload design ratified per G-43
+	//   TooltipToggleVerbose/Short: localization pairs completed across all 9 locales
+	// Full key bodies: dev_notes/architecture/ChromeButtonsArchive/ChromeButtons_CodeArchive.md §3a
+	// Chrome: {
+	//     Help: '''Wand Guide (Coming Soon)...'''
+	//     Info: '''Wand Info (Coming Soon)...'''
+	//     TooltipToggleVerbose: Tooltips: detailed (click to shorten)
+	//     TooltipToggleShort: Tooltips: short (click to expand)
+	//     Help_Short: Wand Guide (Soon)
+	//     Info_Short: Wand Info (Soon)
+	// }
+	
 	// (S4 2026-04-28) Strings for the shared SubPanel primitive (UISubPanel).
 	SubPanel: {
 		// (S13 2026-04-28) Tooltip key names describe the *action a click would
@@ -167,6 +186,17 @@ UI: {
 		MoveStartHint: Transform move anchor set. Click again to move the target.
 		MoveHint: Transform target moved to cursor.
 		ActionInterceptHint: Transform Mode active — pick a panel button or close the SubUI.
+	}
+
+	Planification: {
+		Title: Planification
+		Options: Planification Options
+		RenderConfig: Render Config
+		VisibleStencils: Visible Stencils
+		VisibleStencilsHint: Right-click to open stencil visibility panel.
+		Outline: Outline
+		Grid: Grid
+		Fill: Fill
 	}
 
 	# Stencil-slot row appended below the shape selector on stencil wands
@@ -1974,28 +2004,14 @@ Configs: {
 				'''
 		}
 
-		WandPanelButtons.Header: Show Help Button Header
-
-		ShowHelpButton: {
-			Label: Show Help Button
-			Tooltip: ""
-		}
-
-		ShowInfoButton: {
-			Label: Show Info Button
-			Tooltip: ""
-		}
-
-		ShowTooltipButton: {
-			Label: Show Tooltip Button
-			Tooltip: ""
-		}
-
-		ShowLongTooltips: {
-			Label: Show Long Tooltips
-			Tooltip: ""
-		}
-
+		// ARCHIVED 2026-05-24 S1 — WandPanelButtons config entries removed with config properties.
+		// Full key bodies: dev_notes/architecture/ChromeButtonsArchive/ChromeButtons_CodeArchive.md §3c
+		// WandPanelButtons.Header: Show Help Button Header
+		// ShowHelpButton: { Label: Show Help Button  Tooltip: "" }
+		// ShowInfoButton: { Label: Show Info Button   Tooltip: "" }
+		// ShowTooltipButton: { Label: Show Tooltip Button  Tooltip: "" }
+		// ShowLongTooltips: { Label: Show Long Tooltips  Tooltip: "" }
+		
 		WandPanelDragMode: {
 			Label: Wand Panel Drag Mode
 			Tooltip:
@@ -2487,6 +2503,8 @@ Configs: {
 		Tooltip: ""
 	}
 }
+
+Shape.MagicWandRead.Label: Magic Wand Read
 
 Items: {
 	WandOfDismantlingInstant: {

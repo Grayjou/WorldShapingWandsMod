@@ -43,7 +43,7 @@ public class WandPanelBuilder
     private readonly UIDraggablePanel _panel;
     private readonly float _panelWidth;
     private readonly float _padding;
-    private bool _panelChromeAdded;
+    // _panelChromeAdded — ARCHIVED 2026-05-24 S1 (see dev_notes/architecture/ChromeButtonsArchive/ChromeButtons_CodeArchive.md)
     private string _panelUiScope = "Common";
 
     /// <summary>Current Y offset � automatically advanced by each Add method.</summary>
@@ -743,7 +743,11 @@ public class WandPanelBuilder
     /// <summary>Adds a centered Close button.</summary>
     public WandPanelBuilder AddCloseButton()
     {
-        EnsurePanelChromeButtons();
+        // Chrome buttons (Help/Info/TooltipToggle) were removed 2026-05-24 S1 pending
+        // content, localization, and telemetry design. See:
+        //   dev_notes/architecture/ChromeButtonsArchive/ChromeButtons_CodeArchive.md
+        //   dev_notes/features/ChromeButtonsStatus.md
+        // EnsurePanelChromeButtons() was called here; re-add when chrome is restored.
 
         MarkSection();
         var closeBtn = new UITextPanel<string>(L("Common.Close"), 0.9f, false);
@@ -766,140 +770,24 @@ public class WandPanelBuilder
     }
 
     /// <summary>
-    /// Adds WandPanel chrome controls:
-    /// - Bottom-right: (?) Help and (i) Info
-    /// - Bottom-left: tooltip verbosity toggle (long/short)
-    /// Emits telemetry stubs so downstream tooling can consume chrome interactions.
+    /// ARCHIVED 2026-05-24 S1 — Chrome buttons (Help/Info/TooltipToggle) removed pending
+    /// content authoring, localization completion, and telemetry design ratification.
+    /// Full body preserved in:
+    ///   <c>dev_notes/architecture/ChromeButtonsArchive/ChromeButtons_CodeArchive.md §1b</c>
+    /// Status and next-step breakdown:
+    ///   <c>dev_notes/features/ChromeButtonsStatus.md</c>
+    /// Re-integrate by restoring body from archive, re-adding _panelChromeAdded field,
+    /// and restoring the EnsurePanelChromeButtons() call in AddCloseButton().
     /// </summary>
     private void EnsurePanelChromeButtons()
     {
-        if (_panelChromeAdded)
-            return;
-
-        var prefs = WandConfigs.Preferences;
-        var mod = ModContent.GetInstance<WorldShapingWandsMod>();
-        var texHelp = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Chromes/QuestionMark", AssetRequestMode.ImmediateLoad);
-        var texInfo = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Chromes/Info", AssetRequestMode.ImmediateLoad);
-        var texTooltips = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Chromes/Tooltips", AssetRequestMode.ImmediateLoad);
-
-        // ── Right cluster: Help (outermost) → Info (next inward) ──────────────
-
-        UIIconButton helpBtn = null;
-        if (prefs.ShowHelpButton)
-        {
-            helpBtn = new UIIconButton(texHelp, L("Chrome.Help"))
-            {
-                IsRadio = false,
-                IsAction = true,
-            };
-            helpBtn.HoverTextProvider = () => ResolveChromeTooltip(isHelp: true, Main.LocalPlayer);
-
-            // Help left-click: echo current-mode tooltip text to chat.
-            helpBtn.OnLeftClick += (evt, elem) =>
-            {
-                var player = Main.LocalPlayer;
-                if (player == null)
-                    return;
-
-                var wandPlayer = TryGetWandPlayer(player);
-                bool isVerbose = wandPlayer?.TooltipVerbosityEnabled ?? true;
-                string text = ResolveChromeTooltip(isHelp: true, player);
-
-                Main.NewText($"[Wand Help - {CurrentVerbosityLabel(isVerbose)}]", Color.Cyan);
-                Main.NewText(text, Color.White);
-                EmitChromeTelemetry(action: "HelpLeftClick", isHelp: true, isVerbose: isVerbose);
-            };
-        }
-
-        UIIconButton infoBtn = null;
-        bool showInfo = prefs.ShowInfoButton;
-        if (showInfo)
-        {
-            infoBtn = new UIIconButton(texInfo, L("Chrome.Info"))
-            {
-                IsRadio = false,
-                IsAction = true,
-            };
-            infoBtn.HoverTextProvider = () => ResolveChromeTooltip(isHelp: false, Main.LocalPlayer);
-#if DEBUG
-            // Info left-click: echo current-mode info payload to chat.
-            infoBtn.OnLeftClick += (_, _) =>
-            {
-                var player = Main.LocalPlayer;
-                if (player == null)
-                    return;
-
-                var wandPlayer = TryGetWandPlayer(player);
-                bool isVerbose = wandPlayer?.TooltipVerbosityEnabled ?? true;
-                string text = ResolveChromeTooltip(isHelp: false, player);
-
-                Main.NewText($"[Wand Info - {CurrentVerbosityLabel(isVerbose)}]", Color.Cyan);
-                Main.NewText(text, Color.White);
-                EmitChromeTelemetry(action: "InfoLeftClick", isHelp: false, isVerbose: isVerbose);
-            };
-#endif
-        }
-
-        // Right cluster stacked right-to-left: [Help] [Info] (Help at far-right, Info just inward)
-        var rightCluster = new List<UIElement> { helpBtn, infoBtn };
-        Helpers.StackButtons.Stack(
-            _panel,
-            rightCluster,
-            StackDirection.RightToLeft,
-            ChromeIconSize,
-            ChromeIconGap,
-            hAlign: 1f,
-            vAlign: 1f,
-            anchorLeft: -_padding,
-            anchorTop: -ChromeBottomMargin);
-
-        // ── Left cluster: Tooltip toggle ──────────────────────────────────────
-
-        if (prefs.ShowTooltipButton)
-        {
-            bool verboseDefault = GetSharedTooltipVerbosity();
-
-            var tooltipBtn = new UIIconButton(texTooltips, L("Chrome.TooltipToggleVerbose"), verboseDefault)
-            {
-                IsRadio = false,
-                IsAction = true,
-            };
-            tooltipBtn.HoverTextProvider = () =>
-            {
-                bool isVerbose = GetSharedTooltipVerbosity();
-                tooltipBtn.Toggled = isVerbose;
-                return L(isVerbose ? "Chrome.TooltipToggleVerbose" : "Chrome.TooltipToggleShort");
-            };
-            tooltipBtn.OnLeftClick += (_, _) =>
-            {
-                bool next = !GetSharedTooltipVerbosity();
-                tooltipBtn.Toggled = next;
-                SetTooltipVerbosityFromChrome(next, source: "TooltipChromeToggle");
-                EmitChromeTelemetry(action: "TooltipChromeToggle", isHelp: false, isVerbose: next);
-            };
-
-            var leftCluster = new List<UIElement> { tooltipBtn };
-            Helpers.StackButtons.Stack(
-                _panel,
-                leftCluster,
-                StackDirection.LeftToRight,
-                ChromeIconSize,
-                ChromeIconGap,
-                hAlign: 0f,
-                vAlign: 1f,
-                anchorLeft: _padding,
-                anchorTop: -ChromeBottomMargin);
-        }
-
-        _panelChromeAdded = true;
+        // ARCHIVED — body removed. See XML doc above for restoration instructions.
     }
 
     private void SetTooltipVerbosityFromChrome(bool verboseEnabled, string source)
     {
-        var prefs = WandConfigs.Preferences;
-        if (prefs != null)
-            prefs.ShowLongTooltips = verboseEnabled;
-
+        // ARCHIVED 2026-05-24 S1: prefs.ShowLongTooltips removed with config property.
+        // Verbosity is written to WandPlayer only until config is restored.
         var player = Main.LocalPlayer;
         var wandPlayer = TryGetWandPlayer(player);
         if (wandPlayer != null)
@@ -911,10 +799,8 @@ public class WandPanelBuilder
 
     private static bool GetSharedTooltipVerbosity()
     {
-        var prefs = WandConfigs.Preferences;
-        if (prefs != null)
-            return prefs.ShowLongTooltips;
-
+        // ARCHIVED 2026-05-24 S1: prefs.ShowLongTooltips removed with config property.
+        // Falls back to WandPlayer until config is restored.
         var player = Main.LocalPlayer;
         return TryGetWandPlayer(player)?.TooltipVerbosityEnabled ?? true;
     }

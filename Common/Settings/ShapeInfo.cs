@@ -49,12 +49,23 @@ public struct ShapeInfo
     /// <summary>
     /// (S2 2026-04-30 — DesignDoc_HalfShapeOrientationFlipToggle.md #IOP)
     /// When true, the kept half of a sliced shape is flipped relative to the
-    /// drag direction (i.e. opposite of <see cref="SliceHelper.IsStartAbove"/> /
-    /// <see cref="SliceHelper.IsStartLeft"/>). Default false. Only meaningful
-    /// when <see cref="Slice"/> is a half mode. Propagated to
-    /// <see cref="ShapeContext.InvertHalfOrientation"/> via <see cref="ToShapeContext"/>.
+    /// drag direction (i.e. opposite of <see cref="SliceHelper.IsStartAbove" /> /
+    /// <see cref="SliceHelper.IsStartLeft" />). Default false. Only meaningful
+    /// when <see cref="Slice" /> is a half mode. Propagated to
+    /// <see cref="ShapeContext.InvertHalfOrientation" /> via <see cref="ToShapeContext" />.
     /// </summary>
     public bool InvertHalfOrientation { get; set; }
+
+    /// <summary>
+    /// (S2 2026-05-24 Session 2 — FromCenterShapeOption.md)
+    /// Controls whether the shape is drawn outward from the initial click point
+    /// (which acts as the center) rather than as a drag corner.
+    /// Off = default bbox drag. Odd = symmetric around cursor (odd dims).
+    /// Even = cursor is corner of central 2×2 block (even dims).
+    /// Only meaningful for shapes that support it: Rectangle, Diamond, Ellipse.
+    /// See <see cref="SupportsDrawFromCenter" />.
+    /// </summary>
+    public DrawFromCenterMode DrawFromCenter { get; set; }
 
     /// <summary>
     /// Creates a new ShapeInfo with the specified parameters.
@@ -62,7 +73,8 @@ public struct ShapeInfo
     public ShapeInfo(ShapeType shape, ShapeMode fillMode, int thickness = 1,
         bool equalDimensions = false, SliceMode slice = SliceMode.Full,
         bool connectDiameter = true, bool invertSelection = false,
-        bool invertHalfOrientation = false)
+        bool invertHalfOrientation = false,
+        DrawFromCenterMode drawFromCenter = DrawFromCenterMode.Off)
     {
         Shape = shape;
         FillMode = fillMode;
@@ -72,6 +84,7 @@ public struct ShapeInfo
         ConnectDiameter = connectDiameter;
         InvertSelection = invertSelection;
         InvertHalfOrientation = invertHalfOrientation;
+        DrawFromCenter = drawFromCenter;
     }
 
     /// <summary>
@@ -84,8 +97,8 @@ public struct ShapeInfo
         {
             var config = ModContent.GetInstance<PreferencesConfig>();
             if (config != null)
-                return new(config.DefaultShapeType, config.DefaultShapeMode, 1, false, SliceMode.Full, true, false, false);
-            return new(ShapeType.Rectangle, ShapeMode.Filled, 1, false, SliceMode.Full, true, false, false);
+                return new(config.DefaultShapeType, config.DefaultShapeMode, 1, false, SliceMode.Full, true, false, false, DrawFromCenterMode.Off);
+            return new(ShapeType.Rectangle, ShapeMode.Filled, 1, false, SliceMode.Full, true, false, false, DrawFromCenterMode.Off);
         }
     }
 
@@ -111,6 +124,25 @@ public struct ShapeInfo
     /// toggle is on AND the shape supports it.
     /// </summary>
     public bool ShouldInvert => InvertSelection && SupportsInversion;
+
+    /// <summary>
+    /// Returns true if DrawFromCenter is meaningful for the current shape.
+    /// Rectangle, Diamond, and Ellipse support a true bbox-center expansion.
+    /// Line shapes (Elbow, CardinalLine, StraightLine) and special shapes
+    /// (Triangle, Mold, MagicWandRead) do not.
+    /// </summary>
+    public bool SupportsDrawFromCenter => ShapeSupportsDrawFromCenter(Shape);
+
+    /// <summary>
+    /// Static helper for server-side packet handling.
+    /// </summary>
+    public static bool ShapeSupportsDrawFromCenter(ShapeType shape) => shape switch
+    {
+        ShapeType.Rectangle => true,
+        ShapeType.Diamond   => true,
+        ShapeType.Ellipse   => true,
+        _                   => false
+    };
 
     /// <summary>
     /// Returns a human-readable description of this shape configuration.
@@ -153,9 +185,11 @@ public struct ShapeInfo
     {
         // Pass thickness for all modes. CardinalLine uses thickness in Filled mode
         // for its circular brush. Other shapes ignore thickness in Filled mode.
+        // DrawFromCenter is guarded: unsupported shapes receive Off so GetBounds()
+        // never misapplies the center logic to e.g. Triangle or Elbow.
         return new ShapeContext(start, end, FillMode, Thickness,
             HorizontalBias.None, VerticalBias.None, verticalFirst, EqualDimensions, Slice, ConnectDiameter,
-            InvertHalfOrientation);
+            InvertHalfOrientation, SupportsDrawFromCenter ? DrawFromCenter : DrawFromCenterMode.Off);
     }
 
     /// <summary>

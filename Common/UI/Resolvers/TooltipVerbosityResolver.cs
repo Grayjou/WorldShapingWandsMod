@@ -45,8 +45,15 @@ public static class TooltipVerbosityResolver
         if (longKey == null)
             return "";
 
-        // Source of truth is the shared client config toggle.
-        bool verboseEnabled = WandConfigs.Preferences?.ShowLongTooltips ?? true;
+        // ARCHIVED 2026-05-24 S1: PreferencesConfig.ShowLongTooltips removed.
+        // Verbosity is now read exclusively from WandPlayer. Falls back to true (verbose) if
+        // no player is available. Restore config read when ShowLongTooltips is re-added.
+        bool verboseEnabled = true;
+        if (player != null)
+        {
+            try { verboseEnabled = player.GetModPlayer<WandPlayer>()?.TooltipVerbosityEnabled ?? true; }
+            catch (System.IndexOutOfRangeException) { /* pre-load safety */ }
+        }
 
         // If verbosity is enabled (true = verbose = long form), use the long key.
         // If verbosity is disabled (false = concise = short form), try the short key.
@@ -80,17 +87,13 @@ public static class TooltipVerbosityResolver
     /// <param name="player">The player to toggle. If null, does nothing.</param>
     public static void ToggleVerbosity(Player player)
     {
-        bool current = WandConfigs.Preferences?.ShowLongTooltips ?? true;
-        bool next = !current;
+        // ARCHIVED 2026-05-24 S1: config toggle removed with ShowLongTooltips.
+        // Verbosity state is owned exclusively by WandPlayer until config is restored.
+        if (player == null)
+            return;
 
-        if (WandConfigs.Preferences != null)
-            WandConfigs.Preferences.ShowLongTooltips = next;
-
-        if (player != null)
-        {
-            var wandPlayer = player.GetModPlayer<WandPlayer>();
-            if (wandPlayer != null)
-                wandPlayer.TooltipVerbosityEnabled = next;
-        }
+        var wandPlayer = player.GetModPlayer<WandPlayer>();
+        if (wandPlayer != null)
+            wandPlayer.TooltipVerbosityEnabled = !wandPlayer.TooltipVerbosityEnabled;
     }
 }

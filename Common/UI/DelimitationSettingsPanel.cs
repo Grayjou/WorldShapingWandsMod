@@ -54,6 +54,8 @@ public class DelimitationSettingsPanel : UIState
 
     // Shape options
     private UIIconButton _equalDimensionsBtn, _connectDiameterBtn, _invertSelectionBtn, _flipHalfOrientationBtn;
+    private UIIconButton _drawFromCenterBtn;
+    private Asset<Texture2D> _texDrawFromCenterOff, _texDrawFromCenterOdd, _texDrawFromCenterEven;
 
     // Thickness
     private UIText _thicknessValue;
@@ -63,9 +65,6 @@ public class DelimitationSettingsPanel : UIState
 
     // Action buttons (icon-based)
     private UIIconButton _clearSelectionBtn, _invertBtn, _clearAllBtn, _teleportToPlayerBtn;
-
-    // Status displays
-    private UIText _canvasCountText, _selectionCountText, _customShapeText;
 
     // Delimitation options (icon toggles)
     private UIIconButton _autoCreateCanvasBtn;
@@ -230,6 +229,9 @@ public class DelimitationSettingsPanel : UIState
         var texFlipHalf = mod.Assets.Request<Texture2D>(
             // TODO: pending ToggleFlipHalfOrientation dedicated asset (placeholder = ToggleInvertSel byte-copy; tracked in dev_notes/dev_tasks/pending_assets.md §3b)
             "Assets_Build/Icons/Toggles/ToggleFlipHalfOrientation", AssetRequestMode.ImmediateLoad);
+        _texDrawFromCenterOff  = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleRadiusFromCenterOff",  AssetRequestMode.ImmediateLoad);
+        _texDrawFromCenterOdd  = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleRadiusFromCenterOdd",  AssetRequestMode.ImmediateLoad);
+        _texDrawFromCenterEven = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleRadiusFromCenterEven", AssetRequestMode.ImmediateLoad);
 
 
         // Shape options
@@ -241,11 +243,16 @@ public class DelimitationSettingsPanel : UIState
             new(texConnectDiam, "Common.ConnectDiameterTooltip", isToggle: true, initialState: true),
             new(texInvertSel, "Common.InvertSelection", isToggle: true),
             new(texFlipHalf, "Common.FlipHalfOrientation", isToggle: true),
+            new(_texDrawFromCenterOff, "Common.DrawFromCenter.Off", isToggle: true),
         }, out var optBtns);
         _equalDimensionsBtn = optBtns[0];
         _connectDiameterBtn = optBtns[1];
         _invertSelectionBtn = optBtns[2];
         _flipHalfOrientationBtn = optBtns[3];
+        _drawFromCenterBtn  = optBtns[4];
+        _drawFromCenterBtn.IsRadio = false;
+        _drawFromCenterBtn.AllowDeselect = true;
+        _drawFromCenterBtn.InactiveColor = WandPanelTheme.Colors.ButtonInactive;
 
         var texFlipHorizontal = mod.Assets.Request<Texture2D>(
             "Assets_Build/Icons/Stencil/FlipHorizontal", AssetRequestMode.ImmediateLoad);
@@ -296,30 +303,6 @@ public class DelimitationSettingsPanel : UIState
         _invertBtn = actionBtns[1];
         _clearAllBtn = actionBtns[2];
         _teleportToPlayerBtn = actionBtns[3];
-
-        // ═══════════════════════════════════════════════════════════════
-        //  Status Display (tile counts)
-        // ═══════════════════════════════════════════════════════════════
-
-        _builder.AddSectionHeader("Selection.Status");
-
-        _canvasCountText = new UIText("Canvas: 0 tiles", 0.8f);
-        _canvasCountText.Left.Set(Padding, 0f);
-        _canvasCountText.Top.Set(_builder.CurrentY, 0f);
-        _mainPanel.Append(_canvasCountText);
-        _builder.AdvanceY(20f);
-
-        _selectionCountText = new UIText("Selection: 0 tiles", 0.8f);
-        _selectionCountText.Left.Set(Padding, 0f);
-        _selectionCountText.Top.Set(_builder.CurrentY, 0f);
-        _mainPanel.Append(_selectionCountText);
-        _builder.AdvanceY(20f);
-
-        _customShapeText = new UIText("Custom Shape: none", 0.8f);
-        _customShapeText.Left.Set(Padding, 0f);
-        _customShapeText.Top.Set(_builder.CurrentY, 0f);
-        _mainPanel.Append(_customShapeText);
-        _builder.AdvanceY(24f);
 
         // ═══════════════════════════════════════════════════════════════
         //  Close Button
@@ -388,6 +371,7 @@ public class DelimitationSettingsPanel : UIState
         _connectDiameterBtn.OnToggled += (_, _) => ToggleConnectDiameter();
         _invertSelectionBtn.OnToggled += (_, _) => ToggleInvertSelection();
         _flipHalfOrientationBtn.OnToggled += (_, _) => ToggleFlipHalfOrientation();
+        _drawFromCenterBtn.OnToggled += (_, _) => CycleDrawFromCenter();
 
         // Auto-create canvas
         _autoCreateCanvasBtn.OnToggled += (_, _) =>
@@ -449,7 +433,7 @@ public class DelimitationSettingsPanel : UIState
         var s = GetSettings();
         if (s == null) return;
         s.Shape = new ShapeInfo(type, mode, s.Shape.Thickness, s.Shape.EqualDimensions,
-            s.Shape.Slice, s.Shape.ConnectDiameter, s.Shape.InvertSelection, s.Shape.InvertHalfOrientation);
+            s.Shape.Slice, s.Shape.ConnectDiameter, s.Shape.InvertSelection, s.Shape.InvertHalfOrientation, s.Shape.DrawFromCenter);
         UpdateShapeButtons();
     }
 
@@ -498,6 +482,44 @@ public class DelimitationSettingsPanel : UIState
         var sh = s.Shape;
         sh.InvertHalfOrientation = _flipHalfOrientationBtn.Toggled;
         s.Shape = sh;
+    }
+
+    private void CycleDrawFromCenter()
+    {
+        var s = GetSettings();
+        if (s == null) return;
+        var sh = s.Shape;
+        sh.DrawFromCenter = sh.DrawFromCenter.Next();
+        s.Shape = sh;
+        UpdateDrawFromCenterButton();
+    }
+
+    private void UpdateDrawFromCenterButton()
+    {
+        var s = GetSettings();
+        if (s == null || _drawFromCenterBtn == null) return;
+        bool supported = s.Shape.SupportsDrawFromCenter;
+        _drawFromCenterBtn.Disabled = !supported;
+        switch (supported ? s.Shape.DrawFromCenter : DrawFromCenterMode.Off)
+        {
+            case DrawFromCenterMode.Odd:
+                _drawFromCenterBtn.Toggled = true;
+                _drawFromCenterBtn.ActiveColor = WandPanelTheme.Colors.ActiveBlue;
+                _drawFromCenterBtn.SetTexture(_texDrawFromCenterOdd);
+                _drawFromCenterBtn.HoverText = L("Common.DrawFromCenter.Odd");
+                break;
+            case DrawFromCenterMode.Even:
+                _drawFromCenterBtn.Toggled = true;
+                _drawFromCenterBtn.ActiveColor = WandPanelTheme.Colors.ActiveGreen;
+                _drawFromCenterBtn.SetTexture(_texDrawFromCenterEven);
+                _drawFromCenterBtn.HoverText = L("Common.DrawFromCenter.Even");
+                break;
+            default:
+                _drawFromCenterBtn.Toggled = false;
+                _drawFromCenterBtn.SetTexture(_texDrawFromCenterOff);
+                _drawFromCenterBtn.HoverText = L("Common.DrawFromCenter.Off");
+                break;
+        }
     }
 
     private void OnSliceChanged(SliceMode slice)
@@ -1062,6 +1084,7 @@ public class DelimitationSettingsPanel : UIState
             _flipHalfOrientationBtn.Toggled = s.Shape.InvertHalfOrientation;
             _flipHalfOrientationBtn.Disabled = s.Shape.Slice == SliceMode.Full;
         }
+        UpdateDrawFromCenterButton();
     }
 
     private void UpdateAutoCreateCanvas()
@@ -1105,22 +1128,6 @@ public class DelimitationSettingsPanel : UIState
             s.ActiveTransformAction = TransformActionMode.None;
     }
 
-    private void UpdateStatusDisplay()
-    {
-        var swp = GetDelimitationWandPlayer();
-        if (swp == null) return;
-
-        int canvasCount = swp.Canvas.Count;
-        int selCount = swp.Selection.Count;
-        bool hasCustom = swp.ActiveCustomShape != null;
-
-        _canvasCountText?.SetText($"Canvas: {canvasCount:N0} tiles");
-        _selectionCountText?.SetText($"Selection: {selCount:N0} tiles");
-        _customShapeText?.SetText(hasCustom
-            ? $"Custom Shape: {swp.ActiveCustomShape.Count:N0} tiles"
-            : "Custom Shape: none");
-    }
-
     private void SyncFromSettings()
     {
         UpdateModeButtons();
@@ -1132,7 +1139,6 @@ public class DelimitationSettingsPanel : UIState
         UpdateAutoCreateCanvas();
         UpdateSliceGrid();
         UpdateTransformButtons();
-        UpdateStatusDisplay();
     }
 
     // ═══════════════════════════════════════════════════════════════════

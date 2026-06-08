@@ -115,29 +115,14 @@ namespace WorldShapingWandsMod.Common.Configs
         public LavaRainStyle LavaRainStyle { get; set; } = LavaRainStyle.Embers;
 
         // ═════════════════════════════════════════════
-        //  Wand Panel Buttons
+        //  Wand Panel Buttons  — ARCHIVED 2026-05-24 S1
+        //  ShowHelpButton, ShowInfoButton, ShowTooltipButton, ShowLongTooltips
+        //  removed pending content authoring (Help), telemetry design (Info),
+        //  and localization completion (Tooltip short/long pairs).
+        //  Full config property bodies preserved in:
+        //    dev_notes/architecture/ChromeButtonsArchive/ChromeButtons_CodeArchive.md §2
+        //  Status and next steps: dev_notes/features/ChromeButtonsStatus.md
         // ═════════════════════════════════════════════
-
-        [Header("$Mods.WorldShapingWandsMod.Configs.PreferencesConfig.WandPanelButtons.Header")]
-        [DefaultValue(true)]
-        [LabelKey("$Mods.WorldShapingWandsMod.Configs.PreferencesConfig.ShowHelpButton.Label")]
-        [TooltipKey("$Mods.WorldShapingWandsMod.Configs.PreferencesConfig.ShowHelpButton.Tooltip")]
-        public bool ShowHelpButton { get; set; } = true;
-
-        [DefaultValue(false)]
-        [LabelKey("$Mods.WorldShapingWandsMod.Configs.PreferencesConfig.ShowInfoButton.Label")]
-        [TooltipKey("$Mods.WorldShapingWandsMod.Configs.PreferencesConfig.ShowInfoButton.Tooltip")]
-        public bool ShowInfoButton { get; set; } = false;
-
-        [DefaultValue(true)]
-        [LabelKey("$Mods.WorldShapingWandsMod.Configs.PreferencesConfig.ShowTooltipButton.Label")]
-        [TooltipKey("$Mods.WorldShapingWandsMod.Configs.PreferencesConfig.ShowTooltipButton.Tooltip")]
-        public bool ShowTooltipButton { get; set; } = true;
-
-        [DefaultValue(true)]
-        [LabelKey("$Mods.WorldShapingWandsMod.Configs.PreferencesConfig.ShowLongTooltips.Label")]
-        [TooltipKey("$Mods.WorldShapingWandsMod.Configs.PreferencesConfig.ShowLongTooltips.Tooltip")]
-        public bool ShowLongTooltips { get; set; } = true;
 
         [DefaultValue(WandPanelDragMode.HandleOrAnywhere)]
         [DrawTicks]

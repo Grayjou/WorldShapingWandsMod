@@ -121,7 +121,8 @@ public static class PacketUtilities
             header.Thickness, header.EqualDimensions,
             header.VerticalFirst, header.PlayerWhoAmI,
             header.Slice, header.ConnectDiameter,
-            header.InvertSelection
+            header.InvertSelection, header.InvertHalfOrientation,
+            header.DrawFromCenter
         );
     }
 
@@ -139,7 +140,8 @@ public static class PacketUtilities
             HorizontalBias.None, VerticalBias.None,
             header.VerticalFirst, header.EqualDimensions,
             header.Slice, header.ConnectDiameter,
-            header.InvertHalfOrientation
+            header.InvertHalfOrientation,
+            ShapeInfo.ShapeSupportsDrawFromCenter(header.Shape) ? header.DrawFromCenter : DrawFromCenterMode.Off
         );
         var tileSet = ShapeRegistry.GetShapeTiles(header.Shape, context);
 
@@ -150,7 +152,7 @@ public static class PacketUtilities
         var shapeInfo = new ShapeInfo(header.Shape, header.FillMode,
             header.Thickness, header.EqualDimensions,
             header.Slice, header.ConnectDiameter, header.InvertSelection,
-            header.InvertHalfOrientation);
+            header.InvertHalfOrientation, header.DrawFromCenter);
         var invertedTiles = shapeInfo.ApplyInversion(tileSet.Tiles.ToArray(), context);
         return new ShapeTileSet(invertedTiles);
     }

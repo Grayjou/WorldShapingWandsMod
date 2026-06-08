@@ -44,6 +44,8 @@ public class BuildingSettingsPanel : UIState
 
     // Options
     private UIIconButton _equalDimensionsBtn, _connectDiameterBtn, _invertSelectionBtn, _flipHalfOrientationBtn, _paintSprayerBtn, _actuationBtn;
+    private UIIconButton _drawFromCenterBtn;
+    private Asset<Texture2D> _texDrawFromCenterOff, _texDrawFromCenterOdd, _texDrawFromCenterEven;
     // S9: third button in the Building.Options row that toggles the InventoryView panel.
     // Makes the InventoryView keybind optional per user S9 directive #3 (panel discoverability).
     // Stateful toggle: button.Toggled mirrors WandUISystem.InventoryViewUI.IsVisible (synced in Update).
@@ -182,17 +184,26 @@ public class BuildingSettingsPanel : UIState
         _texPaintSprayerInventory = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/TogglePaintSprayerInventory", AssetRequestMode.ImmediateLoad);
         _texPaintSprayerCoating   = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/TogglePaintSprayerCoating", AssetRequestMode.ImmediateLoad);
 
+        _texDrawFromCenterOff  = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleRadiusFromCenterOff",  AssetRequestMode.ImmediateLoad);
+        _texDrawFromCenterOdd  = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleRadiusFromCenterOdd",  AssetRequestMode.ImmediateLoad);
+        _texDrawFromCenterEven = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleRadiusFromCenterEven", AssetRequestMode.ImmediateLoad);
+
         _builder.AddShapeOptionsSection(new WandPanelBuilder.IconDef[]
         {
             new(texEqualDim,     "Common.EqualDimensions",      isToggle: true),
             new(texConnectDiam,  "Common.ConnectDiameterTooltip", isToggle: true, initialState: true),
             new(texInvertSel,    "Common.InvertSelection",      isToggle: true),
             new(texFlipHalf,     "Common.FlipHalfOrientation",  isToggle: true),
+            new(_texDrawFromCenterOff, "Common.DrawFromCenter.Off", isToggle: true),
         }, out var optBtns);
         _equalDimensionsBtn = optBtns[0];
         _connectDiameterBtn = optBtns[1];
         _invertSelectionBtn = optBtns[2];
         _flipHalfOrientationBtn = optBtns[3];
+        _drawFromCenterBtn  = optBtns[4];
+        _drawFromCenterBtn.IsRadio = false;
+        _drawFromCenterBtn.AllowDeselect = true;
+        _drawFromCenterBtn.InactiveColor = WandPanelTheme.Colors.ButtonInactive;
 
         // === BUILDING OPTIONS (Paint Sprayer + Actuation + InventoryView toggle) ===
         // S9: third button opens/closes the InventoryView panel for the held wand.
@@ -255,6 +266,7 @@ public class BuildingSettingsPanel : UIState
         _connectDiameterBtn.OnToggled += (_, _) => ToggleConnectDiameter();
         _invertSelectionBtn.OnToggled += (_, _) => ToggleInvertSelection();
         _flipHalfOrientationBtn.OnToggled += (_, _) => ToggleFlipHalfOrientation();
+        _drawFromCenterBtn.OnToggled += (_, _) => CycleDrawFromCenter();
         _paintSprayerBtn.OnToggled += (_, _) => CyclePaintSprayer();
         _actuationBtn.OnToggled += (_, _) => CycleActuation();
         _openInventoryViewBtn.OnToggled += (_, _) => ToggleInventoryViewPanel();
@@ -281,8 +293,46 @@ public class BuildingSettingsPanel : UIState
     {
         var settings = GetSettings();
         if (settings == null) return;
-        settings.Shape = new ShapeInfo(type, mode, settings.Shape.Thickness, settings.Shape.EqualDimensions, settings.Shape.Slice, settings.Shape.ConnectDiameter, settings.Shape.InvertSelection, settings.Shape.InvertHalfOrientation);
+        settings.Shape = new ShapeInfo(type, mode, settings.Shape.Thickness, settings.Shape.EqualDimensions, settings.Shape.Slice, settings.Shape.ConnectDiameter, settings.Shape.InvertSelection, settings.Shape.InvertHalfOrientation, settings.Shape.DrawFromCenter);
         UpdateShapeButtons();
+    }
+
+    private void CycleDrawFromCenter()
+    {
+        var s = GetSettings();
+        if (s == null) return;
+        var sh = s.Shape;
+        sh.DrawFromCenter = sh.DrawFromCenter.Next();
+        s.Shape = sh;
+        UpdateDrawFromCenterButton();
+    }
+
+    private void UpdateDrawFromCenterButton()
+    {
+        var s = GetSettings();
+        if (s == null || _drawFromCenterBtn == null) return;
+        bool supported = s.Shape.SupportsDrawFromCenter;
+        _drawFromCenterBtn.Disabled = !supported;
+        switch (supported ? s.Shape.DrawFromCenter : DrawFromCenterMode.Off)
+        {
+            case DrawFromCenterMode.Odd:
+                _drawFromCenterBtn.Toggled = true;
+                _drawFromCenterBtn.ActiveColor = WandPanelTheme.Colors.ActiveBlue;
+                _drawFromCenterBtn.SetTexture(_texDrawFromCenterOdd);
+                _drawFromCenterBtn.HoverText = L("Common.DrawFromCenter.Odd");
+                break;
+            case DrawFromCenterMode.Even:
+                _drawFromCenterBtn.Toggled = true;
+                _drawFromCenterBtn.ActiveColor = WandPanelTheme.Colors.ActiveGreen;
+                _drawFromCenterBtn.SetTexture(_texDrawFromCenterEven);
+                _drawFromCenterBtn.HoverText = L("Common.DrawFromCenter.Even");
+                break;
+            default:
+                _drawFromCenterBtn.Toggled = false;
+                _drawFromCenterBtn.SetTexture(_texDrawFromCenterOff);
+                _drawFromCenterBtn.HoverText = L("Common.DrawFromCenter.Off");
+                break;
+        }
     }
 
     private void SetSlope(SlopeType slope) { var s = GetSettings(); if (s == null) return; s.Slope = slope; UpdateSlopeButtons(); }
@@ -468,6 +518,7 @@ public class BuildingSettingsPanel : UIState
         UpdateConnectDiameterButton();
         UpdateInvertSelectionButton();
         UpdateFlipHalfOrientationButton();
+        UpdateDrawFromCenterButton();
         UpdatePaintSprayerButton();
         UpdateActuationButton();
         UpdateInventoryViewButton();

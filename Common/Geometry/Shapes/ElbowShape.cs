@@ -20,7 +20,27 @@ namespace WorldShapingWandsMod.Common.Geometry.Shapes
 
         public ShapeTileSet GetTiles(ShapeContext context)
         {
-            var tiles = GenerateElbowTiles(context);
+            var centerTiles = GenerateElbowTiles(context);
+
+            // Apply circular brush for thickness > 1, matching CardinalLine/StraightLine behavior.
+            // Thickness 0 or 1 falls through to OutlineHelper as before.
+            // NOTE: The Transform Mode Move elbow overlay in SelectionCanvasOverlay /
+            // MoldingCanvasOverlay draws via DrawElbowSegment1Tile (pure screen-space,
+            // does NOT call GetTiles), so it is always 1-tile wide regardless of this setting.
+            int thickness = Math.Max(1, context.Thickness);
+            HashSet<Point> tiles;
+            if (thickness > 1)
+            {
+                var offsets = CardinalLineShape.GetCircleOffsetsStatic(thickness);
+                tiles = new HashSet<Point>(centerTiles.Count * offsets.Count);
+                foreach (var center in centerTiles)
+                    foreach (var offset in offsets)
+                        tiles.Add(new Point(center.X + offset.X, center.Y + offset.Y));
+            }
+            else
+            {
+                tiles = centerTiles;
+            }
 
             if (context.Slice != SliceMode.Full)
                 return SliceHelper.ApplySlicing(tiles, context);

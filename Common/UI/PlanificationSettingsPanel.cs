@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using ReLogic.Content;
 using Terraria;
 using Terraria.Audio;
 using Terraria.GameContent.UI.Elements;
@@ -53,6 +54,8 @@ public class PlanificationSettingsPanel : UIState
     private UISliceGrid _sliceGrid;
     private UIText _thicknessValue;
     private UIIconButton _equalDimensionsBtn, _connectDiameterBtn, _invertSelectionBtn, _flipHalfOrientationBtn;
+    private UIIconButton _drawFromCenterBtn;
+    private Asset<Texture2D> _texDrawFromCenterOff, _texDrawFromCenterOdd, _texDrawFromCenterEven;
 
     private UIIconButton _autoCreateCanvasBtn, _flipHorizontalBtn, _flipVerticalBtn, _rotateCwBtn, _rotateCcwBtn;
 
@@ -118,25 +121,28 @@ public class PlanificationSettingsPanel : UIState
             slotDefs[i] = WandPanelBuilder.IconDef.WithText(tex, $"Stencil {i + 1}");
         }
         var visTex = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Stencil/StencilVisibility", ReLogic.Content.AssetRequestMode.ImmediateLoad);
-        slotDefs[5] = WandPanelBuilder.IconDef.WithText(visTex, "Stencil Visibility");
+        slotDefs[5] = WandPanelBuilder.IconDef.WithText(
+            visTex,
+            Language.GetTextValue("Mods.WorldShapingWandsMod.UI.Planification.VisibleStencils"));
 
         _builder.AddSmallIconGrid(slotDefs, iconsPerRow: 6, out var slotBtns);
         _slotButtons = new UIIconButton[5];
         for (int i = 0; i < 5; i++)
             _slotButtons[i] = slotBtns[i];
         _visibilityBtn = slotBtns[5];
+        _visibilityBtn.IsAction = true;
         _visibilityBtn.HasSubUIBadge = true;
 
-        _builder.AddSectionHeader("Render Config");
+        _builder.AddSectionHeader("Planification.RenderConfig");
         var outlineTex = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Stencil/OutlineVisibility", ReLogic.Content.AssetRequestMode.ImmediateLoad);
         var gridTex = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Stencil/GridVisibility", ReLogic.Content.AssetRequestMode.ImmediateLoad);
         var fillTex = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Stencil/FillVisibility", ReLogic.Content.AssetRequestMode.ImmediateLoad);
 
         _builder.AddSmallIconGrid(new WandPanelBuilder.IconDef[]
         {
-            new(outlineTex, "Outline", isToggle: true),
-            new(gridTex, "Grid", isToggle: true),
-            new(fillTex, "Fill", isToggle: true),
+            new(outlineTex, Language.GetTextValue("Mods.WorldShapingWandsMod.UI.Planification.Outline"), isToggle: true),
+            new(gridTex, Language.GetTextValue("Mods.WorldShapingWandsMod.UI.Planification.Grid"), isToggle: true),
+            new(fillTex, Language.GetTextValue("Mods.WorldShapingWandsMod.UI.Planification.Fill"), isToggle: true),
         }, iconsPerRow: 5, out var renderBtns);
         _renderOutlineBtn = renderBtns[0];
         _renderGridBtn = renderBtns[1];
@@ -159,6 +165,9 @@ public class PlanificationSettingsPanel : UIState
         var texConnectDiam = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleConnectDiam", ReLogic.Content.AssetRequestMode.ImmediateLoad);
         var texInvertSel = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleInvertSel", ReLogic.Content.AssetRequestMode.ImmediateLoad);
         var texFlipHalf = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleFlipHalfOrientation", ReLogic.Content.AssetRequestMode.ImmediateLoad);
+        _texDrawFromCenterOff  = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleRadiusFromCenterOff",  ReLogic.Content.AssetRequestMode.ImmediateLoad);
+        _texDrawFromCenterOdd  = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleRadiusFromCenterOdd",  ReLogic.Content.AssetRequestMode.ImmediateLoad);
+        _texDrawFromCenterEven = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleRadiusFromCenterEven", ReLogic.Content.AssetRequestMode.ImmediateLoad);
 
         _builder.AddShapeOptionsSection(new WandPanelBuilder.IconDef[]
         {
@@ -166,16 +175,21 @@ public class PlanificationSettingsPanel : UIState
             new(texConnectDiam, "Common.ConnectDiameterTooltip", isToggle: true, initialState: true),
             new(texInvertSel, "Common.InvertSelection", isToggle: true),
             new(texFlipHalf, "Common.FlipHalfOrientation", isToggle: true),
+            new(_texDrawFromCenterOff, "Common.DrawFromCenter.Off", isToggle: true),
         }, out var optBtns);
         _equalDimensionsBtn = optBtns[0];
         _connectDiameterBtn = optBtns[1];
         _invertSelectionBtn = optBtns[2];
         _flipHalfOrientationBtn = optBtns[3];
+        _drawFromCenterBtn  = optBtns[4];
+        _drawFromCenterBtn.IsRadio = false;
+        _drawFromCenterBtn.AllowDeselect = true;
+        _drawFromCenterBtn.InactiveColor = WandPanelTheme.Colors.ButtonInactive;
 
         StencilPanelRowHelpers.AddTransformOptionsRow(
             _builder,
             mod,
-            "Planification Options",
+            "Planification.Options",
             "Selection.AutoCreateCanvas",
             "Flip Horizontal",
             "Flip Vertical",
@@ -235,8 +249,9 @@ public class PlanificationSettingsPanel : UIState
         // Left click shows hint if verbosity is enabled; right click opens subUI
         _visibilityBtn.OnLeftClick += (_, _) =>
         {
-            if (WandConfigs.Preferences?.WandVerbosity == true)
-                Main.NewText("Right-click Planification Visibility to toggle visible stencils.", WandColors.MsgHint);
+            Main.NewText(
+                Language.GetTextValue("Mods.WorldShapingWandsMod.UI.Planification.VisibleStencilsHint"),
+                WandColors.MsgHint);
         };
         _visibilityBtn.OnRightClick += (_, _) => OpenVisibilitySubUI();
 
@@ -262,6 +277,7 @@ public class PlanificationSettingsPanel : UIState
         _connectDiameterBtn.OnToggled += (_, _) => ToggleConnectDiameter();
         _invertSelectionBtn.OnToggled += (_, _) => ToggleInvertSelection();
         _flipHalfOrientationBtn.OnToggled += (_, _) => ToggleFlipHalfOrientation();
+        _drawFromCenterBtn.OnToggled += (_, _) => CycleDrawFromCenter();
 
         _autoCreateCanvasBtn.OnToggled += (_, _) =>
         {
@@ -309,7 +325,7 @@ public class PlanificationSettingsPanel : UIState
         }
         var panelShell = new WandSubPanel(
             body: BuildVisibilityBody(),
-            titleKey: "Planification.VisibleStencils",
+            titleKey: "Mods.WorldShapingWandsMod.UI.Planification.VisibleStencils",
             defaultLocked: true,
             host: _visibilityBtn,
             identityKey: VisibilitySubUIIdentityKey)
@@ -404,7 +420,8 @@ public class PlanificationSettingsPanel : UIState
             settings.Shape.Slice,
             settings.Shape.ConnectDiameter,
             settings.Shape.InvertSelection,
-            settings.Shape.InvertHalfOrientation);
+            settings.Shape.InvertHalfOrientation,
+            settings.Shape.DrawFromCenter);
 
         UpdateShapeButtons();
     }
@@ -464,6 +481,44 @@ public class PlanificationSettingsPanel : UIState
         var shape = settings.Shape;
         shape.InvertHalfOrientation = _flipHalfOrientationBtn.Toggled;
         settings.Shape = shape;
+    }
+
+    private void CycleDrawFromCenter()
+    {
+        var s = GetSettings();
+        if (s == null) return;
+        var sh = s.Shape;
+        sh.DrawFromCenter = sh.DrawFromCenter.Next();
+        s.Shape = sh;
+        UpdateDrawFromCenterButton();
+    }
+
+    private void UpdateDrawFromCenterButton()
+    {
+        var s = GetSettings();
+        if (s == null || _drawFromCenterBtn == null) return;
+        bool supported = s.Shape.SupportsDrawFromCenter;
+        _drawFromCenterBtn.Disabled = !supported;
+        switch (supported ? s.Shape.DrawFromCenter : DrawFromCenterMode.Off)
+        {
+            case DrawFromCenterMode.Odd:
+                _drawFromCenterBtn.Toggled = true;
+                _drawFromCenterBtn.ActiveColor = WandPanelTheme.Colors.ActiveBlue;
+                _drawFromCenterBtn.SetTexture(_texDrawFromCenterOdd);
+                _drawFromCenterBtn.HoverText = Language.GetTextValue("Mods.WorldShapingWandsMod.UI.Common.DrawFromCenter.Odd");
+                break;
+            case DrawFromCenterMode.Even:
+                _drawFromCenterBtn.Toggled = true;
+                _drawFromCenterBtn.ActiveColor = WandPanelTheme.Colors.ActiveGreen;
+                _drawFromCenterBtn.SetTexture(_texDrawFromCenterEven);
+                _drawFromCenterBtn.HoverText = Language.GetTextValue("Mods.WorldShapingWandsMod.UI.Common.DrawFromCenter.Even");
+                break;
+            default:
+                _drawFromCenterBtn.Toggled = false;
+                _drawFromCenterBtn.SetTexture(_texDrawFromCenterOff);
+                _drawFromCenterBtn.HoverText = Language.GetTextValue("Mods.WorldShapingWandsMod.UI.Common.DrawFromCenter.Off");
+                break;
+        }
     }
 
     private void ApplyRenderConfig()
@@ -734,6 +789,7 @@ public class PlanificationSettingsPanel : UIState
         _connectDiameterBtn.Toggled = shape.ConnectDiameter;
         _invertSelectionBtn.Toggled = shape.InvertSelection;
         _flipHalfOrientationBtn.Toggled = shape.InvertHalfOrientation;
+        UpdateDrawFromCenterButton();
         _autoCreateCanvasBtn.Toggled = settings.AutoCreateCanvas;
 
         _sliceGrid.SetValue(shape.Slice);

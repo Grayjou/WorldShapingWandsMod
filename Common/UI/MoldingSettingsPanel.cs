@@ -53,6 +53,8 @@ public class MoldingSettingsPanel : UIState
 
     // Shape options
     private UIIconButton _equalDimensionsBtn, _connectDiameterBtn, _invertSelectionBtn, _flipHalfOrientationBtn;
+    private UIIconButton _drawFromCenterBtn;
+    private Asset<Texture2D> _texDrawFromCenterOff, _texDrawFromCenterOdd, _texDrawFromCenterEven;
 
     // Thickness
     private UIText _thicknessValue;
@@ -220,6 +222,9 @@ public class MoldingSettingsPanel : UIState
         var texFlipHalf = mod.Assets.Request<Texture2D>(
             // TODO: pending ToggleFlipHalfOrientation dedicated asset (placeholder = ToggleInvertSel byte-copy; tracked in dev_notes/dev_tasks/pending_assets.md §3b)
             "Assets_Build/Icons/Toggles/ToggleFlipHalfOrientation", AssetRequestMode.ImmediateLoad);
+        _texDrawFromCenterOff  = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleRadiusFromCenterOff",  AssetRequestMode.ImmediateLoad);
+        _texDrawFromCenterOdd  = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleRadiusFromCenterOdd",  AssetRequestMode.ImmediateLoad);
+        _texDrawFromCenterEven = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleRadiusFromCenterEven", AssetRequestMode.ImmediateLoad);
 
 
         // Shape options
@@ -233,11 +238,16 @@ public class MoldingSettingsPanel : UIState
             new(texConnectDiam, "Common.ConnectDiameterTooltip", isToggle: true, initialState: true),
             new(texInvertSel, "Common.InvertSelection", isToggle: true),
             new(texFlipHalf, "Common.FlipHalfOrientation", isToggle: true),
+            new(_texDrawFromCenterOff, "Common.DrawFromCenter.Off", isToggle: true),
         }, out var optBtns);
         _equalDimensionsBtn = optBtns[0];
         _connectDiameterBtn = optBtns[1];
         _invertSelectionBtn = optBtns[2];
         _flipHalfOrientationBtn = optBtns[3];
+        _drawFromCenterBtn  = optBtns[4];
+        _drawFromCenterBtn.IsRadio = false;
+        _drawFromCenterBtn.AllowDeselect = true;
+        _drawFromCenterBtn.InactiveColor = WandPanelTheme.Colors.ButtonInactive;
 
         var texFlipHorizontal = mod.Assets.Request<Texture2D>(
             "Assets_Build/Icons/Stencil/FlipHorizontal", AssetRequestMode.ImmediateLoad);
@@ -349,6 +359,7 @@ public class MoldingSettingsPanel : UIState
         _connectDiameterBtn.OnToggled += (_, _) => ToggleConnectDiameter();
         _invertSelectionBtn.OnToggled += (_, _) => ToggleInvertSelection();
         _flipHalfOrientationBtn.OnToggled += (_, _) => ToggleFlipHalfOrientation();
+        _drawFromCenterBtn.OnToggled += (_, _) => CycleDrawFromCenter();
 
         // Auto-create canvas
         _autoCreateCanvasBtn.OnToggled += (_, _) =>
@@ -420,7 +431,7 @@ public class MoldingSettingsPanel : UIState
         var s = GetSettings();
         if (s == null) return;
         s.Shape = new ShapeInfo(type, mode, s.Shape.Thickness, s.Shape.EqualDimensions,
-            s.Shape.Slice, s.Shape.ConnectDiameter, s.Shape.InvertSelection, s.Shape.InvertHalfOrientation);
+            s.Shape.Slice, s.Shape.ConnectDiameter, s.Shape.InvertSelection, s.Shape.InvertHalfOrientation, s.Shape.DrawFromCenter);
         UpdateShapeButtons();
     }
 
@@ -469,6 +480,44 @@ public class MoldingSettingsPanel : UIState
         var sh = s.Shape;
         sh.InvertHalfOrientation = _flipHalfOrientationBtn.Toggled;
         s.Shape = sh;
+    }
+
+    private void CycleDrawFromCenter()
+    {
+        var s = GetSettings();
+        if (s == null) return;
+        var sh = s.Shape;
+        sh.DrawFromCenter = sh.DrawFromCenter.Next();
+        s.Shape = sh;
+        UpdateDrawFromCenterButton();
+    }
+
+    private void UpdateDrawFromCenterButton()
+    {
+        var s = GetSettings();
+        if (s == null || _drawFromCenterBtn == null) return;
+        bool supported = s.Shape.SupportsDrawFromCenter;
+        _drawFromCenterBtn.Disabled = !supported;
+        switch (supported ? s.Shape.DrawFromCenter : DrawFromCenterMode.Off)
+        {
+            case DrawFromCenterMode.Odd:
+                _drawFromCenterBtn.Toggled = true;
+                _drawFromCenterBtn.ActiveColor = WandPanelTheme.Colors.ActiveBlue;
+                _drawFromCenterBtn.SetTexture(_texDrawFromCenterOdd);
+                _drawFromCenterBtn.HoverText = L("Common.DrawFromCenter.Odd");
+                break;
+            case DrawFromCenterMode.Even:
+                _drawFromCenterBtn.Toggled = true;
+                _drawFromCenterBtn.ActiveColor = WandPanelTheme.Colors.ActiveGreen;
+                _drawFromCenterBtn.SetTexture(_texDrawFromCenterEven);
+                _drawFromCenterBtn.HoverText = L("Common.DrawFromCenter.Even");
+                break;
+            default:
+                _drawFromCenterBtn.Toggled = false;
+                _drawFromCenterBtn.SetTexture(_texDrawFromCenterOff);
+                _drawFromCenterBtn.HoverText = L("Common.DrawFromCenter.Off");
+                break;
+        }
     }
 
     private void OnSliceChanged(SliceMode slice)
@@ -1039,6 +1088,7 @@ public class MoldingSettingsPanel : UIState
             _flipHalfOrientationBtn.Toggled = s.Shape.InvertHalfOrientation;
             _flipHalfOrientationBtn.Disabled = s.Shape.Slice == SliceMode.Full;
         }
+        UpdateDrawFromCenterButton();
     }
 
     private void UpdateAutoCreateCanvas()

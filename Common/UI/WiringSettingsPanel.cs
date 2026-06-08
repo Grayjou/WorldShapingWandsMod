@@ -41,6 +41,8 @@ public class WiringSettingsPanel : UIState
     private UIIconButton _connectDiameterBtn;
     private UIIconButton _invertSelectionBtn;
     private UIIconButton _flipHalfOrientationBtn;
+    private UIIconButton _drawFromCenterBtn;
+    private Asset<Texture2D> _texDrawFromCenterOff, _texDrawFromCenterOdd, _texDrawFromCenterEven;
 
     // Slice grid
     private UISliceGrid _sliceGrid;
@@ -118,6 +120,9 @@ public class WiringSettingsPanel : UIState
         // (S2 2026-04-30 — InvertHalfOrientation #IOP) placeholder reuses ToggleInvertSel.
         // TODO: pending ToggleFlipHalfOrientation dedicated asset (placeholder = ToggleInvertSel byte-copy; tracked in dev_notes/dev_tasks/pending_assets.md §3b)
         var texFlipHalf    = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleFlipHalfOrientation", AssetRequestMode.ImmediateLoad);
+        _texDrawFromCenterOff  = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleRadiusFromCenterOff",  AssetRequestMode.ImmediateLoad);
+        _texDrawFromCenterOdd  = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleRadiusFromCenterOdd",  AssetRequestMode.ImmediateLoad);
+        _texDrawFromCenterEven = mod.Assets.Request<Texture2D>("Assets_Build/Icons/Toggles/ToggleRadiusFromCenterEven", AssetRequestMode.ImmediateLoad);
 
         _builder.AddShapeOptionsSection(new WandPanelBuilder.IconDef[]
         {
@@ -125,11 +130,16 @@ public class WiringSettingsPanel : UIState
             new(texConnectDiam, "Common.ConnectDiameterTooltip", isToggle: true, initialState: true),
             new(texInvertSel,   "Common.InvertSelection",      isToggle: true),
             new(texFlipHalf,    "Common.FlipHalfOrientation",  isToggle: true),
+            new(_texDrawFromCenterOff, "Common.DrawFromCenter.Off", isToggle: true),
         }, out var optBtns);
         _equalDimensionsBtn = optBtns[0];
         _connectDiameterBtn = optBtns[1];
         _invertSelectionBtn = optBtns[2];
         _flipHalfOrientationBtn = optBtns[3];
+        _drawFromCenterBtn  = optBtns[4];
+        _drawFromCenterBtn.IsRadio = false;
+        _drawFromCenterBtn.AllowDeselect = true;
+        _drawFromCenterBtn.InactiveColor = WandPanelTheme.Colors.ButtonInactive;
 
         // === CLOSE ===
         _builder.AddCloseButton();
@@ -157,6 +167,7 @@ public class WiringSettingsPanel : UIState
         _connectDiameterBtn.OnToggled += (_, _) => ToggleConnectDiameter();
         _invertSelectionBtn.OnToggled += (_, _) => ToggleInvertSelection();
         _flipHalfOrientationBtn.OnToggled += (_, _) => ToggleFlipHalfOrientation();
+        _drawFromCenterBtn.OnToggled += (_, _) => CycleDrawFromCenter();
     }
 
     private WandOfWiringSettings GetSettings() =>
@@ -166,7 +177,7 @@ public class WiringSettingsPanel : UIState
     {
         var settings = GetSettings();
         if (settings == null) return;
-        settings.Shape = new ShapeInfo(type, mode, settings.Shape.Thickness, settings.Shape.EqualDimensions, settings.Shape.Slice, settings.Shape.ConnectDiameter, settings.Shape.InvertSelection, settings.Shape.InvertHalfOrientation);
+        settings.Shape = new ShapeInfo(type, mode, settings.Shape.Thickness, settings.Shape.EqualDimensions, settings.Shape.Slice, settings.Shape.ConnectDiameter, settings.Shape.InvertSelection, settings.Shape.InvertHalfOrientation, settings.Shape.DrawFromCenter);
         UpdateShapeButtons();
     }
 
@@ -295,6 +306,44 @@ public class WiringSettingsPanel : UIState
         _flipHalfOrientationBtn.Disabled = settings.Shape.Slice == SliceMode.Full;
     }
 
+    private void CycleDrawFromCenter()
+    {
+        var s = GetSettings();
+        if (s == null) return;
+        var sh = s.Shape;
+        sh.DrawFromCenter = sh.DrawFromCenter.Next();
+        s.Shape = sh;
+        UpdateDrawFromCenterButton();
+    }
+
+    private void UpdateDrawFromCenterButton()
+    {
+        var s = GetSettings();
+        if (s == null || _drawFromCenterBtn == null) return;
+        bool supported = s.Shape.SupportsDrawFromCenter;
+        _drawFromCenterBtn.Disabled = !supported;
+        switch (supported ? s.Shape.DrawFromCenter : DrawFromCenterMode.Off)
+        {
+            case DrawFromCenterMode.Odd:
+                _drawFromCenterBtn.Toggled = true;
+                _drawFromCenterBtn.ActiveColor = WandPanelTheme.Colors.ActiveBlue;
+                _drawFromCenterBtn.SetTexture(_texDrawFromCenterOdd);
+                _drawFromCenterBtn.HoverText = L("Common.DrawFromCenter.Odd");
+                break;
+            case DrawFromCenterMode.Even:
+                _drawFromCenterBtn.Toggled = true;
+                _drawFromCenterBtn.ActiveColor = WandPanelTheme.Colors.ActiveGreen;
+                _drawFromCenterBtn.SetTexture(_texDrawFromCenterEven);
+                _drawFromCenterBtn.HoverText = L("Common.DrawFromCenter.Even");
+                break;
+            default:
+                _drawFromCenterBtn.Toggled = false;
+                _drawFromCenterBtn.SetTexture(_texDrawFromCenterOff);
+                _drawFromCenterBtn.HoverText = L("Common.DrawFromCenter.Off");
+                break;
+        }
+    }
+
     private void UpdateSliceGrid()
     {
         var settings = GetSettings();
@@ -313,6 +362,7 @@ public class WiringSettingsPanel : UIState
         UpdateConnectDiameterButton();
         UpdateInvertSelectionButton();
         UpdateFlipHalfOrientationButton();
+        UpdateDrawFromCenterButton();
     }
 
     public override void Update(GameTime gameTime)

@@ -26,10 +26,16 @@ public readonly struct WandPacketHeader
     public readonly bool InvertSelection;
     /// <summary>
     /// (S2 2026-04-30 — DesignDoc_HalfShapeOrientationFlipToggle.md #IOP)
-    /// Mirrors <see cref="Settings.ShapeInfo.InvertHalfOrientation"/> over the
+    /// Mirrors <see cref="Settings.ShapeInfo.InvertHalfOrientation" /> over the
     /// network so the server reproduces the same kept half during MP execution.
     /// </summary>
     public readonly bool InvertHalfOrientation;
+    /// <summary>
+    /// (S2 2026-05-24 Session 2 — FromCenterShapeOption.md)
+    /// Mirrors <see cref="Settings.ShapeInfo.DrawFromCenter" /> over the network
+    /// so the server rebuilds the same bbox. Sent as a byte (DrawFromCenterMode).
+    /// </summary>
+    public readonly DrawFromCenterMode DrawFromCenter;
 
     public WandPacketHeader(
         Point start, Point end,
@@ -37,7 +43,8 @@ public readonly struct WandPacketHeader
         int thickness, bool equalDimensions,
         bool verticalFirst, int playerWhoAmI,
         SliceMode slice = SliceMode.Full, bool connectDiameter = true,
-        bool invertSelection = false, bool invertHalfOrientation = false)
+        bool invertSelection = false, bool invertHalfOrientation = false,
+        DrawFromCenterMode drawFromCenter = DrawFromCenterMode.Off)
     {
         Start = start;
         End = end;
@@ -51,6 +58,7 @@ public readonly struct WandPacketHeader
         ConnectDiameter = connectDiameter;
         InvertSelection = invertSelection;
         InvertHalfOrientation = invertHalfOrientation;
+        DrawFromCenter = drawFromCenter;
     }
 }
 
@@ -61,12 +69,13 @@ public readonly struct WandPacketHeader
 public static class WandPacketHeaderIO
 {
     /// <summary>
-    /// Write the common 24-byte header shared by all wand operation packets.
+    /// Write the common 25-byte header shared by all wand operation packets.
     /// Format: Start(8) + End(8) + Shape(1) + FillMode(1) + Thickness(1) +
     ///         EqualDimensions(1) + VerticalFirst(1) + PlayerWhoAmI(1) +
     ///         Slice(1) + ConnectDiameter(1) + InvertSelection(1) +
-    ///         InvertHalfOrientation(1) = 24 bytes.
-    /// (S2 2026-04-30 grew from 23 → 24; pre-release wire change.)
+    ///         InvertHalfOrientation(1) + DrawFromCenter(1) = 25 bytes.
+    /// (S2 2026-04-30 grew from 23 → 24 with InvertHalfOrientation;
+    ///  S2 2026-05-24 grew from 24 → 25 with DrawFromCenter.)
     /// </summary>
     public static void WriteCommonHeader(ModPacket packet, WandPacketHeader header)
     {
@@ -84,10 +93,11 @@ public static class WandPacketHeaderIO
         packet.Write(header.ConnectDiameter);
         packet.Write(header.InvertSelection);
         packet.Write(header.InvertHalfOrientation);
+        packet.Write((byte)header.DrawFromCenter);
     }
 
     /// <summary>
-    /// Read the common 24-byte header from an incoming packet.
+    /// Read the common 25-byte header from an incoming packet.
     /// </summary>
     public static WandPacketHeader ReadCommonHeader(BinaryReader reader)
     {
@@ -103,7 +113,8 @@ public static class WandPacketHeaderIO
             slice: (SliceMode)reader.ReadByte(),
             connectDiameter: reader.ReadBoolean(),
             invertSelection: reader.ReadBoolean(),
-            invertHalfOrientation: reader.ReadBoolean()
+            invertHalfOrientation: reader.ReadBoolean(),
+            drawFromCenter: (DrawFromCenterMode)reader.ReadByte()
         );
     }
 }

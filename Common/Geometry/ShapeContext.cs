@@ -45,15 +45,26 @@ public struct ShapeContext
     /// <summary>
     /// (S2 2026-04-30 — DesignDoc_HalfShapeOrientationFlipToggle.md #IOP)
     /// When true, inverts which half of a sliced shape is kept relative to the
-    /// drag direction. Normally <see cref="SliceHelper.IsStartAbove"/> /
-    /// <see cref="SliceHelper.IsStartLeft"/> select the kept half from
+    /// drag direction. Normally <see cref="SliceHelper.IsStartAbove" /> /
+    /// <see cref="SliceHelper.IsStartLeft" /> select the kept half from
     /// Start/End; with this flag set the opposite half is kept instead.
-    /// Only meaningful when <see cref="Slice"/> != <see cref="SliceMode.Full"/>.
-    /// Applied symmetrically inside <see cref="SliceHelper.SliceFilledTiles"/>
-    /// AND <see cref="SliceHelper.RemoveDiameterEdge"/> so the diameter band
+    /// Only meaningful when <see cref="Slice" /> != <see cref="SliceMode.Full" />.
+    /// Applied symmetrically inside <see cref="SliceHelper.SliceFilledTiles" />
+    /// AND <see cref="SliceHelper.RemoveDiameterEdge" /> so the diameter band
     /// stays on the discarded side.
     /// </summary>
     public bool InvertHalfOrientation { get; set; }
+
+    /// <summary>
+    /// (S2 2026-05-24 Session 2 — FromCenterShapeOption.md)
+    /// Controls how <see cref="GetBounds" /> computes the shape bounding box.
+    /// Off = default drag bbox (Start..End corners).
+    /// Odd  = Start is the center tile; bbox is symmetric with odd dimensions.
+    /// Even = Start is the corner of the center 2×2; bbox has even dimensions.
+    /// Shapes that do not support this (Triangle, Elbow, etc.) receive Off
+    /// from <see cref="Settings.ShapeInfo.ToShapeContext" /> unconditionally.
+    /// </summary>
+    public DrawFromCenterMode DrawFromCenter { get; set; }
 
     /// <summary>
     /// Additional input points beyond Start and End for multi-point shapes.
@@ -82,12 +93,14 @@ public struct ShapeContext
         ConnectDiameter = true;
         InvertHalfOrientation = false;
         ExtraPoints = null;
+        DrawFromCenter = DrawFromCenterMode.Off;
     }
 
     public ShapeContext(Point start, Point end, ShapeMode mode, int thickness, 
         HorizontalBias hBias, VerticalBias vBias, bool verticalFirst, bool equalDimensions = false,
         SliceMode slice = SliceMode.Full, bool connectDiameter = true,
-        bool invertHalfOrientation = false)
+        bool invertHalfOrientation = false,
+        DrawFromCenterMode drawFromCenter = DrawFromCenterMode.Off)
     {
         Start = start;
         End = end;
@@ -101,59 +114,102 @@ public struct ShapeContext
         ConnectDiameter = connectDiameter;
         InvertHalfOrientation = invertHalfOrientation;
         ExtraPoints = null;
+        DrawFromCenter = drawFromCenter;
     }
 
     /// <summary>
     /// Returns the bounding rectangle for this shape context.
-    /// When <see cref="EqualDimensions"/> is true, the rectangle is expanded
-    /// to a square using the larger dimension, anchored at <see cref="Start"/>.
-    /// The Start corner stays fixed while the square extends in the direction of End,
-    /// eliminating the integer-truncation jitter that occurred with center-based expansion.
+    /// <para>
+    /// When <see cref="DrawFromCenter" /> is <see cref="DrawFromCenterMode.Odd" />:
+    /// Start is the center tile. rx = |End.X−Start.X|, ry = |End.Y−Start.Y|.
+    /// bbox = (cx−rx, cy−ry) to (cx+rx, cy+ry) — always odd dimensions.
+    /// </para>
+    /// <para>
+    /// When <see cref="DrawFromCenter" /> is <see cref="DrawFromCenterMode.Even" />:
+    /// Start is the corner of the central 2×2 block. rx = |dx|+1, ry = |dy|+1.
+    /// bbox extends 2rx×2ry in the drag direction — always even dimensions.
+    /// </para>
+    /// <para>
+    /// When <see cref="EqualDimensions" /> is true, the radius is clamped to
+    /// max(rx, ry) before computing the bbox, maintaining center symmetry.
+    /// </para>
+    /// <para>
+    /// When <see cref="DrawFromCenter" /> is <see cref="DrawFromCenterMode.Off" />:
+    /// legacy behavior — the rectangle is expanded to a square using the
+    /// larger dimension, anchored at <see cref="Start" /> when EqualDimensions
+    /// is active.
+    /// </para>
     /// </summary>
     public Rectangle GetBounds()
     {
-        int minX = Math.Min(Start.X, End.X);
-        int minY = Math.Min(Start.Y, End.Y);
-        int maxX = Math.Max(Start.X, End.X);
-        int maxY = Math.Max(Start.Y, End.Y);
+        // ---- Draw-from-center path ----
+        if (DrawFromCenter == DrawFromCenterMode.Odd)
+        {
+            int rx = Math.Abs(End.X - Start.X);
+            int ry = Math.Abs(End.Y - Start.Y);
+            if (EqualDimensions)
+            {
+                int r = Math.Max(rx, ry);
+                rx = r; ry = r;
+            }
+            int minX = Start.X - rx;
+            int minY = Start.Y - ry;
+            int width  = 2 * rx + 1;
+            int height = 2 * ry + 1;
+            return new Rectangle(minX, minY, width, height);
+        }
 
-        int width = maxX - minX + 1;
-        int height = maxY - minY + 1;
+        if (DrawFromCenter == DrawFromCenterMode.Even)
+        {
+            // rx/ry are the half-side lengths (minimum 1 so the bbox is always at least 2×2)
+            int rx = Math.Abs(End.X - Start.X) + 1;
+            int ry = Math.Abs(End.Y - Start.Y) + 1;
+            if (EqualDimensions)
+            {
+                int r = Math.Max(rx, ry);
+                rx = r; ry = r;
+            }
+            // Anchor at Start corner; extend in drag direction so the center stays
+            // between Start and (Start + 1) in each axis.
+            int minX, minY;
+            if (End.X >= Start.X) minX = Start.X;
+            else                  minX = Start.X - 2 * rx + 1;
+            if (End.Y >= Start.Y) minY = Start.Y;
+            else                  minY = Start.Y - 2 * ry + 1;
+            return new Rectangle(minX, minY, 2 * rx, 2 * ry);
+        }
+
+        // ---- Default drag-bbox path ----
+        int dminX = Math.Min(Start.X, End.X);
+        int dminY = Math.Min(Start.Y, End.Y);
+        int dmaxX = Math.Max(Start.X, End.X);
+        int dmaxY = Math.Max(Start.Y, End.Y);
+
+        int dwidth  = dmaxX - dminX + 1;
+        int dheight = dmaxY - dminY + 1;
 
         if (EqualDimensions)
         {
-            int size = Math.Max(width, height);
+            int size = Math.Max(dwidth, dheight);
 
             // Anchor the square at Start — extend in the direction of End.
             // This keeps the Start corner fixed, so the origin never shifts
             // due to integer truncation as the selection grows by 1 tile.
             if (End.X >= Start.X)
-            {
-                // End is to the right of Start: anchor left edge at Start.X
-                minX = Start.X;
-            }
+                dminX = Start.X;
             else
-            {
-                // End is to the left of Start: anchor right edge at Start.X
-                minX = Start.X - size + 1;
-            }
+                dminX = Start.X - size + 1;
 
             if (End.Y >= Start.Y)
-            {
-                // End is below Start: anchor top edge at Start.Y
-                minY = Start.Y;
-            }
+                dminY = Start.Y;
             else
-            {
-                // End is above Start: anchor bottom edge at Start.Y
-                minY = Start.Y - size + 1;
-            }
+                dminY = Start.Y - size + 1;
 
-            width = size;
-            height = size;
+            dwidth  = size;
+            dheight = size;
         }
 
-        return new Rectangle(minX, minY, width, height);
+        return new Rectangle(dminX, dminY, dwidth, dheight);
     }
 
     public Vector2 GetCenter()
@@ -175,7 +231,8 @@ public struct ShapeContext
         SliceMode? slice = null,
         bool? connectDiameter = null,
         bool? invertHalfOrientation = null,
-        Point[]? extraPoints = null)
+        Point[]? extraPoints = null,
+        DrawFromCenterMode? drawFromCenter = null)
     {
         return new ShapeContext(
             Start, End,
@@ -187,7 +244,8 @@ public struct ShapeContext
             equalDimensions ?? EqualDimensions,
             slice ?? Slice,
             connectDiameter ?? ConnectDiameter,
-            invertHalfOrientation ?? InvertHalfOrientation
+            invertHalfOrientation ?? InvertHalfOrientation,
+            drawFromCenter ?? DrawFromCenter
         )
         {
             ExtraPoints = extraPoints ?? ExtraPoints
