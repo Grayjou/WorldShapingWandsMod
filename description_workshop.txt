@@ -1,19 +1,30 @@
 [h1]World Shaping Wands[/h1]
 
-[b]42 wands across 10 families[/b] for large-scale world editing, plus 2 specialized Torch Wheel wands. Build, shape, paint, wire, flood, torch, constrain, and mold any region of your Terraria world using geometric shapes.
+[b]46 wands across 11 families[/b] for large-scale world editing, plus 2 specialized Torch Wheel wands. Build, shape, paint, wire, flood, torch, constrain, plan, and mold any region of your Terraria world using geometric shapes.
 
-[h2]🔨 10 Wand Families[/h2]
+[h2]🔨 11 Wand Families[/h2]
 [list]
-[*][b]Building[/b] — Place tiles, walls, platforms, rope, planter boxes, tracks, and grass seeds in bulk. Slope application, block exhaustion modes, wall placement behind tiles.
-[*][b]Dismantling[/b] — Mass-destroy tiles and walls within a shape. Validates pickaxe power. Container destruction with auto-unlock and item dropping. Void Everything mode.
-[*][b]Replacement[/b] — Swap one tile or wall type for another across an area. Substrate-variant aware (dirt ↔ grass, mud ↔ jungle grass). Tri-state filtering.
-[*][b]Wiring[/b] — Place or remove red, green, blue, and yellow wire plus actuators in bulk. Full multiplayer support with server-side validation.
-[*][b]Safekeeping[/b] — Protect tiles from accidental modification. Persistent (saved with world) and session-only protection modes.
-[*][b]Coating[/b] — Paint tiles and walls, apply or remove illuminant and echo coatings, scrape moss, harvest hanging moss. Tri-state toggles.
-[*][b]Fluids[/b] — Pour water, lava, honey, or shimmer in shaped areas. Drain fluids with sponge mode. Three fill modes: Full, Rain, and Pocket.
-[*][b]Torches[/b] — Place, replace, remove, or convert torches in geometric patterns. Biome-aware torch resolution, configurable grid spacing, Manhattan distance layouts.
-[*][b]Delimitation[/b] — Define a constraint area that filters all other wands. Canvas + selection system with boolean operations (Add, Remove, Intersect, XOR). The stencil for precision editing.
-[*][b]Molding[/b] — Sculpt custom shapes by painting a mold. The mold auto-promotes to a reusable template for any other wand family. Canvas-based with the same boolean operations.
+[*][b]Building[/b] — Place tiles, walls, platforms, rope, planter boxes, tracks, and grass seeds in bulk. Slope/HalfBlock application (6 slope types + actuation on/off/ignore). Block exhaustion modes (NextBlock, Interrupt, Cancel). Paint Sprayer integration (inventory or Coating wand paint). Vacuum item collection. Substrate-variant aware (skips grass/moss variants when replacing). Progressive batching for large operations.
+
+[*][b]Dismantling[/b] — Mass-destroy tiles and walls within a shape. Validates pickaxe power. Container destruction with auto-unlock and item dropping. Void Everything mode. Delicate tile protection (Shadow Orbs, Plantera Bulbs, Bee Larvae, Life Fruit). Demon altar destruction protection toggle.
+
+[*][b]Replacement[/b] — Swap one tile or wall type for another across an area. Substrate-variant aware (dirt ↔ grass, mud ↔ jungle grass). Tri-state filtering (tile only, wall only, both).
+
+[*][b]Wiring[/b] — Place or remove red, green, blue, and yellow wire plus actuators in bulk. Full multiplayer support with server-side validation. Per-wire-type toggles.
+
+[*][b]Safekeeping[/b] — Protect tiles from accidental modification. Persistent (saved with world) and session-only protection modes. Per-tile and per-wall protection.
+
+[*][b]Coating[/b] — Paint tiles and walls (30+ colors), apply or remove illuminant and echo coatings, scrape moss, harvest hanging moss. Tri-state toggles. Color picker with swatch preview.
+
+[*][b]Fluids[/b] — Pour water, lava, honey, or shimmer in shaped areas. Three fill modes: Full, Rain (with decorative rain cloud projectiles), and Pocket (sealed cavities). Drain with selective filtering. Bubble shell containment. Mix Liquids support (water+lava→obsidian, etc.) with particle effects. Achievement gates (planned).
+
+[*][b]Torches[/b] — Place, replace, remove, or convert torches in geometric patterns. Biome-aware resolution (Torch God's Favor). Configurable grid spacing, Manhattan distance layouts, tiling alignment.
+
+[*][b]Delimitation[/b] — Define a constraint area that filters all other wands. Canvas + selection system with boolean operations (Add, Remove, Intersect, XOR, Clear). 3-stencil slots with independent canvases. MagicWandRead integration for flood-fill canvas creation.
+
+[*][b]Molding[/b] — Sculpt custom shapes by painting a mold. Auto-promotion to a reusable template for any other wand family. Canvas-based with boolean operations. Auto-Promote toggle for instant mold updates. Auto-Create Canvas and Auto-Expand Canvas toggles.
+
+[*][b]Planification[/b] — Multi-stencil overlay planning system. 5 independent stencil slots, each with its own canvas + selection pair. Per-slot visibility and render config (outline, grid, fill). StencilTransform system for canvas+selection translation and pivot-based rotation/flip. Independent boolean operations per slot.
 [/list]
 
 [h2]🔥 Torch Wheel System[/h2]
@@ -21,6 +32,7 @@ Two standalone wands that automate torch placement along surfaces:
 [list]
 [*][b]Torch Wheel (Solid)[/b] — Follows solid walls, placing torches at configurable spacing with biome-aware resolution.
 [*][b]Torch Wheel (Platform)[/b] — Traces platform paths, placing torches along platforms and handling falls and re-landing.
+[*]Shift+right-click to kill all active torch wheel projectiles.
 [/list]
 
 [h2]🎮 4 Selection Modes[/h2]
@@ -32,34 +44,105 @@ Every wand comes in 4 variants — cycle by right-clicking in inventory:
 [*][b]Stamp[/b] — Define a template, confirm, then click to repeat it anywhere.
 [/list]
 
-[h2]📐 8 Shape Templates + Custom Mold[/h2]
-Rectangle · Ellipse · Diamond · Triangle · Half-Ellipse (H/V) · Elbow (L-shape) · Cardinal Line · Straight Line · [b]Mold[/b] (custom shape)
+[h2]📐 Shape Types + MagicWandRead[/h2]
+Rectangle (Filled/Hollow) · Ellipse (Filled/Hollow) · Diamond (Filled/Hollow) · Triangle (Filled/Hollow) · Half-Ellipse · Elbow (L-shape) · Cardinal Line · Straight Line · [b]Mold[/b] (custom shape) · [b]MagicWandRead[/b] (flood-fill selection)
 
-Each supports [b]Filled[/b] and [b]Hollow[/b] modes with configurable outline thickness. [b]Slice Mode[/b] halves shapes in any direction. [b]Equal Dimensions[/b] forces square or circle proportions.
+Each shape supports [b]Filled[/b] and [b]Hollow[/b] modes with configurable outline thickness. [b]Slice Mode[/b] halves shapes in any direction. [b]Equal Dimensions[/b] forces square or circle proportions. [b]Connect Diameter[/b] fills between end points for Cardinal Lines.
+
+[b]MagicWandRead[/b] — Flood-fill tool with 12 match types (SameTile, SameWall, Solid, Empty, Liquid, PaintTile, PaintWall, and more). 3 contiguity modes (4-way, 8-way, non-contiguous). Actuation filter. Safety gates block Instant/Select modes by default. Configurable 5000-tile cap. Results write to active canvas on Delimitation/Molding/Planification wands.
+
+[h2]🎨 Stencil System[/h2]
+[list]
+[*]Multi-stencil slots (3 for Delimitation, 5 for Planification) with independent canvases and selections
+[*]EDIT picker: choose which slot your active wand edits
+[*]ACT-ON picker: choose which stencil the Mold cell stamps from — persists across all wands
+[*]Persistence: canvases are saved with the world and synced in multiplayer
+[/list]
+
+[h2]🔄 Transform Mode[/h2]
+[list]
+[*]Move tool: drag canvas + selection to reposition
+[*]Pivot system: set persistent or temporary rotation/flip anchor points
+[*]Flip Horizontal / Flip Vertical
+[*]Rotate 90° Clockwise / Counter-clockwise
+[*]Auto-Create Canvas: automatically creates a canvas on first shape operation
+[*]Auto-Expand Canvas: canvas auto-expands to include any shape tiles outside its boundary
+[/list]
 
 [h2]🎨 Visual Overlay System[/h2]
 [list]
-[*]Selection preview with dimension labels and tile count
+[*]Shape preview with dimension labels, tile count, and stock-vs-cost tint
 [*]Cancel overlay (red) on right-click cancellation
-[*]Delimitation canvas + selection overlays with configurable colors and opacity
-[*]Molding canvas overlay with teal/cyan theme
+[*]Delimitation 3-layer overlay (canvas fill, outside dim, selection highlight) with gold border and transform indicators
+[*]Molding canvas overlay with teal/cyan theme and transform indicators
+[*]Planification overlay: renders all 5 stencil slots with per-slot color, outline/grid/fill
+[*]Safekeeping overlay: cyan/magenta/gold indicators over protected tiles
+[*]Torch tiling preview grid with BFS-computed positions
+[*]Per-layer configurable colors and opacity for all overlays
 [*]Fluid-aware overlay colors (water blue, lava orange, honey yellow, shimmer pink)
 [/list]
 
 [h2]⚙️ Highly Configurable[/h2]
 [list]
-[*]10 per-wand settings panels with draggable icon-based UI
-[*]10 mod config files (Resources, Sandbox, Limits, Performance, Stamp, TorchWheel, Carefree, Overlay, Canvas Overlay, Preferences)
+[*]11 per-wand settings panels with draggable icon-based UI
+[*]11 mod config files (Resources, Sandbox, Limits, Performance, Stamp, TorchWheel, Carefree, Overlay, Canvas Overlay, Preferences, MagicWandReadSafety)
 [*]Configurable infinite resources per type (tiles, walls, seeds, wires, actuators, paint, fluid)
 [*]Selection distance caps, progressive batch sizes, overlay render modes
 [*]Full color customization for all overlays
+[*]Tooltip verbosity toggle (short form / detailed)
+[*]Wand panel drag mode (anywhere / handle only)
+[*]MagicWandRead safety gates and match config
+[/list]
+
+[h2]📦 SubUI System[/h2]
+Floating popout/panel sub-interfaces for deep configuration without leaving the main panel:
+[list]
+[*]Stencil EDIT picker — choose active stencil slot
+[*]Stencil ACT-ON picker — choose Mold stamping stencil (persists across all wands)
+[*]Color Replace Config — source/target paint + channel configuration
+[*]MagicWandRead Config — sample mode + contiguity configuration
+[*]Paint Color Popout — 32-swatch color grid
+[*]Dismantling Options Popout — destroy toggles
+[*]Transform Mode Shell — Move + Set Pivot buttons
+[*]Lock/unlock and close behavior per SubUI
+[/list]
+
+[h2]📋 Inventory View[/h2]
+Companion panel for explicit item selection:
+[list]
+[*]Per-source candidate slot grid for Building (explicit tile/wall type), Replacement (source/target), Torches (explicit torch type)
+[*]Pin/Unpin system (right-click to pin, chosen overrides pinned)
+[*]Ghost item substitution with rate-limited chat toast when chosen item is missing
 [/list]
 
 [h2]↩️ Full Undo/Redo[/h2]
-20-deep undo stack. Every tile modification is recorded. Use [b]/undo[/b] and [b]/redo[/b] chat commands, or [b]/undoinfo[/b] to inspect the stack.
+20-deep undo stack. Every tile modification is recorded. Use [b]/undo[/b] and [b]/redo[/b] chat commands, or [b]/undoinfo[/b] to inspect the stack. Disabled by default (config toggle).
+
+[h2]💬 Chat Commands[/h2]
+[list]
+[*]/wsw help — Display command help
+[*]/wsw toolinfo — Toggle tooltip verbosity
+[*]/wsw inventoryview — Toggle Inventory View panel
+[*]/wsw overlay — Toggle overlay rendering
+[*]/wsw paintdemo — Cycle paint demo overlay
+[*]/paintdebug — Toggle paint debug overlay (dev)
+[*]/shapetest — Debug shape rendering (dev)
+[*]/undo / redo / undoinfo — Undo/redo stack
+[/list]
 
 [h2]🌍 Localization[/h2]
 Full English localization. Locale files for German, Spanish, French, Italian, Polish, Portuguese (BR), Russian, and Chinese (Simplified) are included and will be completed for future updates.
+
+[h2]🕸️ Multiplayer[/h2]
+All operations use dedicated packet handlers per family. Client sends operation parameters to server; server validates and executes. 4-mode item cycling (not flags) for automatic MP sync. Efficient tile framing for large operations.
+
+[h2]🔗 Cross-Compatibility[/h2]
+[list]
+[*]Thorium Mod: AnyGem, AnyGoldBar recipe groups
+[*]Shimmer decrafting: all wands decraft to Amethyst
+[*]Torch God's Favor: biome-aware torch resolution
+[*]Paint Sprayer: can draw from Coating wand settings (cross-wand integration)
+[/list]
 
 [h2]Getting Started[/h2]
 Craft any wand at a Work Bench. Each family has its own recipe using gems and bars. Right-click in inventory to cycle selection modes. Open the settings panel to configure shape, mode, and toggles.

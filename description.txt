@@ -1,34 +1,42 @@
-World Shaping Wands — 42 wands across 10 families for large-scale world
+World Shaping Wands — 46 wands across 11 families for large-scale world
 editing, plus 2 Torch Wheel wands. Build, shape, paint, wire, flood, torch,
-constrain, and mold any region using geometric shapes.
+constrain, plan, and mold any region using geometric shapes.
 
-10 Wand Families:
+11 Wand Families:
   • Building — Place tiles, walls, platforms, rope, planter boxes, tracks,
-    and grass seeds in bulk. Slope application, block exhaustion modes.
-  • Dismantling — Mass-destroy tiles and walls within a shape. Validates
-    pickaxe power. Container destruction with auto-unlock. Void Everything.
-  • Replacement — Swap one tile or wall type for another across an area.
-    Substrate-variant aware (dirt ↔ grass, mud ↔ jungle grass). Tri-state.
-  • Wiring — Place or remove wire colors and actuators in bulk. Full
-    multiplayer support with server-side validation.
+    and grass seeds in bulk. Slope/HalfBlock (6 slope types + actuation).
+    Block exhaustion modes (NextBlock/Interrupt/Cancel). Paint Sprayer
+    integration. Vacuum mode. Progressive batching.
+  • Dismantling — Mass-destroy tiles and walls. Pickaxe validation.
+    Container destruction with auto-unlock. Void Everything. Delicate tile
+    protection. Demon altar handling.
+  • Replacement — Swap tile/wall types across an area. Substrate-variant
+    aware (dirt<->grass, mud<->jungle grass). Tri-state filtering.
+  • Wiring — Place/remove wire colors and actuators in bulk. Full
+    multiplayer with server-side validation. Per-wire toggles.
   • Safekeeping — Protect tiles from accidental modification. Persistent
-    (saved with world) and session-only protection modes.
-  • Coating — Paint tiles and walls, apply or remove illuminant and echo
-    coatings, scrape moss, harvest hanging moss. Tri-state toggles.
-  • Fluids — Pour water, lava, honey, or shimmer in shaped areas. Drain
-    fluids with sponge mode. Three fill modes: Full, Rain, and Pocket.
-  • Torches — Place, replace, remove, or convert torches in geometric
-    patterns. Biome-aware resolution, grid spacing, Manhattan distance.
-  • Delimitation — Define a constraint area that filters all other wands.
-    Canvas + selection with boolean ops (Add, Remove, Intersect, XOR).
-  • Molding — Sculpt custom shapes by painting a mold. Auto-promotes to
-    a reusable template for any wand family. Canvas-based with boolean ops.
+    (world-saved) and session-only modes. Per-tile/per-wall protection.
+  • Coating — Paint tiles/walls (30+ colors). Illuminant/echo coatings.
+    Moss scrape/harvest. Tri-state toggles. Color picker swatches.
+  • Fluids — Pour water, lava, honey, shimmer. Three fill modes (Full,
+    Rain with cloud effects, Pocket). Selective drain. Bubble shell.
+    Mix Liquids support with particle effects.
+  • Torches — Place/replace/remove/convert torches in patterns. Biome-aware
+    resolution. Configurable grid spacing and alignment.
+  • Delimitation — Constraint area filtering all other wands. Canvas +
+    selection with boolean ops (Add/Remove/Intersect/XOR/Clear). 3-stencil
+    slots. MagicWandRead flood-fill integration.
+  • Molding — Sculpt custom shapes by painting a mold. Auto-promotion to
+    reusable template. Boolean ops. Auto-Create/Expand Canvas toggles.
+  • Planification — Multi-stencil overlay planning. 5 independent slots
+    with per-slot canvases and selections. Per-slot visibility/render
+    config (outline/grid/fill). Transform system for moves and pivots.
 
 Torch Wheel System:
   • Torch Wheel (Solid) — Follows walls, placing torches at configurable
     spacing with biome-aware resolution.
-  • Torch Wheel (Platform) — Traces platform paths, placing torches along
-    platforms and handling falls and re-landing.
+  • Torch Wheel (Platform) — Traces platform paths.
+  • Shift+right-click to kill all active projectiles.
 
 Selection Modes (each wand has all four):
   Instant — Click once, shape centered on cursor, executes immediately.
@@ -36,30 +44,41 @@ Selection Modes (each wand has all four):
   Confirm — Click start, click end, preview overlay, confirm or cancel.
   Stamp   — Define a template, confirm, click to repeat anywhere.
 
-Shape Types: Rectangle, Ellipse, Diamond, Triangle, Half-Ellipse (H/V),
-  Elbow (L-shape), Cardinal Line, Straight Line, and Mold (custom).
-  Each supports Filled and Hollow modes with configurable outline thickness
-  and shape slicing (Full / Half-H / Half-V). Equal Dimensions toggle.
+Shape Types + MagicWandRead:
+  Rectangle, Ellipse, Diamond, Triangle, Half-Ellipse, Elbow (L-shape),
+  Cardinal Line, Straight Line, Mold (custom), MagicWandRead (flood-fill).
+  All support Filled/Hollow with outline thickness, slice mode, equal
+  dimensions, and invert selection. MagicWandRead has 12 match types,
+  3 contiguity modes, safety gates, and 5000-tile cap.
 
 Key Features:
-  • 10 per-wand settings panels with draggable icon-based UI
-  • 10 mod config files (Resources, Sandbox, Limits, Performance, Stamp,
-    TorchWheel, Carefree, Overlay, Canvas Overlay, Preferences)
-  • Configurable infinite resources per type (tiles, walls, seeds, wires,
-    actuators, paint, fluid)
-  • Full undo/redo support (20-deep stack, /undo /redo /undoinfo commands)
-  • Selection overlay with dimension labels and tile count
-  • Delimitation canvas overlay with configurable colors and opacity
-  • Molding canvas overlay with teal/cyan theme
-  • Fluid-aware overlay colors (water, lava, honey, shimmer)
+  • 11 per-wand settings panels with draggable icon-based UI
+  • 11 mod config files (Resources, Sandbox, Limits, Performance, Stamp,
+    TorchWheel, Carefree, Overlay, Canvas Overlay, Preferences,
+    MagicWandReadSafety)
+  • Stencil system: multi-slot canvases with EDIT and ACT-ON pickers
+  • Transform Mode: Move, Pivot, Flip (H/V), Rotate (CW/CCW)
+  • Auto-Create Canvas and Auto-Expand Canvas toggles
+  • SubUI system: floating popout panels for deep configuration
+  • Inventory View: explicit item selection with pin/unpin
+  • Full undo/redo (20-deep, /undo /redo /undoinfo)
+  • 7 composable overlays with configurable colors and opacity
+  • Configurable infinite resources per type
+  • MagicWandRead: flood-fill with 12 match types, 3 contiguity modes
   • Progressive placement mode (batched waves with visual effects)
-  • Block exhaustion handling (NextBlock / Interrupt / Cancel)
+  • Paint Sprayer integration (inventory or Coating wand paint)
+  • Slope/HalfBlock system (6 slope types + actuation on/off/ignore)
+  • Block exhaustion modes (NextBlock / Interrupt / Cancel)
   • Container destruction with auto-unlock for locked chests
   • Demon altar destruction protection toggle
   • Drop suppression toggle
+  • Fluids Mix Liquids + Bubble containment + Rain Fill clouds
+  • Tooltip verbosity toggle (short form / detailed)
+  • Chat commands: /wsw help, /wsw toolinfo, /wsw inventoryview,
+    /wsw overlay
+  • Multiplayer: dedicated packet handlers per family, auto MP sync
+  • Cross-compatibility: Thorium mod gems, Shimmer decraft, Torch God
   • Crafting recipes with recipe groups (Any Gem, Any Gold Bar, etc.)
-  • Shimmer decraft support (all wands decraft to Amethyst)
-  • Thorium Mod cross-compatibility (Opal/Aquamarine gem support)
   • Full English localization. Locale files for German, Spanish, French,
     Italian, Polish, Portuguese (BR), Russian, Chinese (Simplified)
     are included and will be completed for future updates
